@@ -77,6 +77,7 @@ export function MortgageCalculator() {
     extraPayment: 0,
     lumpSumYear: 0,
     lumpSumAmount: 0,
+    monthlyServiceFee: 69,
   });
 
   const [tableOpen, setTableOpen] = useState(false);
@@ -262,6 +263,17 @@ export function MortgageCalculator() {
             step={1}
           />
 
+          <InputField
+            label="Monthly Service Fee"
+            id="monthlyServiceFee"
+            value={inputs.monthlyServiceFee}
+            onChange={(v) => set('monthlyServiceFee', v)}
+            prefix="R"
+            min={0}
+            step={1}
+            help="Bank admin fee (e.g. R69/month). Doesn't reduce principal — pure extra cost."
+          />
+
           <SelectField
             label="Payment Frequency"
             id="frequency"
@@ -345,6 +357,27 @@ export function MortgageCalculator() {
               delay={0.15}
             />
           </div>
+
+          {/* Service fee summary */}
+          {inputs.monthlyServiceFee > 0 && (
+            <div className="glass-card-static p-4 border-l-[3px] border-l-[#F59E0B] grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Effective Monthly</p>
+                <p className="text-base font-bold text-[#F59E0B]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>payment + service fee</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Total Service Fees</p>
+                <p className="text-base font-bold text-[#EF4444]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.totalServiceFees)}</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>over loan life</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>True Total Cost</p>
+                <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.totalCostIncludingFees)}</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>incl. interest + fees</p>
+              </div>
+            </div>
+          )}
 
           {/* Extra payments summary */}
           {(inputs.extraPayment > 0 || inputs.lumpSumAmount > 0) && (

@@ -4,7 +4,8 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { Car, Download, AlertTriangle } from 'lucide-react';
+import { Car, Download, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import clsx from 'clsx';
 import * as XLSX from 'xlsx';
 
 import { InputField } from '../components/ui/InputField';
@@ -29,6 +30,9 @@ const DEFAULT_INPUTS: CarInputs = {
   balloonPercent: 0,
   interestRate: 11.25,
   termMonths: 72,
+  minimumInstalment: 0,
+  extraMonthlyPayment: 0,
+  monthlyServiceFee: 69,
   monthlyInsurance: 1200,
   monthlyFuel: 2500,
   monthlyMaintenance: 800,
@@ -50,6 +54,10 @@ function CustomTooltip({ active, payload, label }: any) {
 
 export function CarFinance() {
   const [inputs, setInputs] = useState<CarInputs>(DEFAULT_INPUTS);
+  const [tableOpen, setTableOpen] = useState(false);
+  const [showWithExtras, setShowWithExtras] = useState(false);
+  const [tablePage, setTablePage] = useState(0);
+  const ROWS_PER_PAGE = 24;
 
   const set = useCallback(<K extends keyof CarInputs>(key: K, raw: string) => {
     setInputs((prev) => ({ ...prev, [key]: parseFloat(raw) || 0 }));
@@ -64,8 +72,22 @@ export function CarFinance() {
     const depRates = [0.15, 0.12, 0.10, 0.10, 0.10, 0.10];
     const monthlyRate = inputs.interestRate / 100 / 12;
 
-    return Array.from({ length: Math.ceil(months / 6) + 1 }, (_, i) => {
-      const month = i * 6;
+    // Pre-compute extra-payment balance per month
+    const extraBalByMonth: number[] = [result.financedAmount];
+    if (inputs.extraMonthlyPayment > 0 && result.financedAmount > 0 && monthlyRate > 0) {
+      let bal = result.financedAmount;
+      for (let m = 1; m <= months; m++) {
+        if (bal <= 0) { extraBalByMonth.push(0); continue; }
+        const intCharge = bal * monthlyRate;
+        const payment = Math.min(result.monthlyInstalment + inputs.extraMonthlyPayment, bal + intCharge);
+        bal = Math.max(0, bal - (payment - intCharge));
+        extraBalByMonth.push(bal);
+      }
+    }
+
+    const step = Math.max(1, Math.ceil(months / 12));
+    return Array.from({ length: Math.ceil(months / step) + 1 }, (_, i) => {
+      const month = Math.min(i * step, months);
       const yearFraction = month / 12;
       let value = inputs.vehiclePrice;
       const fullYears = Math.floor(yearFraction);
@@ -85,11 +107,15 @@ export function CarFinance() {
         if (month >= months) loanBal = 0;
       }
 
-      return {
+      const row: Record<string, unknown> = {
         month: `M${month}`,
         'Car Value': Math.round(Math.max(0, value)),
         'Loan Balance': Math.round(Math.max(0, Math.min(loanBal + (month < months ? result.balloonAmount : 0), result.loanAmount))),
       };
+      if (inputs.extraMonthlyPayment > 0) {
+        row['Balance (Extra)'] = Math.round(extraBalByMonth[Math.min(month, extraBalByMonth.length - 1)] ?? 0);
+      }
+      return row;
     });
   }, [inputs, result]);
 
@@ -189,6 +215,19 @@ export function CarFinance() {
           <InputField label="Term" id="term" value={inputs.termMonths}
             onChange={(v) => set('termMonths', v)} suffix="months" min={12} max={84} step={12}
             help="Common SA term: 72 months (6 years)" />
+          <InputField label="Bank Minimum Instalment" id="min" value={inputs.minimumInstalment}
+            onChange={(v) => set('minimumInstalment', v)} prefix="R" step={100} min={0}
+            help={
+              result.instalmentOverride
+                ? `Bank minimum is R ${(inputs.minimumInstalment - result.calculatedInstalment).toFixed(0)} above our calc — surplus reduces principal`
+                : `Our calc: ${formatRand(result.calculatedInstalment)} — leave 0 to use this`
+            } />
+          <InputField label="Monthly Service Fee" id="svcfee" value={inputs.monthlyServiceFee}
+            onChange={(v) => set('monthlyServiceFee', v)} prefix="R" step={1} min={0}
+            help="Bank admin fee (e.g. R69/month). Added to total cost, doesn't reduce loan." />
+          <InputField label="Extra Monthly Payment" id="extra" value={inputs.extraMonthlyPayment}
+            onChange={(v) => set('extraMonthlyPayment', v)} prefix="R" step={500} min={0}
+            help={inputs.extraMonthlyPayment > 0 ? `Saves ${result.monthsSaved} month${result.monthsSaved !== 1 ? 's' : ''} · pays off in ${result.actualTermMonths} months` : 'Optional: pay off faster & save interest'} />
 
           <div className="border-t border-[rgba(255,255,255,0.07)] pt-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-4"
@@ -219,6 +258,61 @@ export function CarFinance() {
             <StatCard label="Total Cost of Ownership" value={formatRand(result.totalCostOfOwnership)}
               sub={`${termYears.toFixed(0)} yr period`} color="emerald" delay={0.15} />
           </div>
+
+          {/* Minimum instalment override notice */}
+          {result.instalmentOverride && (
+            <div className="glass-card-static p-4 border-l-[3px] border-l-[#F59E0B] flex items-start gap-3">
+              <AlertTriangle size={16} className="text-[#F59E0B] mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-[#F59E0B]" style={{ fontFamily: 'var(--font-heading)' }}>
+                  Bank Minimum Overrides Calculated Payment
+                </p>
+                <p className="text-xs text-[#94A3B8] mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+                  Your bank quotes <strong>{formatRand(inputs.minimumInstalment)}/month</strong> vs our calculated <strong>{formatRand(result.calculatedInstalment)}/month</strong>.
+                  The surplus <strong>{formatRand(inputs.minimumInstalment - result.calculatedInstalment)}</strong> goes to principal — you'll pay off faster than the standard term.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Service fee summary */}
+          {inputs.monthlyServiceFee > 0 && (
+            <div className="glass-card-static p-4 border-l-[3px] border-l-[#F59E0B] grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Effective Monthly</p>
+                <p className="text-base font-bold text-[#F59E0B]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>instalment + service fee</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Total Service Fees</p>
+                <p className="text-base font-bold text-[#EF4444]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.totalServiceFees)}</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>over {inputs.termMonths} months</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>True Monthly Cost</p>
+                <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>all-in per month</p>
+              </div>
+            </div>
+          )}
+
+          {/* Extra payment savings */}
+          {inputs.extraMonthlyPayment > 0 && (
+            <div className="glass-card-static p-4 border-l-[3px] border-l-[#10B981] grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Interest Saved</p>
+                <p className="text-base font-bold text-[#10B981]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.interestSaved)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Months Saved</p>
+                <p className="text-base font-bold text-[#10B981]" style={{ fontFamily: 'var(--font-heading)' }}>{result.monthsSaved} months</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Payoff In</p>
+                <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{result.actualTermMonths} months</p>
+              </div>
+            </div>
+          )}
 
           {/* Additional metrics */}
           <div className="glass-card-static p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -283,6 +377,10 @@ export function CarFinance() {
                   fill="url(#gradCarVal)" strokeWidth={2} />
                 <Area type="monotone" dataKey="Loan Balance" stroke={CHART_COLORS.red}
                   fill="url(#gradCarBal)" strokeWidth={2} />
+                {inputs.extraMonthlyPayment > 0 && (
+                  <Area type="monotone" dataKey="Balance (Extra)" stroke={CHART_COLORS.indigo}
+                    fill="none" strokeWidth={2} strokeDasharray="5 3" />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -397,6 +495,100 @@ export function CarFinance() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* ── Amortization Table ───────────────────────────────── */}
+      <div className="mt-6">
+        <button
+          onClick={() => setTableOpen((o) => !o)}
+          className="w-full glass-card-static p-4 flex items-center justify-between text-left hover:border-[rgba(99,102,241,0.3)] transition-all"
+        >
+          <span className="text-sm font-semibold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>
+            Amortization Schedule
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#64748B]" style={{ fontFamily: 'var(--font-body)' }}>
+              {result.amortization.length} payments
+            </span>
+            {tableOpen ? <ChevronUp size={16} className="text-[#6366F1]" /> : <ChevronDown size={16} className="text-[#6366F1]" />}
+          </div>
+        </button>
+
+        {tableOpen && (
+          <div className="glass-card-static mt-2 overflow-hidden">
+            {/* Tab + page controls */}
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[rgba(255,255,255,0.07)] flex-wrap gap-3">
+              <div className="flex gap-2">
+                {(['Standard', 'With Extras'] as const).map((tab) => {
+                  const isExtras = tab === 'With Extras';
+                  const disabled = isExtras && inputs.extraMonthlyPayment <= 0;
+                  return (
+                    <button
+                      key={tab}
+                      disabled={disabled}
+                      onClick={() => { setShowWithExtras(isExtras); setTablePage(0); }}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                        showWithExtras === isExtras && !disabled
+                          ? 'bg-[rgba(99,102,241,0.2)] text-[#818CF8] border border-[rgba(99,102,241,0.3)]'
+                          : 'text-[#64748B] hover:text-[#94A3B8]',
+                        disabled && 'opacity-30 cursor-not-allowed'
+                      )}
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      {tab}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Pagination */}
+              {(() => {
+                const activeRows = showWithExtras ? result.amortizationWithExtras : result.amortization;
+                const totalPages = Math.ceil(activeRows.length / ROWS_PER_PAGE);
+                return totalPages > 1 ? (
+                  <div className="flex items-center gap-2 text-xs text-[#64748B]" style={{ fontFamily: 'var(--font-body)' }}>
+                    <button disabled={tablePage === 0} onClick={() => setTablePage((p) => p - 1)}
+                      className="p-1 rounded hover:text-[#F1F5F9] disabled:opacity-30">
+                      <ChevronLeft size={14} />
+                    </button>
+                    <span>Page {tablePage + 1} / {totalPages}</span>
+                    <button disabled={tablePage >= totalPages - 1} onClick={() => setTablePage((p) => p + 1)}
+                      className="p-1 rounded hover:text-[#F1F5F9] disabled:opacity-30">
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+                <thead>
+                  <tr className="border-b border-[rgba(255,255,255,0.07)]">
+                    {['#', 'Opening Balance', 'Payment', 'Principal', 'Interest', 'Closing Balance', 'Cum. Interest'].map((h) => (
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#475569] whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(showWithExtras ? result.amortizationWithExtras : result.amortization)
+                    .slice(tablePage * ROWS_PER_PAGE, (tablePage + 1) * ROWS_PER_PAGE)
+                    .map((row) => (
+                      <tr key={row.period} className="border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(99,102,241,0.05)] transition-colors">
+                        <td className="px-4 py-2 text-[#64748B]">{row.period}</td>
+                        <td className="px-4 py-2 text-[#94A3B8]">{formatRand(row.openingBalance)}</td>
+                        <td className="px-4 py-2 font-semibold text-[#F1F5F9]">{formatRand(row.payment)}</td>
+                        <td className="px-4 py-2 text-[#10B981]">{formatRand(row.principal)}</td>
+                        <td className="px-4 py-2 text-[#EF4444]">{formatRand(row.interest)}</td>
+                        <td className="px-4 py-2 text-[#94A3B8]">{formatRand(row.closingBalance)}</td>
+                        <td className="px-4 py-2 text-[#F59E0B]">{formatRand(row.cumulativeInterest)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

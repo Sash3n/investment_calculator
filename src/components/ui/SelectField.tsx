@@ -35,8 +35,8 @@ export function SelectField({
     <div className={clsx('flex flex-col gap-1.5', className)}>
       <label
         htmlFor={id}
-        className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="text-xs font-semibold uppercase tracking-wider"
+        style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
       >
         {label}
       </label>
@@ -56,8 +56,8 @@ export function SelectField({
       </select>
       {help && (
         <p
-          className="text-xs text-[#64748B] leading-relaxed"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-xs leading-relaxed"
+          style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
         >
           {help}
         </p>

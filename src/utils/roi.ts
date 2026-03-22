@@ -14,6 +14,8 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
     monthlyLevies,
     monthlyRates,
     insurance,
+    effluentFees,
+    miscFees,
     managementFeePercent,
     vacancyRate,
     rentScenario1,
@@ -38,7 +40,7 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
   const managementFeeS2 = monthlyEffectiveRentS2 * (managementFeePercent / 100);
 
   // ── Total monthly costs ───────────────────────────────────
-  const fixedMonthlyCosts = monthlyBondRepayment + monthlyLevies + monthlyRates + insurance;
+  const fixedMonthlyCosts = monthlyBondRepayment + monthlyLevies + monthlyRates + insurance + effluentFees + miscFees;
   const totalMonthlyCostsS1 = fixedMonthlyCosts + managementFeeS1;
   const totalMonthlyCostsS2 = fixedMonthlyCosts + managementFeeS2;
 

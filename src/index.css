@@ -2,7 +2,7 @@
 
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: dark --default;
+  themes: dark --default, light;
 }
 
 :root {
@@ -41,6 +41,116 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* ── Light theme overrides ─────────────────────────────────── */
+[data-theme="light"] {
+  --color-bg: #EEF2FF;
+  --color-surface: rgba(255, 255, 255, 0.75);
+  --color-surface-hover: rgba(255, 255, 255, 0.95);
+  --color-border: rgba(99, 102, 241, 0.15);
+  --color-border-hover: rgba(99, 102, 241, 0.3);
+  --color-text: #0F172A;
+  --color-text-muted: #475569;
+  --color-text-subtle: #64748B;
+
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 10%,  rgba(139, 92, 246, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 10% 70%,  rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 50% at 90% 80%,  rgba(99, 102, 241, 0.05) 0%, transparent 55%);
+}
+
+[data-theme="light"] .sidebar-glass {
+  background: rgba(238, 242, 255, 0.92);
+  border-right-color: rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="light"] .glass-card,
+[data-theme="light"] .glass-card-static {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="light"] .glass-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+[data-theme="light"] .input-dark {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #0F172A;
+}
+
+[data-theme="light"] .input-dark:focus {
+  background: #fff;
+  border-color: var(--color-indigo);
+}
+
+[data-theme="light"] .select-dark {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #0F172A;
+}
+
+[data-theme="light"] .select-dark option {
+  background: #fff;
+  color: #0F172A;
+}
+
+/* Force text colours for hardcoded white/muted values inside cards */
+[data-theme="light"] .glass-card-static p,
+[data-theme="light"] .glass-card p {
+  color: var(--color-text-muted);
+}
+[data-theme="light"] .glass-card-static p strong,
+[data-theme="light"] .glass-card p strong {
+  color: var(--color-text);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+/* ── Override hardcoded Tailwind text colours in light mode ── */
+[data-theme="light"] .text-\[\#F1F5F9\] { color: #0F172A; }
+[data-theme="light"] .text-\[\#E2E8F0\] { color: #1E293B; }
+[data-theme="light"] .text-\[\#94A3B8\] { color: #475569; }
+[data-theme="light"] .text-\[\#64748B\] { color: #64748B; }
+[data-theme="light"] .text-\[\#475569\] { color: #334155; }
+[data-theme="light"] .text-\[\#334155\] { color: #1E293B; }
+
+/* Header bar background */
+[data-theme="light"] header.sticky {
+  background: rgba(238, 242, 255, 0.92) !important;
+  border-bottom-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Recharts grid and axis text */
+[data-theme="light"] .recharts-cartesian-grid line { stroke: rgba(0,0,0,0.08); }
+[data-theme="light"] .recharts-text { fill: #475569 !important; }
+
+/* Table rows */
+[data-theme="light"] tr:hover { background: rgba(99, 102, 241, 0.05) !important; }
+[data-theme="light"] .border-\[rgba\(255\,255\,255\,0\.07\)\] { border-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .border-\[rgba\(255\,255\,255\,0\.04\)\] { border-color: rgba(0,0,0,0.05); }
+
+/* Tooltip backgrounds */
+[data-theme="light"] .glass-card-static.p-3 { background: rgba(255,255,255,0.95); }
+
+/* Lump sum rows in tables */
+[data-theme="light"] .bg-\[rgba\(99\,102\,241\,0\.05\)\] { background: rgba(99, 102, 241, 0.08); }
 
 /* ── Aurora background ─────────────────────────────────────── */
 body {

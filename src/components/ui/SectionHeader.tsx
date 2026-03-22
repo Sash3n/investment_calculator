@@ -18,8 +18,8 @@ export function SectionHeader({ title, subtitle, icon: Icon, className }: Sectio
           </div>
         )}
         <h2
-          className="text-2xl font-bold text-[#F1F5F9]"
-          style={{ fontFamily: 'var(--font-heading)' }}
+          className="text-2xl font-bold"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
         >
           {title}
         </h2>
@@ -35,8 +35,9 @@ export function SectionHeader({ title, subtitle, icon: Icon, className }: Sectio
       />
       {subtitle && (
         <p
-          className="text-sm text-[#94A3B8]"
+          className="text-sm"
           style={{
+            color: 'var(--color-text-muted)',
             fontFamily: 'var(--font-body)',
             marginLeft: Icon ? '48px' : '0',
           }}

@@ -109,6 +109,7 @@ export function calcMortgageSummary(inputs: MortgageInputs): MortgageResult {
     extraPayment,
     lumpSumYear,
     lumpSumAmount,
+    monthlyServiceFee,
   } = inputs;
 
   const loanAmount = Math.max(0, purchasePrice - deposit);
@@ -167,6 +168,13 @@ export function calcMortgageSummary(inputs: MortgageInputs): MortgageResult {
     ? amortizationBiweekly
     : amortization;
 
+  // ── Service fee totals ───────────────────────────────────
+  // Fee applies for the life of the active schedule; doesn't reduce principal
+  const fee = monthlyServiceFee ?? 0;
+  const totalServiceFees = fee * activeAmortization.length;
+  const effectiveMonthlyPayment = (frequency === 'biweekly' ? biweeklyPayment : standardPayment) + fee;
+  const totalCostIncludingFees = totalPaidStandard + totalServiceFees;
+
   return {
     loanAmount,
     depositPercent,
@@ -185,5 +193,8 @@ export function calcMortgageSummary(inputs: MortgageInputs): MortgageResult {
     payoffDateWithExtras,
     amortization: activeAmortization,
     amortizationWithExtras,
+    totalServiceFees,
+    effectiveMonthlyPayment,
+    totalCostIncludingFees,
   };
 }
