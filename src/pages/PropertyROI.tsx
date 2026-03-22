@@ -34,6 +34,8 @@ const DEFAULT_INPUTS: PropertyInputs = {
   monthlyLevies: 1500,
   monthlyRates: 800,
   insurance: 600,
+  effluentFees: 350,
+  miscFees: 0,
   managementFeePercent: 8,
   vacancyRate: 5,
   rentScenario1: 9500,
@@ -97,6 +99,8 @@ export function PropertyROI() {
     { name: 'Levies', value: inputs.monthlyLevies, fill: CHART_COLORS.amber },
     { name: 'Rates', value: inputs.monthlyRates, fill: CHART_COLORS.pink },
     { name: 'Insurance', value: inputs.insurance, fill: CHART_COLORS.red },
+    { name: 'Effluent', value: inputs.effluentFees, fill: CHART_COLORS.cyan },
+    { name: 'Misc', value: inputs.miscFees, fill: '#A78BFA' },
   ], [result, inputs]);
 
   const propertyValueData = useMemo(() =>
@@ -114,6 +118,8 @@ export function PropertyROI() {
     { name: 'Levies', value: inputs.monthlyLevies, fill: CHART_COLORS.amber },
     { name: 'Rates & Taxes', value: inputs.monthlyRates, fill: CHART_COLORS.cyan },
     { name: 'Insurance', value: inputs.insurance, fill: CHART_COLORS.pink },
+    { name: 'Effluent', value: inputs.effluentFees, fill: '#06B6D4' },
+    { name: 'Misc', value: inputs.miscFees, fill: '#A78BFA' },
     { name: 'Mgmt Fee (S1)', value: Math.round(result.managementFeeS1), fill: CHART_COLORS.emerald },
   ].filter((d) => d.value > 0), [result, inputs]);
 
@@ -167,6 +173,11 @@ export function PropertyROI() {
       ['Deposit', inputs.deposit],
       ['Loan Amount', result.loanAmount],
       ['Monthly Bond Repayment', result.monthlyBondRepayment.toFixed(2)],
+      ['Monthly Levies', inputs.monthlyLevies],
+      ['Rates & Taxes', inputs.monthlyRates],
+      ['Insurance', inputs.insurance],
+      ['Effluent Fees', inputs.effluentFees],
+      ['Misc Fees', inputs.miscFees],
       ['', ''],
       ['Scenario 1 Rent', inputs.rentScenario1],
       ['S1 Effective Rent (after vacancy)', result.monthlyEffectiveRentS1.toFixed(2)],
@@ -278,6 +289,12 @@ export function PropertyROI() {
                 onChange={(v) => set('monthlyRates', v)} prefix="R" step={100} />
               <InputField label="Insurance" id="ins" value={inputs.insurance}
                 onChange={(v) => set('insurance', v)} prefix="R" step={100} />
+              <InputField label="Effluent Fees" id="eff" value={inputs.effluentFees}
+                onChange={(v) => set('effluentFees', v)} prefix="R" step={50}
+                help="Municipal sewage/effluent charges" />
+              <InputField label="Misc Fees" id="misc" value={inputs.miscFees}
+                onChange={(v) => set('miscFees', v)} prefix="R" step={100}
+                help="Any other recurring costs (garden, pool, etc.)" />
               <InputField label="Management Fee" id="mf" value={inputs.managementFeePercent}
                 onChange={(v) => set('managementFeePercent', v)} suffix="% of rent" step={0.5}
                 help="Agent fee deducted from rental income" />

@@ -42,16 +42,16 @@ export function InputField({
     <div className={clsx('flex flex-col gap-1.5', className)}>
       <label
         htmlFor={id}
-        className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="text-xs font-semibold uppercase tracking-wider"
+        style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
       >
         {label}
       </label>
       <div className="relative flex items-center">
         {prefix && (
           <span
-            className="absolute left-3 text-[#64748B] text-sm font-semibold select-none pointer-events-none z-10"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="absolute left-3 text-sm font-semibold select-none pointer-events-none z-10"
+            style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
           >
             {prefix}
           </span>
@@ -61,6 +61,7 @@ export function InputField({
           type={type}
           value={value}
           onChange={handleChange}
+          onFocus={(e) => e.target.select()}
           step={step}
           min={min}
           max={max}
@@ -68,16 +69,18 @@ export function InputField({
           disabled={disabled}
           className={clsx(
             'input-dark',
-            prefix && 'pl-8',
-            suffix && 'pr-10',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
-          style={{ fontFamily: 'var(--font-body)' }}
+          style={{
+            fontFamily: 'var(--font-body)',
+            paddingLeft: prefix ? '28px' : '14px',
+            paddingRight: suffix ? '36px' : '14px',
+          }}
         />
         {suffix && (
           <span
-            className="absolute right-3 text-[#64748B] text-sm font-medium select-none pointer-events-none"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="absolute right-3 text-sm font-medium select-none pointer-events-none"
+            style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
           >
             {suffix}
           </span>
@@ -85,8 +88,8 @@ export function InputField({
       </div>
       {help && (
         <p
-          className="text-xs text-[#64748B] leading-relaxed"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-xs leading-relaxed"
+          style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
         >
           {help}
         </p>

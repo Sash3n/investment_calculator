@@ -1,4 +1,4 @@
-import type { CarInputs, CarResult } from '../types';
+import type { CarAmortizationRow, CarInputs, CarResult } from '../types';
 import { calcPayment } from './mortgage';
 
 /**
@@ -15,6 +15,9 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
     balloonPercent,
     interestRate,
     termMonths,
+    minimumInstalment,
+    extraMonthlyPayment,
+    monthlyServiceFee,
     monthlyInsurance,
     monthlyFuel,
     monthlyMaintenance,
@@ -27,7 +30,13 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
   const financedAmount = Math.max(0, loanAmount - balloonAmount);
 
   const termYears = termMonths / 12;
-  const monthlyInstalment = calcPayment(financedAmount, interestRate, termYears, 12);
+  const calculatedInstalment = calcPayment(financedAmount, interestRate, termYears, 12);
+
+  // Use the higher of our calculated payment or the bank's quoted minimum.
+  // When the bank minimum is higher, the surplus goes to principal — pays off faster.
+  const minFloor = minimumInstalment ?? 0;
+  const monthlyInstalment = Math.max(calculatedInstalment, minFloor);
+  const instalmentOverride = minFloor > calculatedInstalment && minFloor > 0;
 
   // Total repayments = instalments + balloon at end
   const totalInstalments = monthlyInstalment * termMonths;
@@ -38,7 +47,10 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
   const totalInsurance = monthlyInsurance * termMonths;
   const totalFuel = monthlyFuel * termMonths;
   const totalMaintenance = monthlyMaintenance * termMonths;
-  const totalCostOfOwnership = totalRepayments + totalInsurance + totalFuel + totalMaintenance + deposit;
+  const fee = monthlyServiceFee ?? 0;
+  const totalServiceFees = fee * termMonths;
+  const effectiveMonthlyPayment = monthlyInstalment + fee;
+  const totalCostOfOwnership = totalRepayments + totalInsurance + totalFuel + totalMaintenance + deposit + totalServiceFees;
 
   // ── Effective annual cost ─────────────────────────────────
   const effectiveAnnualCost = totalCostOfOwnership / termYears;
@@ -97,6 +109,66 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
     if (bal > val) underwaterMonths++;
   }
 
+  // ── Extra payment amortization ───────────────────────────
+  let extraBal = financedAmount;
+  let totalInterestWithExtra = 0;
+  let actualTermMonths = termMonths;
+
+  if (extraMonthlyPayment > 0 && financedAmount > 0 && monthlyRate > 0) {
+    extraBal = financedAmount;
+    actualTermMonths = 0;
+    while (extraBal > 0.01 && actualTermMonths < termMonths) {
+      const intCharge = extraBal * monthlyRate;
+      const payment = Math.min(monthlyInstalment + extraMonthlyPayment, extraBal + intCharge);
+      const prinPaid = payment - intCharge;
+      totalInterestWithExtra += intCharge;
+      extraBal = Math.max(0, extraBal - prinPaid);
+      actualTermMonths++;
+    }
+  } else {
+    totalInterestWithExtra = totalInterest;
+    actualTermMonths = termMonths;
+  }
+
+  // With balloon: balloon is still due at the actual payoff point, interest on balloon portion saved = difference
+  const totalPaidWithExtra = monthlyInstalment * actualTermMonths
+    + extraMonthlyPayment * actualTermMonths
+    + balloonAmount;
+  const interestSaved = Math.max(0, totalInterest - totalInterestWithExtra);
+  const monthsSaved = termMonths - actualTermMonths;
+
+  // ── Full amortization schedules ──────────────────────────
+  function buildAmortization(basePayment: number, extra: number): CarAmortizationRow[] {
+    const rows: CarAmortizationRow[] = [];
+    let bal = financedAmount;
+    let cumInt = 0;
+    let period = 1;
+    while (bal > 0.005 && period <= termMonths) {
+      const intCharge = bal * monthlyRate;
+      const totalPayment = Math.min(basePayment + extra, bal + intCharge);
+      const prinPaid = totalPayment - intCharge;
+      cumInt += intCharge;
+      const closing = Math.max(0, bal - prinPaid);
+      rows.push({
+        period,
+        openingBalance: bal,
+        payment: totalPayment,
+        principal: prinPaid,
+        interest: intCharge,
+        closingBalance: closing,
+        cumulativeInterest: cumInt,
+      });
+      bal = closing;
+      period++;
+    }
+    return rows;
+  }
+
+  const amortization = buildAmortization(monthlyInstalment, 0);
+  const amortizationWithExtras = extraMonthlyPayment > 0
+    ? buildAmortization(monthlyInstalment, extraMonthlyPayment)
+    : amortization;
+
   // ── Finance vs Cash comparison ───────────────────────────
   // Cash purchase: invest the monthly instalment at 10% p.a.
   // Opportunity cost = future value of deposit + instalments invested at 10%
@@ -116,9 +188,18 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
     loanAmount,
     balloonAmount,
     financedAmount,
+    calculatedInstalment,
     monthlyInstalment,
+    instalmentOverride,
     totalRepayments,
     totalInterest,
+    totalInterestWithExtra,
+    totalPaidWithExtra,
+    interestSaved,
+    monthsSaved,
+    actualTermMonths,
+    totalServiceFees,
+    effectiveMonthlyPayment,
     totalCostOfOwnership,
     effectiveAnnualCost,
     depreciation,
@@ -126,5 +207,7 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
     cashPurchaseOpportunityCost,
     netCostFinancing,
     netCostCash,
+    amortization,
+    amortizationWithExtras,
   };
 }

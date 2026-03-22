@@ -7,6 +7,7 @@ export interface MortgageInputs {
   extraPayment: number;
   lumpSumYear: number; // 0 = none
   lumpSumAmount: number;
+  monthlyServiceFee: number; // bank admin fee, e.g. R69/month
 }
 
 export interface MortgageResult {
@@ -27,6 +28,10 @@ export interface MortgageResult {
   payoffDateWithExtras: Date;
   amortization: AmortizationRow[];
   amortizationWithExtras: AmortizationRow[];
+  // Service fee totals
+  totalServiceFees: number;
+  effectiveMonthlyPayment: number; // scheduled payment + service fee
+  totalCostIncludingFees: number;
 }
 
 export interface AmortizationRow {
@@ -53,6 +58,8 @@ export interface PropertyInputs {
   monthlyLevies: number;
   monthlyRates: number;
   insurance: number;
+  effluentFees: number;
+  miscFees: number;
   managementFeePercent: number;
   vacancyRate: number;
   rentScenario1: number;
@@ -89,25 +96,51 @@ export interface CarInputs {
   balloonPercent: number;
   interestRate: number;
   termMonths: number;
+  minimumInstalment: number;  // bank-quoted minimum (0 = use calculated)
+  extraMonthlyPayment: number;
+  monthlyServiceFee: number;  // bank admin/service fee
   monthlyInsurance: number;
   monthlyFuel: number;
   monthlyMaintenance: number;
+}
+
+export interface CarAmortizationRow {
+  period: number;
+  openingBalance: number;
+  payment: number;
+  principal: number;
+  interest: number;
+  closingBalance: number;
+  cumulativeInterest: number;
 }
 
 export interface CarResult {
   loanAmount: number;
   balloonAmount: number;
   financedAmount: number;
-  monthlyInstalment: number;
+  calculatedInstalment: number;    // pure annuity formula result
+  monthlyInstalment: number;       // effective: max(calculated, minimum)
+  instalmentOverride: boolean;     // true when bank minimum > calculated
   totalRepayments: number;
   totalInterest: number;
-  totalCostOfOwnership: number;
+  // Extra payment results
+  totalInterestWithExtra: number;
+  totalPaidWithExtra: number;
+  interestSaved: number;
+  monthsSaved: number;
+  actualTermMonths: number;
+  // Service fee totals
+  totalServiceFees: number;
+  effectiveMonthlyPayment: number; // instalment + service fee
+  totalCostOfOwnership: number;    // includes service fees
   effectiveAnnualCost: number;
   depreciation: { year: number; value: number; loanBalance: number }[];
   underwaterMonths: number;
   cashPurchaseOpportunityCost: number;
   netCostFinancing: number;
   netCostCash: number;
+  amortization: CarAmortizationRow[];
+  amortizationWithExtras: CarAmortizationRow[];
 }
 
 export interface InvestingInputs {

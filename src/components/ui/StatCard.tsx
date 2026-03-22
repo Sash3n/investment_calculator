@@ -66,14 +66,14 @@ export function StatCard({
       )}
       <div className="flex-1 min-w-0">
         <p
-          className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] mb-1"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-xs font-semibold uppercase tracking-wider mb-1"
+          style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
         >
           {label}
         </p>
         <p
-          className="text-xl font-bold text-[#F1F5F9] leading-tight truncate"
-          style={{ fontFamily: 'var(--font-heading)' }}
+          className="text-xl font-bold leading-tight truncate"
+          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
         >
           {value}
         </p>
