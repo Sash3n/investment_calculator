@@ -7,20 +7,21 @@
 
 ## Screenshots
 
-> Add screenshots to a `docs/screenshots/` folder and update the paths below.
-
-| Dashboard | Mortgage Calculator |
+| Dashboard (Dark) | Dashboard (Light) |
 |---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Mortgage](docs/screenshots/mortgage.png) |
+| ![Dashboard Dark](docs/screenshots/dashboard.png) | ![Dashboard Light](docs/screenshots/dashboard-light.png) |
 
-| Property ROI | Car Finance |
+| Mortgage Calculator | Property ROI |
 |---|---|
-| ![Property ROI](docs/screenshots/property-roi.png) | ![Car Finance](docs/screenshots/car-finance.png) |
+| ![Mortgage](docs/screenshots/mortgage.png) | ![Property ROI](docs/screenshots/property-roi.png) |
 
-| Extra vs Investing | Light Mode |
+| Car Finance | Extra Payments vs Investing |
 |---|---|
-| ![Extra vs Investing](docs/screenshots/extra-vs-investing.png) | ![Light Mode](docs/screenshots/light-mode.png) |
+| ![Car Finance](docs/screenshots/car-finance.png) | ![Extra vs Investing](docs/screenshots/extra-vs-investing.png) |
 
+| Light Mode |
+|---|
+| ![Light Mode](docs/screenshots/light-mode.png) |
 ---
 
 ## Features
