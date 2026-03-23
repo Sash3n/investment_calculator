@@ -181,3 +181,102 @@ export interface InvestingRow {
   netDifference: number;
   winner: 'A' | 'B';
 }
+
+// ── Tax Planner ───────────────────────────────────────────────────────────────
+
+export type AgeGroup = 'under65' | '65to74' | '75plus';
+export type PropertyType = 'primary' | 'investment';
+export type UDZBuildingType = 'new' | 'improvements' | 'lowcost';
+
+export interface RentalTaxInputs {
+  monthlyGrossRent: number;
+  annualBondInterest: number;      // interest portion only (not capital)
+  annualRates: number;
+  annualLevies: number;
+  annualInsurance: number;
+  annualRepairs: number;
+  managementFeePercent: number;    // % of effective annual rent
+  annualAdvertising: number;
+  otherDeductions: number;
+  otherAnnualIncome: number;       // salary / other income
+  ageGroup: AgeGroup;
+}
+
+export interface RentalTaxResult {
+  annualGrossRent: number;
+  managementFee: number;
+  totalDeductions: number;
+  taxableRentalIncome: number;
+  totalTaxableIncome: number;       // rental + other income
+  taxOnTotalIncome: number;
+  taxOnOtherIncomeOnly: number;
+  taxAttributableToRental: number;
+  effectiveTaxRateOnRental: number;
+  marginalRate: number;
+  afterTaxMonthlyRentalCashFlow: number;
+  deductionsBreakdown: { name: string; value: number }[];
+  bracketLabel: string;
+}
+
+export interface Section13sexInputs {
+  numberOfUnits: number;
+  purchasePricePerUnit: number;    // excl. land
+  isLowCostHousing: boolean;
+  annualTaxableIncome: number;     // other income (excl. this deduction)
+  ageGroup: AgeGroup;
+}
+
+export interface Section13sexResult {
+  qualifies: boolean;
+  reason?: string;
+  totalCostExclLand: number;
+  annualDeduction: number;
+  annualTaxSaving: number;
+  totalTaxSavingOverPeriod: number;
+  deductionPeriodYears: number;
+  deductionRate: number;
+  schedule: { year: number; deduction: number; taxSaving: number; cumulativeSaving: number }[];
+}
+
+export interface Section13quatInputs {
+  buildingCost: number;
+  buildingType: UDZBuildingType;
+  annualTaxableIncome: number;
+  ageGroup: AgeGroup;
+}
+
+export interface Section13quatResult {
+  totalAllowance: number;
+  schedule: { year: number; rate: number; deduction: number; taxSaving: number; cumulativeSaving: number }[];
+  totalTaxSaving: number;
+  year1Deduction: number;
+  year1TaxSaving: number;
+}
+
+export interface CGTInputs {
+  purchasePrice: number;
+  acquisitionCosts: number;        // transfer duty, bond reg, legal fees
+  salePrice: number;
+  saleCostsPercent: number;        // agent commission %
+  propertyType: PropertyType;
+  jointOwnership: boolean;         // 50/50 spouse — splits primary exclusion
+  otherAnnualTaxableIncome: number;
+  ageGroup: AgeGroup;
+}
+
+export interface CGTResult {
+  grossCapitalGain: number;
+  saleCosts: number;
+  baseCost: number;
+  primaryResidenceExclusion: number;
+  annualExclusion: number;
+  netGainAfterExclusions: number;
+  inclusionAmount: number;         // 40% of net gain
+  taxOnIncomeWithCGT: number;
+  taxOnIncomeWithoutCGT: number;
+  cgtPayable: number;
+  effectiveCGTRate: number;
+  netProceedsAfterCGT: number;
+  marginalRate: number;
+  bracketLabel: string;
+}
