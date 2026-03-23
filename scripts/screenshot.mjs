@@ -27,11 +27,13 @@ const WAIT_MS = 2200; // let charts/animations settle
 
 // ── Pages to capture ──────────────────────────────────────────────────────────
 const PAGES = [
-  { name: 'dashboard',         path: '/',            title: 'Dashboard' },
-  { name: 'mortgage',          path: '/mortgage',    title: 'Mortgage Calculator' },
-  { name: 'property-roi',      path: '/property',    title: 'Property ROI' },
-  { name: 'car-finance',       path: '/car',         title: 'Car Finance' },
-  { name: 'extra-vs-investing',path: '/investing',   title: 'Extra Payments vs Investing' },
+  { name: 'dashboard',           path: '/',                    title: 'Dashboard' },
+  { name: 'mortgage',            path: '/mortgage',            title: 'Mortgage Calculator' },
+  { name: 'property-roi',        path: '/property-roi',        title: 'Property ROI' },
+  { name: 'car-finance',         path: '/car-finance',         title: 'Car Finance' },
+  { name: 'extra-vs-investing',  path: '/extra-vs-investing',  title: 'Extra Payments vs Investing' },
+  { name: 'tax-planner',         path: '/tax-planner',         title: 'Tax Planner' },
+  { name: 'investment-strategy', path: '/investment-strategy', title: 'Investment Strategy' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -139,6 +141,10 @@ async function main() {
 | Car Finance | Extra Payments vs Investing |
 |---|---|
 | ![Car Finance](${captured['car-finance-dark']}) | ![Extra vs Investing](${captured['extra-vs-investing-dark']}) |
+
+| Tax Planner | Investment Strategy |
+|---|---|
+| ![Tax Planner](${captured['tax-planner-dark']}) | ![Investment Strategy](${captured['investment-strategy-dark']}) |
 
 | Light Mode |
 |---|

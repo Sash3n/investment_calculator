@@ -19,6 +19,10 @@
 |---|---|
 | ![Car Finance](docs/screenshots/car-finance.png) | ![Extra vs Investing](docs/screenshots/extra-vs-investing.png) |
 
+| Tax Planner | Investment Strategy |
+|---|---|
+| ![Tax Planner](docs/screenshots/tax-planner.png) | ![Investment Strategy](docs/screenshots/investment-strategy.png) |
+
 | Light Mode |
 |---|
 | ![Light Mode](docs/screenshots/light-mode.png) |
