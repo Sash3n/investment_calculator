@@ -13,6 +13,7 @@ import {
   Sun,
   Moon,
   Receipt,
+  Wallet,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899' },
   { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
   { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
+  { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -40,6 +42,7 @@ const pageTitles: Record<string, string> = {
   '/car-finance': 'Car Finance Calculator',
   '/extra-vs-investing': 'Extra Payments vs Investing',
   '/tax-planner': 'Property Tax Planner',
+  '/investment-strategy': 'SA Investment Strategy',
 };
 
 export function AppShell() {
