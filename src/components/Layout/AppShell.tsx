@@ -12,6 +12,7 @@ import {
   BarChart3,
   Sun,
   Moon,
+  Receipt,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -29,6 +30,7 @@ const navItems: NavItem[] = [
   { path: '/property-roi', label: 'Property ROI', shortLabel: 'Property', icon: MapPin, color: '#10B981' },
   { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899' },
   { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
+  { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -37,6 +39,7 @@ const pageTitles: Record<string, string> = {
   '/property-roi': 'Property ROI Calculator',
   '/car-finance': 'Car Finance Calculator',
   '/extra-vs-investing': 'Extra Payments vs Investing',
+  '/tax-planner': 'Property Tax Planner',
 };
 
 export function AppShell() {

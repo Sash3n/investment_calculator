@@ -5,6 +5,7 @@ import { MortgageCalculator } from './pages/MortgageCalculator';
 import { PropertyROI } from './pages/PropertyROI';
 import { CarFinance } from './pages/CarFinance';
 import { PaymentVsInvesting } from './pages/PaymentVsInvesting';
+import { TaxPlanner } from './pages/TaxPlanner';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/property-roi" element={<PropertyROI />} />
         <Route path="/car-finance" element={<CarFinance />} />
         <Route path="/extra-vs-investing" element={<PaymentVsInvesting />} />
+        <Route path="/tax-planner" element={<TaxPlanner />} />
       </Route>
     </Routes>
   );
