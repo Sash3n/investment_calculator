@@ -4,7 +4,7 @@ import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { MapPin, Plus, Trash2, Eye, Download, Building2 } from 'lucide-react';
+import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
@@ -13,6 +13,8 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
 import { formatRand, formatPercent } from '../utils/format';
+import { useAuth } from '../context/AuthContext';
+import { useSavedProperties } from '../hooks/useFirestore';
 import type { PropertyInputs } from '../types';
 
 const CHART_COLORS = {
@@ -70,17 +72,25 @@ function PieTooltip({ active, payload }: any) {
 export function PropertyROI() {
   const [activeTab, setActiveTab] = useState<'quick' | 'portfolio'>('quick');
   const [inputs, setInputs] = useState<PropertyInputs>(DEFAULT_INPUTS);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Portfolio: array stored in localStorage
-  const [portfolio, setPortfolio] = useState<(PropertyInputs & { id: string })[]>(() => {
+  // Auth + Firestore
+  const { user } = useAuth();
+  const { properties: cloudProperties, save: saveCloud, remove: removeCloud, loading: cloudLoading } = useSavedProperties(user?.uid ?? null);
+
+  // localStorage fallback for unauthenticated users
+  const [localPortfolio, setLocalPortfolio] = useState<(PropertyInputs & { id: string })[]>(() => {
     try {
       const stored = localStorage.getItem('fincalc_portfolio');
       return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
-  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
+
+  // Unified portfolio — cloud when signed in, localStorage otherwise
+  const portfolio = user
+    ? cloudProperties.map((p) => ({ ...p.inputs, id: p.id }))
+    : localPortfolio;
 
   const set = useCallback(<K extends keyof PropertyInputs>(key: K, raw: string | number) => {
     setInputs((prev) => ({
@@ -124,17 +134,30 @@ export function PropertyROI() {
   ].filter((d) => d.value > 0), [result, inputs]);
 
   // ── Portfolio management ───────────────────────────────────
-  const saveToPortfolio = () => {
-    const entry = { ...inputs, id: Date.now().toString() };
-    const updated = [...portfolio, entry];
-    setPortfolio(updated);
-    localStorage.setItem('fincalc_portfolio', JSON.stringify(updated));
+  const saveToPortfolio = async () => {
+    setSaving(true);
+    try {
+      if (user) {
+        await saveCloud(inputs.propertyName || 'Property', inputs);
+      } else {
+        const entry = { ...inputs, id: Date.now().toString() };
+        const updated = [...localPortfolio, entry];
+        setLocalPortfolio(updated);
+        localStorage.setItem('fincalc_portfolio', JSON.stringify(updated));
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeFromPortfolio = (id: string) => {
-    const updated = portfolio.filter((p) => p.id !== id);
-    setPortfolio(updated);
-    localStorage.setItem('fincalc_portfolio', JSON.stringify(updated));
+  const removeFromPortfolio = async (id: string) => {
+    if (user) {
+      await removeCloud(id);
+    } else {
+      const updated = localPortfolio.filter((p) => p.id !== id);
+      setLocalPortfolio(updated);
+      localStorage.setItem('fincalc_portfolio', JSON.stringify(updated));
+    }
     if (selectedPortfolioId === id) setSelectedPortfolioId(null);
   };
 
@@ -317,10 +340,24 @@ export function PropertyROI() {
                 help="SA average: 7% p.a." />
             </div>
 
+            {/* Cloud sync badge */}
+            {user ? (
+              <div className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-lg" style={{ background: 'rgba(99,102,241,0.08)', color: '#818CF8' }}>
+                <Cloud size={12} /> Syncing to your account
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-lg" style={{ background: 'rgba(100,116,139,0.1)', color: 'var(--color-text-subtle)' }}>
+                <CloudOff size={12} /> Sign in to save across devices
+              </div>
+            )}
+
             <div className="flex gap-2">
-              <button className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm"
-                onClick={saveToPortfolio}>
-                <Plus size={14} /> Save to Portfolio
+              <button
+                className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm disabled:opacity-60"
+                onClick={saveToPortfolio}
+                disabled={saving || cloudLoading}
+              >
+                <Plus size={14} /> {saving ? 'Saving…' : 'Save to Portfolio'}
               </button>
               <button className="btn-ghost flex items-center gap-2 text-sm"
                 onClick={exportQuickExcel}>

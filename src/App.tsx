@@ -7,6 +7,7 @@ import { CarFinance } from './pages/CarFinance';
 import { PaymentVsInvesting } from './pages/PaymentVsInvesting';
 import { TaxPlanner } from './pages/TaxPlanner';
 import { InvestmentStrategy } from './pages/InvestmentStrategy';
+import { History } from './pages/History';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/extra-vs-investing" element={<PaymentVsInvesting />} />
         <Route path="/tax-planner" element={<TaxPlanner />} />
         <Route path="/investment-strategy" element={<InvestmentStrategy />} />
+        <Route path="/history" element={<History />} />
       </Route>
     </Routes>
   );

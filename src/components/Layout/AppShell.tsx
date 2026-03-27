@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   Home,
   Building2,
@@ -15,6 +16,9 @@ import {
   Receipt,
   Wallet,
   AlertTriangle,
+  LogIn,
+  LogOut,
+  History,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -81,6 +85,7 @@ const navItems: NavItem[] = [
   { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
   { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
+  { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -91,6 +96,7 @@ const pageTitles: Record<string, string> = {
   '/extra-vs-investing': 'Extra Payments vs Investing',
   '/tax-planner': 'Property Tax Planner',
   '/investment-strategy': 'SA Investment Strategy',
+  '/history': 'Calculation History',
 };
 
 export function AppShell() {
@@ -98,6 +104,7 @@ export function AppShell() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('fincalc-theme') as 'dark' | 'light') ?? 'dark';
   });
+  const { user, signIn, signOut } = useAuth();
   const location = useLocation();
   const pageTitle = pageTitles[location.pathname] ?? 'FinCalc ZA';
 
@@ -220,6 +227,15 @@ export function AppShell() {
 
         {/* Footer */}
         <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.06)] space-y-1">
+          {user && (
+            <div className="flex items-center gap-2 mb-2 p-2 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              {user.photoURL && <img src={user.photoURL} alt="" className="w-6 h-6 rounded-full flex-shrink-0" />}
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold truncate" style={{ color: '#818CF8' }}>{user.displayName}</p>
+                <p className="text-[9px] truncate" style={{ color: 'var(--color-text-subtle)' }}>Syncing to cloud</p>
+              </div>
+            </div>
+          )}
           <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
             Prime Rate: <span className="text-[#F59E0B] font-semibold">11.25%</span>
           </p>
@@ -283,6 +299,36 @@ export function AppShell() {
             >
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            {/* Auth button */}
+            {user ? (
+              <div className="flex items-center gap-2">
+                {user.photoURL && (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName ?? 'User'}
+                    className="w-7 h-7 rounded-full border border-[rgba(99,102,241,0.4)]"
+                    title={user.displayName ?? user.email ?? ''}
+                  />
+                )}
+                <button
+                  onClick={signOut}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                  style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}
+                  title="Sign out"
+                >
+                  <LogOut size={15} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={signIn}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}
+              >
+                <LogIn size={13} />
+                <span className="hidden sm:inline">Sign in</span>
+              </button>
+            )}
             <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block" title="All systems operational" />
           </div>
         </header>
