@@ -1,0 +1,39 @@
+category,rule,do_pattern,do_code,dont_pattern,dont_code,severity
+Navigation,Use sticky navigation on scroll,Fixed nav with background blur on scroll,position: sticky; top: 0; backdrop-filter: blur(12px),Navigation that disappears on scroll,,HIGH
+Navigation,Highlight active nav item clearly,Active link has distinct color and underline,a.active { color: var(--primary); border-bottom: 2px solid var(--primary); },All nav links look identical,,MEDIUM
+Navigation,Mobile nav uses full-screen overlay or drawer,Hamburger opens full overlay with large tap targets,min-height: 44px; for all touch targets,Tiny dropdown menus on mobile that are hard to tap,,HIGH
+Navigation,Breadcrumbs for multi-level sites,Show full path Home > Category > Page,aria-label="breadcrumb" on nav element,No way to navigate back from deep pages,,MEDIUM
+Animation,Respect reduced motion preference,Wrap animations in media query,@media (prefers-reduced-motion: reduce) { * { animation: none; } },Forcing animations on all users regardless of preference,,HIGH
+Animation,Keep transitions under 300ms for UI feedback,Button hover transition fast and snappy,transition: all 150ms ease-in-out,Slow 1s+ transitions on interactive elements feel laggy,,HIGH
+Animation,Use easing functions not linear motion,Natural easing curves for movement,transition: transform 300ms cubic-bezier(0.4 0 0.2 1),Linear animation looks mechanical and unnatural,,MEDIUM
+Animation,Animate one property at a time,Translate or opacity — not both unless intentional,transform: translateY(-4px) for hover lift,Animating width height margin causes layout reflow,,HIGH
+Forms,Always use visible labels above inputs,Label above input always visible,<label for="email">Email</label><input id="email">,Placeholder-only labels disappear on focus users forget what field is,,HIGH
+Forms,Show error messages below the field,Red error text directly under the problem field,<span class="error" role="alert">Valid email required</span>,Error summary at top of form only users lose track of which field,,HIGH
+Forms,Validate inline on blur not on submit,Validate field when user leaves it not on submit,input.addEventListener('blur' validateField),Validating only on submit forces user to re-read whole form,,MEDIUM
+Forms,Use appropriate input types,Use email tel number date input types,<input type="email"> not <input type="text"> for email,Generic text inputs lose mobile keyboard optimization,,MEDIUM
+Forms,Mark required fields clearly,Asterisk + legend Required fields marked with *,<span aria-label="required">*</span>,Marking optional fields instead of required causes confusion,,MEDIUM
+Accessibility,Minimum contrast ratio 4.5:1 for body text,Use contrast checker before shipping,WCAG AA requires 4.5:1 — use WebAIM contrast checker,Light gray text on white backgrounds commonly fails WCAG,,HIGH
+Accessibility,All interactive elements keyboard accessible,Tab order follows logical reading order,tabindex="0" on custom interactive elements,Mouse-only interactions lock out keyboard users,,HIGH
+Accessibility,Images have descriptive alt text,Meaningful images get descriptions decorative get empty alt,<img alt="Bar chart showing 40% revenue growth Q3">,Empty alt on meaningful images or redundant file names,,HIGH
+Accessibility,Focus states are visible,Custom focus ring clearly visible,outline: 2px solid var(--primary); outline-offset: 2px,outline: none on focus breaks keyboard navigation entirely,,HIGH
+Accessibility,Color is not the only indicator,Use icon + color or text + color for status,Error state uses red + error icon + text not just red border,Red border alone fails color-blind users,,HIGH
+Performance,Lazy load images below the fold,Images outside viewport load on scroll,<img loading="lazy" src="...">,Loading all images on page load slows LCP score,,HIGH
+Performance,Use next-gen image formats,WebP or AVIF for photos SVG for icons,<picture><source type="image/webp"><img src="fallback.jpg"></picture>,Using unoptimized PNG/JPG files for every image,,MEDIUM
+Performance,Minimize layout shift on load,Reserve space for images and embeds,aspect-ratio: 16/9 on image containers,Images with no dimensions cause cumulative layout shift,,HIGH
+CTA Design,Primary CTA is visually dominant,One clear primary action per section,Contrasting color large size clear label,Multiple equal-weight buttons users don't know what to do,,HIGH
+CTA Design,CTA copy is action-oriented,Start with verb describe outcome,Get Started Free — Save My Spot — Start Building,Submit — Click Here — Learn More (vague),MEDIUM
+CTA Design,Sufficient padding on buttons,Min 44px height comfortable tap area,padding: 12px 24px; min-height: 44px,Tiny buttons especially on mobile,HIGH
+CTA Design,Show value near CTA,Add microcopy under CTA button,No credit card required — Join 10000+ users,Isolated CTA with no supporting context,,MEDIUM
+Typography,Maintain readable line length,65-75 characters per line ideal,max-width: 65ch on body text containers,Full-width text on large screens becomes hard to track,,HIGH
+Typography,Line height 1.5-1.7 for body text,Comfortable reading line spacing,line-height: 1.6 on p elements,line-height: 1.2 on body text feels cramped,,HIGH
+Typography,Limit font sizes to 3-4 in a system,Consistent type scale heading body caption,Use Tailwind text-sm text-base text-lg text-xl text-4xl,Random font sizes everywhere no consistent scale,,MEDIUM
+Typography,Don't use all-caps for long text,All-caps only for labels badges short UI text,FILTER BY or CATEGORY labels,Paragraphs or headings in all-caps kill readability,,HIGH
+Spacing,Use a consistent spacing scale,Base-8 or base-4 spacing system,4px 8px 16px 24px 32px 48px 64px,Random spacing values everywhere,,MEDIUM
+Spacing,Generous whitespace around sections,Sections breathe with padding,padding: 80px 0 or py-20 in Tailwind,Sections crammed together no breathing room,,HIGH
+Spacing,Group related elements closer,Law of proximity for visual grouping,Label and input 4px apart section gap 48px,Equal spacing between unrelated elements causes confusion,,MEDIUM
+Feedback,Show loading states on async actions,Spinner or skeleton on button after click,button disabled + spinner while loading,Button looks the same while processing user clicks again,,HIGH
+Feedback,Confirm successful actions,Toast notification or inline confirmation,Saved! — Message sent — Payment successful,Silent success user unsure if action worked,,HIGH
+Feedback,Show empty states with guidance,Helpful empty state with CTA,Illustration + text + button to add first item,Blank white space when no data loaded,,MEDIUM
+Mobile,Design for touch first then desktop,44px minimum touch targets with space between,gap: 12px between touch elements,Desktop-first design with tiny targets on mobile,,HIGH
+Mobile,Stack columns on mobile,Single column layout on small screens,@media (max-width: 768px) { flex-direction: column; },Horizontal scrolling tables and multi-column layouts on mobile,,HIGH
+Mobile,Bottom navigation for primary actions,Thumb-friendly bottom nav on mobile apps,fixed bottom nav with 5 items max,Top-only navigation on mobile forces one-hand stretching,,MEDIUM

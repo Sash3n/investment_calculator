@@ -14,7 +14,7 @@
 
 import { chromium } from 'playwright';
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -85,9 +85,10 @@ async function main() {
 
       const page = await context.newPage();
 
-      // Set theme in localStorage before navigating
+      // Set theme and pre-accept disclaimer so banner doesn't overlay screenshots
       await page.addInitScript((t) => {
         localStorage.setItem('fincalc-theme', t);
+        localStorage.setItem('fincalc-disclaimer', '1');
       }, theme);
 
       for (const { name, path, title } of PAGES) {

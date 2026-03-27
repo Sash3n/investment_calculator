@@ -1,0 +1,17 @@
+data_type,best_chart,colors,accessibility,library,notes
+Trend over time,Line Chart,Single brand color for one line multiple accessible colors for multi-line,Add data point markers not just lines for screen reader clarity,Recharts / Chart.js,Use area fill under line for emphasis on cumulative data
+Part of whole percentage,Donut Chart,Segment colors from accessible palette max 6 segments,Add center label with total value include legend with values,Recharts / Chart.js,Avoid pie charts for more than 5 segments use bar chart instead
+Category comparison,Bar Chart Vertical,Primary color for all bars accent for highlighted bar,Direct value labels above bars,Recharts / Chart.js,Sort bars by value descending unless order is categorical
+Horizontal comparison,Bar Chart Horizontal,Single color gradient from light to dark,Value labels at end of bars,Recharts / Chart.js,Better than vertical when category labels are long text
+Distribution,Histogram,Single brand color with 70% opacity,Label x-axis bins clearly show count on y-axis,Recharts / Chart.js,Bin width affects story choose intentionally
+Correlation,Scatter Plot,Primary color dots accent for outlier clusters,Different shapes not just colors for color-blind users,D3 / Recharts,Add trend line if correlation is the main insight
+Flow between categories,Sankey Diagram,Color-code by source category,Label all nodes with values,D3.js,Best for showing user journeys budget allocation process flows
+Geographic data,Choropleth Map,Sequential single-hue palette for magnitude,Include numeric legend not just color gradient,Mapbox / Leaflet,Avoid rainbow scales — single hue or diverging works better
+Progress toward goal,Gauge Chart or Progress Bar,Brand color for progress gray for remaining,Always show numeric value alongside visual,Recharts / custom CSS,Gauge for single KPI progress bar for multi-metric comparison
+Ranking,Ranked Bar Chart or Table,Highlight top 3 with accent color rest in muted primary,Bold text for top rank accessible color contrast,Recharts / HTML table,Tables often beat charts for ranked data — consider both
+Funnel / Conversion,Funnel Chart,Gradient from full primary to lighter shade,Show absolute numbers and percentage drop-off,Recharts / custom,Label each stage with both count and conversion rate
+Heatmap / Intensity,Heatmap Grid,Sequential palette low = light high = dark brand color,Never use red-green — use blue-orange or single hue,D3 / Recharts,Useful for time-of-day patterns day-of-week engagement
+Multiple KPIs,KPI Card Grid,Each card uses single metric color semantic green up red down,Large number small label clear trend indicator,Custom CSS component,Don't put more than 6 KPIs in one view — group logically
+Real-time data,Live Line Chart,Brand color with glowing endpoint dot,Auto-pause animation if user prefers reduced motion,Chart.js with streaming,Update interval should not be faster than 1 second
+Comparison across groups,Grouped Bar Chart,Distinct accessible colors per group max 4 groups,Include legend label directly on bars if space allows,Recharts / Chart.js,More than 4 groups gets confusing — consider small multiples
+Cumulative total,Area Chart,Brand color fill at 20% opacity solid line on top,Add tooltip with exact values on hover,Recharts,Stack multiple series only if values don't overlap badly

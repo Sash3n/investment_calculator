@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Mortgage Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; font-size: 2.5em; }
+        .input-section { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 25px; border-radius: 15px; margin-bottom: 30px; }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-weight: 600; margin-bottom: 8px; color: #34495e; font-size: 14px; }
+        input, select { padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; background: white; }
+        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 15px rgba(102, 126, 234, 0.2); }
+        .payment-frequency { display: flex; gap: 15px; align-items: center; margin-top: 10px; }
+        .radio-group { display: flex; align-items: center; gap: 8px; }
+        .radio-group input { width: 20px; height: 20px; cursor: pointer; }
+        button { padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .button-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .calculate-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .calculate-btn:hover { transform: translateY(-3px); }
+        .excel-btn { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; }
+        .results-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .summary-card { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 25px; border-radius: 15px; }
+        .summary-card h3 { color: #2c3e50; margin-bottom: 15px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .summary-value { font-weight: 600; color: #e74c3c; }
+        .comparison-card { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 25px; border-radius: 15px; grid-column: 1 / -1; }
+        .charts-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .chart-container { background: white; padding: 20px; border-radius: 15px; }
+        .chart-container h3 { color: #2c3e50; margin-bottom: 15px; text-align: center; }
+        .chart-wrapper { position: relative; height: 300px; }
+        .table-container { background: white; border-radius: 15px; overflow: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 10px; text-align: center; font-weight: 600; }
+        td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e3f2fd; }
+        .currency { color: #27ae60; font-weight: 600; }
+        .lump-sum-row { background-color: #fff3cd !important; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Enhanced Mortgage Calculator</h1>
+        
+        <div class="input-section">
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="purchasePrice">Purchase Price (R)</label>
+                    <input type="number" id="purchasePrice" value="1150000">
+                </div>
+                <div class="input-group">
+                    <label for="deposit">Deposit (R)</label>
+                    <input type="number" id="deposit" value="100000">
+                </div>
+                <div class="input-group">
+                    <label for="interestRate">Interest Rate (%)</label>
+                    <input type="number" id="interestRate" value="10.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="loanTerm">Loan Term (Years)</label>
+                    <input type="number" id="loanTerm" value="20" min="1" max="30">
+                </div>
+                <div class="input-group">
+                    <label>Payment Frequency</label>
+                    <div class="payment-frequency">
+                        <div class="radio-group">
+                            <input type="radio" id="monthly" name="frequency" value="monthly" checked>
+                            <label for="monthly">Monthly</label>
+                        </div>
+                        <div class="radio-group">
+                            <input type="radio" id="biweekly" name="frequency" value="biweekly">
+                            <label for="biweekly">Bi-Weekly</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="additionalPayment">Extra Payment (R)</label>
+                    <input type="number" id="additionalPayment" value="0">
+                </div>
+                <div class="input-group">
+                    <label for="lumpSumYear">Lump Sum Year</label>
+                    <select id="lumpSumYear"><option value="0">None</option></select>
+                </div>
+                <div class="input-group">
+                    <label for="lumpSumAmount">Lump Sum Amount (R)</label>
+                    <input type="number" id="lumpSumAmount" value="0">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="calculate-btn" onclick="calc()">Calculate Mortgage</button>
+                <button class="excel-btn" onclick="downloadExcel()">Download Excel</button>
+            </div>
+        </div>
+        
+        <div class="results-section" id="results" style="display:none;">
+            <div class="summary-card">
+                <h3>📊 Loan Summary</h3>
+                <div class="summary-item"><span>Loan Amount:</span><span class="summary-value" id="loanAmt">R 0</span></div>
+                <div class="summary-item"><span>Payment Amount:</span><span class="summary-value" id="pymtAmt">R 0</span></div>
+                <div class="summary-item"><span>Frequency:</span><span class="summary-value" id="freq">Monthly</span></div>
+                <div class="summary-item"><span>Total Payments:</span><span class="summary-value" id="totPmts">0</span></div>
+                <div class="summary-item"><span>Total Interest:</span><span class="summary-value" id="totInt">R 0</span></div>
+            </div>
+            
+            <div class="summary-card">
+                <h3>💰 With Extra Payments</h3>
+                <div class="summary-item"><span>Total Interest:</span><span class="summary-value" id="intExtra">R 0</span></div>
+                <div class="summary-item"><span>Total Paid:</span><span class="summary-value" id="totExtra">R 0</span></div>
+                <div class="summary-item"><span>Interest Saved:</span><span class="summary-value" id="saved">R 0</span></div>
+                <div class="summary-item"><span>Time Saved:</span><span class="summary-value" id="timeSaved">0</span></div>
+            </div>
+            
+            <div class="comparison-card" id="freqComp" style="display:none;">
+                <h3>📈 Frequency Comparison</h3>
+                <div class="summary-item"><span>Monthly:</span><span class="summary-value" id="moPmt">R 0</span></div>
+                <div class="summary-item"><span>Bi-Weekly:</span><span class="summary-value" id="bwPmt">R 0</span></div>
+                <div class="summary-item"><span>Interest Diff:</span><span class="summary-value" id="intDiff">R 0</span></div>
+                <div class="summary-item"><span>Time Diff:</span><span class="summary-value" id="tmDiff">0 years</span></div>
+            </div>
+        </div>
+        
+        <div class="charts-section" id="charts" style="display:none;">
+            <div class="chart-container"><h3>Principal vs Interest</h3><div class="chart-wrapper"><canvas id="c1"></canvas></div></div>
+            <div class="chart-container"><h3>Interest Comparison</h3><div class="chart-wrapper"><canvas id="c2"></canvas></div></div>
+            <div class="chart-container"><h3>Balance Over Time</h3><div class="chart-wrapper"><canvas id="c3"></canvas></div></div>
+            <div class="chart-container"><h3>Payment Breakdown</h3><div class="chart-wrapper"><canvas id="c4"></canvas></div></div>
+        </div>
+        
+        <div class="table-container" id="tblCont" style="display:none;">
+            <table id="tbl">
+                <thead><tr><th>Payment</th><th>Date</th><th>Begin Bal</th><th>Scheduled</th><th>Extra</th><th>Total</th><th>Principal</th><th>Interest</th><th>End Bal</th><th>Cum Interest</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let data = [], chartObjs = {};
+        
+        function fmt(n) { return new Intl.NumberFormat('en-ZA', {style:'currency', currency:'ZAR'}).format(n); }
+        function fmtDate(n, bw) {
+            const d = new Date();
+            if(bw) d.setDate(d.getDate() + (n-1)*14);
+            else d.setMonth(d.getMonth() + n-1);
+            return d.toLocaleDateString('en-ZA', {year:'numeric', month:'short', day:bw?'numeric':undefined});
+        }
+        
+        function popYears() {
+            const sel = document.getElementById('lumpSumYear'), term = parseInt(document.getElementById('loanTerm').value);
+            sel.innerHTML = '<option value="0">None</option>';
+            for(let i=1; i<=term; i++) sel.innerHTML += `<option value="${i}">Year ${i}</option>`;
+        }
+        document.getElementById('loanTerm').addEventListener('change', popYears);
+        popYears();
+        
+        function calcAmort(loan, rate, pmt, extra, lumpYr, lumpAmt, bw) {
+            const d = [], ppy = bw ? 26 : 12;
+            let bal = loan, totInt = 0, n = 1, yr = 1;
+            while(bal > 0.01 && n <= 720) {
+                const int = bal * rate;
+                let prin = pmt - int, ex = extra;
+                if(bw) yr = Math.floor((n-1)/ppy) + 1;
+                else if(n > yr*12) yr++;
+                if(yr === lumpYr && n === (yr-1)*ppy+1) ex += lumpAmt;
+                const tot = Math.min(pmt + ex, bal + int);
+                prin = tot - int;
+                ex = tot - pmt;
+                const newBal = Math.max(0, bal - prin);
+                totInt += int;
+                d.push({n, date:fmtDate(n,bw), beg:bal, sched:pmt, ex, tot, prin, int, end:newBal, cumInt:totInt, lump:ex>extra});
+                bal = newBal;
+                n++;
+                if(bal <= 0.01) break;
+            }
+            return {d, totInt};
+        }
+        
+        function calc() {
+            const price = parseFloat(document.getElementById('purchasePrice').value);
+            const dep = parseFloat(document.getElementById('deposit').value);
+            const rate = parseFloat(document.getElementById('interestRate').value) / 100;
+            const term = parseInt(document.getElementById('loanTerm').value);
+            const extra = parseFloat(document.getElementById('additionalPayment').value) || 0;
+            const lumpYr = parseInt(document.getElementById('lumpSumYear').value);
+            const lumpAmt = parseFloat(document.getElementById('lumpSumAmount').value) || 0;
+            const bw = document.querySelector('input[name="frequency"]:checked').value === 'biweekly';
+            
+            const loan = price - dep;
+            const ppy = bw ? 26 : 12;
+            const r = rate / ppy;
+            const n = term * ppy;
+            const pmt = loan * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+            
+            document.getElementById('loanAmt').textContent = fmt(loan);
+            document.getElementById('pymtAmt').textContent = fmt(pmt);
+            document.getElementById('freq').textContent = bw ? 'Bi-Weekly' : 'Monthly';
+            document.getElementById('totPmts').textContent = n;
+            
+            const origInt = (pmt * n) - loan;
+            document.getElementById('totInt').textContent = fmt(origInt);
+            
+            const res = calcAmort(loan, r, pmt, extra, lumpYr, lumpAmt, bw);
+            data = res.d;
+            const intPaid = res.totInt;
+            
+            const totPaid = data.reduce((s,p) => s + p.tot, 0);
+            const saved = origInt - intPaid;
+            const pmtsSaved = n - data.length;
+            
+            document.getElementById('intExtra').textContent = fmt(intPaid);
+            document.getElementById('totExtra').textContent = fmt(totPaid);
+            document.getElementById('saved').textContent = fmt(saved);
+            document.getElementById('timeSaved').textContent = `${pmtsSaved} payments`;
+            
+            const moRate = rate/12, moN = term*12;
+            const moPmt = loan * (moRate * Math.pow(1+moRate, moN)) / (Math.pow(1+moRate, moN) - 1);
+            const bwRate = rate/26, bwN = term*26;
+            const bwPmt = loan * (bwRate * Math.pow(1+bwRate, bwN)) / (Math.pow(1+bwRate, bwN) - 1);
+            
+            const moRes = calcAmort(loan, moRate, moPmt, 0, 0, 0, false);
+            const bwRes = calcAmort(loan, bwRate, bwPmt, 0, 0, 0, true);
+            
+            const diff = moRes.totInt - bwRes.totInt;
+            const yrDiff = (moRes.d.length/12) - (bwRes.d.length/26);
+            
+            document.getElementById('moPmt').textContent = fmt(moPmt) + ' (12x/yr)';
+            document.getElementById('bwPmt').textContent = fmt(bwPmt) + ' (26x/yr)';
+            document.getElementById('intDiff').textContent = fmt(Math.abs(diff)) + ' saved';
+            document.getElementById('tmDiff').textContent = yrDiff.toFixed(1) + ' years';
+            document.getElementById('freqComp').style.display = 'block';
+            
+            document.getElementById('results').style.display = 'grid';
+            showTable();
+            makeCharts(moRes, bwRes);
+            document.getElementById('charts').style.display = 'grid';
+            document.getElementById('tblCont').style.display = 'block';
+        }
+        
+        function showTable() {
+            const tbody = document.querySelector('#tbl tbody');
+            tbody.innerHTML = '';
+            data.forEach(p => {
+                const r = tbody.insertRow();
+                if(p.lump) r.className = 'lump-sum-row';
+                r.innerHTML = `<td>${p.n}</td><td>${p.date}</td><td class="currency">${fmt(p.beg)}</td><td class="currency">${fmt(p.sched)}</td><td class="currency">${fmt(p.ex)}</td><td class="currency">${fmt(p.tot)}</td><td class="currency">${fmt(p.prin)}</td><td class="currency">${fmt(p.int)}</td><td class="currency">${fmt(p.end)}</td><td class="currency">${fmt(p.cumInt)}</td>`;
+            });
+        }
+        
+        function makeCharts(moRes, bwRes) {
+            Object.values(chartObjs).forEach(c => c.destroy());
+            chartObjs = {};
+            
+            const sample = data.filter((_, i) => i % Math.ceil(data.length/50) === 0);
+            
+            chartObjs.c1 = new Chart(document.getElementById('c1'), {
+                type: 'line',
+                data: {
+                    labels: sample.map(d => d.n),
+                    datasets: [{label:'Principal', data:sample.map(d=>d.prin), borderColor:'#27ae60', tension:0.4},
+                              {label:'Interest', data:sample.map(d=>d.int), borderColor:'#e74c3c', tension:0.4}]
+                },
+                options: {responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}}
+            });
+            
+            chartObjs.c2 = new Chart(document.getElementById('c2'), {
+                type: 'bar',
+                data: {
+                    labels: ['Monthly', 'Bi-Weekly', 'With Extra'],
+                    datasets: [{label:'Total Interest', data:[moRes.totInt, bwRes.totInt, data.reduce((s,p)=>s+p.int,0)], backgroundColor:['#e74c3c','#f39c12','#27ae60']}]
+                },
+                options: {responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}}
+            });
+            
+            chartObjs.c3 = new Chart(document.getElementById('c3'), {
+                type: 'line',
+                data: {
+                    labels: sample.map(d => d.n),
+                    datasets: [{label:'Balance', data:sample.map(d=>d.end), borderColor:'#667eea', fill:true, tension:0.4}]
+                },
+                options: {responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}}
+            });
+            
+            const totP = data.reduce((s,p)=>s+p.prin,0);
+            const totI = data.reduce((s,p)=>s+p.int,0);
+            chartObjs.c4 = new Chart(document.getElementById('c4'), {
+                type: 'pie',
+                data: {
+                    labels: ['Principal', 'Interest'],
+                    datasets: [{data:[totP, totI], backgroundColor:['#27ae60','#e74c3c']}]
+                },
+                options: {responsive:true, maintainAspectRatio:false}
+            });
+        }
+        
+        function downloadExcel() {
+            if(!data.length) return alert('Calculate first!');
+            const wb = XLSX.utils.book_new();
+            const summary = [['Mortgage Summary',''],['Purchase Price',document.getElementById('purchasePrice').value],['Deposit',document.getElementById('deposit').value],['Loan Amount',document.getElementById('purchasePrice').value-document.getElementById('deposit').value],['Interest Rate',document.getElementById('interestRate').value],['Term (Years)',document.getElementById('loanTerm').value],['Payment',document.getElementById('pymtAmt').textContent],['',''],['Total Interest (Orig)',document.getElementById('totInt').textContent],['Total Interest (Extra)',document.getElementById('intExtra').textContent],['Saved',document.getElementById('saved').textContent]];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Summary');
+            const rows = data.map(p => [p.n,p.date,p.beg,p.sched,p.ex,p.tot,p.prin,p.int,p.end,p.cumInt]);
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Payment','Date','Begin','Scheduled','Extra','Total','Principal','Interest','End','Cum Int'],...rows]), 'Schedule');
+            XLSX.writeFile(wb, `Mortgage_R${document.getElementById('purchasePrice').value}.xlsx`);
+        }
+        
+        calc();
+    </script>
+</body>
+</html>

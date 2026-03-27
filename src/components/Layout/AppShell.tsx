@@ -14,8 +14,56 @@ import {
   Moon,
   Receipt,
   Wallet,
+  AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
+
+function DisclaimerBanner() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const accepted = localStorage.getItem('fincalc-disclaimer');
+    if (!accepted) setVisible(true);
+  }, []);
+
+  const accept = () => {
+    localStorage.setItem('fincalc-disclaimer', '1');
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="fixed bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl rounded-2xl p-4 shadow-2xl"
+      style={{
+        background: 'rgba(15,23,42,0.97)',
+        border: '1px solid rgba(245,158,11,0.35)',
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      <div className="flex gap-3">
+        <AlertTriangle size={18} className="text-[#F59E0B] flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-[#F59E0B] mb-1">Educational Purposes Only</p>
+          <p className="text-[11px] leading-relaxed" style={{ color: '#94A3B8' }}>
+            FinCalc ZA provides general financial illustrations for educational purposes only.
+            All calculations are estimates and <strong style={{ color: '#CBD5E1' }}>do not constitute financial, tax, investment, or legal advice</strong>.
+            Consult a <strong style={{ color: '#CBD5E1' }}>certified financial planner (CFP)</strong> or SARS-registered tax practitioner
+            before making any financial decisions. Figures are based on publicly available SARS information and may not reflect the latest rates.
+          </p>
+        </div>
+        <button
+          onClick={accept}
+          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+          style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}
+        >
+          I understand
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface NavItem {
   path: string;
@@ -76,6 +124,7 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <DisclaimerBanner />
       {/* ── Mobile overlay ─────────────────────────────── */}
       {sidebarOpen && (
         <div
@@ -170,12 +219,15 @@ export function AppShell() {
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.06)]">
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
+        <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.06)] space-y-1">
+          <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
             Prime Rate: <span className="text-[#F59E0B] font-semibold">11.25%</span>
           </p>
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
+          <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
             All values in South African Rand
+          </p>
+          <p className="text-[9px] leading-relaxed pt-1" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)', opacity: 0.6 }}>
+            For educational purposes only. Not financial advice. Consult a CFP before making investment decisions.
           </p>
         </div>
       </aside>

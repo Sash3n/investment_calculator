@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Property Investment Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 3em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            bottom: -3px;
+        }
+        
+        .tab.active {
+            color: #1e3c72;
+            border-bottom: 3px solid #1e3c72;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .property-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .property-card.selected {
+            border: 4px solid #f39c12;
+        }
+        
+        .property-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .property-name {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+        
+        .property-type {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .property-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+        
+        .detail-value {
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        
+        .roi-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        .roi-positive {
+            background: #2ecc71;
+        }
+        
+        .roi-negative {
+            background: #e74c3c;
+        }
+        
+        .comparison-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .calculator-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-size: 14px;
+        }
+        
+        input, select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .result-card {
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-card.blue {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .result-card.green {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .result-card.orange {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .result-card.red {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .result-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .result-value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .positive {
+            color: #27ae60;
+            font-weight: 700;
+        }
+        
+        .negative {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .download-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .properties-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏘️ Smart Property Investment Calculator</h1>
+        <p class="subtitle">Analyze and compare property investments with detailed ROI calculations</p>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('overview')">📊 Portfolio Overview</button>
+            <button class="tab" onclick="switchTab('compare')">⚖️ Compare Properties</button>
+            <button class="tab" onclick="switchTab('calculator')">🧮 Custom Calculator</button>
+            <button class="tab" onclick="switchTab('addproperty')">➕ Add New Property</button>
+            <button class="tab" onclick="switchTab('manage')">⚙️ Manage Properties</button>
+            <button class="tab" onclick="switchTab('insights')">💡 Investment Insights</button>
+        </div>
+        
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button class="download-btn" onclick="downloadExcel()">
+                📥 Download Full Report (Excel)
+            </button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="filter-section" id="filterSection">
+                <button class="filter-btn active" onclick="filterProperties('all')">All Properties</button>
+                <button class="filter-btn" onclick="filterProperties('positive')">Positive ROI Only</button>
+                <button class="filter-btn" onclick="filterProperties('reid')">The Reid</button>
+                <button class="filter-btn" onclick="filterProperties('greenlee')">Greenlee</button>
+            </div>
+            
+            <div class="properties-grid" id="propertiesGrid"></div>
+            
+            <div class="chart-container">
+                <h3 class="section-title">Portfolio ROI Comparison</h3>
+                <canvas id="portfolioChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Compare Tab -->
+        <div id="compare" class="tab-content">
+            <div class="comparison-section">
+                <h2 class="section-title">Select Properties to Compare (click on cards - up to 10)</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">
+                    <strong>Selected: <span id="selectedCount">0</span>/10</strong>
+                </p>
+                <div class="properties-grid" id="compareGrid"></div>
+            </div>
+            
+            <div id="comparisonResults" style="display: none;">
+                <div style="text-align: right; margin-bottom: 20px;">
+                    <button class="download-btn" onclick="downloadComparisonExcel()">
+                        📥 Download Comparison (Excel)
+                    </button>
+                </div>
+                
+                <div class="results-grid" id="compareResultsGrid"></div>
+                
+                <div class="chart-container">
+                    <h3 class="section-title">Side-by-Side Comparison</h3>
+                    <canvas id="compareChart"></canvas>
+                </div>
+                
+                <div class="comparison-table">
+                    <table id="compareTable">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Purchase Price</th>
+                                <th>Monthly Costs</th>
+                                <th>Rent (S1)</th>
+                                <th>Cash Flow (S1)</th>
+                                <th>ROI (S1)</th>
+                                <th>Rent (S2)</th>
+                                <th>Cash Flow (S2)</th>
+                                <th>ROI (S2)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Calculator Tab -->
+        <div id="calculator" class="tab-content">
+            <div class="calculator-section">
+                <h2 class="section-title">Custom Property Investment Calculator</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">Calculate ROI for any property scenario without saving to portfolio</p>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="calcSellingPrice">Selling Price (R)</label>
+                        <input type="number" id="calcSellingPrice" value="900000">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcDiscount">Discount (%)</label>
+                        <input type="number" id="calcDiscount" value="5" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcDeposit">Deposit (R)</label>
+                        <input type="number" id="calcDeposit" value="20000">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcInterest">Interest Rate (%)</label>
+                        <input type="number" id="calcInterest" value="9" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcTerm">Bond Term (Years)</label>
+                        <input type="number" id="calcTerm" value="20">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcLevies">Monthly Levies (R)</label>
+                        <input type="number" id="calcLevies" value="1000">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcRates">Monthly Rates (R)</label>
+                        <input type="number" id="calcRates" value="500">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcEffluent">Effluent Fee (R)</label>
+                        <input type="number" id="calcEffluent" value="803">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcRent1">Estimated Rent - Scenario 1 (R)</label>
+                        <input type="number" id="calcRent1" value="9000">
+                    </div>
+                    <div class="input-group">
+                        <label for="calcRent2">Estimated Rent - Scenario 2 (R)</label>
+                        <input type="number" id="calcRent2" value="10000">
+                    </div>
+                </div>
+                <button class="calculate-btn" onclick="calculateCustom()">Calculate Investment</button>
+            </div>
+            
+            <div id="customResults" style="display: none;">
+                <div class="results-grid">
+                    <div class="result-card blue">
+                        <div class="result-label">Purchase Price</div>
+                        <div class="result-value" id="customPurchase">R 0</div>
+                    </div>
+                    <div class="result-card orange">
+                        <div class="result-label">Monthly Bond</div>
+                        <div class="result-value" id="customBond">R 0</div>
+                    </div>
+                    <div class="result-card red">
+                        <div class="result-label">Total Monthly Costs</div>
+                        <div class="result-value" id="customCosts">R 0</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">Cash Flow (S1)</div>
+                        <div class="result-value" id="customCF1">R 0</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">ROI % (S1)</div>
+                        <div class="result-value" id="customROI1">0%</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">Cash Flow (S2)</div>
+                        <div class="result-value" id="customCF2">R 0</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">ROI % (S2)</div>
+                        <div class="result-value" id="customROI2">0%</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="section-title">Investment Breakdown</h3>
+                    <canvas id="customChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Insights Tab -->
+        <div id="insights" class="tab-content">
+            <div class="comparison-section">
+                <h2 class="section-title">📈 Investment Insights & Recommendations</h2>
+                <div id="insightsContent"></div>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="section-title">Best & Worst Performers</h3>
+                <canvas id="insightsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Manage Properties Tab -->
+        <div id="manage" class="tab-content">
+            <div class="comparison-section">
+                <h2 class="section-title">⚙️ Manage All Properties</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">Edit or remove any property from your portfolio</p>
+                
+                <div class="comparison-table">
+                    <table id="manageTable">
+                        <thead>
+                            <tr>
+                                <th>Estate</th>
+                                <th>Type</th>
+                                <th>Size (m²)</th>
+                                <th>Purchase Price</th>
+                                <th>ROI S2 %</th>
+                                <th>Cash Flow S2</th>
+                                <th>Source</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manageTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Property Modal -->
+        <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+            <div style="background: white; max-width: 900px; margin: 50px auto; padding: 40px; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="color: #1e3c72; margin: 0;">✏️ Edit Property</h2>
+                    <button onclick="closeEditModal()" style="background: none; border: none; font-size: 30px; cursor: pointer; color: #7f8c8d;">&times;</button>
+                </div>
+                
+                <div class="input-grid">
+                    <input type="hidden" id="editIndex">
+                    <div class="input-group">
+                        <label for="editEstate">Estate Name</label>
+                        <input type="text" id="editEstate">
+                    </div>
+                    <div class="input-group">
+                        <label for="editType">Property Type</label>
+                        <input type="text" id="editType">
+                    </div>
+                    <div class="input-group">
+                        <label for="editSize">Size (m²)</label>
+                        <input type="number" id="editSize">
+                    </div>
+                    <div class="input-group">
+                        <label for="editSellingPrice">Selling Price (R)</label>
+                        <input type="number" id="editSellingPrice">
+                    </div>
+                    <div class="input-group">
+                        <label for="editDiscount">Discount (%)</label>
+                        <input type="number" id="editDiscount" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="editDeposit">Deposit (R)</label>
+                        <input type="number" id="editDeposit">
+                    </div>
+                    <div class="input-group">
+                        <label for="editInterest">Interest Rate (%)</label>
+                        <input type="number" id="editInterest" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="editTerm">Bond Term (Years)</label>
+                        <input type="number" id="editTerm">
+                    </div>
+                    <div class="input-group">
+                        <label for="editLevies">Monthly Levies (R)</label>
+                        <input type="number" id="editLevies">
+                    </div>
+                    <div class="input-group">
+                        <label for="editRates">Monthly Rates (R)</label>
+                        <input type="number" id="editRates">
+                    </div>
+                    <div class="input-group">
+                        <label for="editEffluent">Effluent Fee (R)</label>
+                        <input type="number" id="editEffluent">
+                    </div>
+                    <div class="input-group">
+                        <label for="editRent1">Rent - Scenario 1 (R)</label>
+                        <input type="number" id="editRent1">
+                    </div>
+                    <div class="input-group">
+                        <label for="editRent2">Rent - Scenario 2 (R)</label>
+                        <input type="number" id="editRent2">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="savePropertyEdit()">
+                    💾 Save Changes
+                </button>
+            </div>
+        </div>
+        
+        <!-- Add New Property Tab -->
+        <div id="addproperty" class="tab-content">
+            <div class="calculator-section">
+                <h2 class="section-title">➕ Add New Property to Portfolio</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">Add a new property (like The Blyde) to your portfolio for comparison with existing properties</p>
+                
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="newEstate">Estate Name</label>
+                        <input type="text" id="newEstate" placeholder="e.g., The Blyde">
+                    </div>
+                    <div class="input-group">
+                        <label for="newType">Property Type</label>
+                        <input type="text" id="newType" placeholder="e.g., 2 Bed 2 Bath">
+                    </div>
+                    <div class="input-group">
+                        <label for="newSize">Size (m²)</label>
+                        <input type="number" id="newSize" placeholder="e.g., 75">
+                    </div>
+                    <div class="input-group">
+                        <label for="newSellingPrice">Selling Price (R)</label>
+                        <input type="number" id="newSellingPrice" value="1200000">
+                    </div>
+                    <div class="input-group">
+                        <label for="newDiscount">Discount (%)</label>
+                        <input type="number" id="newDiscount" value="5" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="newDeposit">Deposit (R)</label>
+                        <input type="number" id="newDeposit" value="20000">
+                    </div>
+                    <div class="input-group">
+                        <label for="newInterest">Interest Rate (%)</label>
+                        <input type="number" id="newInterest" value="9" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="newTerm">Bond Term (Years)</label>
+                        <input type="number" id="newTerm" value="20">
+                    </div>
+                    <div class="input-group">
+                        <label for="newLevies">Monthly Levies (R)</label>
+                        <input type="number" id="newLevies" value="1200">
+                    </div>
+                    <div class="input-group">
+                        <label for="newRates">Monthly Rates (R)</label>
+                        <input type="number" id="newRates" value="600">
+                    </div>
+                    <div class="input-group">
+                        <label for="newEffluent">Effluent Fee (R)</label>
+                        <input type="number" id="newEffluent" value="803">
+                    </div>
+                    <div class="input-group">
+                        <label for="newRent1">Estimated Rent - Scenario 1 (R)</label>
+                        <input type="number" id="newRent1" value="11000">
+                    </div>
+                    <div class="input-group">
+                        <label for="newRent2">Estimated Rent - Scenario 2 (R)</label>
+                        <input type="number" id="newRent2" value="12500">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="addNewProperty()">
+                    ➕ Add Property to Portfolio
+                </button>
+            </div>
+            
+            <div id="newPropertyPreview" style="display: none; margin-top: 30px;">
+                <div class="comparison-section">
+                    <h3 class="section-title">Preview New Property</h3>
+                    <div id="previewCard"></div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button class="calculate-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="removeLastProperty()">
+                            🗑️ Remove This Property
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const properties = [
+            {
+                estate: "The Reid", type: "1 Bed 1 Bath", size: 61, sellingPrice: 969900, discount: 5,
+                discountAmount: 48495, purchasePrice: 921405, deposit: 20000, bondAmount: 901405,
+                interestRate: 9, bondTerm: 20, monthlyBond: 8110.17, monthlyLevies: 1098,
+                estimatedRates: 556.71, effluentFee: 803, totalMonthlyCosts: 10567.88,
+                estimatedRent1: 9500, monthlyCashFlow1: -1067.88, roi1: 12.37,
+                estimatedRent2: 10700, monthlyCashFlow2: 132.12, roi2: 13.94
+            },
+            {
+                estate: "The Reid", type: "1 Bed 1 Bath", size: 47, sellingPrice: 879900, discount: 5,
+                discountAmount: 43995, purchasePrice: 835905, deposit: 20000, bondAmount: 815905,
+                interestRate: 9, bondTerm: 20, monthlyBond: 7340.91, monthlyLevies: 846,
+                estimatedRates: 477.17, effluentFee: 803, totalMonthlyCosts: 9467.08,
+                estimatedRent1: 8750, monthlyCashFlow1: -717.08, roi1: 12.56,
+                estimatedRent2: 9700, monthlyCashFlow2: 232.92, roi2: 13.93
+            },
+            {
+                estate: "The Reid", type: "1 Bed 1 Bath", size: 47, sellingPrice: 804900, discount: 5,
+                discountAmount: 40245, purchasePrice: 764655, deposit: 20000, bondAmount: 744655,
+                interestRate: 9, bondTerm: 20, monthlyBond: 6699.85, monthlyLevies: 720,
+                estimatedRates: 404, effluentFee: 803, totalMonthlyCosts: 8626.85,
+                estimatedRent1: 8500, monthlyCashFlow1: -126.85, roi1: 13.34,
+                estimatedRent2: 9500, monthlyCashFlow2: 873.15, roi2: 14.91
+            },
+            {
+                estate: "Greenlee", type: "1 Bed 1 Bath", size: 32.17, sellingPrice: 709900, discount: 5,
+                discountAmount: 35495, purchasePrice: 674405, deposit: 10000, bondAmount: 664405,
+                interestRate: 9, bondTerm: 20, monthlyBond: 5977.82, monthlyLevies: 511,
+                estimatedRates: 318.09, effluentFee: 803, totalMonthlyCosts: 7609.91,
+                estimatedRent1: 7100, monthlyCashFlow1: -509.91, roi1: 12.63,
+                estimatedRent2: 8000, monthlyCashFlow2: 390.09, roi2: 14.23
+            },
+            {
+                estate: "Greenlee", type: "1 Bed 1 Bath", size: 47.15, sellingPrice: 814900, discount: 5,
+                discountAmount: 40745, purchasePrice: 774155, deposit: 10000, bondAmount: 764155,
+                interestRate: 9, bondTerm: 20, monthlyBond: 6875.30, monthlyLevies: 748,
+                estimatedRates: 419.90, effluentFee: 803, totalMonthlyCosts: 8846.20,
+                estimatedRent1: 8100, monthlyCashFlow1: -746.20, roi1: 12.56,
+                estimatedRent2: 9000, monthlyCashFlow2: 153.80, roi2: 13.95
+            }
+        ];
+        
+        let selectedProperties = [];
+        let charts = {};
+        let customProperties = []; // Track custom added properties
+        
+        function fmt(n) {
+            return new Intl.NumberFormat('en-ZA', {
+                style: 'currency',
+                currency: 'ZAR',
+                minimumFractionDigits: 0
+            }).format(n);
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if(tabName === 'insights') {
+                generateInsights();
+            }
+            
+            if(tabName === 'overview') {
+                renderProperties('propertiesGrid');
+                updatePortfolioChart();
+                updateFilterButtons();
+            }
+            
+            if(tabName === 'manage') {
+                renderManageTable();
+            }
+        }
+        
+        function getAllProperties() {
+            return [...properties, ...customProperties];
+        }
+        
+        function getAllEstates() {
+            const allProps = getAllProperties();
+            return [...new Set(allProps.map(p => p.estate))];
+        }
+        
+        function updateFilterButtons() {
+            const filterSection = document.getElementById('filterSection');
+            const estates = getAllEstates();
+            
+            // Clear existing buttons
+            filterSection.innerHTML = `
+                <button class="filter-btn active" onclick="filterProperties('all')">All Properties</button>
+                <button class="filter-btn" onclick="filterProperties('positive')">Positive ROI Only</button>
+            `;
+            
+            // Add button for each estate
+            estates.forEach(estate => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.textContent = estate;
+                btn.onclick = () => filterProperties(estate);
+                filterSection.appendChild(btn);
+            });
+        }
+        
+        function renderManageTable() {
+            const tbody = document.getElementById('manageTableBody');
+            tbody.innerHTML = '';
+            
+            const allProps = getAllProperties();
+            
+            allProps.forEach((prop, index) => {
+                const row = tbody.insertRow();
+                const isOriginal = index < properties.length;
+                
+                row.innerHTML = `
+                    <td><strong>${prop.estate}</strong></td>
+                    <td>${prop.type}</td>
+                    <td>${prop.size}</td>
+                    <td>${fmt(prop.purchasePrice)}</td>
+                    <td class="${prop.roi2 >= 14 ? 'positive' : ''}">${prop.roi2.toFixed(2)}%</td>
+                    <td class="${prop.monthlyCashFlow2 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow2)}</td>
+                    <td>${isOriginal ? '<span style="color: #3498db;">📋 Original</span>' : '<span style="color: #f39c12;">🆕 Custom</span>'}</td>
+                    <td>
+                        <button onclick="editProperty(${index})" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-right: 5px;">
+                            ✏️ Edit
+                        </button>
+                        ${!isOriginal ? `
+                            <button onclick="removeProperty(${index})" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                🗑️ Delete
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+            });
+        }
+        
+        function editProperty(index) {
+            const allProps = getAllProperties();
+            const prop = allProps[index];
+            
+            // Populate edit form
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editEstate').value = prop.estate;
+            document.getElementById('editType').value = prop.type;
+            document.getElementById('editSize').value = prop.size;
+            document.getElementById('editSellingPrice').value = prop.sellingPrice;
+            document.getElementById('editDiscount').value = prop.discount;
+            document.getElementById('editDeposit').value = prop.deposit;
+            document.getElementById('editInterest').value = prop.interestRate;
+            document.getElementById('editTerm').value = prop.bondTerm;
+            document.getElementById('editLevies').value = prop.monthlyLevies;
+            document.getElementById('editRates').value = prop.estimatedRates;
+            document.getElementById('editEffluent').value = prop.effluentFee;
+            document.getElementById('editRent1').value = prop.estimatedRent1;
+            document.getElementById('editRent2').value = prop.estimatedRent2;
+            
+            // Show modal
+            document.getElementById('editModal').style.display = 'block';
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        function savePropertyEdit() {
+            const index = parseInt(document.getElementById('editIndex').value);
+            const isOriginal = index < properties.length;
+            
+            // Get values
+            const estateName = document.getElementById('editEstate').value.trim();
+            const propertyType = document.getElementById('editType').value.trim();
+            const size = parseFloat(document.getElementById('editSize').value);
+            const sellingPrice = parseFloat(document.getElementById('editSellingPrice').value);
+            const discount = parseFloat(document.getElementById('editDiscount').value);
+            const deposit = parseFloat(document.getElementById('editDeposit').value);
+            const interestRate = parseFloat(document.getElementById('editInterest').value);
+            const bondTerm = parseFloat(document.getElementById('editTerm').value);
+            const levies = parseFloat(document.getElementById('editLevies').value);
+            const rates = parseFloat(document.getElementById('editRates').value);
+            const effluent = parseFloat(document.getElementById('editEffluent').value);
+            const rent1 = parseFloat(document.getElementById('editRent1').value);
+            const rent2 = parseFloat(document.getElementById('editRent2').value);
+            
+            if(!estateName || !propertyType || !size) {
+                alert('Please fill in Estate Name, Property Type, and Size');
+                return;
+            }
+            
+            // Calculate derived values
+            const discountAmount = sellingPrice * (discount / 100);
+            const purchasePrice = sellingPrice - discountAmount;
+            const bondAmount = purchasePrice - deposit;
+            
+            const monthlyRate = (interestRate / 100) / 12;
+            const numPayments = bondTerm * 12;
+            const monthlyBond = bondAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                               (Math.pow(1 + monthlyRate, numPayments) - 1);
+            
+            const totalMonthlyCosts = monthlyBond + levies + rates + effluent;
+            const monthlyCashFlow1 = rent1 - totalMonthlyCosts;
+            const monthlyCashFlow2 = rent2 - totalMonthlyCosts;
+            const roi1 = ((rent1 * 12) / purchasePrice) * 100;
+            const roi2 = ((rent2 * 12) / purchasePrice) * 100;
+            
+            const updatedProperty = {
+                estate: estateName,
+                type: propertyType,
+                size: size,
+                sellingPrice: sellingPrice,
+                discount: discount,
+                discountAmount: discountAmount,
+                purchasePrice: purchasePrice,
+                deposit: deposit,
+                bondAmount: bondAmount,
+                interestRate: interestRate,
+                bondTerm: bondTerm,
+                monthlyBond: monthlyBond,
+                monthlyLevies: levies,
+                estimatedRates: rates,
+                effluentFee: effluent,
+                totalMonthlyCosts: totalMonthlyCosts,
+                estimatedRent1: rent1,
+                monthlyCashFlow1: monthlyCashFlow1,
+                roi1: roi1,
+                estimatedRent2: rent2,
+                monthlyCashFlow2: monthlyCashFlow2,
+                roi2: roi2,
+                isCustom: !isOriginal
+            };
+            
+            // Update the property
+            if(isOriginal) {
+                properties[index] = updatedProperty;
+            } else {
+                customProperties[index - properties.length] = updatedProperty;
+            }
+            
+            // Close modal and refresh displays
+            closeEditModal();
+            renderManageTable();
+            renderProperties('propertiesGrid');
+            renderProperties('compareGrid', true);
+            updatePortfolioChart();
+            updateFilterButtons();
+            
+            alert('✅ Property updated successfully!');
+        }
+        
+        function removeProperty(index) {
+            const allProps = getAllProperties();
+            const prop = allProps[index];
+            
+            if(confirm(`Are you sure you want to delete "${prop.estate} - ${prop.type}"?`)) {
+                const customIndex = index - properties.length;
+                customProperties.splice(customIndex, 1);
+                
+                renderManageTable();
+                renderProperties('propertiesGrid');
+                renderProperties('compareGrid', true);
+                updatePortfolioChart();
+                updateFilterButtons();
+                
+                // Clear selection if removed property was selected
+                selectedProperties = selectedProperties.filter(i => i !== index).map(i => i > index ? i - 1 : i);
+                updateSelectedCount();
+                
+                alert('✅ Property removed successfully!');
+            }
+        }
+        
+        function addNewProperty() {
+            const estateName = document.getElementById('newEstate').value.trim();
+            const propertyType = document.getElementById('newType').value.trim();
+            const size = parseFloat(document.getElementById('newSize').value);
+            
+            if(!estateName || !propertyType || !size) {
+                alert('Please fill in Estate Name, Property Type, and Size');
+                return;
+            }
+            
+            const sellingPrice = parseFloat(document.getElementById('newSellingPrice').value);
+            const discount = parseFloat(document.getElementById('newDiscount').value);
+            const deposit = parseFloat(document.getElementById('newDeposit').value);
+            const interestRate = parseFloat(document.getElementById('newInterest').value);
+            const bondTerm = parseFloat(document.getElementById('newTerm').value);
+            const levies = parseFloat(document.getElementById('newLevies').value);
+            const rates = parseFloat(document.getElementById('newRates').value);
+            const effluent = parseFloat(document.getElementById('newEffluent').value);
+            const rent1 = parseFloat(document.getElementById('newRent1').value);
+            const rent2 = parseFloat(document.getElementById('newRent2').value);
+            
+            // Calculate derived values
+            const discountAmount = sellingPrice * (discount / 100);
+            const purchasePrice = sellingPrice - discountAmount;
+            const bondAmount = purchasePrice - deposit;
+            
+            const monthlyRate = (interestRate / 100) / 12;
+            const numPayments = bondTerm * 12;
+            const monthlyBond = bondAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                               (Math.pow(1 + monthlyRate, numPayments) - 1);
+            
+            const totalMonthlyCosts = monthlyBond + levies + rates + effluent;
+            const monthlyCashFlow1 = rent1 - totalMonthlyCosts;
+            const monthlyCashFlow2 = rent2 - totalMonthlyCosts;
+            const roi1 = ((rent1 * 12) / purchasePrice) * 100;
+            const roi2 = ((rent2 * 12) / purchasePrice) * 100;
+            
+            const newProperty = {
+                estate: estateName,
+                type: propertyType,
+                size: size,
+                sellingPrice: sellingPrice,
+                discount: discount,
+                discountAmount: discountAmount,
+                purchasePrice: purchasePrice,
+                deposit: deposit,
+                bondAmount: bondAmount,
+                interestRate: interestRate,
+                bondTerm: bondTerm,
+                monthlyBond: monthlyBond,
+                monthlyLevies: levies,
+                estimatedRates: rates,
+                effluentFee: effluent,
+                totalMonthlyCosts: totalMonthlyCosts,
+                estimatedRent1: rent1,
+                monthlyCashFlow1: monthlyCashFlow1,
+                roi1: roi1,
+                estimatedRent2: rent2,
+                monthlyCashFlow2: monthlyCashFlow2,
+                roi2: roi2,
+                isCustom: true
+            };
+            
+            customProperties.push(newProperty);
+            
+            // Show preview
+            showPropertyPreview(newProperty);
+            
+            // Refresh displays
+            renderProperties('propertiesGrid');
+            renderProperties('compareGrid', true);
+            updatePortfolioChart();
+            updateFilterButtons();
+            
+            alert(`✅ Property "${estateName} - ${propertyType}" added successfully!\n\n💡 Tip: A new filter button for "${estateName}" has been added to the Overview tab.`);
+        }
+        
+        function showPropertyPreview(prop) {
+            const previewDiv = document.getElementById('newPropertyPreview');
+            const cardDiv = document.getElementById('previewCard');
+            
+            cardDiv.innerHTML = `
+                <div class="properties-grid">
+                    <div class="property-card">
+                        <div class="property-header">
+                            <div class="property-name">${prop.estate}</div>
+                            <div class="property-type">${prop.type}</div>
+                        </div>
+                        <div class="property-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Size</span>
+                                <span class="detail-value">${prop.size}m²</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Purchase Price</span>
+                                <span class="detail-value">${fmt(prop.purchasePrice)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Monthly Costs</span>
+                                <span class="detail-value">${fmt(prop.totalMonthlyCosts)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Cash Flow (S1)</span>
+                                <span class="detail-value ${prop.monthlyCashFlow1 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow1)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Cash Flow (S2)</span>
+                                <span class="detail-value ${prop.monthlyCashFlow2 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow2)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">ROI (S1)</span>
+                                <span class="detail-value">${prop.roi1.toFixed(2)}%</span>
+                            </div>
+                        </div>
+                        <div class="roi-badge ${prop.roi2 >= 0 ? 'roi-positive' : 'roi-negative'}">
+                            ROI (S2): ${prop.roi2.toFixed(2)}%
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            previewDiv.style.display = 'block';
+        }
+        
+        function removeLastProperty() {
+            if(customProperties.length > 0) {
+                const removed = customProperties.pop();
+                document.getElementById('newPropertyPreview').style.display = 'none';
+                renderProperties('propertiesGrid');
+                renderProperties('compareGrid', true);
+                updatePortfolioChart();
+                alert(`Property "${removed.estate} - ${removed.type}" removed from portfolio`);
+            }
+        }
+        
+        function updatePortfolioChart() {
+            if(charts.portfolio) charts.portfolio.destroy();
+            
+            const allProps = getAllProperties();
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            charts.portfolio = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: allProps.map(p => `${p.estate} ${p.size}m²`),
+                    datasets: [{
+                        label: 'ROI Scenario 1 (%)',
+                        data: allProps.map(p => p.roi1),
+                        backgroundColor: '#3498db'
+                    }, {
+                        label: 'ROI Scenario 2 (%)',
+                        data: allProps.map(p => p.roi2),
+                        backgroundColor: '#2ecc71'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+        
+        function renderProperties(containerId, selectable = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            const allProps = getAllProperties();
+            
+            allProps.forEach((prop, index) => {
+                const card = document.createElement('div');
+                card.className = 'property-card';
+                if(selectable && selectedProperties.includes(index)) {
+                    card.classList.add('selected');
+                }
+                
+                // Add visual indicator for custom properties
+                const customBadge = prop.isCustom ? '<span style="background: #f39c12; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; margin-left: 10px;">NEW</span>' : '';
+                
+                card.innerHTML = `
+                    <div class="property-header">
+                        <div class="property-name">${prop.estate}${customBadge}</div>
+                        <div class="property-type">${prop.type}</div>
+                    </div>
+                    <div class="property-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Size</span>
+                            <span class="detail-value">${prop.size}m²</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Purchase Price</span>
+                            <span class="detail-value">${fmt(prop.purchasePrice)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Monthly Costs</span>
+                            <span class="detail-value">${fmt(prop.totalMonthlyCosts)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cash Flow (S1)</span>
+                            <span class="detail-value ${prop.monthlyCashFlow1 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow1)}</span>
+                        </div>
+                    </div>
+                    <div class="roi-badge ${prop.roi2 >= 0 ? 'roi-positive' : 'roi-negative'}">
+                        ROI (S2): ${prop.roi2.toFixed(2)}%
+                    </div>
+                `;
+                
+                if(selectable) {
+                    card.onclick = () => togglePropertySelection(index);
+                }
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function togglePropertySelection(index) {
+            const idx = selectedProperties.indexOf(index);
+            if(idx > -1) {
+                selectedProperties.splice(idx, 1);
+            } else {
+                if(selectedProperties.length >= 10) {
+                    alert('Maximum 10 properties can be selected for comparison');
+                    return;
+                }
+                selectedProperties.push(index);
+            }
+            renderProperties('compareGrid', true);
+            updateSelectedCount();
+            
+            if(selectedProperties.length >= 2) {
+                compareSelected();
+            } else {
+                document.getElementById('comparisonResults').style.display = 'none';
+            }
+        }
+        
+        function updateSelectedCount() {
+            const countElement = document.getElementById('selectedCount');
+            if(countElement) {
+                countElement.textContent = selectedProperties.length;
+            }
+        }
+        
+        function compareSelected() {
+            const allProps = getAllProperties();
+            const selected = selectedProperties.map(i => allProps[i]);
+            
+            const tbody = document.querySelector('#compareTable tbody');
+            tbody.innerHTML = '';
+            selected.forEach(prop => {
+                const customIndicator = prop.isCustom ? ' 🆕' : '';
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${prop.estate}${customIndicator} - ${prop.size}m²</strong></td>
+                    <td>${fmt(prop.purchasePrice)}</td>
+                    <td>${fmt(prop.totalMonthlyCosts)}</td>
+                    <td>${fmt(prop.estimatedRent1)}</td>
+                    <td class="${prop.monthlyCashFlow1 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow1)}</td>
+                    <td>${prop.roi1.toFixed(2)}%</td>
+                    <td>${fmt(prop.estimatedRent2)}</td>
+                    <td class="${prop.monthlyCashFlow2 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow2)}</td>
+                    <td class="positive">${prop.roi2.toFixed(2)}%</td>
+                `;
+            });
+            
+            document.getElementById('comparisonResults').style.display = 'block';
+            
+            if(charts.compare) charts.compare.destroy();
+            const ctx = document.getElementById('compareChart').getContext('2d');
+            charts.compare = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: selected.map(p => `${p.estate} ${p.size}m²`),
+                    datasets: [{
+                        label: 'ROI Scenario 1 (%)',
+                        data: selected.map(p => p.roi1),
+                        backgroundColor: '#3498db'
+                    }, {
+                        label: 'ROI Scenario 2 (%)',
+                        data: selected.map(p => p.roi2),
+                        backgroundColor: '#2ecc71'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+        
+        function filterProperties(filter) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const container = document.getElementById('propertiesGrid');
+            container.innerHTML = '';
+            
+            const allProps = getAllProperties();
+            let filtered = allProps;
+            
+            if(filter === 'positive') {
+                filtered = allProps.filter(p => p.monthlyCashFlow2 >= 0);
+            } else if(filter !== 'all') {
+                // Filter by estate name
+                filtered = allProps.filter(p => p.estate === filter);
+            }
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">No properties found for this filter.</p>';
+                return;
+            }
+            
+            filtered.forEach((prop, index) => {
+                const customBadge = prop.isCustom ? '<span style="background: #f39c12; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; margin-left: 10px;">NEW</span>' : '';
+                const card = document.createElement('div');
+                card.className = 'property-card';
+                card.innerHTML = `
+                    <div class="property-header">
+                        <div class="property-name">${prop.estate}${customBadge}</div>
+                        <div class="property-type">${prop.type}</div>
+                    </div>
+                    <div class="property-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Size</span>
+                            <span class="detail-value">${prop.size}m²</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Purchase Price</span>
+                            <span class="detail-value">${fmt(prop.purchasePrice)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Monthly Costs</span>
+                            <span class="detail-value">${fmt(prop.totalMonthlyCosts)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cash Flow (S1)</span>
+                            <span class="detail-value ${prop.monthlyCashFlow1 >= 0 ? 'positive' : 'negative'}">${fmt(prop.monthlyCashFlow1)}</span>
+                        </div>
+                    </div>
+                    <div class="roi-badge ${prop.roi2 >= 0 ? 'roi-positive' : 'roi-negative'}">
+                        ROI (S2): ${prop.roi2.toFixed(2)}%
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        function calculateCustom() {
+            const sellingPrice = parseFloat(document.getElementById('calcSellingPrice').value);
+            const discount = parseFloat(document.getElementById('calcDiscount').value) / 100;
+            const deposit = parseFloat(document.getElementById('calcDeposit').value);
+            const interest = parseFloat(document.getElementById('calcInterest').value) / 100;
+            const term = parseFloat(document.getElementById('calcTerm').value);
+            const levies = parseFloat(document.getElementById('calcLevies').value);
+            const rates = parseFloat(document.getElementById('calcRates').value);
+            const effluent = parseFloat(document.getElementById('calcEffluent').value);
+            const rent1 = parseFloat(document.getElementById('calcRent1').value);
+            const rent2 = parseFloat(document.getElementById('calcRent2').value);
+            
+            const discountAmount = sellingPrice * discount;
+            const purchasePrice = sellingPrice - discountAmount;
+            const bondAmount = purchasePrice - deposit;
+            
+            const monthlyRate = interest / 12;
+            const numPayments = term * 12;
+            const monthlyBond = bondAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                               (Math.pow(1 + monthlyRate, numPayments) - 1);
+            
+            const totalMonthlyCosts = monthlyBond + levies + rates + effluent;
+            const cashFlow1 = rent1 - totalMonthlyCosts;
+            const cashFlow2 = rent2 - totalMonthlyCosts;
+            const roi1 = ((rent1 * 12) / purchasePrice) * 100;
+            const roi2 = ((rent2 * 12) / purchasePrice) * 100;
+            
+            document.getElementById('customPurchase').textContent = fmt(purchasePrice);
+            document.getElementById('customBond').textContent = fmt(monthlyBond);
+            document.getElementById('customCosts').textContent = fmt(totalMonthlyCosts);
+            document.getElementById('customCF1').textContent = fmt(cashFlow1);
+            document.getElementById('customROI1').textContent = roi1.toFixed(2) + '%';
+            document.getElementById('customCF2').textContent = fmt(cashFlow2);
+            document.getElementById('customROI2').textContent = roi2.toFixed(2) + '%';
+            
+            document.getElementById('customResults').style.display = 'block';
+            
+            if(charts.custom) charts.custom.destroy();
+            const ctx = document.getElementById('customChart').getContext('2d');
+            charts.custom = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Monthly Bond', 'Levies', 'Rates', 'Effluent'],
+                    datasets: [{
+                        data: [monthlyBond, levies, rates, effluent],
+                        backgroundColor: ['#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+        
+        function generateInsights() {
+            const allProps = getAllProperties();
+            const best = allProps.reduce((a, b) => a.roi2 > b.roi2 ? a : b);
+            const worst = allProps.reduce((a, b) => a.roi2 < b.roi2 ? a : b);
+            const avgROI = allProps.reduce((sum, p) => sum + p.roi2, 0) / allProps.length;
+            const positiveFlow = allProps.filter(p => p.monthlyCashFlow2 >= 0);
+            
+            const content = document.getElementById('insightsContent');
+            content.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; padding: 25px; border-radius: 15px;">
+                        <h3 style="margin-bottom: 10px;">🏆 Best Investment</h3>
+                        <p style="font-size: 1.2em; font-weight: 700;">${best.estate} - ${best.size}m²</p>
+                        <p>ROI: ${best.roi2.toFixed(2)}%</p>
+                        <p>Cash Flow: ${fmt(best.monthlyCashFlow2)}</p>
+                        ${best.isCustom ? '<p style="margin-top: 10px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px;">🆕 Custom Property</p>' : ''}
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 25px; border-radius: 15px;">
+                        <h3 style="margin-bottom: 10px;">⚠️ Lowest ROI</h3>
+                        <p style="font-size: 1.2em; font-weight: 700;">${worst.estate} - ${worst.size}m²</p>
+                        <p>ROI: ${worst.roi2.toFixed(2)}%</p>
+                        <p>Cash Flow: ${fmt(worst.monthlyCashFlow2)}</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 25px; border-radius: 15px;">
+                        <h3 style="margin-bottom: 10px;">📊 Portfolio Stats</h3>
+                        <p style="font-size: 1.2em; font-weight: 700;">Average ROI: ${avgROI.toFixed(2)}%</p>
+                        <p>Positive Cash Flow: ${positiveFlow.length}/${allProps.length}</p>
+                        <p>Total Properties: ${allProps.length}</p>
+                        ${customProperties.length > 0 ? `<p style="margin-top: 10px;">🆕 Custom: ${customProperties.length}</p>` : ''}
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 15px; margin-top: 20px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">💡 Key Insights</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 10px; margin-bottom: 10px; background: #f8f9fa; border-radius: 8px;">
+                            ✓ <strong>Scenario 2</strong> yields ${((avgROI - allProps.reduce((sum, p) => sum + p.roi1, 0) / allProps.length)).toFixed(2)}% higher ROI on average
+                        </li>
+                        <li style="padding: 10px; margin-bottom: 10px; background: #f8f9fa; border-radius: 8px;">
+                            ✓ <strong>${positiveFlow.length} properties</strong> generate positive cash flow in Scenario 2
+                        </li>
+                        <li style="padding: 10px; margin-bottom: 10px; background: #f8f9fa; border-radius: 8px;">
+                            ✓ Average deposit required: ${fmt(allProps.reduce((sum, p) => sum + p.deposit, 0) / allProps.length)}
+                        </li>
+                        <li style="padding: 10px; margin-bottom: 10px; background: #f8f9fa; border-radius: 8px;">
+                            ✓ Best estate for ROI: <strong>${best.estate}</strong>
+                        </li>
+                    </ul>
+                </div>
+            `;
+            
+            if(charts.insights) charts.insights.destroy();
+            const ctx = document.getElementById('insightsChart').getContext('2d');
+            const sorted = [...allProps].sort((a, b) => b.roi2 - a.roi2);
+            charts.insights = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(p => `${p.estate} ${p.size}m²`),
+                    datasets: [{
+                        label: 'ROI Scenario 2 (%)',
+                        data: sorted.map(p => p.roi2),
+                        backgroundColor: sorted.map(p => p.roi2 >= 14 ? '#2ecc71' : '#f39c12')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+        
+        // Excel Download Functions
+        function downloadExcel() {
+            const wb = XLSX.utils.book_new();
+            const allProps = getAllProperties();
+            
+            // Sheet 1: All Properties Overview
+            const overviewData = [
+                ['Property Investment Analysis Report'],
+                ['Generated: ' + new Date().toLocaleDateString()],
+                ['Total Properties: ' + allProps.length + ' (Custom: ' + customProperties.length + ')'],
+                [],
+                ['Estate', 'Type', 'Size (m²)', 'Selling Price', 'Discount %', 'Purchase Price', 'Deposit', 'Bond Amount', 
+                 'Interest Rate %', 'Bond Term (Years)', 'Monthly Bond', 'Monthly Levies', 'Rates', 'Effluent Fee', 
+                 'Total Monthly Costs', 'Rent S1', 'Cash Flow S1', 'ROI S1 %', 'Rent S2', 'Cash Flow S2', 'ROI S2 %', 'Custom']
+            ];
+            
+            allProps.forEach(prop => {
+                overviewData.push([
+                    prop.estate,
+                    prop.type,
+                    prop.size,
+                    prop.sellingPrice,
+                    prop.discount,
+                    prop.purchasePrice,
+                    prop.deposit,
+                    prop.bondAmount,
+                    prop.interestRate,
+                    prop.bondTerm,
+                    prop.monthlyBond,
+                    prop.monthlyLevies,
+                    prop.estimatedRates,
+                    prop.effluentFee,
+                    prop.totalMonthlyCosts,
+                    prop.estimatedRent1,
+                    prop.monthlyCashFlow1,
+                    prop.roi1,
+                    prop.estimatedRent2,
+                    prop.monthlyCashFlow2,
+                    prop.roi2,
+                    prop.isCustom ? 'Yes' : 'No'
+                ]);
+            });
+            
+            const ws1 = XLSX.utils.aoa_to_sheet(overviewData);
+            ws1['!cols'] = [
+                {wch: 12}, {wch: 15}, {wch: 10}, {wch: 12}, {wch: 10}, {wch: 12}, {wch: 10}, {wch: 12},
+                {wch: 10}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 10}, {wch: 12}, {wch: 15}, {wch: 10},
+                {wch: 12}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 10}, {wch: 8}
+            ];
+            XLSX.utils.book_append_sheet(wb, ws1, 'All Properties');
+            
+            // Sheet 2: Summary Statistics
+            const avgROI1 = allProps.reduce((sum, p) => sum + p.roi1, 0) / allProps.length;
+            const avgROI2 = allProps.reduce((sum, p) => sum + p.roi2, 0) / allProps.length;
+            const positiveFlowS1 = allProps.filter(p => p.monthlyCashFlow1 >= 0).length;
+            const positiveFlowS2 = allProps.filter(p => p.monthlyCashFlow2 >= 0).length;
+            const avgPurchasePrice = allProps.reduce((sum, p) => sum + p.purchasePrice, 0) / allProps.length;
+            const avgDeposit = allProps.reduce((sum, p) => sum + p.deposit, 0) / allProps.length;
+            const best = allProps.reduce((a, b) => a.roi2 > b.roi2 ? a : b);
+            const worst = allProps.reduce((a, b) => a.roi2 < b.roi2 ? a : b);
+            
+            const summaryData = [
+                ['Portfolio Summary Statistics'],
+                [],
+                ['Metric', 'Value'],
+                ['Total Properties', allProps.length],
+                ['Original Properties', properties.length],
+                ['Custom Added Properties', customProperties.length],
+                ['Average Purchase Price', avgPurchasePrice.toFixed(2)],
+                ['Average Deposit', avgDeposit.toFixed(2)],
+                [],
+                ['Scenario 1 Analysis'],
+                ['Average ROI %', avgROI1.toFixed(2)],
+                ['Properties with Positive Cash Flow', positiveFlowS1],
+                [],
+                ['Scenario 2 Analysis'],
+                ['Average ROI %', avgROI2.toFixed(2)],
+                ['Properties with Positive Cash Flow', positiveFlowS2],
+                [],
+                ['Best Performing Property'],
+                ['Estate', best.estate],
+                ['Type', best.type],
+                ['Size (m²)', best.size],
+                ['ROI S2 %', best.roi2.toFixed(2)],
+                ['Cash Flow S2', best.monthlyCashFlow2.toFixed(2)],
+                ['Custom Property', best.isCustom ? 'Yes' : 'No'],
+                [],
+                ['Lowest Performing Property'],
+                ['Estate', worst.estate],
+                ['Type', worst.type],
+                ['Size (m²)', worst.size],
+                ['ROI S2 %', worst.roi2.toFixed(2)],
+                ['Cash Flow S2', worst.monthlyCashFlow2.toFixed(2)]
+            ];
+            
+            const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+            ws2['!cols'] = [{wch: 35}, {wch: 20}];
+            XLSX.utils.book_append_sheet(wb, ws2, 'Summary Statistics');
+            
+            // Sheet 3: Detailed Breakdown by Estate
+            const estates = [...new Set(allProps.map(p => p.estate))];
+            const breakdownData = [
+                ['Property Breakdown by Estate'],
+                []
+            ];
+            
+            estates.forEach(estate => {
+                const estateProps = allProps.filter(p => p.estate === estate);
+                breakdownData.push([estate + ' Properties']);
+                breakdownData.push(['Property', 'Type', 'Size (m²)', 'Purchase Price', 'Monthly Costs', 'Cash Flow S2', 'ROI S2 %', 'Custom']);
+                
+                estateProps.forEach(prop => {
+                    breakdownData.push([
+                        prop.estate,
+                        prop.type,
+                        prop.size,
+                        prop.purchasePrice,
+                        prop.totalMonthlyCosts,
+                        prop.monthlyCashFlow2,
+                        prop.roi2,
+                        prop.isCustom ? 'Yes' : 'No'
+                    ]);
+                });
+                breakdownData.push([]);
+            });
+            
+            const ws3 = XLSX.utils.aoa_to_sheet(breakdownData);
+            ws3['!cols'] = [{wch: 15}, {wch: 15}, {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, {wch: 8}];
+            XLSX.utils.book_append_sheet(wb, ws3, 'By Estate');
+            
+            // Download
+            XLSX.writeFile(wb, `Property_Investment_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        function downloadComparisonExcel() {
+            if(selectedProperties.length < 2) {
+                alert('Please select at least 2 properties to download comparison');
+                return;
+            }
+            
+            const allProps = getAllProperties();
+            const selected = selectedProperties.map(i => allProps[i]);
+            const wb = XLSX.utils.book_new();
+            
+            // Comparison Sheet
+            const comparisonData = [
+                ['Property Comparison Report'],
+                ['Generated: ' + new Date().toLocaleDateString()],
+                ['Properties Compared: ' + selected.length],
+                [],
+                ['Property', 'Estate', 'Type', 'Size (m²)', 'Purchase Price', 'Total Monthly Costs', 
+                 'Rent S1', 'Cash Flow S1', 'ROI S1 %', 'Rent S2', 'Cash Flow S2', 'ROI S2 %', 'Custom']
+            ];
+            
+            selected.forEach((prop, idx) => {
+                comparisonData.push([
+                    `Property ${idx + 1}`,
+                    prop.estate,
+                    prop.type,
+                    prop.size,
+                    prop.purchasePrice,
+                    prop.totalMonthlyCosts,
+                    prop.estimatedRent1,
+                    prop.monthlyCashFlow1,
+                    prop.roi1,
+                    prop.estimatedRent2,
+                    prop.monthlyCashFlow2,
+                    prop.roi2,
+                    prop.isCustom ? 'Yes' : 'No'
+                ]);
+            });
+            
+            comparisonData.push([]);
+            comparisonData.push(['Comparison Summary']);
+            comparisonData.push(['Metric', 'Best', 'Worst', 'Average']);
+            
+            const bestROI = Math.max(...selected.map(p => p.roi2));
+            const worstROI = Math.min(...selected.map(p => p.roi2));
+            const avgROI = selected.reduce((sum, p) => sum + p.roi2, 0) / selected.length;
+            
+            const bestCF = Math.max(...selected.map(p => p.monthlyCashFlow2));
+            const worstCF = Math.min(...selected.map(p => p.monthlyCashFlow2));
+            const avgCF = selected.reduce((sum, p) => sum + p.monthlyCashFlow2, 0) / selected.length;
+            
+            comparisonData.push(['ROI S2 (%)', bestROI.toFixed(2), worstROI.toFixed(2), avgROI.toFixed(2)]);
+            comparisonData.push(['Cash Flow S2', bestCF.toFixed(2), worstCF.toFixed(2), avgCF.toFixed(2)]);
+            
+            const ws = XLSX.utils.aoa_to_sheet(comparisonData);
+            ws['!cols'] = [
+                {wch: 15}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 15}, {wch: 18},
+                {wch: 12}, {wch: 12}, {wch: 10}, {wch: 12}, {wch: 12}, {wch: 10}, {wch: 8}
+            ];
+            XLSX.utils.book_append_sheet(wb, ws, 'Comparison');
+            
+            // Download
+            XLSX.writeFile(wb, `Property_Comparison_${selected.length}_Properties_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        // Initialize
+        renderProperties('propertiesGrid');
+        renderProperties('compareGrid', true);
+        updateSelectedCount();
+        updatePortfolioChart();
+        updateFilterButtons();
+    </script>
+</body>
+</html>

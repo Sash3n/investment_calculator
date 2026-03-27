@@ -1,0 +1,26 @@
+product_type,recommended_style,color_mood,typography_mood,key_effects,anti_patterns,severity
+SaaS (General),Hero + Features + CTA,Trust blue + Orange CTA,Clean geometric,Glassmorphism cards hover lift,Cluttered hero with too many CTAs,HIGH
+SaaS (Dark),Dark glassmorphism + Glow accents,Deep navy + Indigo glow,Modern sans-serif,Glow on hover particle background,Light mode only no dark option,MEDIUM
+E-commerce (Fashion),Full-bleed imagery + Minimal text,Green or neutral + warm CTA,Elegant serif + clean sans,Parallax scroll image zoom,Too much text over product images,HIGH
+E-commerce (General),Grid catalog + Sticky cart,Blue trust + Red urgency,Clean readable sans,Micro-interactions on add-to-cart,No urgency signals or social proof,HIGH
+Fintech/Crypto,Conversion-Optimized dashboard dark,Deep purple + Amber accents,Modern sans-serif bold,Dark mode glassmorphism animated numbers,Light backgrounds reduce trust,HIGH
+Healthcare App,Clean clinical + Soft cards,Teal + Green CTA soft whites,Clean readable sans,Subtle fade-in no aggressive animations,Red as primary color triggers anxiety,HIGH
+Restaurant/Food,Menu-first visual full-bleed food,Warm red + Gold accents,Friendly rounded serif,Food photography parallax hover zoom,Stock photos instead of real food,HIGH
+Luxury/Premium,Editorial minimal high-whitespace,Black + Gold warm whites,Elegant serif refined,Slow elegant fade-in no bouncy effects,Bright flashy CTAs cheapen brand,HIGH
+Education/EdTech,Engaging colorful + Progress UI,Purple + Amber reward tones,Friendly approachable rounded,Progress bars confetti on completion,Walls of text no visual hierarchy,HIGH
+Real Estate,Property-first large imagery,Teal + Orange CTA clean,Premium serif + clean sans,Map integration image gallery hover,Hiding price information from users,MEDIUM
+Legal/Law Firm,Professional minimal trust-focused,Navy blue + Gold serif accents,Corporate authoritative serif,Subtle hover states no animations,Casual fonts or colorful layouts,HIGH
+Travel/Hospitality,Immersive full-bleed destination,Sky blue + Warm orange CTA,Adventurous open sans,Parallax hero video background,Generic stock travel photos,HIGH
+Fitness/Wellness,Energetic bold + Strong CTAs,Green + Red CTA high contrast,Bold display + clean sans,Bold hover transforms progress tracking,Passive soft design no energy,MEDIUM
+Agency/Creative,Portfolio-led bold experimental,Pink + Purple unexpected combos,Creative display + body,Cursor effects scroll animations,Playing it too safe generic layouts,MEDIUM
+Developer Tools,Dark mode code-first minimal,Dark slate + Indigo accents,Monospace + technical sans,Syntax highlighting smooth scrolling,Light default mode no code snippets,HIGH
+Nonprofit/Charity,Story-led emotional impact,Blue + Green hope tones,Warm humanist sans,Emotional imagery counters fade-in,Burying donation CTA below the fold,HIGH
+Gaming,Dark immersive high-contrast,Deep purple + Red + Neon,Futuristic display + sans,Particle effects glow hover animations,Bright white backgrounds kill immersion,HIGH
+News/Media,Scannable grid editorial,Red + White high contrast,Authoritative serif + sans,Sticky nav quick-load lazy images,Auto-playing videos pop-ups on load,HIGH
+Consulting/B2B,Trust-led case study focused,Navy + Gold professional,Corporate sans serif,Clean hover states scroll-triggered reveals,Vague claims no specific results shown,HIGH
+Photography/Portfolio,Full-bleed imagery minimal chrome,Dark + Gold accent neutral,Minimal sans or none,Lightbox gallery smooth transitions,Busy layouts competing with the work,HIGH
+Startup/MVP,Simple clear value proposition,Blue + Orange energetic,Clean modern sans,Smooth scroll subtle hover lift,Over-engineering before product-market fit,MEDIUM
+Mental Health,Calm soft approachable,Purple + Green soft tones,Warm rounded friendly,Gentle fade-in no sudden movements,Sterile clinical white feels cold,HIGH
+Automotive,Dark powerful bold imagery,Dark slate + Red accents,Strong bold sans-serif,360 spin video hero bold hover,Weak CTAs no urgency on test drives,MEDIUM
+Beauty/Cosmetics,Soft editorial product-led,Pink + Gold warm neutrals,Elegant serif + clean,Before-after hover product zoom,Harsh high-contrast colors feel cheap,HIGH
+Kids/Family,Bright playful engaging,Yellow + Red fun primaries,Rounded friendly bold,Bouncy animations fun micro-interactions,Tiny text dark colors feel adult,HIGH
