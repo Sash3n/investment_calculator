@@ -242,9 +242,21 @@ export function AppShell() {
           <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
             All values in South African Rand
           </p>
-          <p className="text-[9px] leading-relaxed pt-1" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)', opacity: 0.6 }}>
-            For educational purposes only. Not financial advice. Consult a CFP before making investment decisions.
-          </p>
+          <div className="mt-2 p-2 rounded-lg" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
+            <p className="text-[10px] leading-relaxed font-medium" style={{ color: '#F59E0B', fontFamily: 'var(--font-body)' }}>
+              ⚠ Educational use only
+            </p>
+            <p className="text-[9px] leading-relaxed mt-0.5" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
+              Not financial advice. Consult a CFP before investing.
+            </p>
+            <button
+              className="text-[9px] mt-1 underline"
+              style={{ color: 'var(--color-text-subtle)' }}
+              onClick={() => { localStorage.removeItem('fincalc-disclaimer'); window.location.reload(); }}
+            >
+              View full disclaimer
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -299,24 +311,35 @@ export function AppShell() {
             >
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            {/* Auth button */}
+            {/* Auth */}
             {user ? (
-              <div className="flex items-center gap-2">
-                {user.photoURL && (
+              <div
+                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl"
+                style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}
+              >
+                {user.photoURL ? (
                   <img
                     src={user.photoURL}
                     alt={user.displayName ?? 'User'}
-                    className="w-7 h-7 rounded-full border border-[rgba(99,102,241,0.4)]"
-                    title={user.displayName ?? user.email ?? ''}
+                    className="w-6 h-6 rounded-full flex-shrink-0"
                   />
+                ) : (
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                    style={{ background: 'rgba(99,102,241,0.3)', color: '#818CF8' }}>
+                    {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
+                  </div>
                 )}
+                <span className="text-xs font-medium hidden sm:block max-w-[100px] truncate" style={{ color: '#818CF8' }}>
+                  {user.displayName?.split(' ')[0] ?? user.email}
+                </span>
                 <button
                   onClick={signOut}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                  style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium transition-all ml-1"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}
                   title="Sign out"
                 >
-                  <LogOut size={15} />
+                  <LogOut size={11} />
+                  <span className="hidden sm:inline">Sign out</span>
                 </button>
               </div>
             ) : (
@@ -326,7 +349,7 @@ export function AppShell() {
                 style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}
               >
                 <LogIn size={13} />
-                <span className="hidden sm:inline">Sign in</span>
+                <span className="hidden sm:inline">Sign in with Google</span>
               </button>
             )}
             <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block" title="All systems operational" />
