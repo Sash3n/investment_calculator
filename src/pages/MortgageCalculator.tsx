@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -14,6 +15,7 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
 import type { MortgageInputs } from '../types';
@@ -91,6 +93,13 @@ export function MortgageCalculator() {
     }));
     setTablePage(0);
   }, []);
+
+  // Load snapshot navigated from History page
+  const location = useLocation();
+  useEffect(() => {
+    const loaded = (location.state as { loadedInputs?: MortgageInputs } | null)?.loadedInputs;
+    if (loaded) setInputs(loaded);
+  }, [location.state]);
 
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
 
@@ -319,6 +328,14 @@ export function MortgageCalculator() {
               step={10000}
             />
           )}
+
+          <SaveLoadBar<MortgageInputs>
+            type="mortgage"
+            title={`Mortgage — ${formatRand(result.loanAmount)} at ${inputs.interestRate}% / ${inputs.termYears}yrs`}
+            summary={`Monthly: ${formatRand(result.standardPayment)} | Total interest: ${formatRand(result.totalInterestStandard)}`}
+            inputs={inputs}
+            onLoad={(saved) => setInputs(saved)}
+          />
         </div>
 
         {/* ── Results panel ────────────────────────────── */}

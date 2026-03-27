@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -12,6 +13,7 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { formatRand, formatPercent, formatRandShort } from '../utils/format';
 import {
   calcInvestmentStrategy,
@@ -225,6 +227,12 @@ export function InvestmentStrategy() {
     tfsaLifetimeContributed: 0,
   });
 
+  const location = useLocation();
+  useEffect(() => {
+    const loaded = (location.state as { loadedInputs?: InvestmentStrategyInputs } | null)?.loadedInputs;
+    if (loaded) setInputs(loaded);
+  }, [location.state]);
+
   const result = useMemo(() => calcInvestmentStrategy(inputs), [inputs]);
 
   const upd = (key: keyof InvestmentStrategyInputs) => (val: string) =>
@@ -407,6 +415,14 @@ export function InvestmentStrategy() {
               <InputField label="Investment Horizon" id="is-horizon" value={inputs.horizonYears} onChange={upd('horizonYears')} suffix="years" min={5} max={40} />
             </div>
           </div>
+
+          <SaveLoadBar<InvestmentStrategyInputs>
+            type="strategy"
+            title={`Strategy — ${formatRandShort(result.totalMonthlyGross)}/month gross`}
+            summary={`Tax saving: ${formatRand(result.monthlyTaxSaving)}/month | Recommended: ${result.recommendedTag}`}
+            inputs={inputs}
+            onLoad={(saved) => setInputs(saved)}
+          />
         </div>
 
         {/* ── Live Dashboard ────────────────────────────────────────────────── */}

@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, LineChart, Line,
@@ -12,6 +13,7 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcExtraPaymentVsInvesting, calcStandardPayment } from '../utils/investing';
 import { formatRand, formatPercent, formatYears, formatDate } from '../utils/format';
 import type { InvestingInputs } from '../types';
@@ -78,6 +80,12 @@ export function PaymentVsInvesting() {
       expectedReturn: isCustom ? prev.expectedReturn : (etf?.return ?? 13),
     }));
   };
+
+  const location = useLocation();
+  useEffect(() => {
+    const loaded = (location.state as { loadedInputs?: InvestingInputs } | null)?.loadedInputs;
+    if (loaded) setInputs(loaded);
+  }, [location.state]);
 
   const result = useMemo(() => calcExtraPaymentVsInvesting(inputs), [inputs]);
   const standardPayment = useMemo(
@@ -218,6 +226,14 @@ export function PaymentVsInvesting() {
                 help="SA average CPI: ~5% p.a." />
             </div>
           </div>
+
+          <SaveLoadBar<InvestingInputs>
+            type="investing"
+            title={`Extra vs Invest — ${formatRand(inputs.extraMonthlyAmount)}/month extra`}
+            summary={`Winner: ${result.winner === 'bond' ? 'Pay off bond' : 'Invest in ' + inputs.investmentVehicle} | Advantage: ${formatRand(result.winnerAmount)}`}
+            inputs={inputs}
+            onLoad={(saved) => setInputs(saved)}
+          />
         </div>
 
         {/* Results panel */}

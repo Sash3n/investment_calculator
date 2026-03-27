@@ -14,7 +14,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
 import { formatRand, formatPercent } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
-import { useSavedProperties } from '../hooks/useFirestore';
+import { useSavedProperties, useHistory } from '../hooks/useFirestore';
 import type { PropertyInputs } from '../types';
 
 const CHART_COLORS = {
@@ -78,6 +78,7 @@ export function PropertyROI() {
   // Auth + Firestore
   const { user } = useAuth();
   const { properties: cloudProperties, save: saveCloud, remove: removeCloud, loading: cloudLoading } = useSavedProperties(user?.uid ?? null);
+  const { push: pushHistory } = useHistory(user?.uid ?? null);
 
   // localStorage fallback for unauthenticated users
   const [localPortfolio, setLocalPortfolio] = useState<(PropertyInputs & { id: string })[]>(() => {
@@ -139,6 +140,13 @@ export function PropertyROI() {
     try {
       if (user) {
         await saveCloud(inputs.propertyName || 'Property', inputs);
+        // Also push to calculation history
+        await pushHistory({
+          type: 'property',
+          title: `Property — ${inputs.propertyName || 'Investment Property'}`,
+          summary: `Net yield: ${result.netYieldS1.toFixed(1)}% | Cash flow: ${formatRand(result.cashFlowS1)}/month | Price: ${formatRand(inputs.purchasePrice)}`,
+          inputs: inputs as unknown as Record<string, unknown>,
+        });
       } else {
         const entry = { ...inputs, id: Date.now().toString() };
         const updated = [...localPortfolio, entry];

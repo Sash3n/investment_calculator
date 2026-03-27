@@ -117,6 +117,12 @@ export function useHistory(uid: string | null) {
     await load();
   };
 
+  const remove = async (id: string) => {
+    if (!uid) return;
+    await deleteDoc(doc(db, 'users', uid, 'history', id));
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  };
+
   const clear = async () => {
     if (!uid) return;
     const snap = await getDocs(collection(db, 'users', uid, 'history'));
@@ -124,5 +130,8 @@ export function useHistory(uid: string | null) {
     setEntries([]);
   };
 
-  return { entries, loading, push, clear, reload: load };
+  /** Returns only entries matching the given calc type — filtered client-side */
+  const byType = (type: CalcType) => entries.filter((e) => e.type === type);
+
+  return { entries, loading, push, remove, clear, byType, reload: load };
 }

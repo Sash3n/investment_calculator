@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -11,6 +12,7 @@ import * as XLSX from 'xlsx';
 import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcCarFinance } from '../utils/car';
 import { formatRand } from '../utils/format';
 import type { CarInputs } from '../types';
@@ -62,6 +64,12 @@ export function CarFinance() {
   const set = useCallback(<K extends keyof CarInputs>(key: K, raw: string) => {
     setInputs((prev) => ({ ...prev, [key]: parseFloat(raw) || 0 }));
   }, []);
+
+  const location = useLocation();
+  useEffect(() => {
+    const loaded = (location.state as { loadedInputs?: CarInputs } | null)?.loadedInputs;
+    if (loaded) setInputs(loaded);
+  }, [location.state]);
 
   const result = useMemo(() => calcCarFinance(inputs), [inputs]);
 
@@ -243,6 +251,14 @@ export function CarFinance() {
                 onChange={(v) => set('monthlyMaintenance', v)} prefix="R" step={100} />
             </div>
           </div>
+
+          <SaveLoadBar<CarInputs>
+            type="car"
+            title={`Car — ${formatRand(inputs.vehiclePrice)} at ${inputs.interestRate}% / ${inputs.termMonths}mo`}
+            summary={`Instalment: ${formatRand(result.monthlyInstalment)} | Total interest: ${formatRand(result.totalInterest)}`}
+            inputs={inputs}
+            onLoad={(saved) => setInputs(saved)}
+          />
         </div>
 
         {/* Results */}

@@ -1,7 +1,17 @@
 import { motion } from 'framer-motion';
-import { History as HistoryIcon, Trash2, LogIn, Building2, Car, TrendingUp, Receipt, Wallet, Home } from 'lucide-react';
+import { History as HistoryIcon, Trash2, LogIn, Building2, Car, TrendingUp, Receipt, Wallet, Home, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useHistory, type CalcType } from '../hooks/useFirestore';
+
+const CALC_ROUTES: Record<CalcType, string> = {
+  mortgage:  '/mortgage',
+  property:  '/property-roi',
+  car:       '/car-finance',
+  investing: '/extra-vs-investing',
+  strategy:  '/investment-strategy',
+  tax:       '/tax-planner',
+};
 
 const TYPE_META: Record<CalcType, { label: string; icon: typeof Home; color: string }> = {
   mortgage:   { label: 'Mortgage',           icon: Building2,   color: '#F59E0B' },
@@ -14,7 +24,8 @@ const TYPE_META: Record<CalcType, { label: string; icon: typeof Home; color: str
 
 export function History() {
   const { user, signIn } = useAuth();
-  const { entries, loading, clear } = useHistory(user?.uid ?? null);
+  const { entries, loading, clear, remove } = useHistory(user?.uid ?? null);
+  const navigate = useNavigate();
 
   if (!user) {
     return (
@@ -109,13 +120,30 @@ export function History() {
                     {entry.summary}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   <p className="text-[10px] font-medium" style={{ color: meta.color }}>
                     {meta.label}
                   </p>
                   <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
                     {entry.savedAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => navigate(CALC_ROUTES[entry.type], { state: { loadedInputs: entry.inputs } })}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all"
+                      style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}30` }}
+                    >
+                      <ExternalLink size={10} /> Open
+                    </button>
+                    <button
+                      onClick={() => remove(entry.id)}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+                      style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}
+                      title="Delete"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             );
