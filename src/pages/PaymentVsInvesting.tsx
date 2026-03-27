@@ -82,10 +82,10 @@ export function PaymentVsInvesting() {
   };
 
   const location = useLocation();
+  const locationState = location.state as { loadedInputs?: InvestingInputs; entryId?: string } | null;
   useEffect(() => {
-    const loaded = (location.state as { loadedInputs?: InvestingInputs } | null)?.loadedInputs;
-    if (loaded) setInputs(loaded);
-  }, [location.state]);
+    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
+  }, [locationState]);
 
   const result = useMemo(() => calcExtraPaymentVsInvesting(inputs), [inputs]);
   const standardPayment = useMemo(
@@ -233,6 +233,7 @@ export function PaymentVsInvesting() {
             summary={`Winner: ${result.winner === 'bond' ? 'Pay off bond' : 'Invest in ' + inputs.investmentVehicle} | Advantage: ${formatRand(result.winnerAmount)}`}
             inputs={inputs}
             onLoad={(saved) => setInputs(saved)}
+            initialEditingId={locationState?.entryId}
           />
         </div>
 

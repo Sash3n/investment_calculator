@@ -6,7 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   collection, doc, getDocs, setDoc, deleteDoc,
-  addDoc, query, orderBy, limit, serverTimestamp,
+  addDoc, updateDoc, query, orderBy, limit, serverTimestamp,
   type DocumentData,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -123,6 +123,21 @@ export function useHistory(uid: string | null) {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
+  const rename = async (id: string, newTitle: string) => {
+    if (!uid) return;
+    await updateDoc(doc(db, 'users', uid, 'history', id), { title: newTitle });
+    setEntries((prev) => prev.map((e) => e.id === id ? { ...e, title: newTitle } : e));
+  };
+
+  const update = async (id: string, entry: Omit<HistoryEntry, 'id' | 'savedAt'>) => {
+    if (!uid) return;
+    await setDoc(doc(db, 'users', uid, 'history', id), {
+      ...entry,
+      savedAt: serverTimestamp(),
+    });
+    await load();
+  };
+
   const clear = async () => {
     if (!uid) return;
     const snap = await getDocs(collection(db, 'users', uid, 'history'));
@@ -133,5 +148,5 @@ export function useHistory(uid: string | null) {
   /** Returns only entries matching the given calc type — filtered client-side */
   const byType = (type: CalcType) => entries.filter((e) => e.type === type);
 
-  return { entries, loading, push, remove, clear, byType, reload: load };
+  return { entries, loading, push, update, remove, rename, clear, byType, reload: load };
 }

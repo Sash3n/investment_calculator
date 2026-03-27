@@ -66,10 +66,10 @@ export function CarFinance() {
   }, []);
 
   const location = useLocation();
+  const locationState = location.state as { loadedInputs?: CarInputs; entryId?: string } | null;
   useEffect(() => {
-    const loaded = (location.state as { loadedInputs?: CarInputs } | null)?.loadedInputs;
-    if (loaded) setInputs(loaded);
-  }, [location.state]);
+    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
+  }, [locationState]);
 
   const result = useMemo(() => calcCarFinance(inputs), [inputs]);
 
@@ -258,6 +258,7 @@ export function CarFinance() {
             summary={`Instalment: ${formatRand(result.monthlyInstalment)} | Total interest: ${formatRand(result.totalInterest)}`}
             inputs={inputs}
             onLoad={(saved) => setInputs(saved)}
+            initialEditingId={locationState?.entryId}
           />
         </div>
 

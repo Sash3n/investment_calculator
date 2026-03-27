@@ -34,6 +34,7 @@ const PAGES = [
   { name: 'extra-vs-investing',  path: '/extra-vs-investing',  title: 'Extra Payments vs Investing' },
   { name: 'tax-planner',         path: '/tax-planner',         title: 'Tax Planner' },
   { name: 'investment-strategy', path: '/investment-strategy', title: 'Investment Strategy' },
+  { name: 'history',             path: '/history',             title: 'Calculation History' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -147,9 +148,9 @@ async function main() {
 |---|---|
 | ![Tax Planner](${captured['tax-planner-dark']}) | ![Investment Strategy](${captured['investment-strategy-dark']}) |
 
-| Light Mode |
-|---|
-| ![Light Mode](${captured['light-mode']}) |`;
+| Calculation History | Light Mode |
+|---|---|
+| ![History](${captured['history-dark']}) | ![Light Mode](${captured['light-mode']}) |`;
 
     // Replace the existing Screenshots section
     readme = readme.replace(

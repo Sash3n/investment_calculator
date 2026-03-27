@@ -4,7 +4,7 @@ import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff } from 'lucide-react';
+import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
@@ -74,6 +74,7 @@ export function PropertyROI() {
   const [inputs, setInputs] = useState<PropertyInputs>(DEFAULT_INPUTS);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Auth + Firestore
   const { user } = useAuth();
@@ -137,6 +138,7 @@ export function PropertyROI() {
   // ── Portfolio management ───────────────────────────────────
   const saveToPortfolio = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       if (user) {
         await saveCloud(inputs.propertyName || 'Property', inputs);
@@ -153,6 +155,11 @@ export function PropertyROI() {
         setLocalPortfolio(updated);
         localStorage.setItem('fincalc_portfolio', JSON.stringify(updated));
       }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveError(msg.includes('permission-denied') || msg.includes('PERMISSION_DENIED')
+        ? 'Save failed: Firestore rules not configured.'
+        : `Save failed: ${msg}`);
     } finally {
       setSaving(false);
     }
@@ -359,6 +366,13 @@ export function PropertyROI() {
               </div>
             )}
 
+            {saveError && (
+              <div className="text-xs px-2 py-1.5 rounded-lg flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <span className="flex-1">{saveError}</span>
+                <button onClick={() => setSaveError(null)} className="font-bold opacity-60 hover:opacity-100">✕</button>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button
                 className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm disabled:opacity-60"
@@ -542,12 +556,27 @@ export function PropertyROI() {
                         <div className="w-9 h-9 rounded-xl bg-[rgba(16,185,129,0.12)] flex items-center justify-center">
                           <MapPin size={16} className="text-[#10B981]" />
                         </div>
-                        <button
-                          className="text-[#64748B] hover:text-[#EF4444] transition-colors p-1"
-                          onClick={(e) => { e.stopPropagation(); removeFromPortfolio(prop.id); }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="p-1 rounded-lg transition-colors text-[#64748B] hover:text-[#F59E0B]"
+                            title="Edit in calculator"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                              const { id: _id, ...propInputs } = prop;
+                              setInputs(propInputs as PropertyInputs);
+                              setActiveTab('quick');
+                            }}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            className="text-[#64748B] hover:text-[#EF4444] transition-colors p-1"
+                            onClick={(e) => { e.stopPropagation(); removeFromPortfolio(prop.id); }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                       <p className="text-sm font-bold text-[#F1F5F9] mb-1 truncate"
                          style={{ fontFamily: 'var(--font-heading)' }}>

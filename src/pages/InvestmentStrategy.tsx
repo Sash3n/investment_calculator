@@ -228,10 +228,10 @@ export function InvestmentStrategy() {
   });
 
   const location = useLocation();
+  const locationState = location.state as { loadedInputs?: InvestmentStrategyInputs; entryId?: string } | null;
   useEffect(() => {
-    const loaded = (location.state as { loadedInputs?: InvestmentStrategyInputs } | null)?.loadedInputs;
-    if (loaded) setInputs(loaded);
-  }, [location.state]);
+    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
+  }, [locationState]);
 
   const result = useMemo(() => calcInvestmentStrategy(inputs), [inputs]);
 
@@ -422,6 +422,7 @@ export function InvestmentStrategy() {
             summary={`Tax saving: ${formatRand(result.monthlyTaxSaving)}/month | Recommended: ${result.recommendedTag}`}
             inputs={inputs}
             onLoad={(saved) => setInputs(saved)}
+            initialEditingId={locationState?.entryId}
           />
         </div>
 

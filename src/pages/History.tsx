@@ -129,7 +129,7 @@ export function History() {
                   </p>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => navigate(CALC_ROUTES[entry.type], { state: { loadedInputs: entry.inputs } })}
+                      onClick={() => navigate(CALC_ROUTES[entry.type], { state: { loadedInputs: entry.inputs, entryId: entry.id } })}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all"
                       style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}30` }}
                     >

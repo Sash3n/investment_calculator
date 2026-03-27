@@ -1,7 +1,7 @@
 # FinCalc ZA
 
 > **Smart Investment Tools for South African Investors**
-> A production-grade, dark-themed financial calculator suite built with React + TypeScript + Vite. Covers mortgages, buy-to-let property ROI, car finance, and the classic extra-payment vs. investing dilemma — all calibrated for South African conditions (ZAR, Prime Rate, JSE ETFs, CGT).
+> A production-grade, dark-themed financial calculator suite built with React + TypeScript + Vite. Covers mortgages, buy-to-let property ROI, car finance, the classic extra-payment vs. investing dilemma, SA tax planning, and investment strategy — all calibrated for South African conditions (ZAR, Prime Rate, JSE ETFs, CGT, SARS tax brackets).
 
 ---
 
@@ -23,9 +23,9 @@
 |---|---|
 | ![Tax Planner](docs/screenshots/tax-planner.png) | ![Investment Strategy](docs/screenshots/investment-strategy.png) |
 
-| Light Mode |
-|---|
-| ![Light Mode](docs/screenshots/light-mode.png) |
+| Calculation History | Light Mode |
+|---|---|
+| ![History](docs/screenshots/history.png) | ![Light Mode](docs/screenshots/light-mode.png) |
 ---
 
 ## Features
@@ -38,6 +38,7 @@
 - Monthly bank service fee with true total-cost banner
 - Payoff date projection with and without extras
 - Excel (XLSX) export of the full schedule
+- Save & load snapshots (Google sign-in required)
 
 ### Property ROI Calculator
 - Dual rental scenario comparison (conservative vs. optimistic)
@@ -48,7 +49,9 @@
 - Property value + equity growth chart (10 years)
 - Income vs. Expenses bar chart
 - Cost composition pie chart
-- **Portfolio Manager**: save multiple properties to localStorage, compare side-by-side, bulk Excel export
+- **Portfolio Manager**: save multiple properties, compare side-by-side, bulk Excel export
+- Edit saved portfolio properties — loads back into calculator with one click
+- Cloud sync when signed in (Firestore); localStorage fallback when offline
 
 ### Car Finance Calculator
 - Balloon payment support (common SA practice)
@@ -59,6 +62,7 @@
 - Underwater months detection (loan balance > vehicle value)
 - Opportunity cost comparison: cash purchase vs. financed
 - Full amortization table — Standard & With Extras tabs, paginated
+- Save & load snapshots (Google sign-in required)
 
 ### Extra Payments vs. JSE ETF Investing
 - Side-by-side: paying extra into your bond vs. investing the same amount
@@ -67,6 +71,36 @@
 - Inflation-adjusted comparison
 - Year-by-year table showing bond balance (both scenarios) and portfolio value
 - Clear winner callout with rand advantage
+- Save & load snapshots (Google sign-in required)
+
+### Tax Planner
+- SARS 2024/25 income tax brackets
+- Medical aid credits (principal + dependants)
+- Retirement annuity (RA) and pension fund deduction modelling
+- Monthly and annual tax breakdown
+- Net take-home pay after all deductions
+- Save & load snapshots (Google sign-in required)
+
+### Investment Strategy Calculator
+- Gross-to-net salary breakdown with PAYE, UIF, SDL
+- RA vs. TFSA vs. direct ETF contribution optimisation
+- Monthly tax saving from RA contributions
+- Recommended strategy tag based on income and goals
+- Save & load snapshots (Google sign-in required)
+
+### Calculation History
+- All saved snapshots from every calculator in one place
+- Open any snapshot — navigates to the correct calculator and restores all inputs in "Edit" mode so you can update and save back
+- Delete individual entries or clear all history
+- Automatically populated when saving from any calculator
+
+### Save / Load Snapshots (all calculators)
+- **Google sign-in** — one-click Google Auth via Firebase
+- **Save snapshot** — captures current inputs + key result as a named entry
+- **Edit mode** — click Edit on any saved entry to load its inputs and switch the Save button to "Update snapshot", overwriting the same Firestore document
+- **Rename** — inline title editing without touching inputs
+- **New** button — exit edit mode to save a brand-new snapshot instead of updating
+- Snapshots persist in Firestore, synced across devices
 
 ### App-wide
 - Dark/light mode toggle — persisted to `localStorage`
@@ -75,6 +109,7 @@
 - Framer Motion page transitions and card animations
 - South African Rand (ZAR) formatting throughout
 - Prime Rate displayed in sidebar footer (11.25%)
+- Disclaimer banner with full legal text
 
 ---
 
@@ -92,6 +127,8 @@
 | Animations | Framer Motion | 11.x |
 | Icons | Lucide React | latest |
 | Excel Export | SheetJS (xlsx) | latest |
+| Auth | Firebase Auth (Google) | 11.x |
+| Database | Firebase Firestore | 11.x |
 | CSS Utilities | clsx | latest |
 
 ---
@@ -102,23 +139,34 @@
 src/
 ├── components/
 │   ├── Layout/
-│   │   └── AppShell.tsx        # Sidebar, header, mobile nav, theme toggle
+│   │   └── AppShell.tsx        # Sidebar, header, mobile nav, theme toggle, auth pill
 │   └── ui/
 │       ├── InputField.tsx      # Labelled number/text input with prefix/suffix
 │       ├── SelectField.tsx     # Styled select dropdown
 │       ├── StatCard.tsx        # Metric card with icon and trend
-│       └── SectionHeader.tsx   # Section heading with optional icon
+│       ├── SectionHeader.tsx   # Section heading with optional icon
+│       └── SaveLoadBar.tsx     # Reusable save/load/edit panel for all calculators
+├── context/
+│   └── AuthContext.tsx         # Firebase Auth provider (Google sign-in)
+├── hooks/
+│   └── useFirestore.ts         # useSavedProperties + useHistory Firestore hooks
+├── lib/
+│   └── firebase.ts             # Firebase app + Firestore + Auth initialisation
 ├── pages/
 │   ├── Dashboard.tsx           # Overview landing page
 │   ├── MortgageCalculator.tsx
-│   ├── PropertyROI.tsx         # Includes portfolio manager
+│   ├── PropertyROI.tsx         # Includes portfolio manager + cloud sync
 │   ├── CarFinance.tsx
-│   └── ExtraVsInvesting.tsx
+│   ├── PaymentVsInvesting.tsx
+│   ├── TaxPlanner.tsx
+│   ├── InvestmentStrategy.tsx
+│   └── History.tsx             # Unified calculation history with Open/Delete
 ├── utils/
 │   ├── mortgage.ts             # Bond maths (annuity, amortization, lump sum)
 │   ├── roi.ts                  # Property ROI, yields, equity projections
 │   ├── car.ts                  # Car finance, balloon, depreciation, underwater
 │   ├── investing.ts            # Extra vs. invest comparison, CGT adjustment
+│   ├── tax.ts                  # SARS tax brackets, medical credits, RA deductions
 │   └── format.ts               # ZAR, percent, date formatters
 ├── types/
 │   └── index.ts                # All TypeScript interfaces
@@ -134,6 +182,7 @@ src/
 ### Prerequisites
 - Node.js 20+
 - npm 10+
+- A Firebase project (for Auth + Firestore — see below)
 
 ### Installation
 
@@ -141,6 +190,37 @@ src/
 git clone https://github.com/Sash3n/investment_calculator.git
 cd investment_calculator
 npm install
+```
+
+### Firebase Setup
+
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable **Google sign-in** under Authentication → Sign-in methods
+3. Create a **Firestore database** (production mode)
+4. Set Firestore rules:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{userId}/{document=**} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
+   ```
+5. Register a web app and copy the config into `.env.local`:
+   ```
+   VITE_FIREBASE_API_KEY=...
+   VITE_FIREBASE_AUTH_DOMAIN=...
+   VITE_FIREBASE_PROJECT_ID=...
+   VITE_FIREBASE_STORAGE_BUCKET=...
+   VITE_FIREBASE_MESSAGING_SENDER_ID=...
+   VITE_FIREBASE_APP_ID=...
+   ```
+
+### Run
+
+```bash
 npm run dev
 ```
 
@@ -151,6 +231,14 @@ Open [http://localhost:5173](http://localhost:5173)
 ```bash
 npm run build
 npm run preview
+```
+
+### Regenerate Screenshots
+
+```bash
+npm install --save-dev playwright
+npx playwright install chromium
+node scripts/screenshot.mjs
 ```
 
 ---
@@ -224,13 +312,16 @@ Branches merged to `dev` then promoted to `main` for releases.
 
 ## Roadmap / Future Enhancements
 
-- [ ] **Google Auth + Cloud Sync** — sign in with Google to persist saved properties and portfolios across devices (Firebase Auth + Firestore)
-- [ ] **Sectional Title vs. Full-Title** comparison mode in Property ROI
+- [x] **Google Auth + Cloud Sync** — sign in with Google to persist snapshots and portfolios across devices
+- [x] **Calculation History** — unified history page with open/edit/delete per entry
+- [x] **Investment Strategy Calculator** — RA vs. TFSA vs. ETF optimisation with tax saving
+- [x] **Tax Planner** — SARS brackets, medical credits, RA deductions
 - [ ] **Transfer duty calculator** integrated into Property ROI acquisition costs
 - [ ] **Live Prime Rate feed** from SARB API
 - [ ] **PDF export** for shareable reports (jsPDF)
+- [ ] **Shareable report links** — generate a URL that restores a specific snapshot
 - [ ] **Currency selector** for USD/EUR expats
-- [ ] **Tax calculator** — rental income after-tax projections (SARS brackets)
+- [ ] **Sectional Title vs. Full-Title** comparison mode in Property ROI
 - [ ] **Multi-currency mortgage** — rand-denominated bond on foreign-currency property
 
 ---

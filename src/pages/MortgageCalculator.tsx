@@ -96,10 +96,10 @@ export function MortgageCalculator() {
 
   // Load snapshot navigated from History page
   const location = useLocation();
+  const locationState = location.state as { loadedInputs?: MortgageInputs; entryId?: string } | null;
   useEffect(() => {
-    const loaded = (location.state as { loadedInputs?: MortgageInputs } | null)?.loadedInputs;
-    if (loaded) setInputs(loaded);
-  }, [location.state]);
+    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
+  }, [locationState]);
 
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
 
@@ -335,6 +335,7 @@ export function MortgageCalculator() {
             summary={`Monthly: ${formatRand(result.standardPayment)} | Total interest: ${formatRand(result.totalInterestStandard)}`}
             inputs={inputs}
             onLoad={(saved) => setInputs(saved)}
+            initialEditingId={locationState?.entryId}
           />
         </div>
 
