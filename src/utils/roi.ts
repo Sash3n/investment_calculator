@@ -23,6 +23,7 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
     rentScenario2,
     annualAppreciation,
     transferDutyExempt,
+    bondRegistrationIncluded,
   } = inputs;
 
   // ── Effective price after discount ───────────────────────
@@ -31,7 +32,7 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
 
   // ── Acquisition costs ─────────────────────────────────────
   const transferDuty = transferDutyExempt ? 0 : calcTransferDuty(effectivePurchasePrice);
-  const bondRegistrationCost = calcBondRegistrationCost(loanAmount);
+  const bondRegistrationCost = bondRegistrationIncluded ? 0 : calcBondRegistrationCost(loanAmount);
   const totalAcquisitionCost = deposit + transferDuty + bondRegistrationCost;
   const totalCashRequired = totalAcquisitionCost;
 

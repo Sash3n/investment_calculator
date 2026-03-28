@@ -20,6 +20,7 @@ const baseInputs = {
   rentScenario2: 11_000,
   annualAppreciation: 5,
   transferDutyExempt: false,
+  bondRegistrationIncluded: false,
 };
 
 describe('calcPropertyROI', () => {
@@ -100,6 +101,17 @@ describe('calcPropertyROI', () => {
   it('transfer duty is zero when exempt', () => {
     const result = calcPropertyROI({ ...baseInputs, transferDutyExempt: true });
     expect(result.transferDuty).toBe(0);
+  });
+
+  it('bond registration cost is zero when included in loan', () => {
+    const result = calcPropertyROI({ ...baseInputs, bondRegistrationIncluded: true });
+    expect(result.bondRegistrationCost).toBe(0);
+  });
+
+  it('totalCashRequired is lower when bond registration is excluded', () => {
+    const withReg    = calcPropertyROI({ ...baseInputs, bondRegistrationIncluded: false });
+    const withoutReg = calcPropertyROI({ ...baseInputs, bondRegistrationIncluded: true });
+    expect(withReg.totalCashRequired).toBeGreaterThan(withoutReg.totalCashRequired);
   });
 
   it('total cash required is higher when transfer duty applies', () => {

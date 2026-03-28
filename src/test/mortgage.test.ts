@@ -78,6 +78,8 @@ describe('calcMortgageSummary', () => {
     lumpSumYear: 0,
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
+    transferDutyExempt: false,
+    bondRegistrationIncluded: false,
   };
 
   it('calculates correct loan amount after deposit', () => {

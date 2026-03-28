@@ -17,6 +17,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
+import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
 import type { MortgageInputs } from '../types';
 
@@ -80,6 +81,8 @@ export function MortgageCalculator() {
     lumpSumYear: 0,
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
+    transferDutyExempt: false,
+    bondRegistrationIncluded: false,
   });
 
   const [tableOpen, setTableOpen] = useState(false);
@@ -102,6 +105,16 @@ export function MortgageCalculator() {
   }, [locationState]);
 
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
+
+  const upfrontCosts = useMemo(() => {
+    const transferDuty = inputs.transferDutyExempt ? 0 : calcTransferDuty(inputs.purchasePrice);
+    const bondRegCost = inputs.bondRegistrationIncluded ? 0 : calcBondRegistrationCost(result.loanAmount);
+    return {
+      transferDuty,
+      bondRegCost,
+      totalCashRequired: inputs.deposit + transferDuty + bondRegCost,
+    };
+  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, result.loanAmount]);
 
   // ── Chart data ─────────────────────────────────────────────
   const balanceChartData = useMemo(() => {
@@ -283,6 +296,39 @@ export function MortgageCalculator() {
             help="Bank admin fee (e.g. R69/month). Doesn't reduce principal — pure extra cost."
           />
 
+          {/* Upfront cost toggles */}
+          <div className="space-y-2 pt-1">
+            {[
+              {
+                key: 'transferDutyExempt' as const,
+                label: 'Transfer Duty Exempt',
+                help: 'VAT-registered seller or new build — no transfer duty payable.',
+              },
+              {
+                key: 'bondRegistrationIncluded' as const,
+                label: 'Bond Registration Capitalised',
+                help: 'Bank promotion or costs rolled into the loan — no upfront bond reg fee.',
+              },
+            ].map(({ key, label, help }) => (
+              <label key={key} className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative mt-0.5 flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={inputs[key]}
+                    onChange={(e) => setInputs((prev) => ({ ...prev, [key]: e.target.checked }))}
+                  />
+                  <div className={`w-9 h-5 rounded-full transition-colors ${inputs[key] ? 'bg-[#6366F1]' : 'bg-[#334155]'}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${inputs[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-[#CBD5E1]" style={{ fontFamily: 'var(--font-body)' }}>{label}</p>
+                  <p className="text-[10px] text-[#475569] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{help}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+
           <SelectField
             label="Payment Frequency"
             id="frequency"
@@ -341,6 +387,32 @@ export function MortgageCalculator() {
 
         {/* ── Results panel ────────────────────────────── */}
         <div className="space-y-5">
+          {/* Upfront cash required */}
+          <div className="glass-card-static p-4 border-l-[3px] border-l-[#6366F1] grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Deposit</p>
+              <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(inputs.deposit)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>
+                {inputs.transferDutyExempt ? 'Transfer Duty' : 'Transfer Duty'}
+              </p>
+              <p className={`text-base font-bold ${inputs.transferDutyExempt ? 'text-[#10B981]' : 'text-[#EF4444]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.transferDutyExempt ? 'Exempt' : formatRand(upfrontCosts.transferDuty)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Bond Registration</p>
+              <p className={`text-base font-bold ${inputs.bondRegistrationIncluded ? 'text-[#10B981]' : 'text-[#EF4444]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(upfrontCosts.bondRegCost)}
+              </p>
+            </div>
+            <div className="col-span-3 border-t border-[rgba(255,255,255,0.07)] pt-3 flex items-center justify-between">
+              <p className="text-xs text-[#94A3B8]" style={{ fontFamily: 'var(--font-body)' }}>Total Cash Required on Transfer Day</p>
+              <p className="text-lg font-bold text-[#6366F1]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(upfrontCosts.totalCashRequired)}</p>
+            </div>
+          </div>
+
           {/* Stat cards */}
           <div className="four-col-stats">
             <StatCard

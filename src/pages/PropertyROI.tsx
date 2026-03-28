@@ -44,6 +44,7 @@ const DEFAULT_INPUTS: PropertyInputs = {
   rentScenario2: 11000,
   annualAppreciation: 7,
   transferDutyExempt: false,
+  bondRegistrationIncluded: false,
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -312,25 +313,40 @@ export function PropertyROI() {
               <InputField label="Deposit" id="dep" value={inputs.deposit}
                 onChange={(v) => set('deposit', v)} prefix="R" step={5000} />
 
-              {/* Transfer duty toggle */}
-              <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                <div
-                  onClick={() => setInputs((prev) => ({ ...prev, transferDutyExempt: !prev.transferDutyExempt }))}
-                  className="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
-                  style={{ background: inputs.transferDutyExempt ? 'rgba(100,116,139,0.3)' : '#6366F1' }}
-                >
-                  <span
-                    className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow"
-                    style={{ transform: inputs.transferDutyExempt ? 'translateX(0)' : 'translateX(16px)' }}
-                  />
-                </div>
-                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  Include transfer duty
-                  <span className="ml-1.5 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
-                    (disable for VAT / new builds)
+              {/* Acquisition cost toggles */}
+              {[
+                {
+                  label: 'Include transfer duty',
+                  hint: 'Disable for VAT-registered seller / new build',
+                  active: !inputs.transferDutyExempt,
+                  onToggle: () => setInputs((prev) => ({ ...prev, transferDutyExempt: !prev.transferDutyExempt })),
+                },
+                {
+                  label: 'Include bond registration costs',
+                  hint: 'Disable if capitalised into loan or covered by bank promotion',
+                  active: !inputs.bondRegistrationIncluded,
+                  onToggle: () => setInputs((prev) => ({ ...prev, bondRegistrationIncluded: !prev.bondRegistrationIncluded })),
+                },
+              ].map(({ label, hint, active, onToggle }) => (
+                <label key={label} className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={onToggle}
+                    className="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
+                    style={{ background: active ? '#6366F1' : 'rgba(100,116,139,0.3)' }}
+                  >
+                    <span
+                      className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow"
+                      style={{ transform: active ? 'translateX(16px)' : 'translateX(0)' }}
+                    />
+                  </div>
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {label}
+                    <span className="ml-1.5 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                      ({hint})
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+              ))}
 
               {/* Acquisition cost breakdown */}
               <div className="rounded-xl p-3.5 space-y-2" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
@@ -338,13 +354,13 @@ export function PropertyROI() {
                   Acquisition Costs
                 </p>
                 {[
-                  { label: 'Deposit',             value: inputs.deposit },
-                  { label: 'Transfer Duty',        value: inputs.transferDutyExempt ? 0 : result.transferDuty, muted: inputs.transferDutyExempt },
-                  { label: 'Bond Registration',    value: result.bondRegistrationCost },
+                  { label: 'Deposit',           value: inputs.deposit,                                                         muted: false },
+                  { label: 'Transfer Duty',     value: inputs.transferDutyExempt ? 0 : result.transferDuty,                    muted: inputs.transferDutyExempt },
+                  { label: 'Bond Registration', value: inputs.bondRegistrationIncluded ? 0 : result.bondRegistrationCost,      muted: inputs.bondRegistrationIncluded },
                 ].map(({ label, value, muted }) => (
                   <div key={label} className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text-muted)' }}>
-                      {label}{muted ? ' (exempt)' : ''}
+                      {label}{muted ? ' (excluded)' : ''}
                     </span>
                     <span className="text-xs font-semibold tabular-nums" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text)' }}>
                       {formatRand(value)}

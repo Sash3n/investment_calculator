@@ -8,6 +8,8 @@ export interface MortgageInputs {
   lumpSumYear: number; // 0 = none
   lumpSumAmount: number;
   monthlyServiceFee: number; // bank admin fee, e.g. R69/month
+  transferDutyExempt: boolean;
+  bondRegistrationIncluded: boolean;
 }
 
 export interface MortgageResult {
@@ -67,6 +69,8 @@ export interface PropertyInputs {
   annualAppreciation: number;
   /** When true, transfer duty is excluded (e.g. VAT-registered seller / new build) */
   transferDutyExempt: boolean;
+  /** When true, bond registration costs are excluded (e.g. capitalised into loan / bank promotion) */
+  bondRegistrationIncluded: boolean;
 }
 
 export interface PropertyResult {
