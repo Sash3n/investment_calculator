@@ -4,7 +4,7 @@ import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil } from 'lucide-react';
+import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
@@ -12,6 +12,7 @@ import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
+import { exportPropertyPDF } from '../utils/pdf';
 import { formatRand, formatPercent } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
@@ -456,6 +457,16 @@ export function PropertyROI() {
 
           {/* Results panel */}
           <div className="space-y-5">
+            {/* PDF export */}
+            <div className="flex justify-end">
+              <button
+                className="btn-ghost text-xs py-2 px-3 flex items-center gap-1.5"
+                onClick={() => exportPropertyPDF(inputs, result)}
+              >
+                <FileText size={13} /> Export PDF
+              </button>
+            </div>
+
             {/* Key metrics */}
             <div className="four-col-stats">
               <StatCard label="Monthly Bond" value={formatRand(result.monthlyBondRepayment)}

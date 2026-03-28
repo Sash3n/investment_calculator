@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import {
-  Building2, Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Zap,
+  Building2, Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Zap, FileText,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
@@ -18,6 +18,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
+import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
 import type { MortgageInputs } from '../types';
 
@@ -387,6 +388,16 @@ export function MortgageCalculator() {
 
         {/* ── Results panel ────────────────────────────── */}
         <div className="space-y-5">
+          {/* PDF export */}
+          <div className="flex justify-end">
+            <button
+              className="btn-ghost text-xs py-2 px-3 flex items-center gap-1.5"
+              onClick={() => exportMortgagePDF(inputs, result, upfrontCosts)}
+            >
+              <FileText size={13} /> Export PDF
+            </button>
+          </div>
+
           {/* Upfront cash required */}
           <div className="glass-card-static p-4 border-l-[3px] border-l-[#6366F1] grid grid-cols-3 gap-4">
             <div>

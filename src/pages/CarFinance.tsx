@@ -5,7 +5,7 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { Car, Download, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Car, Download, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import clsx from 'clsx';
 import * as XLSX from 'xlsx';
 
@@ -14,6 +14,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcCarFinance } from '../utils/car';
+import { exportCarPDF } from '../utils/pdf';
 import { formatRand } from '../utils/format';
 import type { CarInputs } from '../types';
 
@@ -264,6 +265,16 @@ export function CarFinance() {
 
         {/* Results */}
         <div className="space-y-5">
+          {/* PDF export */}
+          <div className="flex justify-end">
+            <button
+              className="btn-ghost text-xs py-2 px-3 flex items-center gap-1.5"
+              onClick={() => exportCarPDF(inputs, result)}
+            >
+              <FileText size={13} /> Export PDF
+            </button>
+          </div>
+
           {/* Stat cards */}
           <div className="four-col-stats">
             <StatCard label="Monthly Instalment" value={formatRand(result.monthlyInstalment)}

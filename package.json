@@ -19,6 +19,8 @@
     "daisyui": "^5.5.19",
     "firebase": "^12.11.0",
     "framer-motion": "^12.38.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
