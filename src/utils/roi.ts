@@ -1,5 +1,6 @@
 import type { PropertyInputs, PropertyResult } from '../types';
 import { calcPayment } from './mortgage';
+import { calcTransferDuty, calcBondRegistrationCost } from './tax';
 
 /**
  * Calculate property ROI for a buy-to-let investment.
@@ -21,11 +22,18 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
     rentScenario1,
     rentScenario2,
     annualAppreciation,
+    transferDutyExempt,
   } = inputs;
 
   // ── Effective price after discount ───────────────────────
   const effectivePurchasePrice = purchasePrice * (1 - discount / 100);
   const loanAmount = Math.max(0, effectivePurchasePrice - deposit);
+
+  // ── Acquisition costs ─────────────────────────────────────
+  const transferDuty = transferDutyExempt ? 0 : calcTransferDuty(effectivePurchasePrice);
+  const bondRegistrationCost = calcBondRegistrationCost(loanAmount);
+  const totalAcquisitionCost = deposit + transferDuty + bondRegistrationCost;
+  const totalCashRequired = totalAcquisitionCost;
 
   // ── Monthly bond repayment ────────────────────────────────
   const monthlyBondRepayment = calcPayment(loanAmount, interestRate, bondTerm, 12);
@@ -63,12 +71,13 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
   const netYieldS2 = effectivePurchasePrice > 0 ? (annualNetIncomeS2 / effectivePurchasePrice) * 100 : 0;
 
   // ── ROI calculation over N years ──────────────────────────
-  // ROI = (Capital Gain + Net Rental Income - Deposit) / Deposit × 100
+  // ROI = (Capital Gain + Net Rental Income) / Total Cash Invested × 100
+  // Total cash invested = deposit + transfer duty + bond registration costs
   const calcROI = (years: number, cashFlow: number) => {
     const futureValue = effectivePurchasePrice * Math.pow(1 + annualAppreciation / 100, years);
     const capitalGain = futureValue - effectivePurchasePrice;
     const totalNetRental = cashFlow * 12 * years;
-    const totalInvestment = deposit > 0 ? deposit : effectivePurchasePrice;
+    const totalInvestment = totalAcquisitionCost > 0 ? totalAcquisitionCost : effectivePurchasePrice;
     if (totalInvestment <= 0) return 0;
     return ((capitalGain + totalNetRental) / totalInvestment) * 100;
   };
@@ -125,5 +134,9 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
     roi10YearS1,
     roi10YearS2,
     propertyValueYears,
+    transferDuty,
+    bondRegistrationCost,
+    totalAcquisitionCost,
+    totalCashRequired,
   };
 }

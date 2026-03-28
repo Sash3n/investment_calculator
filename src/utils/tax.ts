@@ -63,6 +63,60 @@ export function getBracketLabel(taxableIncome: number): string {
   return `${(rate * 100).toFixed(0)}% marginal bracket`;
 }
 
+// ── Transfer Duty (SARS 2026: 1 Mar 2025 – 28 Feb 2026) ──────────────────────
+// Source: SARS Budget 2026 — no change from 2025 table
+const TRANSFER_DUTY_BRACKETS = [
+  { min: 0,          max: 1_100_000,  base: 0,         rate: 0.00 },
+  { min: 1_100_001,  max: 1_512_500,  base: 0,         rate: 0.03 },
+  { min: 1_512_501,  max: 2_117_500,  base: 12_375,    rate: 0.06 },
+  { min: 2_117_501,  max: 2_722_500,  base: 48_675,    rate: 0.08 },
+  { min: 2_722_501,  max: 12_100_000, base: 97_075,    rate: 0.11 },
+  { min: 12_100_001, max: Infinity,   base: 1_128_600, rate: 0.13 },
+];
+
+export function calcTransferDuty(purchasePrice: number): number {
+  if (purchasePrice <= 0) return 0;
+  const bracket = TRANSFER_DUTY_BRACKETS.find((b) => purchasePrice <= b.max)
+    ?? TRANSFER_DUTY_BRACKETS[TRANSFER_DUTY_BRACKETS.length - 1];
+  return Math.round(bracket.base + bracket.rate * (purchasePrice - bracket.min));
+}
+
+/**
+ * Estimate bond registration costs (Deeds Office + conveyancing attorney fees).
+ * Based on standard SA sliding scale tariffs — approximate, not a legal quote.
+ */
+export function calcBondRegistrationCost(bondAmount: number): number {
+  if (bondAmount <= 0) return 0;
+  // Deeds Office registration fee (stepped tariff)
+  let deedsOffice = 0;
+  if      (bondAmount <= 85_000)    deedsOffice = 500;
+  else if (bondAmount <= 200_000)   deedsOffice = 600;
+  else if (bondAmount <= 400_000)   deedsOffice = 900;
+  else if (bondAmount <= 800_000)   deedsOffice = 1_200;
+  else if (bondAmount <= 1_000_000) deedsOffice = 1_500;
+  else if (bondAmount <= 2_000_000) deedsOffice = 2_000;
+  else if (bondAmount <= 4_000_000) deedsOffice = 2_500;
+  else                              deedsOffice = 3_000;
+
+  // Attorney conveyancing fee (approximate sliding scale)
+  let attorney = 0;
+  if      (bondAmount <= 100_000)   attorney = 4_500;
+  else if (bondAmount <= 200_000)   attorney = 6_000;
+  else if (bondAmount <= 300_000)   attorney = 7_500;
+  else if (bondAmount <= 500_000)   attorney = 9_500;
+  else if (bondAmount <= 750_000)   attorney = 11_000;
+  else if (bondAmount <= 1_000_000) attorney = 13_000;
+  else if (bondAmount <= 1_500_000) attorney = 16_000;
+  else if (bondAmount <= 2_000_000) attorney = 19_000;
+  else if (bondAmount <= 3_000_000) attorney = 22_000;
+  else if (bondAmount <= 5_000_000) attorney = 26_000;
+  else                              attorney = 31_000;
+
+  // VAT on attorney fees (15%)
+  const vat = Math.round(attorney * 0.15);
+  return deedsOffice + attorney + vat;
+}
+
 // ── Rental Income Tax Calculator ──────────────────────────────────────────────
 export function calcRentalIncomeTax(inputs: RentalTaxInputs): RentalTaxResult {
   const {

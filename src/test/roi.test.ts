@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calcPropertyROI } from '../utils/roi';
+import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 
 const baseInputs = {
   propertyName: 'Test Property',
@@ -18,6 +19,7 @@ const baseInputs = {
   rentScenario1: 9_500,
   rentScenario2: 11_000,
   annualAppreciation: 5,
+  transferDutyExempt: false,
 };
 
 describe('calcPropertyROI', () => {
@@ -86,5 +88,60 @@ describe('calcPropertyROI', () => {
   it('propertyValueYears has 11 entries (year 0 to year 10)', () => {
     const result = calcPropertyROI(baseInputs);
     expect(result.propertyValueYears).toHaveLength(11);
+  });
+
+  it('totalCashRequired includes deposit + transfer duty + bond registration', () => {
+    const result = calcPropertyROI(baseInputs);
+    expect(result.totalCashRequired).toBe(
+      baseInputs.deposit + result.transferDuty + result.bondRegistrationCost
+    );
+  });
+
+  it('transfer duty is zero when exempt', () => {
+    const result = calcPropertyROI({ ...baseInputs, transferDutyExempt: true });
+    expect(result.transferDuty).toBe(0);
+  });
+
+  it('total cash required is higher when transfer duty applies', () => {
+    const withDuty    = calcPropertyROI({ ...baseInputs, transferDutyExempt: false });
+    const withoutDuty = calcPropertyROI({ ...baseInputs, transferDutyExempt: true });
+    expect(withDuty.totalCashRequired).toBeGreaterThan(withoutDuty.totalCashRequired);
+  });
+});
+
+describe('calcTransferDuty (SARS 2026)', () => {
+  it('returns 0 for properties up to R1 100 000', () => {
+    expect(calcTransferDuty(1_100_000)).toBe(0);
+    expect(calcTransferDuty(500_000)).toBe(0);
+  });
+
+  it('applies 3% on value above R1.1M (second bracket)', () => {
+    // R1 200 000: 3% × (1 200 000 - 1 100 000) = R3 000
+    expect(calcTransferDuty(1_200_000)).toBe(3_000);
+  });
+
+  it('applies correct amount in third bracket', () => {
+    // R1 600 000: R12 375 + 6% × (1 600 000 - 1 512 500) = R12 375 + R5 250 = R17 625
+    expect(calcTransferDuty(1_600_000)).toBe(17_625);
+  });
+
+  it('returns 0 for zero price', () => {
+    expect(calcTransferDuty(0)).toBe(0);
+  });
+});
+
+describe('calcBondRegistrationCost', () => {
+  it('returns 0 for zero bond', () => {
+    expect(calcBondRegistrationCost(0)).toBe(0);
+  });
+
+  it('returns a positive value for standard bond', () => {
+    expect(calcBondRegistrationCost(1_000_000)).toBeGreaterThan(0);
+  });
+
+  it('higher bond = higher registration cost', () => {
+    const low  = calcBondRegistrationCost(500_000);
+    const high = calcBondRegistrationCost(2_000_000);
+    expect(high).toBeGreaterThan(low);
   });
 });

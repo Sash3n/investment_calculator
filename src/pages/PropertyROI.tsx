@@ -43,6 +43,7 @@ const DEFAULT_INPUTS: PropertyInputs = {
   rentScenario1: 9500,
   rentScenario2: 11000,
   annualAppreciation: 7,
+  transferDutyExempt: false,
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -310,6 +311,55 @@ export function PropertyROI() {
                 help="Reduces effective purchase price (e.g. distressed sale)" />
               <InputField label="Deposit" id="dep" value={inputs.deposit}
                 onChange={(v) => set('deposit', v)} prefix="R" step={5000} />
+
+              {/* Transfer duty toggle */}
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <div
+                  onClick={() => setInputs((prev) => ({ ...prev, transferDutyExempt: !prev.transferDutyExempt }))}
+                  className="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
+                  style={{ background: inputs.transferDutyExempt ? 'rgba(100,116,139,0.3)' : '#6366F1' }}
+                >
+                  <span
+                    className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow"
+                    style={{ transform: inputs.transferDutyExempt ? 'translateX(0)' : 'translateX(16px)' }}
+                  />
+                </div>
+                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  Include transfer duty
+                  <span className="ml-1.5 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                    (disable for VAT / new builds)
+                  </span>
+                </span>
+              </label>
+
+              {/* Acquisition cost breakdown */}
+              <div className="rounded-xl p-3.5 space-y-2" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: '#818CF8' }}>
+                  Acquisition Costs
+                </p>
+                {[
+                  { label: 'Deposit',             value: inputs.deposit },
+                  { label: 'Transfer Duty',        value: inputs.transferDutyExempt ? 0 : result.transferDuty, muted: inputs.transferDutyExempt },
+                  { label: 'Bond Registration',    value: result.bondRegistrationCost },
+                ].map(({ label, value, muted }) => (
+                  <div key={label} className="flex justify-between items-center">
+                    <span className="text-xs" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text-muted)' }}>
+                      {label}{muted ? ' (exempt)' : ''}
+                    </span>
+                    <span className="text-xs font-semibold tabular-nums" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text)' }}>
+                      {formatRand(value)}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid rgba(99,102,241,0.2)' }}>
+                  <span className="text-xs font-bold" style={{ color: '#818CF8' }}>Total Cash Required</span>
+                  <span className="text-sm font-bold" style={{ color: '#818CF8' }}>{formatRand(result.totalCashRequired)}</span>
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                  Bond registration costs are estimated — get a quote from your attorney.
+                </p>
+              </div>
+
               <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
                 onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
               <InputField label="Bond Term" id="bt" value={inputs.bondTerm}

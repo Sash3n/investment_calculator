@@ -65,6 +65,8 @@ export interface PropertyInputs {
   rentScenario1: number;
   rentScenario2: number;
   annualAppreciation: number;
+  /** When true, transfer duty is excluded (e.g. VAT-registered seller / new build) */
+  transferDutyExempt: boolean;
 }
 
 export interface PropertyResult {
@@ -88,6 +90,11 @@ export interface PropertyResult {
   roi10YearS1: number;
   roi10YearS2: number;
   propertyValueYears: { year: number; value: number; equity: number; loanBalance: number }[];
+  // Acquisition costs
+  transferDuty: number;
+  bondRegistrationCost: number;
+  totalAcquisitionCost: number;   // deposit + transfer duty + bond reg
+  totalCashRequired: number;      // same as totalAcquisitionCost — explicit alias
 }
 
 export interface CarInputs {

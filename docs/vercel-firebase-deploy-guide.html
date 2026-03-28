@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vercel + Firebase Deploy Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 820px; margin: 0 auto; }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #f1f5f9;
+    }
+
+    .subtitle {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Section cards */
+    .section {
+      background: #1e2433;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #6366f1;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    ol, ul {
+      padding-left: 1.25rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+
+    code {
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      color: #a5b4fc;
+    }
+
+    pre {
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.75rem 0;
+      overflow-x: auto;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      color: #a5b4fc;
+      line-height: 1.7;
+    }
+
+    /* Mistake cards */
+    .mistakes { display: flex; flex-direction: column; gap: 1rem; }
+
+    .mistake {
+      border-radius: 10px;
+      border: 1px solid #ef444430;
+      background: #ef44440a;
+      padding: 1.1rem 1.25rem;
+    }
+
+    .mistake-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .badge-wrong {
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 99px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      letter-spacing: 0.04em;
+    }
+
+    .mistake h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fca5a5;
+    }
+
+    .mistake p {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 0.6rem;
+    }
+
+    .fix {
+      border-radius: 8px;
+      border: 1px solid #10b98130;
+      background: #10b9810a;
+      padding: 0.75rem 1rem;
+    }
+
+    .fix-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #34d399;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+
+    .fix p {
+      font-size: 0.85rem;
+      color: #a7f3d0;
+      margin: 0;
+    }
+
+    .fix code {
+      background: #064e3b;
+      border-color: #065f46;
+      color: #6ee7b7;
+    }
+
+    /* Checklist */
+    .checklist { list-style: none; padding: 0; }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #1e2433;
+      font-size: 0.88rem;
+    }
+
+    .checklist li:last-child { border-bottom: none; }
+
+    .check-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #10b981;
+      color: #fff;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Env table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid #1a2035;
+      color: #cbd5e1;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    td:first-child code { color: #818cf8; }
+
+    .val-note { color: #64748b; font-size: 0.78rem; margin-top: 0.2rem; }
+
+    /* Tip box */
+    .tip {
+      background: #1e3a5f;
+      border: 1px solid #1e40af50;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: #93c5fd;
+    }
+
+    .tip strong { color: #bfdbfe; }
+
+    /* Tag */
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.1rem 0.5rem;
+      border-radius: 99px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    .tag-firebase { background: #92400e30; color: #fcd34d; border: 1px solid #92400e60; }
+    .tag-vercel   { background: #1e293b;   color: #94a3b8;  border: 1px solid #334155; }
+
+    hr {
+      border: none;
+      border-top: 1px solid #2d3748;
+      margin: 2rem 0;
+    }
+
+    .footer {
+      text-align: center;
+      color: #334155;
+      font-size: 0.8rem;
+      margin-top: 2.5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Vercel + Firebase Deploy Guide</h1>
+  <p class="subtitle">For Vite + React apps — FinCalc ZA reference · compiled from real mistakes</p>
+
+  <!-- ── STEP 1 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Set up Firestore security rules <span class="tag tag-firebase">Firebase</span></h2>
+    </div>
+    <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:0.75rem;">
+      Firestore created in production mode defaults to <strong style="color:#fca5a5">deny all</strong>.
+      Set rules before your first deploy or nothing will save.
+    </p>
+    <p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">Firebase Console → Firestore Database → Rules tab</p>
+    <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null
+                         &amp;&amp; request.auth.uid == userId;
+    }
+  }
+}</pre>
+    <div class="tip"><strong>Tip:</strong> Click <strong>Publish</strong> after pasting — just editing the box doesn't save it.</div>
+  </div>
+
+  <!-- ── STEP 2 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Import the project on Vercel <span class="tag tag-vercel">Vercel</span></h2>
+    </div>
+    <ol>
+      <li>Go to <strong>vercel.com</strong> → sign in with GitHub</li>
+      <li>Click <strong>Add New → Project</strong> → find your repo → <strong>Import</strong></li>
+      <li>Vercel auto-detects Vite — leave all build settings as-is:
+        <pre>Framework:        Vite
+Build Command:    npm run build
+Output Directory: dist</pre>
+      </li>
+      <li>Do <strong>not</strong> click Deploy yet — add environment variables first (Step 3)</li>
+    </ol>
+  </div>
+
+  <!-- ── STEP 3 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Add environment variables <span class="tag tag-vercel">Vercel</span></h2>
+    </div>
+    <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:0.75rem;">
+      Expand <strong>Environment Variables</strong> before clicking Deploy. Copy values from your <code>.env.local</code> file.
+    </p>
+    <table>
+      <tr>
+        <th>Variable</th>
+        <th>Correct value</th>
+      </tr>
+      <tr>
+        <td><code>VITE_FIREBASE_API_KEY</code></td>
+        <td>Your API key from Firebase config</td>
+      </tr>
+      <tr>
+        <td><code>VITE_FIREBASE_AUTH_DOMAIN</code></td>
+        <td>
+          <code>your-project-id.firebaseapp.com</code>
+          <div class="val-note">⚠️ This is the Firebase domain — NOT your Vercel URL</div>
+        </td>
+      </tr>
+      <tr>
+        <td><code>VITE_FIREBASE_PROJECT_ID</code></td>
+        <td>e.g. <code>fincalc-za</code></td>
+      </tr>
+      <tr>
+        <td><code>VITE_FIREBASE_STORAGE_BUCKET</code></td>
+        <td><code>your-project-id.firebasestorage.app</code></td>
+      </tr>
+      <tr>
+        <td><code>VITE_FIREBASE_MESSAGING_SENDER_ID</code></td>
+        <td>Number from Firebase config</td>
+      </tr>
+      <tr>
+        <td><code>VITE_FIREBASE_APP_ID</code></td>
+        <td>App ID from Firebase config</td>
+      </tr>
+    </table>
+    <div class="tip" style="margin-top:1rem;">
+      <strong>After any env var change</strong> you must redeploy: Vercel → Deployments → ··· → <strong>Redeploy</strong>.
+      Changes don't apply to existing deployments automatically.
+    </div>
+  </div>
+
+  <!-- ── STEP 4 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Whitelist your Vercel domain in Firebase <span class="tag tag-firebase">Firebase</span></h2>
+    </div>
+    <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:0.75rem;">
+      Google sign-in is blocked from any domain not on the authorised list — including your Vercel URL.
+    </p>
+    <ol>
+      <li>Firebase Console → <strong>Authentication → Settings → Authorised domains</strong></li>
+      <li>Click <strong>Add domain</strong></li>
+      <li>Enter your Vercel URL exactly — no <code>https://</code>, no trailing slash:
+        <pre>your-app-name.vercel.app</pre>
+      </li>
+      <li>Takes effect immediately — no redeploy needed</li>
+    </ol>
+    <div class="tip">
+      <strong>Custom domain?</strong> Add it here too — each domain you use to access the app must be listed separately.
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ── COMMON MISTAKES ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num" style="background:#ef4444">!</div>
+      <h2>Common mistakes &amp; fixes</h2>
+    </div>
+
+    <div class="mistakes">
+
+      <div class="mistake">
+        <div class="mistake-header">
+          <span class="badge-wrong">MISTAKE 1</span>
+          <h3>VITE_FIREBASE_AUTH_DOMAIN set to the Vercel URL</h3>
+        </div>
+        <p>Setting <code>VITE_FIREBASE_AUTH_DOMAIN</code> to <code>your-app.vercel.app</code> instead of the Firebase project domain.
+        This causes <code>auth/unauthorized-domain</code> and a 404 on <code>/__/auth/iframe</code>.</p>
+        <div class="fix">
+          <div class="fix-label">✓ FIX</div>
+          <p>Always set it to your <strong>Firebase project</strong> domain:<br/>
+          <code>your-project-id.firebaseapp.com</code><br/>
+          Found in Firebase Console → Project Settings → Your apps → Config object.</p>
+        </div>
+      </div>
+
+      <div class="mistake">
+        <div class="mistake-header">
+          <span class="badge-wrong">MISTAKE 2</span>
+          <h3>Firestore left in production mode (deny all)</h3>
+        </div>
+        <p>When you create a Firestore database in production mode, ALL reads and writes are blocked by default.
+        Saves appear to work (no visible error) but nothing persists — the error is swallowed silently.</p>
+        <div class="fix">
+          <div class="fix-label">✓ FIX</div>
+          <p>Paste the security rules from Step 1 into <strong>Firestore → Rules</strong> and click <strong>Publish</strong> before testing any data operations.</p>
+        </div>
+      </div>
+
+      <div class="mistake">
+        <div class="mistake-header">
+          <span class="badge-wrong">MISTAKE 3</span>
+          <h3>Changing domain but not updating Firebase authorised domains</h3>
+        </div>
+        <p>Renaming or changing your Vercel project URL (e.g. from <code>app-chi-ten.vercel.app</code> to <code>app-za.vercel.app</code>)
+        invalidates the old Firebase whitelist entry. Sign-in immediately breaks with <code>auth/unauthorized-domain</code>.</p>
+        <div class="fix">
+          <div class="fix-label">✓ FIX</div>
+          <p>Every time you change domains: Firebase Console → Authentication → Settings → Authorised domains → Add the new URL.
+          Keep the old one until you're sure nothing uses it.</p>
+        </div>
+      </div>
+
+      <div class="mistake">
+        <div class="mistake-header">
+          <span class="badge-wrong">MISTAKE 4</span>
+          <h3>Changing env vars without redeploying</h3>
+        </div>
+        <p>Updating an environment variable in Vercel's dashboard only applies to <em>future</em> deployments.
+        The currently live deployment still uses the old values.</p>
+        <div class="fix">
+          <div class="fix-label">✓ FIX</div>
+          <p>After any env var change: Vercel → Deployments → click <strong>···</strong> on the latest → <strong>Redeploy</strong>.
+          Takes ~60 seconds.</p>
+        </div>
+      </div>
+
+      <div class="mistake">
+        <div class="mistake-header">
+          <span class="badge-wrong">MISTAKE 5</span>
+          <h3>Silent Firestore errors (no user feedback)</h3>
+        </div>
+        <p>Using <code>try/finally</code> without a <code>catch</code> block means Firestore permission errors are swallowed.
+        The UI shows no feedback and the user has no idea why their save didn't work.</p>
+        <div class="fix">
+          <div class="fix-label">✓ FIX</div>
+          <p>Always add a <code>catch</code> block that surfaces the error in the UI. Check for
+          <code>permission-denied</code> in the error message to give a specific hint about Firestore rules.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PRE-DEPLOY CHECKLIST ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num" style="background:#10b981">✓</div>
+      <h2>Pre-deploy checklist</h2>
+    </div>
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span> <span><code>npm run build</code> passes with no TypeScript errors locally</span></li>
+      <li><span class="check-icon">✓</span> <span>Firestore security rules published (not left as deny-all)</span></li>
+      <li><span class="check-icon">✓</span> <span><code>VITE_FIREBASE_AUTH_DOMAIN</code> = <code>your-project.firebaseapp.com</code> (NOT the Vercel URL)</span></li>
+      <li><span class="check-icon">✓</span> <span>All 6 Firebase env vars added to Vercel before first deploy</span></li>
+      <li><span class="check-icon">✓</span> <span>Vercel domain added to Firebase Authorised Domains</span></li>
+      <li><span class="check-icon">✓</span> <span>After any env var change → redeploy on Vercel</span></li>
+      <li><span class="check-icon">✓</span> <span>Test Google sign-in on the live URL in an incognito window after deploy</span></li>
+      <li><span class="check-icon">✓</span> <span>If you rename the Vercel project → re-add the new URL to Firebase Authorised Domains</span></li>
+    </ul>
+  </div>
+
+  <div class="footer">FinCalc ZA · Vercel + Firebase deploy reference · 2026</div>
+
+</div>
+</body>
+</html>
