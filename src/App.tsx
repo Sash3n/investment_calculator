@@ -11,6 +11,7 @@ import { History } from './pages/History';
 import { NotFound } from './pages/NotFound';
 import { ErrorPage } from './pages/ErrorPage';
 import { Compare } from './pages/Compare';
+import { PortfolioSummary } from './pages/PortfolioSummary';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/investment-strategy" element={<InvestmentStrategy />} />
         <Route path="/history" element={<History />} />
         <Route path="/compare" element={<Compare />} />
+        <Route path="/portfolio" element={<PortfolioSummary />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

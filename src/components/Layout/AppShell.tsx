@@ -87,6 +87,7 @@ const navItems: NavItem[] = [
   { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
   { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
+  { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -98,6 +99,7 @@ const pageTitles: Record<string, string> = {
   '/tax-planner': 'Property Tax Planner',
   '/investment-strategy': 'SA Investment Strategy',
   '/history': 'Calculation History',
+  '/portfolio': 'Portfolio Summary',
 };
 
 export function AppShell() {
