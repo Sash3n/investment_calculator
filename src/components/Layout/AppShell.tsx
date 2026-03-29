@@ -88,6 +88,7 @@ const navItems: NavItem[] = [
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
   { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
   { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
+  { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -100,6 +101,7 @@ const pageTitles: Record<string, string> = {
   '/investment-strategy': 'SA Investment Strategy',
   '/history': 'Calculation History',
   '/portfolio': 'Portfolio Summary',
+  '/tax-projections': 'Tax Projections',
 };
 
 export function AppShell() {
