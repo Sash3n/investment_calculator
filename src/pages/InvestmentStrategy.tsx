@@ -112,12 +112,12 @@ function StrategyCard({ s, isRecommended }: {
       {/* Key metrics grid */}
       <div className="grid grid-cols-2 gap-2">
         {[
-          { label: 'RA',          value: formatRand(s.raMonthly),       color: C.indigo },
-          { label: 'TFSA',        value: formatRand(s.tfsaMonthly),     color: C.cyan   },
-          { label: 'Separate',    value: formatRand(s.separateMonthly), color: C.violet },
-          { label: 'PAYE',        value: formatRand(s.monthlyPAYE),     color: C.red    },
-          { label: 'Tax Saving',  value: formatRand(s.monthlyTaxSaving),color: C.emerald},
-          { label: 'Take-Home',   value: formatRand(s.takeHome),        color: 'var(--color-text)' },
+          { label: 'RA',          value: formatRand(s.raMonthly, 0),       color: C.indigo },
+          { label: 'TFSA',        value: formatRand(s.tfsaMonthly, 0),     color: C.cyan   },
+          { label: 'Separate',    value: formatRand(s.separateMonthly, 0), color: C.violet },
+          { label: 'PAYE',        value: formatRand(s.monthlyPAYE, 0),     color: C.red    },
+          { label: 'Tax Saving',  value: formatRand(s.monthlyTaxSaving, 0),color: C.emerald},
+          { label: 'Take-Home',   value: formatRand(s.takeHome, 0),        color: 'var(--color-text)' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-lg p-2" style={{ background: 'var(--color-surface)' }}>
             <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>{label}</p>
@@ -431,10 +431,10 @@ export function InvestmentStrategy() {
 
           {/* Stat cards row 1 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Total Monthly Gross" value={formatRand(result.totalMonthlyGross)} sub={formatRand(result.totalAnnualGross, 0) + '/yr'} icon={Wallet} color="indigo" delay={0} />
+            <StatCard label="Total Monthly Gross" value={formatRand(result.totalMonthlyGross, 0)} sub={formatRand(result.totalAnnualGross, 0) + '/yr'} icon={Wallet} color="indigo" delay={0} />
             <StatCard label="Taxable Income" value={formatRand(result.taxableIncome, 0)} sub="After RA deduction (annual)" icon={Shield} color="amber" delay={0.05} />
-            <StatCard label="Monthly PAYE" value={formatRand(result.monthlyPAYE)} sub={`Without RA: ${formatRand(result.monthlyPAYEWithoutRA)}`} icon={TrendingUp} color="red" delay={0.1} />
-            <StatCard label="Monthly Tax Saving" value={formatRand(result.monthlyTaxSaving)} sub={`SARS pays ${result.sarsSubsidyPct.toFixed(0)}% of RA`} icon={CheckCircle2} color="emerald" delay={0.15} />
+            <StatCard label="Monthly PAYE" value={formatRand(result.monthlyPAYE, 0)} sub={`Without RA: ${formatRand(result.monthlyPAYEWithoutRA, 0)}`} icon={TrendingUp} color="red" delay={0.1} />
+            <StatCard label="Monthly Tax Saving" value={formatRand(result.monthlyTaxSaving, 0)} sub={`SARS pays ${result.sarsSubsidyPct.toFixed(0)}% of RA`} icon={CheckCircle2} color="emerald" delay={0.15} />
           </div>
 
           {/* Tax saving highlight */}
