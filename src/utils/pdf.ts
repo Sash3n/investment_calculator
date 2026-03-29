@@ -101,22 +101,29 @@ function twoColKV(
   items: { label: string; value: string; color?: [number, number, number] }[],
 ): number {
   const half = COL_W / 2;
-  items.forEach((item, i) => {
-    const x = MARGIN + (i % 2) * (half + 4);
-    if (i % 2 === 0 && i > 0) y += 6;
+  const ROW_H = 14; // label (5mm) + value (6mm) + gap (3mm)
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...C.muted);
-    doc.text(item.label, x, y);
+  for (let i = 0; i < items.length; i += 2) {
+    const rowY = y + Math.floor(i / 2) * ROW_H;
+    [0, 1].forEach((col) => {
+      const item = items[i + col];
+      if (!item) return;
+      const x = MARGIN + col * (half + 2);
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...(item.color ?? C.text));
-    doc.text(item.value, x, y + 4.5);
-  });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...C.muted);
+      doc.text(item.label, x, rowY);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...(item.color ?? C.text));
+      doc.text(item.value, x, rowY + 6);
+    });
+  }
+
   const rows = Math.ceil(items.length / 2);
-  return y + rows * 6 + 4;
+  return y + rows * ROW_H + 2;
 }
 
 function statBox(
@@ -288,15 +295,14 @@ export function exportMortgagePDF(
   y = sectionTitle(doc, y, 'Annual Amortization Summary');
 
   const cols = [
-    { label: 'Year', w: 15 },
-    { label: 'Opening Balance', w: 38, align: 'right' as const },
-    { label: 'Annual Payment', w: 38, align: 'right' as const },
-    { label: 'Principal Paid', w: 38, align: 'right' as const },
-    { label: 'Interest Paid', w: 38, align: 'right' as const },
-    { label: 'Closing Balance', w: 15, align: 'right' as const },
+    { label: 'Year',          w: 14,                        },
+    { label: 'Opening Bal.',  w: 36, align: 'right' as const },
+    { label: 'Annual Pmt',   w: 32, align: 'right' as const },
+    { label: 'Principal',    w: 32, align: 'right' as const },
+    { label: 'Interest',     w: 32, align: 'right' as const },
+    { label: 'Closing Bal.', w: 36, align: 'right' as const },
   ];
-
-  // Adjust last col width to fill
+  // Safety: recalculate last col to fill exactly
   cols[5].w = COL_W - cols.slice(0, 5).reduce((s, c) => s + c.w, 0);
   y = tableHeader(doc, y, cols);
 
@@ -426,10 +432,10 @@ export function exportPropertyPDF(inputs: PropertyInputs, result: PropertyResult
   y = sectionTitle(doc, y, '10-Year Property Value Projection');
 
   const pvCols = [
-    { label: 'Year', w: 20 },
-    { label: 'Property Value', w: 55, align: 'right' as const },
-    { label: 'Loan Balance',   w: 55, align: 'right' as const },
-    { label: 'Equity',         w: 52, align: 'right' as const },
+    { label: 'Year',           w: 20 },
+    { label: 'Property Value', w: 54, align: 'right' as const },
+    { label: 'Loan Balance',   w: 54, align: 'right' as const },
+    { label: 'Equity',         w: 54, align: 'right' as const },
   ];
   pvCols[3].w = COL_W - pvCols.slice(0, 3).reduce((s, c) => s + c.w, 0);
   y = tableHeader(doc, y, pvCols);
@@ -524,10 +530,10 @@ export function exportCarPDF(inputs: CarInputs, result: CarResult) {
   y = checkPage(doc, y, 50);
   y = sectionTitle(doc, y, 'Depreciation vs Loan Balance');
   const depCols = [
-    { label: 'Year', w: 20 },
-    { label: 'Vehicle Value', w: 57, align: 'right' as const },
-    { label: 'Loan Balance',  w: 57, align: 'right' as const },
-    { label: 'Equity',        w: 48, align: 'right' as const },
+    { label: 'Year',          w: 20 },
+    { label: 'Vehicle Value', w: 54, align: 'right' as const },
+    { label: 'Loan Balance',  w: 54, align: 'right' as const },
+    { label: 'Equity',        w: 54, align: 'right' as const },
   ];
   depCols[3].w = COL_W - depCols.slice(0, 3).reduce((s, c) => s + c.w, 0);
   y = tableHeader(doc, y, depCols);
