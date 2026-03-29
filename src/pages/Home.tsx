@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { usePrimeRate } from '../hooks/usePrimeRate';
 import {
   Building2,
   MapPin,
@@ -65,13 +66,15 @@ const featureCards = [
 ];
 
 const quickStats = [
-  { label: 'SA Prime Rate', value: '11.25%', icon: Landmark, color: '#F59E0B' },
+  { label: 'SA Prime Rate', value: null, icon: Landmark, color: '#F59E0B' },
   { label: 'Avg Property Appreciation', value: '7% p.a.', icon: TrendingUp, color: '#10B981' },
   { label: 'Typical Bond Term', value: '20 years', icon: Building2, color: '#6366F1' },
   { label: 'Avg JSE ETF Return', value: '13–18% p.a.', icon: BarChart3, color: '#06B6D4' },
 ];
 
 export function Home() {
+  const liveRate = usePrimeRate();
+
   return (
     <motion.div
       variants={containerVariants}
@@ -144,7 +147,9 @@ export function Home() {
                   className="text-lg font-bold text-[#F1F5F9]"
                   style={{ fontFamily: 'var(--font-heading)' }}
                 >
-                  {stat.value}
+                  {stat.label === 'SA Prime Rate'
+                    ? liveRate.loading ? '…' : `${liveRate.primeRate}%`
+                    : stat.value}
                 </p>
                 <p
                   className="text-[11px] text-[#64748B] mt-0.5"

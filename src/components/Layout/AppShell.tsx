@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
   Home,
   Building2,
@@ -100,6 +101,7 @@ const pageTitles: Record<string, string> = {
 };
 
 export function AppShell() {
+  const liveRate = usePrimeRate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('fincalc-theme') as 'dark' | 'light') ?? 'dark';
@@ -237,7 +239,13 @@ export function AppShell() {
             </div>
           )}
           <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
-            Prime Rate: <span className="text-[#F59E0B] font-semibold">11.25%</span>
+            Prime Rate:{' '}
+            <span className="text-[#F59E0B] font-semibold">
+              {liveRate.loading ? '…' : `${liveRate.primeRate}%`}
+            </span>
+            {!liveRate.loading && !liveRate.fallback && liveRate.asOf && (
+              <span className="text-[#475569]"> · {new Date(liveRate.asOf).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            )}
           </p>
           <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
             All values in South African Rand

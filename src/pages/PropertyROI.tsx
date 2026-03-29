@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil, FileText } from 'lucide-react';
+import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil, FileText, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
@@ -16,6 +16,7 @@ import { exportPropertyPDF } from '../utils/pdf';
 import { formatRand, formatPercent } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
+import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
 
 const CHART_COLORS = {
@@ -32,7 +33,7 @@ const DEFAULT_INPUTS: PropertyInputs = {
   purchasePrice: 1200000,
   discount: 0,
   deposit: 120000,
-  interestRate: 11.25,
+  interestRate: FALLBACK_PRIME,
   bondTerm: 20,
   monthlyLevies: 1500,
   monthlyRates: 800,
@@ -73,8 +74,22 @@ function PieTooltip({ active, payload }: any) {
 }
 
 export function PropertyROI() {
+  const liveRate = usePrimeRate();
   const [activeTab, setActiveTab] = useState<'quick' | 'portfolio'>('quick');
   const [inputs, setInputs] = useState<PropertyInputs>(DEFAULT_INPUTS);
+
+  // Pre-fill with live prime rate once loaded (only if user hasn't changed it yet)
+  const [rateApplied, setRateApplied] = useState(false);
+  useEffect(() => {
+    if (!liveRate.loading && !liveRate.fallback && !rateApplied) {
+      setInputs((prev) =>
+        prev.interestRate === FALLBACK_PRIME
+          ? { ...prev, interestRate: liveRate.primeRate }
+          : prev
+      );
+      setRateApplied(true);
+    }
+  }, [liveRate.loading, liveRate.fallback, liveRate.primeRate, rateApplied]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -377,8 +392,18 @@ export function PropertyROI() {
                 </p>
               </div>
 
-              <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
-                onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
+              <div className="space-y-1.5">
+                <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
+                  onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
+                <button
+                  className="text-xs text-[#6366F1] hover:text-[#818CF8] transition-colors flex items-center gap-1"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  onClick={() => set('interestRate', String(liveRate.primeRate))}
+                >
+                  <Zap size={11} />
+                  {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
+                </button>
+              </div>
               <InputField label="Bond Term" id="bt" value={inputs.bondTerm}
                 onChange={(v) => set('bondTerm', v)} suffix="yrs" min={1} max={30} step={1} />
             </div>

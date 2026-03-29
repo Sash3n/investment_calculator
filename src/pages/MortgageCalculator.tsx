@@ -20,10 +20,10 @@ import { calcMortgageSummary } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
+import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 
 const ROWS_PER_PAGE = 24;
-const PRIME_RATE = 11.25;
 
 const CHART_COLORS = {
   indigo: '#6366F1',
@@ -75,7 +75,7 @@ export function MortgageCalculator() {
   const [inputs, setInputs] = useState<MortgageInputs>({
     purchasePrice: 1150000,
     deposit: 100000,
-    interestRate: PRIME_RATE,
+    interestRate: FALLBACK_PRIME,
     termYears: 20,
     frequency: 'monthly',
     extraPayment: 0,
@@ -104,6 +104,8 @@ export function MortgageCalculator() {
   useEffect(() => {
     if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
   }, [locationState]);
+
+  const liveRate = usePrimeRate();
 
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
 
@@ -269,9 +271,10 @@ export function MortgageCalculator() {
             <button
               className="text-xs text-[#6366F1] hover:text-[#818CF8] transition-colors flex items-center gap-1"
               style={{ fontFamily: 'var(--font-body)' }}
-              onClick={() => setInputs((p) => ({ ...p, interestRate: PRIME_RATE }))}
+              onClick={() => setInputs((p) => ({ ...p, interestRate: liveRate.primeRate }))}
             >
-              <Zap size={11} /> Use SA Prime Rate ({PRIME_RATE}%)
+              <Zap size={11} />
+              {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
             </button>
           </div>
 

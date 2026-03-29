@@ -5,7 +5,7 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { Car, Download, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Car, Download, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileText, Zap } from 'lucide-react';
 import clsx from 'clsx';
 import * as XLSX from 'xlsx';
 
@@ -16,6 +16,7 @@ import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcCarFinance } from '../utils/car';
 import { exportCarPDF } from '../utils/pdf';
 import { formatRand } from '../utils/format';
+import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { CarInputs } from '../types';
 
 const CHART_COLORS = {
@@ -31,7 +32,7 @@ const DEFAULT_INPUTS: CarInputs = {
   vehiclePrice: 450000,
   deposit: 50000,
   balloonPercent: 0,
-  interestRate: 11.25,
+  interestRate: FALLBACK_PRIME,
   termMonths: 72,
   minimumInstalment: 0,
   extraMonthlyPayment: 0,
@@ -56,6 +57,7 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 export function CarFinance() {
+  const liveRate = usePrimeRate();
   const [inputs, setInputs] = useState<CarInputs>(DEFAULT_INPUTS);
   const [tableOpen, setTableOpen] = useState(false);
   const [showWithExtras, setShowWithExtras] = useState(false);
@@ -219,8 +221,18 @@ export function CarFinance() {
           <InputField label="Balloon Payment" id="bal" value={inputs.balloonPercent}
             onChange={(v) => set('balloonPercent', v)} suffix="% of price" step={5} min={0} max={30}
             help={`= ${formatRand(result.balloonAmount)} lump sum at end of term`} />
-          <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
-            onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
+          <div className="space-y-1.5">
+            <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
+              onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
+            <button
+              className="text-xs text-[#6366F1] hover:text-[#818CF8] transition-colors flex items-center gap-1"
+              style={{ fontFamily: 'var(--font-body)' }}
+              onClick={() => set('interestRate', String(liveRate.primeRate))}
+            >
+              <Zap size={11} />
+              {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
+            </button>
+          </div>
           <InputField label="Term" id="term" value={inputs.termMonths}
             onChange={(v) => set('termMonths', v)} suffix="months" min={12} max={84} step={12}
             help="Common SA term: 72 months (6 years)" />
