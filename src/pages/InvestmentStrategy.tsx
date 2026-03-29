@@ -103,7 +103,7 @@ function StrategyCard({ s, isRecommended }: {
         <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: borderColor }}>{s.label}</p>
         <div className="flex items-baseline gap-2">
           <p className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-            {formatRandShort(s.totalInvested)}
+            {formatRand(s.totalInvested)}
           </p>
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>invested/month</p>
         </div>
@@ -112,12 +112,12 @@ function StrategyCard({ s, isRecommended }: {
       {/* Key metrics grid */}
       <div className="grid grid-cols-2 gap-2">
         {[
-          { label: 'RA',          value: formatRandShort(s.raMonthly),       color: C.indigo },
-          { label: 'TFSA',        value: formatRandShort(s.tfsaMonthly),     color: C.cyan   },
-          { label: 'Separate',    value: formatRandShort(s.separateMonthly), color: C.violet },
-          { label: 'PAYE',        value: formatRandShort(s.monthlyPAYE),     color: C.red    },
-          { label: 'Tax Saving',  value: formatRandShort(s.monthlyTaxSaving),color: C.emerald},
-          { label: 'Take-Home',   value: formatRandShort(s.takeHome),        color: 'var(--color-text)' },
+          { label: 'RA',          value: formatRand(s.raMonthly),       color: C.indigo },
+          { label: 'TFSA',        value: formatRand(s.tfsaMonthly),     color: C.cyan   },
+          { label: 'Separate',    value: formatRand(s.separateMonthly), color: C.violet },
+          { label: 'PAYE',        value: formatRand(s.monthlyPAYE),     color: C.red    },
+          { label: 'Tax Saving',  value: formatRand(s.monthlyTaxSaving),color: C.emerald},
+          { label: 'Take-Home',   value: formatRand(s.takeHome),        color: 'var(--color-text)' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-lg p-2" style={{ background: 'var(--color-surface)' }}>
             <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>{label}</p>
@@ -129,7 +129,7 @@ function StrategyCard({ s, isRecommended }: {
       {/* SARS subsidy note */}
       {subsidyPct && (
         <div className="text-xs p-2 rounded-lg" style={{ background: `${C.emerald}11`, color: C.emerald }}>
-          SARS funds {subsidyPct}% of your RA ({formatRandShort(s.monthlyTaxSaving)}/month)
+          SARS funds {subsidyPct}% of your RA ({formatRand(s.monthlyTaxSaving)}/month)
         </div>
       )}
 
@@ -143,7 +143,7 @@ function StrategyCard({ s, isRecommended }: {
       >
         <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Spendable cash</span>
         <span className="text-sm font-bold" style={{ color: s.budgetTight ? C.red : C.emerald }}>
-          {formatRandShort(s.spendable)}/mo
+          {formatRand(s.spendable)}/mo
         </span>
       </div>
 
@@ -162,7 +162,7 @@ function StrategyCard({ s, isRecommended }: {
       <div className="pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
         <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--color-text-subtle)' }}>Projected Value</p>
         <p className="text-lg font-bold" style={{ color: borderColor, fontFamily: 'var(--font-heading)' }}>
-          {formatRandShort(s.projectedFV)}
+          {formatRand(s.projectedFV, 0)}
         </p>
       </div>
 
@@ -205,7 +205,7 @@ function CompRow({ label, values, bestIdx, format = 'rand' }: {
             borderRadius: i === bestIdx ? 4 : 0,
           }}
         >
-          {format === 'rand' ? formatRandShort(v) : `${v.toFixed(1)}%`}
+          {format === 'rand' ? formatRand(v, 0) : `${v.toFixed(1)}%`}
         </td>
       ))}
     </tr>
@@ -313,7 +313,7 @@ export function InvestmentStrategy() {
                 value={inputs.monthlyRA}
                 onChange={upd('monthlyRA')}
                 prefix="R"
-                help={`27.5% limit: ${formatRandShort(result.raMonthlyLimit)}/month · Annual cap: R350,000`}
+                help={`27.5% limit: ${formatRand(result.raMonthlyLimit, 0)}/month · Annual cap: R350,000`}
               />
               {/* Slider */}
               <div>
@@ -335,7 +335,7 @@ export function InvestmentStrategy() {
                       {result.raCapSource === 'r350k' && ' · Annual R350K cap hit'}
                     </span>
                     <span style={{ color: result.raUtilizationPct > 100 ? C.red : result.raUtilizationPct > 85 ? C.amber : C.emerald }}>
-                      {formatRandShort(inputs.monthlyRA)}/mo
+                      {formatRand(inputs.monthlyRA)}/mo
                     </span>
                   </div>
                   <div className="h-2 rounded-full" style={{ background: 'var(--color-surface)' }}>
@@ -373,7 +373,7 @@ export function InvestmentStrategy() {
                 <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: `${C.cyan}11`, border: `1px solid ${C.cyan}33` }}>
                   <Zap size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.cyan }} />
                   <span style={{ color: 'var(--color-text-muted)' }}>
-                    <strong style={{ color: C.cyan }}>New for 2026:</strong> You can contribute {formatRand(result.tfsaMonthlyLimit - inputs.monthlyTFSA, 0)}/month more tax-free — increasing from {formatRandShort(inputs.monthlyTFSA)} to {formatRandShort(result.tfsaMonthlyLimit)}/month.
+                    <strong style={{ color: C.cyan }}>New for 2026:</strong> You can contribute {formatRand(result.tfsaMonthlyLimit - inputs.monthlyTFSA, 0)}/month more tax-free — increasing from {formatRand(inputs.monthlyTFSA)} to {formatRand(result.tfsaMonthlyLimit)}/month.
                   </span>
                 </div>
               )}
@@ -418,7 +418,7 @@ export function InvestmentStrategy() {
 
           <SaveLoadBar<InvestmentStrategyInputs>
             type="strategy"
-            title={`Strategy — ${formatRandShort(result.totalMonthlyGross)}/month gross`}
+            title={`Strategy — ${formatRand(result.totalMonthlyGross, 0)}/month gross`}
             summary={`Tax saving: ${formatRand(result.monthlyTaxSaving)}/month | Recommended: ${result.recommendedTag}`}
             inputs={inputs}
             onLoad={(saved) => setInputs(saved)}
@@ -431,10 +431,10 @@ export function InvestmentStrategy() {
 
           {/* Stat cards row 1 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Total Monthly Gross" value={formatRandShort(result.totalMonthlyGross)} sub={formatRandShort(result.totalAnnualGross) + '/yr'} icon={Wallet} color="indigo" delay={0} />
-            <StatCard label="Taxable Income" value={formatRandShort(result.taxableIncome)} sub="After RA deduction (annual)" icon={Shield} color="amber" delay={0.05} />
-            <StatCard label="Monthly PAYE" value={formatRandShort(result.monthlyPAYE)} sub={`Without RA: ${formatRandShort(result.monthlyPAYEWithoutRA)}`} icon={TrendingUp} color="red" delay={0.1} />
-            <StatCard label="Monthly Tax Saving" value={formatRandShort(result.monthlyTaxSaving)} sub={`SARS pays ${result.sarsSubsidyPct.toFixed(0)}% of RA`} icon={CheckCircle2} color="emerald" delay={0.15} />
+            <StatCard label="Total Monthly Gross" value={formatRand(result.totalMonthlyGross)} sub={formatRand(result.totalAnnualGross, 0) + '/yr'} icon={Wallet} color="indigo" delay={0} />
+            <StatCard label="Taxable Income" value={formatRand(result.taxableIncome, 0)} sub="After RA deduction (annual)" icon={Shield} color="amber" delay={0.05} />
+            <StatCard label="Monthly PAYE" value={formatRand(result.monthlyPAYE)} sub={`Without RA: ${formatRand(result.monthlyPAYEWithoutRA)}`} icon={TrendingUp} color="red" delay={0.1} />
+            <StatCard label="Monthly Tax Saving" value={formatRand(result.monthlyTaxSaving)} sub={`SARS pays ${result.sarsSubsidyPct.toFixed(0)}% of RA`} icon={CheckCircle2} color="emerald" delay={0.15} />
           </div>
 
           {/* Tax saving highlight */}
@@ -448,7 +448,7 @@ export function InvestmentStrategy() {
             {[
               { label: 'Effective RA Cost', value: formatRand(result.effectiveRAMonthlyCost), sub: 'RA minus tax saving', color: C.emerald },
               { label: 'Net Take-Home', value: formatRand(result.takeHome), sub: 'After RA + PAYE', color: 'var(--color-text)' },
-              { label: 'Total Invested', value: formatRandShort(result.totalInvested), sub: `${result.investPct.toFixed(1)}% of income`, color: C.indigo },
+              { label: 'Total Invested', value: formatRand(result.totalInvested), sub: `${result.investPct.toFixed(1)}% of income`, color: C.indigo },
               { label: 'Spendable Cash', value: formatRand(result.spendable), sub: 'After all investments', color: result.spendable < 5_000 ? C.red : C.emerald },
             ].map((item) => (
               <div key={item.label}>
@@ -597,7 +597,7 @@ export function InvestmentStrategy() {
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3 text-center" style={{ background: `${item.color}11`, border: `1px solid ${item.color}33` }}>
               <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: item.color }}>{item.label}</p>
-              <p className="text-base font-bold" style={{ color: item.color, fontFamily: 'var(--font-heading)' }}>{formatRandShort(item.value)}</p>
+              <p className="text-base font-bold" style={{ color: item.color, fontFamily: 'var(--font-heading)' }}>{formatRand(item.value, 0)}</p>
               <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>after {inputs.horizonYears} years</p>
             </div>
           ))}
@@ -624,7 +624,7 @@ export function InvestmentStrategy() {
               <p className="text-sm font-semibold" style={{ color: C.emerald }}>Savings Pot (1/3)</p>
             </div>
             <p className="text-2xl font-bold" style={{ color: C.emerald, fontFamily: 'var(--font-heading)' }}>
-              {formatRandShort(result.savingsPotMonthly)}<span className="text-sm font-normal">/month</span>
+              {formatRand(result.savingsPotMonthly)}<span className="text-sm font-normal">/month</span>
             </p>
             <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
               Accessible once per tax year · Minimum withdrawal: R2,000 · Taxed as income on withdrawal
@@ -637,7 +637,7 @@ export function InvestmentStrategy() {
               <p className="text-sm font-semibold" style={{ color: C.indigo }}>Retirement Pot (2/3)</p>
             </div>
             <p className="text-2xl font-bold" style={{ color: C.indigo, fontFamily: 'var(--font-heading)' }}>
-              {formatRandShort(result.retirementPotMonthly)}<span className="text-sm font-normal">/month</span>
+              {formatRand(result.retirementPotMonthly)}<span className="text-sm font-normal">/month</span>
             </p>
             <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
               Locked until age 55 · Tax-deferred growth · Partially tax-free on retirement
@@ -645,7 +645,7 @@ export function InvestmentStrategy() {
           </div>
         </div>
 
-        <InfoBadge text={`At your current RA of ${formatRand(inputs.monthlyRA)}/month: ${formatRandShort(result.savingsPotMonthly)} goes to savings pot (accessible), ${formatRandShort(result.retirementPotMonthly)} locked in retirement pot. Annual savings pot available: ~${formatRandShort(result.savingsPotMonthly * 12)} (subject to tax on withdrawal).`} />
+        <InfoBadge text={`At your current RA of ${formatRand(inputs.monthlyRA)}/month: ${formatRand(result.savingsPotMonthly)} goes to savings pot (accessible), ${formatRand(result.retirementPotMonthly)} locked in retirement pot. Annual savings pot available: ~${formatRand(result.savingsPotMonthly * 12, 0)} (subject to tax on withdrawal).`} />
       </div>
 
       {/* ── Smart Recommendation ────────────────────────────────────────────── */}
@@ -681,10 +681,10 @@ export function InvestmentStrategy() {
               {(() => {
                 const rec = { conservative: result.conservative, balanced: result.balanced, maxTax: result.maxTax }[result.recommendedTag];
                 return [
-                  { label: 'Monthly Invested', value: formatRandShort(rec.totalInvested), color: C.indigo },
-                  { label: 'Tax Saving', value: formatRandShort(rec.monthlyTaxSaving), color: C.emerald },
-                  { label: 'Take-Home', value: formatRandShort(rec.takeHome), color: 'var(--color-text)' },
-                  { label: `Value at ${inputs.horizonYears}yr`, value: formatRandShort(rec.projectedFV), color: C.emerald },
+                  { label: 'Monthly Invested', value: formatRand(rec.totalInvested), color: C.indigo },
+                  { label: 'Tax Saving', value: formatRand(rec.monthlyTaxSaving), color: C.emerald },
+                  { label: 'Take-Home', value: formatRand(rec.takeHome), color: 'var(--color-text)' },
+                  { label: `Value at ${inputs.horizonYears}yr`, value: formatRand(rec.projectedFV, 0), color: C.emerald },
                 ].map((item) => (
                   <div key={item.label} className="rounded-xl p-3" style={{ background: 'var(--color-surface)' }}>
                     <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>{item.label}</p>
