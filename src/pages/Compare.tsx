@@ -7,10 +7,7 @@ import { calcPropertyROI } from '../utils/roi';
 import { calcCarFinance } from '../utils/car';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { formatRand, formatPercent, formatYears } from '../utils/format';
-import type {
-  MortgageInputs, PropertyInputs, CarInputs,
-  CalcType as _CalcType,
-} from '../types';
+import type { MortgageInputs, PropertyInputs, CarInputs } from '../types';
 import type { CalcType } from '../hooks/useFirestore';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
