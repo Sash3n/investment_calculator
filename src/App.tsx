@@ -8,11 +8,13 @@ import { PaymentVsInvesting } from './pages/PaymentVsInvesting';
 import { TaxPlanner } from './pages/TaxPlanner';
 import { InvestmentStrategy } from './pages/InvestmentStrategy';
 import { History } from './pages/History';
+import { NotFound } from './pages/NotFound';
+import { ErrorPage } from './pages/ErrorPage';
 
 function App() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
+      <Route element={<AppShell />} errorElement={<ErrorPage />}>
         <Route path="/" element={<Home />} />
         <Route path="/mortgage" element={<MortgageCalculator />} />
         <Route path="/property-roi" element={<PropertyROI />} />
@@ -21,6 +23,7 @@ function App() {
         <Route path="/tax-planner" element={<TaxPlanner />} />
         <Route path="/investment-strategy" element={<InvestmentStrategy />} />
         <Route path="/history" element={<History />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
