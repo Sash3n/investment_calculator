@@ -78,7 +78,7 @@
 
 ### TFSA Optimizer
 - Lifetime allowance tracker (R500k) with animated progress bar
-- Annual contribution cap enforcement (R36,000/year, SARS 2026)
+- Annual contribution cap enforcement (R46,000/year, SARS 2026/27)
 - TFSA vs. taxable investment comparison (same balance, same contributions)
 - Tax drag modelling by investment type:
   - ETF: 20% dividend withholding tax on yield, CGT on disposal
@@ -268,7 +268,7 @@ npm run preview   # preview production build locally
 | CGT inclusion rate | 40% | SARS 2026 |
 | CGT annual exclusion | R50,000 | Increased from R40k in 2026 budget |
 | Primary residence exclusion | R3,000,000 | Increased from R2M in 2026 budget |
-| TFSA annual limit | R36,000 | Per tax year |
+| TFSA annual limit | R46,000 | Per tax year (increased from R36k in 2026/27 budget) |
 | TFSA lifetime limit | R500,000 | Total contributions |
 | Bond term | 20 years | SA standard |
 | Bank service fee | R69/month | Typical bond admin fee |

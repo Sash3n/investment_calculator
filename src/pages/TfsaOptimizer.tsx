@@ -13,7 +13,7 @@ import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
 
 // ── TFSA 2026 Rules ───────────────────────────────────────────────────────────
-const ANNUAL_LIMIT    = 36_000;
+const ANNUAL_LIMIT    = 46_000; // SARS 2026/27 budget — increased from R36,000
 const LIFETIME_LIMIT  = 500_000;
 const DIV_WHT         = 0.20;   // dividend withholding tax
 const CGT_INCLUSION   = 0.40;
@@ -186,7 +186,7 @@ function simulate(inp: Inputs): YearRow[] {
 export function TfsaOptimizer() {
   const [inp, setInp] = useState<Inputs>({
     currentAge:            30,
-    annualContribution:    36_000,
+    annualContribution:    46_000,
     existingBalance:       0,
     existingLifetimeUsed:  0,
     expectedReturnPercent: 11,
@@ -248,7 +248,7 @@ export function TfsaOptimizer() {
               TFSA Optimizer
             </h1>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-              Tax-Free Savings Account · R36,000/year · R500,000 lifetime · SARS 2026
+              Tax-Free Savings Account · R46,000/year · R500,000 lifetime · SARS 2026/27
             </p>
           </div>
           <span
@@ -298,7 +298,7 @@ export function TfsaOptimizer() {
           <div>
             <p style={{ color: 'var(--color-text-subtle)' }}>Annual limit</p>
             <p className="font-bold mt-0.5" style={{ color: C.indigo }}>
-              R 36,000 / year
+              R 46,000 / year
             </p>
           </div>
           <div>
@@ -324,8 +324,8 @@ export function TfsaOptimizer() {
         >
           <AlertTriangle size={14} className="text-[#EF4444] mt-0.5 flex-shrink-0" />
           <span style={{ color: '#FCA5A5' }}>
-            Your annual contribution exceeds the R36,000 SARS limit. Excess contributions are penalised at
-            <strong> 40%</strong>. The calculator caps contributions at R36,000/year. Do not over-contribute.
+            Your annual contribution exceeds the R46,000 SARS limit. Excess contributions are penalised at
+            <strong> 40%</strong>. The calculator caps contributions at R46,000/year. Do not over-contribute.
           </span>
         </div>
       )}
@@ -364,7 +364,7 @@ export function TfsaOptimizer() {
               onChange={n((v) => ({ currentAge: v }))} suffix="yrs" />
             <InputField id="annualContrib" label="Annual Contribution" value={inp.annualContribution}
               onChange={n((v) => ({ annualContribution: v }))} prefix="R"
-              help="Max R36,000/year" />
+              help="Max R46,000/year (SARS 2026/27)" />
             <InputField id="existingBalance" label="Existing TFSA Balance" value={inp.existingBalance}
               onChange={n((v) => ({ existingBalance: v }))} prefix="R" />
             <InputField id="lifetimeUsed" label="Lifetime Contributions Used" value={inp.existingLifetimeUsed}
@@ -585,7 +585,7 @@ export function TfsaOptimizer() {
         {[
           {
             title: 'Annual Limit',
-            body: 'R36,000 per tax year (1 March – 28 February). Excess is penalised at 40% by SARS. Does not roll over.',
+            body: 'R46,000 per tax year (1 March – 28 February). Excess is penalised at 40% by SARS. Does not roll over. Increased from R36,000 in the 2026/27 budget.',
             color: C.indigo,
           },
           {
