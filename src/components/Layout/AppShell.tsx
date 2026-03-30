@@ -91,6 +91,7 @@ const navItems: NavItem[] = [
   { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
   { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
   { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
+  { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -105,6 +106,7 @@ const pageTitles: Record<string, string> = {
   '/portfolio': 'Portfolio Summary',
   '/tax-projections': 'Tax Projections',
   '/tfsa': 'TFSA Optimizer',
+  '/fire': 'FIRE Calculator',
 };
 
 export function AppShell() {

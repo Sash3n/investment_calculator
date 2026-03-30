@@ -14,6 +14,7 @@ import { Compare } from './pages/Compare';
 import { PortfolioSummary } from './pages/PortfolioSummary';
 import { TaxProjections } from './pages/TaxProjections';
 import { TfsaOptimizer } from './pages/TfsaOptimizer';
+import { FireCalculator } from './pages/FireCalculator';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/portfolio" element={<PortfolioSummary />} />
         <Route path="/tax-projections" element={<TaxProjections />} />
         <Route path="/tfsa" element={<TfsaOptimizer />} />
+        <Route path="/fire" element={<FireCalculator />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
