@@ -16,6 +16,7 @@ import { TaxProjections } from './pages/TaxProjections';
 import { TfsaOptimizer } from './pages/TfsaOptimizer';
 import { FireCalculator } from './pages/FireCalculator';
 import { RaPlanner } from './pages/RaPlanner';
+import { BuyVsRent } from './pages/BuyVsRent';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
         <Route path="/tfsa" element={<TfsaOptimizer />} />
         <Route path="/fire" element={<FireCalculator />} />
         <Route path="/ra-planner" element={<RaPlanner />} />
+        <Route path="/buy-vs-rent" element={<BuyVsRent />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

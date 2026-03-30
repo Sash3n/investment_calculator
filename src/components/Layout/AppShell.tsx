@@ -94,6 +94,7 @@ const navItems: NavItem[] = [
   { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
   { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
   { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1' },
+  { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: Home, color: '#10B981' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -110,6 +111,7 @@ const pageTitles: Record<string, string> = {
   '/tfsa': 'TFSA Optimizer',
   '/fire': 'FIRE Calculator',
   '/ra-planner': 'RA Planner',
+  '/buy-vs-rent': 'Buy vs Rent',
 };
 
 export function AppShell() {
