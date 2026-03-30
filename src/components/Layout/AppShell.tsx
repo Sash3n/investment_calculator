@@ -378,47 +378,64 @@ export function AppShell() {
       </div>
 
       {/* ── Mobile bottom tab bar ──────────────────────── */}
-      <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 flex backdrop-blur-xl"
+      <div
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30"
         style={{
           background: 'var(--color-bg)',
-          backdropFilter: 'blur(20px)',
           borderTop: '1px solid var(--color-border)',
         }}
       >
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-1 text-[10px] font-medium transition-all duration-200"
-              style={({ isActive }) => ({
-                fontFamily: 'var(--font-body)',
-                color: isActive ? '#6366F1' : 'var(--color-text-subtle)',
-              })}
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className="w-8 h-6 flex items-center justify-center rounded-lg transition-all duration-200"
-                    style={{
-                      background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent',
-                    }}
-                  >
-                    <Icon
-                      size={16}
-                      style={{ color: isActive ? '#6366F1' : 'var(--color-text-subtle)' }}
-                    />
-                  </span>
-                  <span>{item.shortLabel}</span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
+        {/* Scroll-hint fade on right edge */}
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10"
+          style={{
+            background: 'linear-gradient(to left, var(--color-bg) 10%, transparent 100%)',
+          }}
+        />
+        <nav
+          className="flex overflow-x-auto backdrop-blur-xl scrollbar-hidden"
+          style={{
+            backdropFilter: 'blur(20px)',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className="flex flex-col items-center justify-center py-2.5 gap-1 text-[10px] font-medium transition-all duration-200 flex-shrink-0"
+                style={({ isActive }) => ({
+                  fontFamily: 'var(--font-body)',
+                  color: isActive ? '#6366F1' : 'var(--color-text-subtle)',
+                  minWidth: '64px',
+                  paddingLeft: '8px',
+                  paddingRight: '8px',
+                })}
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className="w-8 h-6 flex items-center justify-center rounded-lg transition-all duration-200"
+                      style={{
+                        background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent',
+                      }}
+                    >
+                      <Icon
+                        size={16}
+                        style={{ color: isActive ? '#6366F1' : 'var(--color-text-subtle)' }}
+                      />
+                    </span>
+                    <span className="truncate w-full text-center">{item.shortLabel}</span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }
