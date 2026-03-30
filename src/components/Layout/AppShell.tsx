@@ -21,6 +21,7 @@ import {
   LogOut,
   History,
   Landmark,
+  Shield,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -92,6 +93,7 @@ const navItems: NavItem[] = [
   { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
   { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
   { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
+  { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -107,6 +109,7 @@ const pageTitles: Record<string, string> = {
   '/tax-projections': 'Tax Projections',
   '/tfsa': 'TFSA Optimizer',
   '/fire': 'FIRE Calculator',
+  '/ra-planner': 'RA Planner',
 };
 
 export function AppShell() {
