@@ -273,6 +273,90 @@ export function calc13quat(inputs: Section13quatInputs): Section13quatResult {
   };
 }
 
+// ── PAYE / Salary Calculator ──────────────────────────────────────────────────
+// Medical aid tax credits (2026 tax year)
+const MED_CREDIT_MAIN      = 364;  // per month, main member
+const MED_CREDIT_FIRST_DEP = 364;  // per month, first dependant
+const MED_CREDIT_EXTRA_DEP = 246;  // per month, each additional dependant
+
+// UIF: 1% of remuneration, capped at R17,712/month → max R177.12/mo
+const UIF_RATE        = 0.01;
+const UIF_CAP_MONTHLY = 177.12;
+
+export interface PAYEInputs {
+  grossMonthly:       number;
+  ageGroup:           AgeGroup;
+  raMonthlyContrib:   number;  // voluntary RA contribution per month
+  medAidDependants:   number;  // 0 = main member only, 1 = main + 1, 2 = main + 2, etc.
+}
+
+export interface PAYEResult {
+  grossAnnual:        number;
+  taxableIncome:      number;   // after RA deduction
+  grossTaxBefore:     number;   // before rebates & medical credits
+  rebateAmount:       number;
+  medCreditMonthly:   number;
+  medCreditAnnual:    number;
+  raDeduction:        number;   // actual annual RA deduction applied
+  annualPAYE:         number;
+  monthlyPAYE:        number;
+  monthlyUIF:         number;
+  monthlyRA:          number;
+  monthlyNet:         number;
+  effectiveRate:      number;   // annualPAYE / grossAnnual (%)
+  marginalRate:       number;   // marginal bracket rate (%)
+}
+
+export function calcPAYE(inputs: PAYEInputs): PAYEResult {
+  const { grossMonthly, ageGroup, raMonthlyContrib, medAidDependants } = inputs;
+
+  const grossAnnual = grossMonthly * 12;
+
+  // RA deduction: 27.5% of greater of remuneration or taxable income, max R350,000 p.a.
+  const raAnnual    = raMonthlyContrib * 12;
+  const raCap       = Math.min(grossAnnual * 0.275, 350_000);
+  const raDeduction = Math.min(raAnnual, raCap);
+
+  const taxableIncome = Math.max(0, grossAnnual - raDeduction);
+
+  // Gross tax from brackets
+  const bracket    = BRACKETS.find((b) => taxableIncome <= b.max) ?? BRACKETS[BRACKETS.length - 1];
+  const grossTax   = taxableIncome > 0 ? bracket.base + bracket.rate * (taxableIncome - bracket.min + 1) : 0;
+
+  // Rebate
+  const reb = REBATES[ageGroup];
+
+  // Medical aid tax credit
+  const deps = Math.max(0, medAidDependants);
+  const medMonthly =
+    deps === 0 ? MED_CREDIT_MAIN
+    : deps === 1 ? MED_CREDIT_MAIN + MED_CREDIT_FIRST_DEP
+    : MED_CREDIT_MAIN + MED_CREDIT_FIRST_DEP + (deps - 1) * MED_CREDIT_EXTRA_DEP;
+  const medAnnual = medMonthly * 12;
+
+  const annualPAYE  = Math.max(0, grossTax - reb - medAnnual);
+  const monthlyPAYE = annualPAYE / 12;
+  const monthlyUIF  = Math.min(grossMonthly * UIF_RATE, UIF_CAP_MONTHLY);
+  const monthlyNet  = grossMonthly - monthlyPAYE - monthlyUIF - raMonthlyContrib;
+
+  return {
+    grossAnnual,
+    taxableIncome,
+    grossTaxBefore:  grossTax,
+    rebateAmount:    reb,
+    medCreditMonthly: medMonthly,
+    medCreditAnnual: medAnnual,
+    raDeduction,
+    annualPAYE,
+    monthlyPAYE,
+    monthlyUIF,
+    monthlyRA:       raMonthlyContrib,
+    monthlyNet,
+    effectiveRate:   grossAnnual > 0 ? (annualPAYE / grossAnnual) * 100 : 0,
+    marginalRate:    bracket.rate * 100,
+  };
+}
+
 // ── Capital Gains Tax ─────────────────────────────────────────────────────────
 export function calcCGT(inputs: CGTInputs): CGTResult {
   const {

@@ -17,6 +17,15 @@ import { TfsaOptimizer } from './pages/TfsaOptimizer';
 import { FireCalculator } from './pages/FireCalculator';
 import { RaPlanner } from './pages/RaPlanner';
 import { BuyVsRent } from './pages/BuyVsRent';
+import { LoanComparison } from './pages/LoanComparison';
+import { NetWorthDashboard } from './pages/NetWorthDashboard';
+import { RentalYieldFinder } from './pages/RentalYieldFinder';
+import { SalaryCalculator } from './pages/SalaryCalculator';
+import { BudgetPlanner } from './pages/BudgetPlanner';
+import { DebtSnowball } from './pages/DebtSnowball';
+import { EmergencyFund } from './pages/EmergencyFund';
+import { InflationCalc } from './pages/InflationCalc';
+import { EducationSavings } from './pages/EducationSavings';
 
 function App() {
   return (
@@ -37,6 +46,15 @@ function App() {
         <Route path="/fire" element={<FireCalculator />} />
         <Route path="/ra-planner" element={<RaPlanner />} />
         <Route path="/buy-vs-rent" element={<BuyVsRent />} />
+        <Route path="/loan-comparison" element={<LoanComparison />} />
+        <Route path="/net-worth" element={<NetWorthDashboard />} />
+        <Route path="/rental-yield" element={<RentalYieldFinder />} />
+        <Route path="/salary" element={<SalaryCalculator />} />
+        <Route path="/budget" element={<BudgetPlanner />} />
+        <Route path="/debt-snowball" element={<DebtSnowball />} />
+        <Route path="/emergency-fund" element={<EmergencyFund />} />
+        <Route path="/inflation" element={<InflationCalc />} />
+        <Route path="/education-savings" element={<EducationSavings />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
