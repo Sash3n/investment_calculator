@@ -22,6 +22,13 @@ import {
   History,
   Landmark,
   Shield,
+  Scale,
+  PieChart,
+  House,
+  Briefcase,
+  Snowflake,
+  GraduationCap,
+  TrendingDown,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -82,19 +89,34 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { path: '/', label: 'Dashboard', shortLabel: 'Home', icon: Home, color: '#6366F1' },
+  // ── Property & Loans ──
   { path: '/mortgage', label: 'Mortgage Calculator', shortLabel: 'Mortgage', icon: Building2, color: '#F59E0B' },
   { path: '/property-roi', label: 'Property ROI', shortLabel: 'Property', icon: MapPin, color: '#10B981' },
+  { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: House, color: '#10B981' },
+  { path: '/rental-yield', label: 'Rental Yield Finder', shortLabel: 'Yield', icon: House, color: '#10B981' },
+  { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B' },
+  // ── Income & Budget ──
+  { path: '/salary', label: 'Salary Calculator', shortLabel: 'Salary', icon: Briefcase, color: '#6366F1' },
+  { path: '/budget', label: 'Budget Planner', shortLabel: 'Budget', icon: Wallet, color: '#10B981' },
+  { path: '/debt-snowball', label: 'Debt Snowball', shortLabel: 'Debt', icon: Snowflake, color: '#06B6D4' },
+  { path: '/emergency-fund', label: 'Emergency Fund', shortLabel: 'Emergency', icon: Shield, color: '#10B981' },
+  // ── Vehicles ──
   { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899' },
+  // ── Investing & Tax ──
   { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
-  { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
-  { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
-  { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
+  { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
   { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
   { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
-  { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
   { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1' },
-  { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: Home, color: '#10B981' },
+  { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
+  // ── Planning ──
+  { path: '/net-worth', label: 'Net Worth Dashboard', shortLabel: 'Net Worth', icon: PieChart, color: '#6366F1' },
+  { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
+  { path: '/inflation', label: 'Inflation Calculator', shortLabel: 'Inflation', icon: TrendingDown, color: '#EF4444' },
+  { path: '/education-savings', label: 'Education Savings', shortLabel: 'Education', icon: GraduationCap, color: '#8B5CF6' },
+  // ── History ──
+  { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -112,6 +134,15 @@ const pageTitles: Record<string, string> = {
   '/fire': 'FIRE Calculator',
   '/ra-planner': 'RA Planner',
   '/buy-vs-rent': 'Buy vs Rent',
+  '/loan-comparison': 'Loan Comparison Tool',
+  '/net-worth': 'Net Worth Dashboard',
+  '/rental-yield': 'Rental Yield Finder',
+  '/salary': 'Salary / Take-Home Calculator',
+  '/budget': 'Budget Planner',
+  '/debt-snowball': 'Debt Snowball / Avalanche',
+  '/emergency-fund': 'Emergency Fund Planner',
+  '/inflation': 'Inflation & Purchasing Power',
+  '/education-savings': 'Education Savings Planner',
 };
 
 export function AppShell() {
