@@ -7,6 +7,7 @@ import {
 import { Home, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
+import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -43,11 +44,13 @@ interface MonthlyCosts {
   insurance:   number;
   maintenance: number;
   agentFee:    number;
+  effluent:    number;
+  misc:        number;
   total:       number;
 }
 
 function calcMonthlyCosts(
-  purchasePrice: number,
+  loanAmount: number,
   bondRate: number,
   bondTerm: number,
   levy: number,
@@ -55,32 +58,46 @@ function calcMonthlyCosts(
   insurance: number,
   maintenancePct: number,
   agentFeePct: number,
-  monthlyRent: number
+  monthlyRent: number,
+  purchasePrice: number,
+  effluent: number,
+  misc: number,
 ): MonthlyCosts {
-  const bond        = calcMonthlyBondPayment(purchasePrice * 0.9, bondRate, bondTerm); // assume 10% deposit
+  const bond        = calcMonthlyBondPayment(loanAmount, bondRate, bondTerm);
   const maintenance = (purchasePrice * maintenancePct) / 100 / 12;
   const agentFee    = (monthlyRent * agentFeePct) / 100;
-  const total       = bond + levy + rates + insurance + maintenance + agentFee;
-  return { bond, levy, rates, insurance, maintenance, agentFee, total };
+  const total       = bond + levy + rates + insurance + maintenance + agentFee + effluent + misc;
+  return { bond, levy, rates, insurance, maintenance, agentFee, effluent, misc, total };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function RentalYieldFinder() {
   const [purchasePrice,   setPurchasePrice]   = useState(1_200_000);
+  const [deposit,         setDeposit]         = useState(120_000);
+  const [initiationFee,   setInitiationFee]   = useState(6_037);
   const [monthlyRent,     setMonthlyRent]     = useState(8_500);
   const [bondRate,        setBondRate]        = useState(11.5);
   const [bondTerm,        setBondTerm]        = useState(20);
   const [levy,            setLevy]            = useState(1_800);
   const [rates,           setRates]           = useState(900);
   const [insurance,       setInsurance]       = useState(500);
+  const [effluent,        setEffluent]        = useState(350);
+  const [misc,            setMisc]            = useState(0);
   const [maintenancePct,  setMaintenancePct]  = useState(1.0);
   const [agentFeePct,     setAgentFeePct]     = useState(8.5);
   const [vacancyMonths,   setVacancyMonths]   = useState(1);
 
+  const loanAmount = Math.max(0, purchasePrice - deposit);
+
+  // Upfront costs
+  const transferDuty     = useMemo(() => calcTransferDuty(purchasePrice), [purchasePrice]);
+  const bondRegCost      = useMemo(() => calcBondRegistrationCost(loanAmount), [loanAmount]);
+  const totalUpfront     = deposit + initiationFee + transferDuty + bondRegCost;
+
   const costs = useMemo(
-    () => calcMonthlyCosts(purchasePrice, bondRate, bondTerm, levy, rates, insurance, maintenancePct, agentFeePct, monthlyRent),
-    [purchasePrice, bondRate, bondTerm, levy, rates, insurance, maintenancePct, agentFeePct, monthlyRent]
+    () => calcMonthlyCosts(loanAmount, bondRate, bondTerm, levy, rates, insurance, maintenancePct, agentFeePct, monthlyRent, purchasePrice, effluent, misc),
+    [loanAmount, bondRate, bondTerm, levy, rates, insurance, maintenancePct, agentFeePct, monthlyRent, purchasePrice, effluent, misc]
   );
 
   // Effective annual rent after vacancy
@@ -95,8 +112,8 @@ export function RentalYieldFinder() {
   const netYield         = purchasePrice > 0 ? (annualCashFlow / purchasePrice) * 100 : 0;
   const isCashFlowPositive = monthlyCashFlow >= 0;
 
-  // True breakeven: rent = (bond + levy + rates + insurance + maintenance) / (1 - agentFee%)
-  const fixedCosts  = costs.bond + costs.levy + costs.rates + costs.insurance + costs.maintenance;
+  // True breakeven: rent = (bond + levy + rates + insurance + maintenance + effluent + misc) / (1 - agentFee%)
+  const fixedCosts  = costs.bond + costs.levy + costs.rates + costs.insurance + costs.maintenance + costs.effluent + costs.misc;
   const breakEvenRentActual = agentFeePct < 100
     ? fixedCosts / (1 - agentFeePct / 100)
     : fixedCosts;
@@ -114,7 +131,7 @@ export function RentalYieldFinder() {
     return Array.from({ length: steps + 1 }, (_, i) => {
       const r      = minRent + (maxRent - minRent) * (i / steps);
       const agFee  = (r * agentFeePct) / 100;
-      const total  = costs.bond + costs.levy + costs.rates + costs.insurance + costs.maintenance + agFee;
+      const total  = costs.bond + costs.levy + costs.rates + costs.insurance + costs.maintenance + costs.effluent + costs.misc + agFee;
       const cf     = r - total;
       const yield_ = purchasePrice > 0 ? (r * 12 / purchasePrice) * 100 : 0;
       return {
@@ -133,7 +150,7 @@ export function RentalYieldFinder() {
       const totalRentReceived = effectiveAnnualRent * yr;
       const totalCostsPaid    = costs.total * 12 * yr;
       const netCashFlow       = totalRentReceived - totalCostsPaid;
-      const equity            = propertyValue - (purchasePrice * 0.9); // simplified
+      const equity            = propertyValue - loanAmount;
       return {
         year:     `Yr ${yr}`,
         equity:   Math.round(equity),
@@ -141,7 +158,7 @@ export function RentalYieldFinder() {
         total:    Math.round(equity + netCashFlow),
       };
     });
-  }, [purchasePrice, effectiveAnnualRent, costs]);
+  }, [purchasePrice, effectiveAnnualRent, costs, loanAmount]);
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -231,6 +248,8 @@ export function RentalYieldFinder() {
           <div className="grid grid-cols-2 gap-3">
             <InputField id="pp" label="Purchase Price" value={purchasePrice}
               onChange={(v) => setPurchasePrice(parseFloat(v) || 0)} prefix="R" />
+            <InputField id="dep" label="Deposit" value={deposit}
+              onChange={(v) => setDeposit(parseFloat(v) || 0)} prefix="R" />
             <InputField id="rent" label="Expected Monthly Rent" value={monthlyRent}
               onChange={(v) => setMonthlyRent(parseFloat(v) || 0)} prefix="R" />
             <InputField id="br" label="Bond Interest Rate" value={bondRate}
@@ -239,6 +258,30 @@ export function RentalYieldFinder() {
               onChange={(v) => setBondTerm(parseFloat(v) || 0)} suffix="yrs" />
             <InputField id="vac" label="Vacancy (months/yr)" value={vacancyMonths}
               onChange={(v) => setVacancyMonths(parseFloat(v) || 0)} suffix="mo" step={0.5} />
+          </div>
+
+          {/* Upfront costs breakdown */}
+          <div className="rounded-xl p-3.5 space-y-2 mt-1" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: C.indigo }}>
+              Upfront Costs
+            </p>
+            <InputField id="init" label="Initiation Fee" value={initiationFee}
+              onChange={(v) => setInitiationFee(parseFloat(v) || 0)} prefix="R" step={100}
+              help="NCA cap R6,037 for bonds > R500K" />
+            <div className="space-y-1.5 pt-1">
+              {[
+                { label: 'Transfer Duty',     value: transferDuty },
+                { label: 'Bond Registration', value: bondRegCost },
+                { label: 'Total Cash Needed', value: totalUpfront, bold: true },
+              ].map((r) => (
+                <div key={r.label} className={`flex justify-between ${r.bold ? 'pt-1.5 border-t border-[rgba(99,102,241,0.2)]' : ''}`}>
+                  <span className="text-xs" style={{ color: r.bold ? C.indigo : 'var(--color-text-muted)' }}>{r.label}</span>
+                  <span className={`text-xs font-semibold tabular-nums ${r.bold ? 'text-sm' : ''}`} style={{ color: r.bold ? C.indigo : 'var(--color-text)' }}>
+                    {formatRand(r.value)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -252,6 +295,8 @@ export function RentalYieldFinder() {
             <InputField id="levy"    label="Levy"              value={levy}           onChange={(v) => setLevy(parseFloat(v) || 0)}           prefix="R" />
             <InputField id="rates"   label="Rates & Taxes"     value={rates}          onChange={(v) => setRates(parseFloat(v) || 0)}          prefix="R" />
             <InputField id="ins"     label="Insurance"         value={insurance}      onChange={(v) => setInsurance(parseFloat(v) || 0)}      prefix="R" />
+            <InputField id="eff"     label="Effluent"          value={effluent}       onChange={(v) => setEffluent(parseFloat(v) || 0)}       prefix="R"  />
+            <InputField id="misc"    label="Misc"              value={misc}           onChange={(v) => setMisc(parseFloat(v) || 0)}           prefix="R" />
             <InputField id="maint"   label="Maintenance"       value={maintenancePct} onChange={(v) => setMaintenancePct(parseFloat(v) || 0)} suffix="% p.a." step={0.1} />
             <InputField id="agent"   label="Agent Fee"         value={agentFeePct}    onChange={(v) => setAgentFeePct(parseFloat(v) || 0)}    suffix="%" step={0.5} />
           </div>
@@ -267,12 +312,14 @@ export function RentalYieldFinder() {
           style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
           Monthly Cost Breakdown
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
           {[
             { label: 'Bond Payment', value: costs.bond,        color: C.indigo  },
             { label: 'Levy',         value: costs.levy,        color: C.violet  },
             { label: 'Rates',        value: costs.rates,       color: C.amber   },
             { label: 'Insurance',    value: costs.insurance,   color: C.cyan    },
+            { label: 'Effluent',     value: costs.effluent,    color: '#06B6D4' },
+            { label: 'Misc',         value: costs.misc,        color: '#A78BFA' },
             { label: 'Maintenance',  value: costs.maintenance, color: C.emerald },
             { label: 'Agent Fee',    value: costs.agentFee,    color: C.red     },
           ].map((item) => (
@@ -349,7 +396,7 @@ export function RentalYieldFinder() {
           </LineChart>
         </ResponsiveContainer>
         <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-subtle)' }}>
-          * Assumes 10% deposit, 7% annual appreciation, current rent held constant. Does not account for bond balance reduction.
+          * Assumes 7% annual appreciation, current rent held constant. Does not account for bond balance reduction.
         </p>
       </motion.div>
 
