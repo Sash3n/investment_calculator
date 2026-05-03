@@ -82,6 +82,7 @@ export function MortgageCalculator() {
     lumpSumYear: 0,
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
+    initiationFee: 6037,
     transferDutyExempt: false,
     bondRegistrationIncluded: false,
   });
@@ -115,7 +116,7 @@ export function MortgageCalculator() {
     return {
       transferDuty,
       bondRegCost,
-      totalCashRequired: inputs.deposit + transferDuty + bondRegCost,
+      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + inputs.initiationFee,
     };
   }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, result.loanAmount]);
 
@@ -203,6 +204,7 @@ export function MortgageCalculator() {
       ['Interest Rate', `${inputs.interestRate}%`],
       ['Term', `${inputs.termYears} years`],
       ['Monthly Payment', result.standardPayment.toFixed(2)],
+      ['Initiation Fee', inputs.initiationFee.toFixed(2)],
       ['Total Interest (Standard)', result.totalInterestStandard.toFixed(2)],
       ['Total Interest (With Extras)', result.totalInterestWithExtras.toFixed(2)],
       ['Interest Saved', result.interestSaved.toFixed(2)],
@@ -298,6 +300,17 @@ export function MortgageCalculator() {
             min={0}
             step={1}
             help="Bank admin fee (e.g. R69/month). Doesn't reduce principal — pure extra cost."
+          />
+
+          <InputField
+            label="Initiation Fee"
+            id="initiationFee"
+            value={inputs.initiationFee}
+            onChange={(v) => set('initiationFee', v)}
+            prefix="R"
+            min={0}
+            step={100}
+            help="Once-off upfront fee. NCA cap: R6,037 for bonds above R500K."
           />
 
           {/* Upfront cost toggles */}
@@ -402,15 +415,13 @@ export function MortgageCalculator() {
           </div>
 
           {/* Upfront cash required */}
-          <div className="glass-card-static p-4 border-l-[3px] border-l-[#6366F1] grid grid-cols-3 gap-4">
+          <div className="glass-card-static p-4 border-l-[3px] border-l-[#6366F1] grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
               <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Deposit</p>
               <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(inputs.deposit)}</p>
             </div>
             <div>
-              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>
-                {inputs.transferDutyExempt ? 'Transfer Duty' : 'Transfer Duty'}
-              </p>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Transfer Duty</p>
               <p className={`text-base font-bold ${inputs.transferDutyExempt ? 'text-[#10B981]' : 'text-[#EF4444]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
                 {inputs.transferDutyExempt ? 'Exempt' : formatRand(upfrontCosts.transferDuty)}
               </p>
@@ -421,7 +432,13 @@ export function MortgageCalculator() {
                 {inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(upfrontCosts.bondRegCost)}
               </p>
             </div>
-            <div className="col-span-3 border-t border-[rgba(255,255,255,0.07)] pt-3 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Initiation Fee</p>
+              <p className={`text-base font-bold ${inputs.initiationFee > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
+              </p>
+            </div>
+            <div className="col-span-2 sm:col-span-4 border-t border-[rgba(255,255,255,0.07)] pt-3 flex items-center justify-between">
               <p className="text-xs text-[#94A3B8]" style={{ fontFamily: 'var(--font-body)' }}>Total Cash Required on Transfer Day</p>
               <p className="text-lg font-bold text-[#6366F1]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(upfrontCosts.totalCashRequired)}</p>
             </div>

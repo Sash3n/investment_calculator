@@ -8,6 +8,7 @@ export interface MortgageInputs {
   lumpSumYear: number; // 0 = none
   lumpSumAmount: number;
   monthlyServiceFee: number; // bank admin fee, e.g. R69/month
+  initiationFee: number;     // once-off upfront fee (NCA cap R6,037 for bonds > R500K)
   transferDutyExempt: boolean;
   bondRegistrationIncluded: boolean;
 }
