@@ -14,6 +14,7 @@ const baseInputs = {
   insurance: 600,
   effluentFees: 350,
   miscFees: 200,
+  monthlyServiceFee: 69,
   managementFeePercent: 10,
   vacancyRate: 8,
   rentScenario1: 9_500,
