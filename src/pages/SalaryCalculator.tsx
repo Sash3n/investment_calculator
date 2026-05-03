@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
-import { Briefcase, TrendingDown, Info } from 'lucide-react';
+import { Briefcase, TrendingDown, Info, Plus, Trash2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPAYE, type PAYEInputs } from '../utils/tax';
@@ -32,35 +32,70 @@ const TOOLTIP_STYLE = {
 const AGE_GROUPS: { value: AgeGroupLocal; label: string }[] = [
   { value: 'under65', label: 'Under 65' },
   { value: '65to74',  label: '65 – 74' },
-  { value: '75plus',  label: '75+' },
+  { value: '75+',     label: '75+' } as unknown as { value: AgeGroupLocal; label: string },
 ];
 
+// -1 = not on medical aid (no credit); 0 = main member only; 1+ = main + dependants
+const MED_OPTIONS: { value: number; label: string }[] = [
+  { value: -1, label: 'None' },
+  { value: 0,  label: 'Solo' },
+  { value: 1,  label: '+1' },
+  { value: 2,  label: '+2' },
+  { value: 3,  label: '+3' },
+  { value: 4,  label: '+4' },
+];
+
+interface IncomeStream {
+  id: number;
+  label: string;
+  amount: number;
+}
+
 export function SalaryCalculator() {
-  const [grossMonthly,     setGrossMonthly]     = useState(45_000);
-  const [ageGroup,         setAgeGroup]         = useState<AgeGroupLocal>('under65');
-  const [raContrib,        setRaContrib]        = useState(2_000);
-  const [medDependants,    setMedDependants]    = useState(0);
-  const [showAnnual,       setShowAnnual]       = useState(false);
+  const [incomes, setIncomes]           = useState<IncomeStream[]>([{ id: 1, label: 'Primary Income', amount: 45_000 }]);
+  const [ageGroup, setAgeGroup]         = useState<AgeGroupLocal>('under65');
+  const [raContrib, setRaContrib]       = useState(2_000);
+  const [medDependants, setMedDependants] = useState(0);
+  const [showAnnual, setShowAnnual]     = useState(false);
+
+  const grossMonthly = useMemo(() => incomes.reduce((s, i) => s + i.amount, 0), [incomes]);
 
   const result = useMemo(
     () => calcPAYE({
       grossMonthly,
       ageGroup,
-      raMonthlyContrib:  raContrib,
-      medAidDependants:  medDependants,
+      raMonthlyContrib: raContrib,
+      medAidDependants: medDependants,
     } satisfies PAYEInputs),
     [grossMonthly, ageGroup, raContrib, medDependants]
   );
 
-  const mult = showAnnual ? 12 : 1;
+  const mult  = showAnnual ? 12 : 1;
   const label = showAnnual ? 'Annual' : 'Monthly';
+
+  const addIncome = () => {
+    if (incomes.length >= 3) return;
+    const id = Math.max(...incomes.map((i) => i.id)) + 1;
+    setIncomes([...incomes, { id, label: `Income ${id}`, amount: 0 }]);
+  };
+
+  const removeIncome = (id: number) => {
+    if (incomes.length <= 1) return;
+    setIncomes(incomes.filter((i) => i.id !== id));
+  };
+
+  const updateIncome = (id: number, field: 'label' | 'amount', val: string) => {
+    setIncomes(incomes.map((i) =>
+      i.id === id ? { ...i, [field]: field === 'amount' ? parseFloat(val) || 0 : val } : i
+    ));
+  };
 
   // Pie chart: deductions breakdown
   const pieData = [
-    { name: 'Net Pay',   value: result.monthlyNet   * mult, color: C.emerald },
-    { name: 'PAYE',      value: result.monthlyPAYE  * mult, color: C.red     },
-    { name: 'UIF',       value: result.monthlyUIF   * mult, color: C.amber   },
-    { name: 'RA Contrib',value: result.monthlyRA    * mult, color: C.indigo  },
+    { name: 'Net Pay',    value: result.monthlyNet   * mult, color: C.emerald },
+    { name: 'PAYE',       value: result.monthlyPAYE  * mult, color: C.red     },
+    { name: 'UIF',        value: result.monthlyUIF   * mult, color: C.amber   },
+    { name: 'RA Contrib', value: result.monthlyRA    * mult, color: C.indigo  },
   ].filter((d) => d.value > 0);
 
   // Bar chart: gross vs net at different salary levels
@@ -113,9 +148,55 @@ export function SalaryCalculator() {
           <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
             Your Details
           </p>
-          <InputField id="gross" label="Gross Monthly Salary" value={grossMonthly}
-            onChange={(v) => setGrossMonthly(parseFloat(v) || 0)} prefix="R" />
 
+          {/* Income streams */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                Income Sources
+              </p>
+              {incomes.length < 3 && (
+                <button onClick={addIncome}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg font-semibold"
+                  style={{ background: 'rgba(99,102,241,0.1)', color: C.indigo, border: '1px solid rgba(99,102,241,0.25)' }}>
+                  <Plus size={11} /> Add Income
+                </button>
+              )}
+            </div>
+
+            {incomes.map((inc, idx) => (
+              <div key={inc.id} className="rounded-xl p-3 space-y-2"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex items-center justify-between">
+                  <input
+                    value={inc.label}
+                    onChange={(e) => updateIncome(inc.id, 'label', e.target.value)}
+                    className="text-xs font-semibold bg-transparent border-0 outline-none"
+                    style={{ color: [C.indigo, C.emerald, C.amber][idx % 3] }}
+                  />
+                  {incomes.length > 1 && (
+                    <button onClick={() => removeIncome(inc.id)}
+                      className="p-0.5 rounded" style={{ color: C.red }}>
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+                <InputField id={`income-${inc.id}`} label="Gross Monthly Amount" value={inc.amount}
+                  onChange={(v) => updateIncome(inc.id, 'amount', v)} prefix="R" />
+              </div>
+            ))}
+
+            {incomes.length > 1 && (
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Total Gross Monthly</span>
+                <span className="text-sm font-bold" style={{ color: C.indigo }}>{formatRand(grossMonthly, 0)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Age group */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>Age Group</label>
@@ -139,27 +220,30 @@ export function SalaryCalculator() {
             onChange={(v) => setRaContrib(parseFloat(v) || 0)} prefix="R"
             help="Tax-deductible up to 27.5% of income (max R350K/yr)" />
 
+          {/* Medical aid dependants */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-              Medical Aid Dependants
+              Medical Aid
             </label>
             <div className="flex gap-2 flex-wrap">
-              {[0, 1, 2, 3, 4].map((n) => (
-                <button key={n}
-                  onClick={() => setMedDependants(n)}
-                  className="w-12 py-2 rounded-xl text-xs font-semibold transition-all"
+              {MED_OPTIONS.map((opt) => (
+                <button key={opt.value}
+                  onClick={() => setMedDependants(opt.value)}
+                  className="flex-1 min-w-[48px] py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
-                    background: medDependants === n ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                    color: medDependants === n ? C.emerald : 'var(--color-text-muted)',
-                    border: `1px solid ${medDependants === n ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    background: medDependants === opt.value ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+                    color: medDependants === opt.value ? C.emerald : 'var(--color-text-muted)',
+                    border: `1px solid ${medDependants === opt.value ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
                   }}>
-                  {n === 0 ? 'Solo' : `+${n}`}
+                  {opt.label}
                 </button>
               ))}
             </div>
             <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
-              Medical credit: R{364}/mo main + R{364}/mo 1st dep + R{246}/mo each extra
+              {medDependants < 0
+                ? 'No medical aid — no tax credit applied.'
+                : `Medical credit: R364/mo main + R364/mo 1st dep + R246/mo each extra`}
             </p>
           </div>
         </motion.div>
@@ -189,7 +273,7 @@ export function SalaryCalculator() {
             { label: 'PAYE Income Tax',    value: result.monthlyPAYE  * mult, color: C.red },
             { label: 'UIF (employee 1%)', value: result.monthlyUIF   * mult, color: C.amber },
             { label: 'RA Contribution',   value: result.monthlyRA    * mult, color: C.indigo },
-            { label: 'Medical Aid Credit', value: -(result.medCreditMonthly * mult), color: C.cyan, note: 'tax credit' },
+            ...(medDependants >= 0 ? [{ label: 'Medical Aid Credit', value: -(result.medCreditMonthly * mult), color: C.cyan, note: 'tax credit' }] : []),
             { label: 'Net Take-Home',      value: result.monthlyNet   * mult, color: C.emerald, bold: true },
           ].map((row) => (
             <div key={row.label}
@@ -197,7 +281,7 @@ export function SalaryCalculator() {
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span className="text-xs" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
                 {row.label}
-                {row.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>({row.note})</span>}
+                {'note' in row && row.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>({row.note})</span>}
               </span>
               <span className="text-sm font-bold" style={{ color: row.color }}>
                 {row.value < 0 ? '-' : ''}{formatRand(Math.abs(row.value), 0)}
@@ -258,7 +342,7 @@ export function SalaryCalculator() {
             { label: 'Taxable Income',   value: formatRand(result.taxableIncome / 12 * mult, 0), color: 'var(--color-text)' },
             { label: 'Gross Tax',        value: formatRand(result.grossTaxBefore / 12 * mult, 0), color: C.red },
             { label: 'Rebates',          value: `-${formatRand(result.rebateAmount / 12 * mult, 0)}`, color: C.emerald },
-            { label: 'Med Aid Credit',   value: `-${formatRand(result.medCreditAnnual / 12 * mult, 0)}`, color: C.cyan },
+            { label: 'Med Aid Credit',   value: medDependants >= 0 ? `-${formatRand(result.medCreditAnnual / 12 * mult, 0)}` : 'None', color: medDependants >= 0 ? C.cyan : 'var(--color-text-subtle)' },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>

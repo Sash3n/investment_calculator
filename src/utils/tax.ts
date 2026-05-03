@@ -326,10 +326,10 @@ export function calcPAYE(inputs: PAYEInputs): PAYEResult {
   // Rebate
   const reb = REBATES[ageGroup];
 
-  // Medical aid tax credit
-  const deps = Math.max(0, medAidDependants);
-  const medMonthly =
-    deps === 0 ? MED_CREDIT_MAIN
+  // Medical aid tax credit — pass medAidDependants = -1 to indicate no medical aid
+  const deps = medAidDependants;
+  const medMonthly = deps < 0 ? 0
+    : deps === 0 ? MED_CREDIT_MAIN
     : deps === 1 ? MED_CREDIT_MAIN + MED_CREDIT_FIRST_DEP
     : MED_CREDIT_MAIN + MED_CREDIT_FIRST_DEP + (deps - 1) * MED_CREDIT_EXTRA_DEP;
   const medAnnual = medMonthly * 12;
