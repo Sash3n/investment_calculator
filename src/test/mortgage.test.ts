@@ -78,6 +78,7 @@ describe('calcMortgageSummary', () => {
     lumpSumYear: 0,
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
+    initiationFee: 6037,
     transferDutyExempt: false,
     bondRegistrationIncluded: false,
   };

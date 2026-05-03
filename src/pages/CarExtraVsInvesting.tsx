@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, BarChart, Bar,
 } from 'recharts';
-import { Car, TrendingUp, Trophy, Info } from 'lucide-react';
+import { Car, Trophy, Info } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { formatRand, formatRandShort } from '../utils/format';
