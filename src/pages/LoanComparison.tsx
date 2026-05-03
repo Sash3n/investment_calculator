@@ -7,6 +7,7 @@ import { Scale, Plus, Trash2, Trophy } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
+import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 
 const C = {
   indigo:  '#6366F1',
@@ -27,13 +28,15 @@ const TOOLTIP_STYLE = {
 };
 
 interface Loan {
-  id:               number;
-  label:            string;
-  amount:           number;
-  interestRate:     number;
-  termYears:        number;
-  initiationFee:    number;
-  monthlyServiceFee:number;
+  id:                  number;
+  label:               string;
+  amount:              number;
+  interestRate:        number;
+  termYears:           number;
+  initiationFee:       number;
+  monthlyServiceFee:   number;
+  transferDutyOverride:    number | null; // null = auto-calculate
+  bondRegFeeOverride:      number | null;
 }
 
 interface LoanResult {
@@ -41,34 +44,45 @@ interface LoanResult {
   label:            string;
   color:            string;
   monthlyPayment:   number;
-  totalMonthly:     number;  // payment + service fee
-  totalRepaid:      number;  // all payments + fees + initiation
+  totalMonthly:     number;
+  totalRepaid:      number;
   totalInterest:    number;
-  totalCost:        number;  // total repaid - principal
-  effectiveRate:    number;  // APR including fees
+  totalCost:        number;
+  effectiveRate:    number;
+  transferDuty:     number;
+  bondRegFee:       number;
+  totalUpfront:     number;
+  grandTotal:       number;
 }
 
 function calcLoanResult(loan: Loan, color: string): LoanResult {
-  const monthlyPayment    = calcPayment(loan.amount, loan.interestRate, loan.termYears, 12);
-  const totalMonthly      = monthlyPayment + loan.monthlyServiceFee;
-  const totalPayments     = totalMonthly * loan.termYears * 12;
-  const totalRepaid       = totalPayments + loan.initiationFee;
-  const totalInterest     = totalPayments - loan.amount;
-  const totalCost         = totalRepaid - loan.amount;
+  const monthlyPayment  = calcPayment(loan.amount, loan.interestRate, loan.termYears, 12);
+  const totalMonthly    = monthlyPayment + loan.monthlyServiceFee;
+  const totalPayments   = totalMonthly * loan.termYears * 12;
+  const totalRepaid     = totalPayments + loan.initiationFee;
+  const totalInterest   = totalPayments - loan.amount;
+  const totalCost       = totalRepaid - loan.amount;
 
-  // Effective APR: solve for rate that gives same monthly payment on amount net of fees
-  // Approximate: effective rate = (totalInterest + fees) / (amount * termYears / 2) * 100
   const effectiveRate = totalCost > 0
     ? (totalCost / (loan.amount * loan.termYears / 2)) * 100
     : loan.interestRate;
 
-  return { id: loan.id, label: loan.label, color, monthlyPayment, totalMonthly, totalRepaid, totalInterest, totalCost, effectiveRate };
+  const transferDuty = loan.transferDutyOverride ?? calcTransferDuty(loan.amount);
+  const bondRegFee   = loan.bondRegFeeOverride   ?? calcBondRegistrationCost(loan.amount);
+  const totalUpfront = loan.initiationFee + transferDuty + bondRegFee;
+  const grandTotal   = totalRepaid + transferDuty + bondRegFee;
+
+  return {
+    id: loan.id, label: loan.label, color,
+    monthlyPayment, totalMonthly, totalRepaid,
+    totalInterest, totalCost, effectiveRate,
+    transferDuty, bondRegFee, totalUpfront, grandTotal,
+  };
 }
 
 function buildBalanceChart(loans: Loan[]): Record<string, number | string>[] {
   const maxMonths = Math.max(...loans.map((l) => l.termYears * 12));
   const rows: Record<string, number | string>[] = [];
-
   for (let m = 0; m <= maxMonths; m += Math.max(1, Math.floor(maxMonths / 30))) {
     const row: Record<string, number | string> = { month: m === 0 ? 'Start' : `M${m}` };
     for (const loan of loans) {
@@ -89,11 +103,13 @@ function buildBalanceChart(loans: Loan[]): Record<string, number | string>[] {
   return rows;
 }
 
+const DEFAULT_LOANS: Loan[] = [
+  { id: 1, label: 'Option A', amount: 1_200_000, interestRate: 11.5, termYears: 20, initiationFee: 6_037, monthlyServiceFee: 69, transferDutyOverride: null, bondRegFeeOverride: null },
+  { id: 2, label: 'Option B', amount: 1_200_000, interestRate: 11.0, termYears: 20, initiationFee: 6_037, monthlyServiceFee: 69, transferDutyOverride: null, bondRegFeeOverride: null },
+];
+
 export function LoanComparison() {
-  const [loans, setLoans] = useState<Loan[]>([
-    { id: 1, label: 'Option A', amount: 1_200_000, interestRate: 11.5, termYears: 20, initiationFee: 6_037, monthlyServiceFee: 69 },
-    { id: 2, label: 'Option B', amount: 1_200_000, interestRate: 11.0, termYears: 20, initiationFee: 6_037, monthlyServiceFee: 69 },
-  ]);
+  const [loans, setLoans] = useState<Loan[]>(DEFAULT_LOANS);
 
   const nextId = Math.max(...loans.map((l) => l.id)) + 1;
 
@@ -101,10 +117,15 @@ export function LoanComparison() {
     if (loans.length >= 3) return;
     const last = loans[loans.length - 1];
     setLoans([...loans, {
-      id: nextId, label: `Option ${String.fromCharCode(64 + loans.length + 1)}`,
-      amount: last.amount, interestRate: last.interestRate + 0.5,
-      termYears: last.termYears, initiationFee: last.initiationFee,
+      id: nextId,
+      label: `Option ${String.fromCharCode(64 + loans.length + 1)}`,
+      amount: last.amount,
+      interestRate: last.interestRate + 0.5,
+      termYears: last.termYears,
+      initiationFee: last.initiationFee,
       monthlyServiceFee: last.monthlyServiceFee,
+      transferDutyOverride: null,
+      bondRegFeeOverride: null,
     }]);
   };
 
@@ -121,16 +142,21 @@ export function LoanComparison() {
     ));
   };
 
+  const setOverride = (id: number, field: 'transferDutyOverride' | 'bondRegFeeOverride', val: string) => {
+    setLoans(loans.map((l) =>
+      l.id === id ? { ...l, [field]: parseFloat(val) || 0 } : l
+    ));
+  };
+
   const results = useMemo<LoanResult[]>(
     () => loans.map((l, i) => calcLoanResult(l, LOAN_COLORS[i % LOAN_COLORS.length])),
     [loans]
   );
 
-  const bestMonthly  = results.reduce((a, b) => a.totalMonthly  < b.totalMonthly  ? a : b);
-  const bestTotal    = results.reduce((a, b) => a.totalCost     < b.totalCost     ? a : b);
+  const bestMonthly = results.reduce((a, b) => a.totalMonthly < b.totalMonthly ? a : b);
+  const bestTotal   = results.reduce((a, b) => a.grandTotal   < b.grandTotal   ? a : b);
 
   const balanceChart = useMemo(() => buildBalanceChart(loans), [loans]);
-
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -148,7 +174,7 @@ export function LoanComparison() {
               Loan Comparison Tool
             </h1>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-              Compare up to 3 loan offers — true total cost including fees and interest
+              Compare up to 3 loan offers — true total cost including all fees
             </p>
           </div>
           {loans.length < 3 && (
@@ -187,6 +213,8 @@ export function LoanComparison() {
                 </button>
               )}
             </div>
+
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Loan Details</p>
             <div className="grid grid-cols-2 gap-3">
               <InputField id={`amount-${loan.id}`} label="Loan Amount" value={loan.amount}
                 onChange={(v) => updateLoan(loan.id, 'amount', v)} prefix="R" />
@@ -199,6 +227,24 @@ export function LoanComparison() {
               <InputField id={`fee-${loan.id}`} label="Monthly Service Fee" value={loan.monthlyServiceFee}
                 onChange={(v) => updateLoan(loan.id, 'monthlyServiceFee', v)} prefix="R" />
             </div>
+
+            <p className="text-[10px] font-semibold uppercase tracking-widest pt-1" style={{ color: 'var(--color-text-subtle)' }}>Property Costs (auto-calculated)</p>
+            <div className="grid grid-cols-2 gap-3">
+              <InputField id={`transfer-${loan.id}`} label="Transfer Duty" value={results[idx].transferDuty}
+                onChange={(v) => setOverride(loan.id, 'transferDutyOverride', v)}
+                prefix="R" help="Override auto-calculated value" />
+              <InputField id={`bondreg-${loan.id}`} label="Bond Registration" value={results[idx].bondRegFee}
+                onChange={(v) => setOverride(loan.id, 'bondRegFeeOverride', v)}
+                prefix="R" help="Override auto-calculated value" />
+            </div>
+
+            <div className="flex items-center justify-between pt-2 px-1 rounded-lg"
+              style={{ background: `${LOAN_COLORS[idx % LOAN_COLORS.length]}0A`, border: `1px solid ${LOAN_COLORS[idx % LOAN_COLORS.length]}20`, padding: '8px 12px' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Total Upfront</span>
+              <span className="text-sm font-bold" style={{ color: LOAN_COLORS[idx % LOAN_COLORS.length] }}>
+                {formatRand(results[idx].totalUpfront, 0)}
+              </span>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -207,7 +253,7 @@ export function LoanComparison() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
           { label: 'Lowest Monthly Payment', winner: bestMonthly, value: formatRand(bestMonthly.totalMonthly, 0) + '/mo' },
-          { label: 'Lowest Total Cost', winner: bestTotal, value: formatRand(bestTotal.totalCost, 0) + ' above principal' },
+          { label: 'Lowest Grand Total (all costs)', winner: bestTotal, value: formatRand(bestTotal.grandTotal, 0) },
         ].map((item) => (
           <div key={item.label} className="rounded-xl p-4 flex items-center gap-3"
             style={{ background: `${item.winner.color}0D`, border: `1px solid ${item.winner.color}30` }}>
@@ -246,19 +292,22 @@ export function LoanComparison() {
             </thead>
             <tbody>
               {[
-                { label: 'Loan Amount',             vals: loans.map((l) => formatRand(l.amount, 0)) },
-                { label: 'Interest Rate',            vals: loans.map((l) => `${l.interestRate}%`) },
-                { label: 'Term',                     vals: loans.map((l) => `${l.termYears} years`) },
-                { label: 'Monthly Payment',          vals: results.map((r) => formatRand(r.monthlyPayment, 0)), bestIdx: results.indexOf(bestMonthly) },
-                { label: 'Monthly (incl. service fee)', vals: results.map((r) => formatRand(r.totalMonthly, 0)), bestIdx: results.indexOf(bestMonthly) },
-                { label: 'Initiation Fee',           vals: loans.map((l) => formatRand(l.initiationFee, 0)) },
-                { label: 'Total Service Fees',       vals: loans.map((l) => formatRand(l.monthlyServiceFee * l.termYears * 12, 0)) },
-                { label: 'Total Interest Paid',      vals: results.map((r) => formatRand(r.totalInterest, 0)), bestIdx: results.indexOf(results.reduce((a, b) => a.totalInterest < b.totalInterest ? a : b)) },
-                { label: 'Total Cost (above principal)', vals: results.map((r) => formatRand(r.totalCost, 0)), bestIdx: results.indexOf(bestTotal) },
-                { label: 'Total Repaid',             vals: results.map((r) => formatRand(r.totalRepaid, 0)), bestIdx: results.indexOf(bestTotal) },
-                { label: 'Saving vs most expensive', vals: results.map((r) => {
-                  const worst = Math.max(...results.map((x) => x.totalCost));
-                  const saving = worst - r.totalCost;
+                { label: 'Loan Amount',                     vals: loans.map((l) => formatRand(l.amount, 0)) },
+                { label: 'Interest Rate',                   vals: loans.map((l) => `${l.interestRate}%`) },
+                { label: 'Term',                            vals: loans.map((l) => `${l.termYears} years`) },
+                { label: 'Monthly Payment',                 vals: results.map((r) => formatRand(r.monthlyPayment, 0)), bestIdx: results.indexOf(bestMonthly) },
+                { label: 'Monthly (incl. service fee)',     vals: results.map((r) => formatRand(r.totalMonthly, 0)), bestIdx: results.indexOf(bestMonthly) },
+                { label: 'Initiation Fee',                  vals: loans.map((l) => formatRand(l.initiationFee, 0)) },
+                { label: 'Transfer Duty',                   vals: results.map((r) => formatRand(r.transferDuty, 0)) },
+                { label: 'Bond Registration',               vals: results.map((r) => formatRand(r.bondRegFee, 0)) },
+                { label: 'Total Upfront',                   vals: results.map((r) => formatRand(r.totalUpfront, 0)) },
+                { label: 'Total Service Fees',              vals: loans.map((l) => formatRand(l.monthlyServiceFee * l.termYears * 12, 0)) },
+                { label: 'Total Interest Paid',             vals: results.map((r) => formatRand(r.totalInterest, 0)), bestIdx: results.indexOf(results.reduce((a, b) => a.totalInterest < b.totalInterest ? a : b)) },
+                { label: 'Total Repaid (excl. upfront)',    vals: results.map((r) => formatRand(r.totalRepaid, 0)) },
+                { label: 'Grand Total (all costs)',         vals: results.map((r) => formatRand(r.grandTotal, 0)), bestIdx: results.indexOf(bestTotal) },
+                { label: 'Saving vs most expensive',        vals: results.map((r) => {
+                  const worst = Math.max(...results.map((x) => x.grandTotal));
+                  const saving = worst - r.grandTotal;
                   return saving === 0 ? '—' : `${formatRand(saving, 0)} cheaper`;
                 })},
               ].map((row, i) => (
@@ -312,7 +361,7 @@ export function LoanComparison() {
       </div>
 
       <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
-        Initiation fee cap: SARS/NCA limits initiation fees on home loans. Effective APR is approximate. Not financial advice.
+        Transfer duty and bond registration are auto-calculated from loan amount but can be overridden. Not financial advice.
       </p>
     </div>
   );
