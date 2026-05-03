@@ -102,6 +102,7 @@ const navItems: NavItem[] = [
   { path: '/emergency-fund', label: 'Emergency Fund', shortLabel: 'Emergency', icon: Shield, color: '#10B981' },
   // ── Vehicles ──
   { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899' },
+  { path: '/car-extra-vs-investing', label: 'Car: Extra vs Investing', shortLabel: 'Car vs Invest', icon: TrendingUp, color: '#EC4899' },
   // ── Investing & Tax ──
   { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
@@ -124,6 +125,7 @@ const pageTitles: Record<string, string> = {
   '/mortgage': 'Mortgage Calculator',
   '/property-roi': 'Property ROI Calculator',
   '/car-finance': 'Car Finance Calculator',
+  '/car-extra-vs-investing': 'Car: Extra Payment vs Investing',
   '/extra-vs-investing': 'Extra Payments vs Investing',
   '/tax-planner': 'Property Tax Planner',
   '/investment-strategy': 'SA Investment Strategy',

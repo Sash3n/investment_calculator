@@ -26,6 +26,7 @@ import { DebtSnowball } from './pages/DebtSnowball';
 import { EmergencyFund } from './pages/EmergencyFund';
 import { InflationCalc } from './pages/InflationCalc';
 import { EducationSavings } from './pages/EducationSavings';
+import { CarExtraVsInvesting } from './pages/CarExtraVsInvesting';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
         <Route path="/mortgage" element={<MortgageCalculator />} />
         <Route path="/property-roi" element={<PropertyROI />} />
         <Route path="/car-finance" element={<CarFinance />} />
+        <Route path="/car-extra-vs-investing" element={<CarExtraVsInvesting />} />
         <Route path="/extra-vs-investing" element={<PaymentVsInvesting />} />
         <Route path="/tax-planner" element={<TaxPlanner />} />
         <Route path="/investment-strategy" element={<InvestmentStrategy />} />
