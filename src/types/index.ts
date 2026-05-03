@@ -63,6 +63,7 @@ export interface PropertyInputs {
   insurance: number;
   effluentFees: number;
   miscFees: number;
+  monthlyServiceFee: number; // bond bank admin fee, e.g. R69/month
   managementFeePercent: number;
   vacancyRate: number;
   rentScenario1: number;

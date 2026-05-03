@@ -40,6 +40,7 @@ const DEFAULT_INPUTS: PropertyInputs = {
   insurance: 600,
   effluentFees: 350,
   miscFees: 0,
+  monthlyServiceFee: 69,
   managementFeePercent: 8,
   vacancyRate: 5,
   rentScenario1: 9500,
@@ -126,6 +127,7 @@ export function PropertyROI() {
     { name: 'S1 Rent', value: result.monthlyEffectiveRentS1, fill: CHART_COLORS.emerald },
     { name: 'S2 Rent', value: result.monthlyEffectiveRentS2, fill: CHART_COLORS.cyan },
     { name: 'Bond', value: result.monthlyBondRepayment, fill: CHART_COLORS.indigo },
+    { name: 'Service Fee', value: inputs.monthlyServiceFee, fill: '#818CF8' },
     { name: 'Levies', value: inputs.monthlyLevies, fill: CHART_COLORS.amber },
     { name: 'Rates', value: inputs.monthlyRates, fill: CHART_COLORS.pink },
     { name: 'Insurance', value: inputs.insurance, fill: CHART_COLORS.red },
@@ -145,6 +147,7 @@ export function PropertyROI() {
 
   const costPieData = useMemo(() => [
     { name: 'Bond Repayment', value: Math.round(result.monthlyBondRepayment), fill: CHART_COLORS.indigo },
+    { name: 'Service Fee', value: inputs.monthlyServiceFee, fill: '#818CF8' },
     { name: 'Levies', value: inputs.monthlyLevies, fill: CHART_COLORS.amber },
     { name: 'Rates & Taxes', value: inputs.monthlyRates, fill: CHART_COLORS.cyan },
     { name: 'Insurance', value: inputs.insurance, fill: CHART_COLORS.pink },
@@ -419,6 +422,9 @@ export function PropertyROI() {
                 onChange={(v) => set('monthlyRates', v)} prefix="R" step={100} />
               <InputField label="Insurance" id="ins" value={inputs.insurance}
                 onChange={(v) => set('insurance', v)} prefix="R" step={100} />
+              <InputField label="Monthly Service Fee" id="msf" value={inputs.monthlyServiceFee}
+                onChange={(v) => set('monthlyServiceFee', v)} prefix="R" step={1}
+                help="Bank bond admin fee (e.g. R69/month)" />
               <InputField label="Effluent Fees" id="eff" value={inputs.effluentFees}
                 onChange={(v) => set('effluentFees', v)} prefix="R" step={50}
                 help="Municipal sewage/effluent charges" />
