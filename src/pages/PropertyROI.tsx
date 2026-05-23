@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
@@ -76,8 +77,15 @@ function PieTooltip({ active, payload }: any) {
 
 export function PropertyROI() {
   const liveRate = usePrimeRate();
+  const location = useLocation();
+  const locationState = location.state as { loadedInputs?: PropertyInputs; editingId?: string } | null;
+
   const [activeTab, setActiveTab] = useState<'quick' | 'portfolio'>('quick');
-  const [inputs, setInputs] = useState<PropertyInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<PropertyInputs>(
+    locationState?.loadedInputs ?? DEFAULT_INPUTS
+  );
+  // Track which saved property we're editing (null = creating new)
+  const [editingId, setEditingId] = useState<string | null>(locationState?.editingId ?? null);
 
   // Pre-fill with live prime rate once loaded (only if user hasn't changed it yet)
   const [rateApplied, setRateApplied] = useState(false);
@@ -162,7 +170,7 @@ export function PropertyROI() {
     setSaveError(null);
     try {
       if (user) {
-        await saveCloud(inputs.propertyName || 'Property', inputs);
+        await saveCloud(inputs.propertyName || 'Property', inputs, editingId ?? undefined);
         // Also push to calculation history
         await pushHistory({
           type: 'property',
@@ -673,6 +681,7 @@ export function PropertyROI() {
                               // eslint-disable-next-line @typescript-eslint/no-unused-vars
                               const { id: _id, ...propInputs } = prop;
                               setInputs(propInputs as PropertyInputs);
+                              setEditingId(prop.id);
                               setActiveTab('quick');
                             }}
                           >

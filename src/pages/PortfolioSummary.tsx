@@ -42,116 +42,347 @@ function exportPortfolioPDF(
     positive: number;
   }
 ) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const BG: [number,number,number] = [15, 20, 40];
-  const SURF: [number,number,number] = [22, 30, 55];
-  const MUTED: [number,number,number] = [100, 116, 139];
-  const TEXT: [number,number,number] = [241, 245, 249];
-  const IND: [number,number,number] = [99, 102, 241];
-  const EME: [number,number,number] = [16, 185, 129];
-  const RED: [number,number,number] = [239, 68, 68];
-  const AMB: [number,number,number] = [245, 158, 11];
-  const M = 14, W = 210, H = 297;
+  // ── Theme ──────────────────────────────────────────────────────────────────
+  const C = {
+    bg:      [15,  20,  40]  as [number,number,number],
+    surf:    [22,  30,  55]  as [number,number,number],
+    surf2:   [28,  38,  68]  as [number,number,number],
+    border:  [51,  65,  85]  as [number,number,number],
+    text:    [241, 245, 249] as [number,number,number],
+    muted:   [100, 116, 139] as [number,number,number],
+    indigo:  [99,  102, 241] as [number,number,number],
+    emerald: [16,  185, 129] as [number,number,number],
+    amber:   [245, 158, 11]  as [number,number,number],
+    red:     [239, 68,  68]  as [number,number,number],
+    cyan:    [6,   182, 212] as [number,number,number],
+  };
 
-  doc.setFillColor(...BG); doc.rect(0, 0, W, H, 'F');
-  doc.setFillColor(...SURF); doc.rect(0, 0, W, 28, 'F');
-  doc.setFillColor(...IND); doc.rect(0, 26, W, 2, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...TEXT);
+  // ── Page 1: Landscape summary ─────────────────────────────────────────────
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const LW = 297, LH = 210, M = 14, TW = LW - M * 2;
+
+  const fillBg = () => { doc.setFillColor(...C.bg); doc.rect(0, 0, LW, LH, 'F'); };
+  fillBg();
+
+  // Header bar
+  doc.setFillColor(...C.surf); doc.rect(0, 0, LW, 28, 'F');
+  doc.setFillColor(...C.indigo); doc.rect(0, 26, LW, 2, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...C.text);
   doc.text('FinCalc ZA', M, 11);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...MUTED);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...C.muted);
   doc.text('Property Portfolio Summary', M, 18.5);
   doc.setFontSize(8);
-  doc.text(`Generated ${new Date().toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' })}`, W-M, 11, { align:'right' });
-  doc.text(`${props.length} propert${props.length === 1 ? 'y' : 'ies'}`, W-M, 18.5, { align:'right' });
+  doc.text(
+    `Generated ${new Date().toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric' })}`,
+    LW - M, 11, { align: 'right' }
+  );
+  doc.text(`${props.length} propert${props.length === 1 ? 'y' : 'ies'}`, LW - M, 18.5, { align: 'right' });
 
   let y = 36;
 
-  // Totals
-  const bw = (W - M*2 - 9) / 4;
-  const boxes = [
-    { label: 'Portfolio Value', value: formatRand(totals.totalValue, 0), color: IND },
-    { label: 'Total Equity',    value: formatRand(totals.totalEquity, 0), color: EME },
-    { label: 'Monthly Cash Flow', value: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? EME : RED },
-    { label: 'Blended Yield',  value: formatPercent(totals.blendedYield), color: AMB },
+  // ── Stat boxes (5 across landscape width) ─────────────────────────────────
+  const bw = (TW - 12) / 5;
+  const statBoxes = [
+    { label: 'Portfolio Value',    value: formatRand(totals.totalValue, 0),    color: C.indigo  },
+    { label: 'Total Equity',       value: formatRand(totals.totalEquity, 0),   color: C.emerald },
+    { label: 'Total Debt',         value: formatRand(totals.totalDebt, 0),     color: C.red     },
+    { label: 'Monthly Cash Flow',  value: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? C.emerald : C.red },
+    { label: 'Blended Yield',      value: formatPercent(totals.blendedYield),  color: C.amber   },
   ];
-  boxes.forEach((b, i) => {
+  statBoxes.forEach((b, i) => {
     const x = M + i * (bw + 3);
-    doc.setFillColor(...SURF); doc.roundedRect(x, y, bw, 16, 2, 2, 'F');
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...MUTED);
-    doc.text(b.label.toUpperCase(), x + bw/2, y+5, { align:'center' });
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...b.color);
-    doc.text(b.value, x + bw/2, y+12, { align:'center' });
+    doc.setFillColor(...C.surf); doc.roundedRect(x, y, bw, 18, 2, 2, 'F');
+    // Accent top line
+    doc.setFillColor(...b.color); doc.rect(x, y, bw, 1.5, 'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...C.muted);
+    doc.text(b.label.toUpperCase(), x + bw / 2, y + 7, { align: 'center' });
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...b.color);
+    doc.text(b.value, x + bw / 2, y + 14, { align: 'center' });
   });
-  y += 22;
+  y += 26;
 
-  // Properties table
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...IND);
+  // ── Section title ──────────────────────────────────────────────────────────
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.indigo);
   doc.text('PROPERTIES', M, y);
-  doc.setDrawColor(51,65,85); doc.setLineWidth(0.3);
-  doc.line(M, y+1.5, W-M, y+1.5);
+  doc.setDrawColor(...C.border); doc.setLineWidth(0.3);
+  doc.line(M, y + 1.5, LW - M, y + 1.5);
   y += 8;
 
+  // ── Table — 8 columns across landscape ────────────────────────────────────
   const cols = [
-    { label: 'Property', w: 44 },
-    { label: 'Price', w: 30, r: true },
-    { label: 'Bond Repmt', w: 28, r: true },
-    { label: 'Cash Flow', w: 26, r: true },
-    { label: 'Yield', w: 20, r: true },
-    { label: '10yr ROI', w: 22, r: true },
-    { label: 'Equity', w: 26, r: true },
+    { label: 'Property',    w: 56,              r: false },
+    { label: 'Price',       w: 33, r: true  },
+    { label: 'Deposit',     w: 27, r: true  },
+    { label: 'Bond Repmt',  w: 30, r: true  },
+    { label: 'Cash Flow',   w: 28, r: true  },
+    { label: 'Net Yield',   w: 24, r: true  },
+    { label: '10yr ROI',    w: 24, r: true  },
+    { label: 'Equity',      w: 47, r: true  },
   ];
+  // Ensure last col fills exactly
+  const usedW = cols.slice(0, 7).reduce((s, c) => s + c.w, 0);
+  cols[7].w = TW - usedW;
 
-  // Table header
-  doc.setFillColor(...SURF); doc.rect(M, y, W-M*2, 7, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-  let cx = M+2;
+  // Header row
+  doc.setFillColor(...C.surf2); doc.rect(M, y, TW, 7, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.muted);
+  let cx = M + 2;
   cols.forEach((c) => {
-    if (c.r) doc.text(c.label, cx+c.w-2, y+4.8, { align:'right' });
-    else doc.text(c.label, cx, y+4.8);
+    if (c.r) doc.text(c.label, cx + c.w - 2, y + 4.8, { align: 'right' });
+    else      doc.text(c.label, cx, y + 4.8);
     cx += c.w;
   });
   y += 7;
 
   props.forEach((prop, i) => {
-    const r = results[i];
-    const equity = r.propertyValueYears[0]?.equity ?? r.loanAmount;
-    const cf = r.cashFlowS1;
+    const r   = results[i];
+    const cf  = r.cashFlowS1;
+    const eq  = r.propertyValueYears[0]?.equity ?? 0;
+    const ny  = r.netYieldS1;
+    const roi = r.roi10YearS1;
 
-    if (y > H - 20) {
+    // New page if needed
+    if (y > LH - 20) {
       doc.addPage();
-      doc.setFillColor(...BG); doc.rect(0, 0, W, H, 'F');
+      fillBg();
       y = 14;
     }
 
-    if (i % 2 === 0) { doc.setFillColor(...SURF); doc.rect(M, y, W-M*2, 6.5, 'F'); }
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...TEXT);
-    const vals = [
-      prop.inputs.propertyName?.substring(0,22) ?? '—',
+    if (i % 2 === 0) { doc.setFillColor(...C.surf); doc.rect(M, y, TW, 6.5, 'F'); }
+
+    const rowValues = [
+      prop.inputs.propertyName?.substring(0, 30) ?? '—',
       formatRand(r.effectivePurchasePrice, 0),
+      formatRand(prop.inputs.deposit, 0),
       formatRand(r.monthlyBondRepayment, 0),
       formatRand(cf, 0),
-      formatPercent(r.netYieldS1),
-      formatPercent(r.roi10YearS1, 1),
-      formatRand(equity, 0),
+      formatPercent(ny),
+      formatPercent(roi, 1),
+      formatRand(eq, 0),
     ];
-    cx = M+2;
+
+    // Per-column color logic
+    const colColors: ([number,number,number] | null)[] = [
+      null,                                         // Property name → default text
+      null,                                         // Price
+      null,                                         // Deposit
+      C.amber,                                      // Bond repayment → amber
+      cf  >= 0 ? C.emerald : C.red,                 // Cash flow
+      ny  >= 0 ? C.emerald : C.red,                 // Net yield
+      roi >= 0 ? C.emerald : C.red,                 // 10yr ROI
+      eq  >= 0 ? C.emerald : C.red,                 // Equity
+    ];
+
+    cx = M + 2;
     cols.forEach((c, ci) => {
-      const color: [number,number,number] = ci === 3 ? (cf >= 0 ? EME : RED) : TEXT;
-      doc.setTextColor(...color);
-      if (c.r) doc.text(vals[ci], cx+c.w-2, y+4.5, { align:'right' });
-      else doc.text(vals[ci], cx, y+4.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...(colColors[ci] ?? C.text));
+      if (c.r) doc.text(rowValues[ci], cx + c.w - 2, y + 4.5, { align: 'right' });
+      else      doc.text(rowValues[ci], cx, y + 4.5);
       cx += c.w;
     });
+
+    // Subtle separator line
+    doc.setDrawColor(...C.border); doc.setLineWidth(0.1);
+    doc.line(M, y + 6.5, LW - M, y + 6.5);
     y += 6.5;
   });
 
-  // Footer
+  // ── Totals summary row ─────────────────────────────────────────────────────
+  y += 2;
+  doc.setFillColor(...C.surf2); doc.rect(M, y, TW, 7, 'F');
+  doc.setFillColor(...C.indigo); doc.rect(M, y, 2, 7, 'F'); // left accent
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.muted);
+  doc.text('TOTALS', M + 4, y + 4.8);
+
+  const totalsValues: { val: string; color: [number,number,number] }[] = [
+    { val: formatRand(totals.totalValue, 0),    color: C.indigo  },
+    { val: '—',                                  color: C.muted   },
+    { val: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? C.emerald : C.red },
+    { val: formatPercent(totals.blendedYield),  color: C.amber   },
+    { val: '—',                                  color: C.muted   },
+    { val: formatRand(totals.totalEquity, 0),   color: C.emerald },
+  ];
+  // Map to columns 1-7 (skip col 0 which has the label)
+  cx = M + 2 + cols[0].w;
+  [1,2,3,4,5,6,7].forEach((ci) => {
+    const tv = totalsValues[ci - 1];
+    if (!tv) { cx += cols[ci].w; return; }
+    doc.setTextColor(...tv.color);
+    doc.text(tv.val, cx + cols[ci].w - 2, y + 4.8, { align: 'right' });
+    cx += cols[ci].w;
+  });
+
+  // ── Page 2+: Per-property detail cards ────────────────────────────────────
+  // Switch back to portrait for detail pages
+  props.forEach((prop, i) => {
+    const r   = results[i];
+    const cf  = r.cashFlowS1;
+    const eq  = r.propertyValueYears[0]?.equity ?? 0;
+
+    doc.addPage('a4', 'portrait');
+    const PW = 210, PH = 297, PM = 14, PTW = PW - PM * 2;
+    doc.setFillColor(...C.bg); doc.rect(0, 0, PW, PH, 'F');
+
+    // Header bar
+    doc.setFillColor(...C.surf); doc.rect(0, 0, PW, 28, 'F');
+    doc.setFillColor(...C.indigo); doc.rect(0, 26, PW, 2, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...C.text);
+    doc.text(prop.inputs.propertyName || 'Investment Property', PM, 11);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...C.muted);
+    doc.text('Property Detail', PM, 18.5);
+    doc.setFontSize(8);
+    doc.text(`${i + 1} of ${props.length}`, PW - PM, 11, { align: 'right' });
+    doc.text(formatRand(prop.inputs.purchasePrice, 0), PW - PM, 18.5, { align: 'right' });
+
+    let py = 36;
+
+    // ── 4 key stat boxes ──
+    const pbw = (PTW - 9) / 4;
+    const pBoxes = [
+      { label: 'Loan Amount',    value: formatRand(r.loanAmount, 0),            color: C.indigo  },
+      { label: 'Bond Repayment', value: formatRand(r.monthlyBondRepayment, 0),  color: C.amber   },
+      { label: 'Cash Flow (S1)', value: formatRand(cf, 0),                      color: cf >= 0 ? C.emerald : C.red },
+      { label: 'Net Yield (S1)', value: formatPercent(r.netYieldS1),            color: r.netYieldS1 >= 0 ? C.emerald : C.red },
+    ];
+    pBoxes.forEach((b, bi) => {
+      const bx = PM + bi * (pbw + 3);
+      doc.setFillColor(...C.surf); doc.roundedRect(bx, py, pbw, 18, 2, 2, 'F');
+      doc.setFillColor(...b.color); doc.rect(bx, py, pbw, 1.5, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...C.muted);
+      doc.text(b.label.toUpperCase(), bx + pbw / 2, py + 7, { align: 'center' });
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...b.color);
+      doc.text(b.value, bx + pbw / 2, py + 14, { align: 'center' });
+    });
+    py += 26;
+
+    // ── Two-column layout ──────────────────────────────────────────────────
+    const half = PTW / 2 - 3;
+
+    const drawSection = (sx: number, sy: number, sw: number, title: string, rows: { label: string; value: string; color?: [number,number,number] }[]): number => {
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.indigo);
+      doc.text(title.toUpperCase(), sx, sy);
+      doc.setDrawColor(...C.border); doc.setLineWidth(0.25);
+      doc.line(sx, sy + 1.5, sx + sw, sy + 1.5);
+      sy += 7;
+      rows.forEach((row) => {
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...C.muted);
+        doc.text(row.label, sx, sy);
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...(row.color ?? C.text));
+        doc.text(row.value, sx + sw, sy, { align: 'right' });
+        sy += 6;
+      });
+      return sy + 2;
+    };
+
+    // Left column: Property & Bond
+    const lx = PM;
+    let leftY = py;
+    leftY = drawSection(lx, leftY, half, 'Bond & Acquisition', [
+      { label: 'Purchase Price',   value: formatRand(prop.inputs.purchasePrice, 0) },
+      { label: 'Deposit',          value: formatRand(prop.inputs.deposit, 0) },
+      { label: 'Loan Amount',      value: formatRand(r.loanAmount, 0),           color: C.indigo },
+      { label: 'Interest Rate',    value: formatPercent(prop.inputs.interestRate) },
+      { label: 'Bond Term',        value: `${prop.inputs.bondTerm} years` },
+      { label: 'Monthly Repayment',value: formatRand(r.monthlyBondRepayment, 0), color: C.amber },
+      { label: 'Transfer Duty',    value: prop.inputs.transferDutyExempt ? 'Exempt' : formatRand(r.transferDuty, 0), color: prop.inputs.transferDutyExempt ? C.emerald : C.red },
+      { label: 'Total Cash In',    value: formatRand(r.totalCashRequired, 0),    color: C.indigo },
+    ]);
+
+    leftY = drawSection(lx, leftY, half, 'Returns', [
+      { label: 'Gross Yield S1',  value: formatPercent(r.grossYieldS1),   color: C.indigo },
+      { label: 'Net Yield S1',    value: formatPercent(r.netYieldS1),     color: r.netYieldS1  >= 0 ? C.emerald : C.red },
+      { label: 'Net Yield S2',    value: formatPercent(r.netYieldS2),     color: r.netYieldS2  >= 0 ? C.emerald : C.red },
+      { label: '5-Year ROI S1',   value: formatPercent(r.roi5YearS1, 1),  color: r.roi5YearS1  >= 0 ? C.emerald : C.red },
+      { label: '10-Year ROI S1',  value: formatPercent(r.roi10YearS1, 1), color: r.roi10YearS1 >= 0 ? C.emerald : C.red },
+      { label: 'Equity (Yr 1)',   value: formatRand(eq, 0),               color: eq >= 0 ? C.emerald : C.red },
+    ]);
+
+    // Right column: Monthly costs & cash flow
+    const rx = PM + half + 6;
+    let rightY = py;
+    rightY = drawSection(rx, rightY, half, 'Monthly Costs', [
+      { label: 'Bond Repayment',   value: formatRand(r.monthlyBondRepayment, 0), color: C.amber },
+      { label: 'Levies',           value: formatRand(prop.inputs.monthlyLevies, 0) },
+      { label: 'Rates & Taxes',    value: formatRand(prop.inputs.monthlyRates, 0) },
+      { label: 'Insurance',        value: formatRand(prop.inputs.insurance, 0) },
+      ...(prop.inputs.effluentFees ? [{ label: 'Effluent', value: formatRand(prop.inputs.effluentFees, 0) }] : []),
+      ...(prop.inputs.miscFees     ? [{ label: 'Misc',     value: formatRand(prop.inputs.miscFees, 0)     }] : []),
+      { label: 'Total Costs (S1)', value: formatRand(r.totalMonthlyCostsS1, 0), color: C.red },
+    ]);
+
+    rightY = drawSection(rx, rightY, half, 'Rental Income', [
+      { label: 'Rent Scenario 1',  value: formatRand(prop.inputs.rentScenario1, 0) },
+      { label: 'Rent Scenario 2',  value: formatRand(prop.inputs.rentScenario2, 0) },
+      { label: 'Vacancy Rate',     value: formatPercent(prop.inputs.vacancyRate) },
+      { label: 'Effective Rent S1',value: formatRand(r.monthlyEffectiveRentS1, 0) },
+      { label: 'Mgmt Fee S1',      value: formatRand(r.managementFeeS1, 0) },
+      { label: 'Net Cash Flow S1', value: formatRand(cf, 0),                     color: cf >= 0 ? C.emerald : C.red },
+      { label: 'Net Cash Flow S2', value: formatRand(r.cashFlowS2, 0),           color: r.cashFlowS2 >= 0 ? C.emerald : C.red },
+    ]);
+
+    // ── 5-year projection mini table ──────────────────────────────────────
+    const tableY = Math.max(leftY, rightY) + 4;
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.indigo);
+    doc.text('PROPERTY VALUE PROJECTION', PM, tableY);
+    doc.setDrawColor(...C.border); doc.setLineWidth(0.25);
+    doc.line(PM, tableY + 1.5, PW - PM, tableY + 1.5);
+
+    const tCols = [
+      { label: 'Year',           w: 18 },
+      { label: 'Property Value', w: 47, r: true },
+      { label: 'Loan Balance',   w: 47, r: true },
+      { label: 'Equity',        w: 47, r: true },
+      { label: 'Annual App.',   w: 23, r: true },
+    ];
+    tCols[4].w = PTW - tCols.slice(0,4).reduce((s,c) => s+c.w,0);
+
+    let ty = tableY + 7;
+    doc.setFillColor(...C.surf2); doc.rect(PM, ty - 5.5, PTW, 6, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.muted);
+    let tcx = PM + 2;
+    tCols.forEach((tc) => {
+      if (tc.r) doc.text(tc.label, tcx + tc.w - 2, ty - 1.5, { align: 'right' });
+      else       doc.text(tc.label, tcx, ty - 1.5);
+      tcx += tc.w;
+    });
+
+    r.propertyValueYears.slice(0, 10).forEach((row, ri) => {
+      if (ri % 2 === 0) { doc.setFillColor(...C.surf); doc.rect(PM, ty, PTW, 5.5, 'F'); }
+      doc.setFont('helvetica','normal'); doc.setFontSize(7);
+      const rowEq = row.equity;
+      const appreciation = row.value - (ri === 0 ? prop.inputs.purchasePrice : r.propertyValueYears[ri-1].value);
+      const vals2 = [
+        `Year ${row.year}`,
+        formatRand(row.value, 0),
+        formatRand(row.loanBalance, 0),
+        formatRand(rowEq, 0),
+        formatRand(appreciation, 0),
+      ];
+      tcx = PM + 2;
+      tCols.forEach((tc, tci) => {
+        const c2: [number,number,number] = tci === 3 ? (rowEq >= 0 ? C.emerald : C.red) : tci === 4 ? C.cyan : C.text;
+        doc.setTextColor(...c2);
+        if (tc.r) doc.text(vals2[tci], tcx + tc.w - 2, ty + 4, { align: 'right' });
+        else       doc.text(vals2[tci], tcx, ty + 4);
+        tcx += tc.w;
+      });
+      ty += 5.5;
+    });
+  });
+
+  // ── Footer on every page ───────────────────────────────────────────────────
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-    doc.text('FinCalc ZA — for illustrative purposes only. Not financial advice.', M, H-6);
-    doc.text(`Page ${p} of ${pages}`, W-M, H-6, { align:'right' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.muted);
+    // Detect landscape (page 1) vs portrait (pages 2+)
+    const isLandscape = p === 1;
+    const fW = isLandscape ? 297 : 210;
+    const fH = isLandscape ? 210 : 297;
+    doc.text('FinCalc ZA — for illustrative purposes only. Not financial advice.', M, fH - 6);
+    doc.text(`Page ${p} of ${pages}`, fW - M, fH - 6, { align: 'right' });
   }
 
   doc.save(`FinCalcZA_Portfolio_${new Date().toISOString().slice(0,10)}.pdf`);
@@ -427,7 +658,7 @@ export function PortfolioSummary() {
                     </td>
                     <td className="text-right">
                       <button
-                        onClick={() => navigate('/property-roi', { state: { loadedInputs: prop.inputs } })}
+                        onClick={() => navigate('/property-roi', { state: { loadedInputs: prop.inputs, editingId: prop.id } })}
                         className="text-[10px] px-2 py-1 rounded-lg transition-all"
                         style={{ background: 'rgba(99,102,241,0.1)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.2)' }}
                       >
