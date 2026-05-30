@@ -30,6 +30,7 @@ import {
   GraduationCap,
   TrendingDown,
   Activity,
+  BedDouble,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -96,6 +97,7 @@ const navItems: NavItem[] = [
   { path: '/affordability', label: 'Bond Affordability', shortLabel: 'Afford', icon: Wallet, color: '#6366F1' },
   { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: House, color: '#10B981' },
   { path: '/rental-yield', label: 'Rental Yield Finder', shortLabel: 'Yield', icon: House, color: '#10B981' },
+  { path: '/airbnb-vs-rental', label: 'Airbnb vs Rental', shortLabel: 'Airbnb', icon: BedDouble, color: '#EC4899' },
   { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B' },
   // ── Income & Budget ──
   { path: '/salary', label: 'Salary Calculator', shortLabel: 'Salary', icon: Briefcase, color: '#6366F1' },
@@ -136,6 +138,7 @@ const pageTitles: Record<string, string> = {
   '/portfolio': 'Portfolio Summary',
   '/stress-test': 'Portfolio Stress Test',
   '/affordability': 'Bond Affordability Qualifier',
+  '/airbnb-vs-rental': 'Airbnb vs Long-term Rental',
   '/tax-projections': 'Tax Projections',
   '/tfsa': 'TFSA Optimizer',
   '/fire': 'FIRE Calculator',

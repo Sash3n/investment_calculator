@@ -29,6 +29,7 @@ import { EducationSavings } from './pages/EducationSavings';
 import { CarExtraVsInvesting } from './pages/CarExtraVsInvesting';
 import { StressTest } from './pages/StressTest';
 import { Affordability } from './pages/Affordability';
+import { AirbnbVsRental } from './pages/AirbnbVsRental';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
         <Route path="/portfolio" element={<PortfolioSummary />} />
         <Route path="/stress-test" element={<StressTest />} />
         <Route path="/affordability" element={<Affordability />} />
+        <Route path="/airbnb-vs-rental" element={<AirbnbVsRental />} />
         <Route path="/tax-projections" element={<TaxProjections />} />
         <Route path="/tfsa" element={<TfsaOptimizer />} />
         <Route path="/fire" element={<FireCalculator />} />

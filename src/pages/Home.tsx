@@ -20,6 +20,7 @@ import {
   GraduationCap,
   TrendingDown,
   Activity,
+  BedDouble,
 } from 'lucide-react';
 
 const containerVariants = {
@@ -116,6 +117,15 @@ const featureCards = [
     color: '#10B981',
     colorDim: 'rgba(16,185,129,0.12)',
     tag: 'Cash Flow Analysis',
+  },
+  {
+    path: '/airbnb-vs-rental',
+    title: 'Airbnb vs Long-term Rental',
+    description: 'Compare short-term letting against a traditional lease on the same property — net income, yield, break-even occupancy, and the costs and effort each strategy demands.',
+    icon: BedDouble,
+    color: '#EC4899',
+    colorDim: 'rgba(236,72,153,0.12)',
+    tag: 'Strategy Compare',
   },
   {
     path: '/salary',
