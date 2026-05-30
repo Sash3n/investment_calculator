@@ -93,6 +93,7 @@ const navItems: NavItem[] = [
   // ── Property & Loans ──
   { path: '/mortgage', label: 'Mortgage Calculator', shortLabel: 'Mortgage', icon: Building2, color: '#F59E0B' },
   { path: '/property-roi', label: 'Property ROI', shortLabel: 'Property', icon: MapPin, color: '#10B981' },
+  { path: '/affordability', label: 'Bond Affordability', shortLabel: 'Afford', icon: Wallet, color: '#6366F1' },
   { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: House, color: '#10B981' },
   { path: '/rental-yield', label: 'Rental Yield Finder', shortLabel: 'Yield', icon: House, color: '#10B981' },
   { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B' },
@@ -134,6 +135,7 @@ const pageTitles: Record<string, string> = {
   '/history': 'Calculation History',
   '/portfolio': 'Portfolio Summary',
   '/stress-test': 'Portfolio Stress Test',
+  '/affordability': 'Bond Affordability Qualifier',
   '/tax-projections': 'Tax Projections',
   '/tfsa': 'TFSA Optimizer',
   '/fire': 'FIRE Calculator',

@@ -64,6 +64,15 @@ const featureCards = [
     tag: 'Risk Analysis',
   },
   {
+    path: '/affordability',
+    title: 'Bond Affordability',
+    description: 'Find out how much home loan you qualify for using SA bank rules (30% instalment, NCA debt-to-income), with a rate stress test and upfront cash needed.',
+    icon: Wallet,
+    color: '#6366F1',
+    colorDim: 'rgba(99,102,241,0.12)',
+    tag: 'Qualify Instantly',
+  },
+  {
     path: '/car-finance',
     title: 'Car Finance',
     description: 'Model SA car finance with balloon payments, depreciation schedules, and true cost of ownership vs cash purchase analysis.',
