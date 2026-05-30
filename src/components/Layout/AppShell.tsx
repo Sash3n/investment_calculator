@@ -29,6 +29,7 @@ import {
   Snowflake,
   GraduationCap,
   TrendingDown,
+  Activity,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -114,6 +115,7 @@ const navItems: NavItem[] = [
   // ── Planning ──
   { path: '/net-worth', label: 'Net Worth Dashboard', shortLabel: 'Net Worth', icon: PieChart, color: '#6366F1' },
   { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
+  { path: '/stress-test', label: 'Portfolio Stress Test', shortLabel: 'Stress Test', icon: Activity, color: '#EF4444' },
   { path: '/inflation', label: 'Inflation Calculator', shortLabel: 'Inflation', icon: TrendingDown, color: '#EF4444' },
   { path: '/education-savings', label: 'Education Savings', shortLabel: 'Education', icon: GraduationCap, color: '#8B5CF6' },
   // ── History ──
@@ -131,6 +133,7 @@ const pageTitles: Record<string, string> = {
   '/investment-strategy': 'SA Investment Strategy',
   '/history': 'Calculation History',
   '/portfolio': 'Portfolio Summary',
+  '/stress-test': 'Portfolio Stress Test',
   '/tax-projections': 'Tax Projections',
   '/tfsa': 'TFSA Optimizer',
   '/fire': 'FIRE Calculator',

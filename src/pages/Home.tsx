@@ -19,6 +19,7 @@ import {
   Snowflake,
   GraduationCap,
   TrendingDown,
+  Activity,
 } from 'lucide-react';
 
 const containerVariants = {
@@ -52,6 +53,15 @@ const featureCards = [
     color: '#10B981',
     colorDim: 'rgba(16,185,129,0.12)',
     tag: 'Portfolio Manager',
+  },
+  {
+    path: '/stress-test',
+    title: 'Portfolio Stress Test',
+    description: 'Run your saved properties through rate hikes, vacancy spikes and value drops. See breaking-point rates and which properties go cash-flow negative — no extra input needed.',
+    icon: Activity,
+    color: '#EF4444',
+    colorDim: 'rgba(239,68,68,0.12)',
+    tag: 'Risk Analysis',
   },
   {
     path: '/car-finance',
