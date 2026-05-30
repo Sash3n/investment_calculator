@@ -15,6 +15,7 @@ import type {
   RentalTaxResult,
   Section13sexInputs,
   Section13sexResult,
+  S13UnitResult,
   Section13quatInputs,
   Section13quatResult,
   CGTInputs,
@@ -39,9 +40,9 @@ const REBATES: Record<AgeGroup, number> = {
 };
 
 // CGT 2026 constants
-const CGT_PRIMARY_RESIDENCE_EXCLUSION = 3_000_000; // increased from R2M in 2026 budget
-const CGT_ANNUAL_EXCLUSION = 50_000;               // increased from R40K in 2026 budget
-const CGT_INCLUSION_RATE = 0.40;
+export const CGT_PRIMARY_RESIDENCE_EXCLUSION = 3_000_000; // increased from R2M in 2026 budget
+export const CGT_ANNUAL_EXCLUSION = 50_000;               // increased from R40K in 2026 budget
+export const CGT_INCLUSION_RATE = 0.40;
 
 // ── Core: compute SARS income tax ─────────────────────────────────────────────
 export function calcIncomeTax(taxableIncome: number, ageGroup: AgeGroup): number {
@@ -180,51 +181,144 @@ export function calcRentalIncomeTax(inputs: RentalTaxInputs): RentalTaxResult {
 
 // ── Section 13sex ─────────────────────────────────────────────────────────────
 export function calc13sex(inputs: Section13sexInputs): Section13sexResult {
-  const { numberOfUnits, purchasePricePerUnit, isLowCostHousing, annualTaxableIncome, ageGroup } = inputs;
+  const { units, annualTaxableIncome, raMonthlyContrib, ageGroup } = inputs;
+  const n = units.length;
+  const marginalRate = getMarginalRate(annualTaxableIncome) * 100;
 
-  if (numberOfUnits < 5) {
+  const EMPTY: Section13sexResult = {
+    qualifies: false,
+    reason: `You need at least 5 units to qualify. You currently have ${n}.`,
+    numberOfUnits: n,
+    totalCostExclLand: 0,
+    annualDeduction: 0,
+    annualTaxSaving: 0,
+    totalTaxSavingOverPeriod: 0,
+    deductionPeriodYears: 0,
+    deductionRate: 0,
+    schedule: [],
+    unitResults: [],
+    totalAnnualRent: 0,
+    totalAnnualExpenses: 0,
+    totalAnnualCashFlow: 0,
+    totalGrossYield: 0,
+    totalNetYield: 0,
+    raAnnualDeduction: 0,
+    raTaxSaving: 0,
+    combinedAnnualTaxSaving: 0,
+    marginalRate,
+  };
+
+  if (n < 5) return EMPTY;
+
+  // Per-unit calculations
+  const unitResults: S13UnitResult[] = units.map(u => {
+    const rate = u.isLowCostHousing ? 0.10 : 0.05;
+    const period = u.isLowCostHousing ? 10 : 20;
+    const annualDeductionPerUnit = u.purchasePrice * rate;
+
+    const effectiveMonthlyRent = u.monthlyRent * (1 - u.vacancyRate / 100);
+    const annualRent = effectiveMonthlyRent * 12;
+    const mgmtFee = (u.managementFeePercent / 100) * annualRent;
+    const monthlyExpenses =
+      u.monthlyBondRepayment +
+      u.monthlyLevies +
+      u.monthlyRates +
+      u.monthlyInsurance +
+      mgmtFee / 12;
+    const annualExpenses = monthlyExpenses * 12;
+    const annualCashFlow = annualRent - annualExpenses;
+    const monthlyCashFlow = annualCashFlow / 12;
+    const grossYield = u.purchasePrice > 0 ? (u.monthlyRent * 12 / u.purchasePrice) * 100 : 0;
+    const netYield = u.purchasePrice > 0 ? (annualCashFlow / u.purchasePrice) * 100 : 0;
+
     return {
-      qualifies: false,
-      reason: `You need at least 5 units to qualify. You have ${numberOfUnits}.`,
-      totalCostExclLand: 0,
-      annualDeduction: 0,
-      annualTaxSaving: 0,
-      totalTaxSavingOverPeriod: 0,
-      deductionPeriodYears: 0,
-      deductionRate: 0,
-      schedule: [],
+      id: u.id,
+      name: u.name,
+      purchasePrice: u.purchasePrice,
+      annualDeductionPerUnit,
+      deductionPeriodYears: period,
+      annualRent,
+      monthlyExpenses,
+      annualExpenses,
+      monthlyCashFlow,
+      annualCashFlow,
+      grossYield,
+      netYield,
     };
-  }
+  });
 
-  const deductionRate = isLowCostHousing ? 0.10 : 0.05;
-  const deductionPeriodYears = isLowCostHousing ? 10 : 20;
-  const totalCostExclLand = purchasePricePerUnit * numberOfUnits;
-  const annualDeduction = deductionRate * totalCostExclLand;
+  const totalCostExclLand = units.reduce((s, u) => s + u.purchasePrice, 0);
+  const maxPeriod = Math.max(...units.map(u => u.isLowCostHousing ? 10 : 20));
 
+  // RA deduction: 27.5% of taxable income, max R350k p.a.
+  const raAnnual = raMonthlyContrib * 12;
+  const raCap = Math.min(annualTaxableIncome * 0.275, 350_000);
+  const raAnnualDeduction = Math.min(raAnnual, raCap);
+
+  const taxBase = calcIncomeTax(annualTaxableIncome, ageGroup);
+  const raTaxSaving = Math.max(0, taxBase - calcIncomeTax(Math.max(0, annualTaxableIncome - raAnnualDeduction), ageGroup));
+
+  // Year-by-year schedule
   const schedule: Section13sexResult['schedule'] = [];
   let cumulativeSaving = 0;
+  let combinedCumulative = 0;
 
-  for (let year = 1; year <= deductionPeriodYears; year++) {
-    const reducedIncome = Math.max(0, annualTaxableIncome - annualDeduction);
-    const taxWithDeduction = calcIncomeTax(reducedIncome, ageGroup);
-    const taxWithoutDeduction = calcIncomeTax(annualTaxableIncome, ageGroup);
-    const taxSaving = Math.max(0, taxWithoutDeduction - taxWithDeduction);
+  for (let year = 1; year <= maxPeriod; year++) {
+    const deductionThisYear = units.reduce((s, u) => {
+      const period = u.isLowCostHousing ? 10 : 20;
+      const rate = u.isLowCostHousing ? 0.10 : 0.05;
+      return year <= period ? s + u.purchasePrice * rate : s;
+    }, 0);
+
+    const incomeAfterS13 = Math.max(0, annualTaxableIncome - deductionThisYear);
+    const incomeAfterBoth = Math.max(0, incomeAfterS13 - raAnnualDeduction);
+
+    const taxWithS13 = calcIncomeTax(incomeAfterS13, ageGroup);
+    const taxWithBoth = calcIncomeTax(incomeAfterBoth, ageGroup);
+
+    const taxSaving = Math.max(0, taxBase - taxWithS13);
+    const raTaxSavingYear = Math.max(0, taxWithS13 - taxWithBoth);
+    const combinedSaving = Math.max(0, taxBase - taxWithBoth);
+
     cumulativeSaving += taxSaving;
-    schedule.push({ year, deduction: annualDeduction, taxSaving, cumulativeSaving });
+    combinedCumulative += combinedSaving;
+
+    schedule.push({ year, deduction: deductionThisYear, taxSaving, cumulativeSaving, raTaxSaving: raTaxSavingYear, combinedSaving, combinedCumulative });
   }
 
+  const annualDeduction = schedule[0]?.deduction ?? 0;
   const annualTaxSaving = schedule[0]?.taxSaving ?? 0;
-  const totalTaxSavingOverPeriod = cumulativeSaving;
+  const combinedAnnualTaxSaving = schedule[0]?.combinedSaving ?? 0;
+  const deductionRate = totalCostExclLand > 0 ? annualDeduction / totalCostExclLand : 0.05;
+
+  const totalAnnualRent = unitResults.reduce((s, u) => s + u.annualRent, 0);
+  const totalAnnualExpenses = unitResults.reduce((s, u) => s + u.annualExpenses, 0);
+  const totalAnnualCashFlow = unitResults.reduce((s, u) => s + u.annualCashFlow, 0);
+  const totalGrossYield = totalCostExclLand > 0
+    ? (units.reduce((s, u) => s + u.monthlyRent * 12, 0) / totalCostExclLand) * 100
+    : 0;
+  const totalNetYield = totalCostExclLand > 0 ? (totalAnnualCashFlow / totalCostExclLand) * 100 : 0;
 
   return {
     qualifies: true,
+    numberOfUnits: n,
     totalCostExclLand,
     annualDeduction,
     annualTaxSaving,
-    totalTaxSavingOverPeriod,
-    deductionPeriodYears,
+    totalTaxSavingOverPeriod: cumulativeSaving,
+    deductionPeriodYears: maxPeriod,
     deductionRate,
     schedule,
+    unitResults,
+    totalAnnualRent,
+    totalAnnualExpenses,
+    totalAnnualCashFlow,
+    totalGrossYield,
+    totalNetYield,
+    raAnnualDeduction,
+    raTaxSaving,
+    combinedAnnualTaxSaving,
+    marginalRate,
   };
 }
 

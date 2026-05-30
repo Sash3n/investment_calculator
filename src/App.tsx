@@ -30,6 +30,7 @@ import { CarExtraVsInvesting } from './pages/CarExtraVsInvesting';
 import { StressTest } from './pages/StressTest';
 import { Affordability } from './pages/Affordability';
 import { AirbnbVsRental } from './pages/AirbnbVsRental';
+import { ExitPlanner } from './pages/ExitPlanner';
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
         <Route path="/stress-test" element={<StressTest />} />
         <Route path="/affordability" element={<Affordability />} />
         <Route path="/airbnb-vs-rental" element={<AirbnbVsRental />} />
+        <Route path="/exit-planner" element={<ExitPlanner />} />
         <Route path="/tax-projections" element={<TaxProjections />} />
         <Route path="/tfsa" element={<TfsaOptimizer />} />
         <Route path="/fire" element={<FireCalculator />} />

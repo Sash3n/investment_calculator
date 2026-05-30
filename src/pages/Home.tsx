@@ -21,6 +21,7 @@ import {
   TrendingDown,
   Activity,
   BedDouble,
+  DoorOpen,
 } from 'lucide-react';
 
 const containerVariants = {
@@ -162,6 +163,15 @@ const featureCards = [
     color: '#10B981',
     colorDim: 'rgba(16,185,129,0.12)',
     tag: 'Safety Net',
+  },
+  {
+    path: '/exit-planner',
+    title: 'Optimal Exit Planner',
+    description: 'When should you sell an investment property? Models CGT, Section 13sex recoupment and your marginal rate across sale years to reveal the recoupment trap and the best exit.',
+    icon: DoorOpen,
+    color: '#8B5CF6',
+    colorDim: 'rgba(139,92,246,0.12)',
+    tag: 'Tax-Smart Exit',
   },
   {
     path: '/inflation',

@@ -31,6 +31,7 @@ import {
   TrendingDown,
   Activity,
   BedDouble,
+  DoorOpen,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -112,6 +113,7 @@ const navItems: NavItem[] = [
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
   { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
   { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
+  { path: '/exit-planner', label: 'Optimal Exit Planner', shortLabel: 'Exit', icon: DoorOpen, color: '#8B5CF6' },
   { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
   { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1' },
   { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
@@ -139,6 +141,7 @@ const pageTitles: Record<string, string> = {
   '/stress-test': 'Portfolio Stress Test',
   '/affordability': 'Bond Affordability Qualifier',
   '/airbnb-vs-rental': 'Airbnb vs Long-term Rental',
+  '/exit-planner': 'Optimal Exit Planner',
   '/tax-projections': 'Tax Projections',
   '/tfsa': 'TFSA Optimizer',
   '/fire': 'FIRE Calculator',
