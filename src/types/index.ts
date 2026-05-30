@@ -231,24 +231,72 @@ export interface RentalTaxResult {
   bracketLabel: string;
 }
 
-export interface Section13sexInputs {
-  numberOfUnits: number;
-  purchasePricePerUnit: number;    // excl. land
+export interface S13Unit {
+  id: string;
+  name: string;
+  purchasePrice: number;         // building cost excl. land
+  monthlyRent: number;
   isLowCostHousing: boolean;
-  annualTaxableIncome: number;     // other income (excl. this deduction)
+  monthlyBondRepayment: number;
+  monthlyLevies: number;
+  monthlyRates: number;
+  monthlyInsurance: number;
+  managementFeePercent: number;
+  vacancyRate: number;           // percent 0–100
+  portfolioId?: string;
+}
+
+export interface S13UnitResult {
+  id: string;
+  name: string;
+  purchasePrice: number;
+  annualDeductionPerUnit: number;
+  deductionPeriodYears: number;
+  annualRent: number;
+  monthlyExpenses: number;
+  annualExpenses: number;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  grossYield: number;
+  netYield: number;
+}
+
+export interface Section13sexInputs {
+  units: S13Unit[];
+  annualTaxableIncome: number;
+  raMonthlyContrib: number;
   ageGroup: AgeGroup;
 }
 
 export interface Section13sexResult {
   qualifies: boolean;
   reason?: string;
+  numberOfUnits: number;
   totalCostExclLand: number;
   annualDeduction: number;
   annualTaxSaving: number;
   totalTaxSavingOverPeriod: number;
   deductionPeriodYears: number;
   deductionRate: number;
-  schedule: { year: number; deduction: number; taxSaving: number; cumulativeSaving: number }[];
+  schedule: {
+    year: number;
+    deduction: number;
+    taxSaving: number;
+    cumulativeSaving: number;
+    raTaxSaving: number;
+    combinedSaving: number;
+    combinedCumulative: number;
+  }[];
+  unitResults: S13UnitResult[];
+  totalAnnualRent: number;
+  totalAnnualExpenses: number;
+  totalAnnualCashFlow: number;
+  totalGrossYield: number;
+  totalNetYield: number;
+  raAnnualDeduction: number;
+  raTaxSaving: number;
+  combinedAnnualTaxSaving: number;
+  marginalRate: number;
 }
 
 export interface Section13quatInputs {
