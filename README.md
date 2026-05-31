@@ -55,7 +55,11 @@
 
 ### Property Tax Planner
 - **Rental Income Tax** — SARS 2026 brackets, all allowable deductions (bond interest, rates, levies, insurance, repairs, management fee), marginal rate on rental income
-- **Section 13sex** — new residential unit depreciation allowance (5% / 10% for 20 / 10 years), multi-unit qualification check, year-by-year tax saving schedule
+- **Section 13sex** — new residential unit depreciation allowance (5% / 10% for 20 / 10 years), now fully **multi-unit**:
+  - Each unit has its own price, rent, bond, levies, rates, insurance, management fee and vacancy (no longer assumes 5 identical units)
+  - **Import from Portfolio** — pull saved Property ROI properties straight in as units (price auto-adjusted for land exclusion)
+  - **RA stacking** — model a retirement-annuity contribution alongside the S13 allowance and see the combined tax saving
+  - Per-unit analysis table (yield, cash flow), portfolio cash-flow chart, year-by-year schedule, and an in-page education section
 - **Section 13quat (UDZ)** — Urban Development Zone allowances (new/improvements/low-cost), full deduction schedule
 - **CGT Planner** — primary residence exclusion (R3M, 2026), annual exclusion (R50k), 40% inclusion rate, net proceeds after CGT, joint ownership support
 
@@ -98,6 +102,34 @@
 - Per-property breakdown table with totals row
 - One-click "Open" to load any property back into the ROI calculator
 
+### Portfolio Stress Test
+- Reads your saved Property ROI portfolio — **no extra data entry**
+- Runs every property through adverse scenarios: prime +1/+2/+3%, 15% vacancy, −10% value, and a combined worst case
+- Monthly cash-flow matrix (property × scenario) with negatives flagged
+- **Breaking-point rate** per property — the interest rate at which it turns cash-flow negative — plus rate headroom
+- Most-fragile property callout, portfolio totals, and a how-to-read-it education section
+
+### Bond Affordability Qualifier
+- Max home loan & property price using SA bank rules: 30% instalment-to-income + NCA ~36% debt-to-income
+- Live prime rate seeded as the default interest rate
+- **Rate stress test** — how much your qualifying loan shrinks if rates rise
+- Upfront cash needed (deposit + transfer duty + bond registration)
+- "Can I afford this specific home?" target-price check with required-income estimate
+- Income-allocation pie + affordability-vs-stress bar chart, education section
+
+### Airbnb vs Long-term Rental
+- Compares short-term letting vs a traditional lease on the same property
+- Net operating income (before bond, like-for-like), net yield, and after-bond monthly cash flow for each
+- **Break-even occupancy** — the Airbnb occupancy needed to match the long-term lease
+- Models platform fees, cleaning per stay, co-host/management %, utilities, and vacancy
+- Winner banner, side-by-side comparison table, income-breakdown chart, education section
+
+### Optimal Exit Planner
+- Answers "when should I sell?" across years 1 / 3 / 5 / 10 / 15 / 20 / 25
+- Combines **CGT**, **Section 13sex recoupment** (allowances clawed back as income on sale), and your marginal rate
+- Surfaces the recoupment trap and the **net lifetime tax position** (S13 savings received − tax paid on exit)
+- Best-cash-year and best-tax-year callouts, net-proceeds vs exit-tax chart, scenario table, education section
+
 ### Comparison Mode
 - Select any two saved snapshots of the same calculator type
 - Side-by-side A/B table with diff column
@@ -120,6 +152,7 @@
 - Synced to Firestore, accessible across devices
 
 ### App-wide
+- **Route-based code splitting** — calculator pages are lazy-loaded as on-demand chunks (initial bundle trimmed from ~2.3 MB to ~620 KB); heavy libs (jsPDF, xlsx, html2canvas, Recharts) load only when their page is opened
 - Live SA Prime Rate — fetched from SARB API via Vercel serverless proxy, cached 6hrs in sessionStorage, shown in sidebar footer
 - Dark/light mode toggle — persisted to `localStorage`
 - Responsive: desktop sidebar + scrollable mobile bottom tab bar
@@ -183,6 +216,10 @@ src/
 │   ├── TaxProjections.tsx        # Multi-year rental tax forecast
 │   ├── TfsaOptimizer.tsx         # TFSA vs taxable comparison
 │   ├── PortfolioSummary.tsx      # Aggregate property portfolio view
+│   ├── StressTest.tsx            # Portfolio stress test (rate/vacancy/value)
+│   ├── Affordability.tsx         # Bond affordability qualifier
+│   ├── AirbnbVsRental.tsx        # Short-term vs long-term rental
+│   ├── ExitPlanner.tsx           # Optimal exit (CGT + S13 recoupment)
 │   ├── History.tsx               # Unified history + compare mode
 │   ├── Compare.tsx               # A/B snapshot comparison
 │   ├── NotFound.tsx              # 404 page
@@ -193,6 +230,10 @@ src/
 │   ├── car.ts
 │   ├── investing.ts
 │   ├── tax.ts                    # SARS brackets, transfer duty, CGT, Section 13
+│   ├── stress.ts                 # Portfolio stress-test scenarios
+│   ├── affordability.ts          # Bond affordability (30% rule + NCA DTI)
+│   ├── shortTermRental.ts        # Airbnb vs long-term rental comparison
+│   ├── exitPlanner.ts            # CGT + S13 recoupment by sale year
 │   ├── pdf.ts                    # jsPDF exporters (Mortgage, Property, Car)
 │   └── format.ts
 ├── types/
@@ -291,6 +332,12 @@ npm run preview   # preview production build locally
 - [x] Portfolio Summary (aggregate property dashboard)
 - [x] Tax Projections (multi-year rental + CGT forecast)
 - [x] TFSA Optimizer (tax-free vs taxable compounding)
+- [x] Section 13sex multi-unit overhaul (per-unit pricing, portfolio import, RA stacking)
+- [x] Portfolio Stress Test (rate/vacancy/value scenarios + breaking-point rates)
+- [x] Bond Affordability Qualifier (30% rule, NCA DTI, rate stress test)
+- [x] Airbnb vs Long-term Rental comparison (NOI, yield, break-even occupancy)
+- [x] Optimal Exit Planner (CGT + S13sex recoupment by sale year)
+- [x] Route-based lazy loading / code splitting
 - [ ] FIRE Calculator — time to financial independence
 - [ ] Retirement Annuity Planner (27.5% deduction, 2-Pot rules)
 - [ ] Buy vs. Rent Calculator
