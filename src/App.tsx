@@ -35,6 +35,7 @@ const DebtSnowball = lazy(() => import('./pages/DebtSnowball').then((m) => ({ de
 const EmergencyFund = lazy(() => import('./pages/EmergencyFund').then((m) => ({ default: m.EmergencyFund })));
 const InflationCalc = lazy(() => import('./pages/InflationCalc').then((m) => ({ default: m.InflationCalc })));
 const EducationSavings = lazy(() => import('./pages/EducationSavings').then((m) => ({ default: m.EducationSavings })));
+const DividendCalculator = lazy(() => import('./pages/DividendCalculator').then((m) => ({ default: m.DividendCalculator })));
 
 function PageFallback() {
   return (
@@ -85,6 +86,7 @@ function App() {
                 <Route path="/emergency-fund" element={<EmergencyFund />} />
                 <Route path="/inflation" element={<InflationCalc />} />
                 <Route path="/education-savings" element={<EducationSavings />} />
+                <Route path="/dividend-calculator" element={<DividendCalculator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

@@ -191,6 +191,15 @@ const featureCards = [
     colorDim: 'rgba(139,92,246,0.12)',
     tag: 'Inflation-Adjusted',
   },
+  {
+    path: '/dividend-calculator',
+    title: 'Dividend Income Calculator',
+    description: 'Project dividend income from SA or international stocks with DRIP compounding, yield on cost growth, and SA Dividends Tax (20%) applied.',
+    icon: BarChart3,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'DRIP + Tax',
+  },
 ];
 
 const quickStats = [
