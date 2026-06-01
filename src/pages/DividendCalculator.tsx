@@ -77,9 +77,10 @@ function project(inp: Inputs): ProjectionRow[] {
   for (let year = 1; year <= inp.years; year++) {
     const grossDividend    = portfolioValue * currentYield;
     const afterTaxDividend = grossDividend * (1 - taxRate);
-    const zarIncome        = inp.market === 'International'
-      ? afterTaxDividend * inp.exchangeRate
-      : afterTaxDividend;
+    // Investment/portfolio are entered in Rands, so afterTaxDividend is already a
+    // ZAR figure regardless of market. (For international holdings the FX rate
+    // converts in on purchase and out on payout at ~the same rate, so it cancels.)
+    const zarIncome        = afterTaxDividend;
 
     cumulativeIncome += afterTaxDividend;
 
