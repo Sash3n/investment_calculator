@@ -83,6 +83,7 @@ export function MortgageCalculator() {
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
     initiationFee: 6037,
+    utilityConnectionFee: 1500,
     transferDutyExempt: false,
     bondRegistrationIncluded: false,
   });
@@ -113,12 +114,13 @@ export function MortgageCalculator() {
   const upfrontCosts = useMemo(() => {
     const transferDuty = inputs.transferDutyExempt ? 0 : calcTransferDuty(inputs.purchasePrice);
     const bondRegCost = inputs.bondRegistrationIncluded ? 0 : calcBondRegistrationCost(result.loanAmount);
+    const utilityFee = inputs.utilityConnectionFee ?? 0;
     return {
       transferDuty,
       bondRegCost,
-      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + inputs.initiationFee,
+      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + inputs.initiationFee + utilityFee,
     };
-  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, result.loanAmount]);
+  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, inputs.initiationFee, inputs.utilityConnectionFee, result.loanAmount]);
 
   // ── Chart data ─────────────────────────────────────────────
   const balanceChartData = useMemo(() => {
@@ -313,6 +315,17 @@ export function MortgageCalculator() {
             help="Once-off upfront fee. NCA cap: R6,037 for bonds above R500K."
           />
 
+          <InputField
+            label="Utility Connection Fee"
+            id="utilityConnectionFee"
+            value={inputs.utilityConnectionFee ?? 0}
+            onChange={(v) => set('utilityConnectionFee', v)}
+            prefix="R"
+            min={0}
+            step={100}
+            help="Once-off water/electricity connection & activation deposit charged by the municipality."
+          />
+
           {/* Upfront cost toggles */}
           <div className="space-y-2 pt-1">
             {[
@@ -436,6 +449,12 @@ export function MortgageCalculator() {
               <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Initiation Fee</p>
               <p className={`text-base font-bold ${inputs.initiationFee > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
                 {inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Utility Connection</p>
+              <p className={`text-base font-bold ${(inputs.utilityConnectionFee ?? 0) > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {(inputs.utilityConnectionFee ?? 0) > 0 ? formatRand(inputs.utilityConnectionFee ?? 0) : 'None'}
               </p>
             </div>
             <div className="col-span-2 sm:col-span-4 border-t border-[rgba(255,255,255,0.07)] pt-3 flex items-center justify-between">

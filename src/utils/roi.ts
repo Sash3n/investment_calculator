@@ -34,7 +34,8 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
   // ── Acquisition costs ─────────────────────────────────────
   const transferDuty = transferDutyExempt ? 0 : calcTransferDuty(effectivePurchasePrice);
   const bondRegistrationCost = bondRegistrationIncluded ? 0 : calcBondRegistrationCost(loanAmount);
-  const totalAcquisitionCost = deposit + transferDuty + bondRegistrationCost;
+  const utilityConnectionFee = inputs.utilityConnectionFee ?? 0;
+  const totalAcquisitionCost = deposit + transferDuty + bondRegistrationCost + utilityConnectionFee;
   const totalCashRequired = totalAcquisitionCost;
 
   // ── Monthly bond repayment ────────────────────────────────

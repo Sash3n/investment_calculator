@@ -49,6 +49,7 @@ const DEFAULT_INPUTS: PropertyInputs = {
   annualAppreciation: 7,
   transferDutyExempt: false,
   bondRegistrationIncluded: false,
+  utilityConnectionFee: 1500,
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -339,6 +340,9 @@ export function PropertyROI() {
                 help="Reduces effective purchase price (e.g. distressed sale)" />
               <InputField label="Deposit" id="dep" value={inputs.deposit}
                 onChange={(v) => set('deposit', v)} prefix="R" step={5000} />
+              <InputField label="Utility Connection Fee" id="ucf" value={inputs.utilityConnectionFee ?? 0}
+                onChange={(v) => set('utilityConnectionFee', v)} prefix="R" step={100}
+                help="Once-off water/electricity connection & activation deposit (upfront)" />
 
               {/* Acquisition cost toggles */}
               {[
@@ -384,6 +388,7 @@ export function PropertyROI() {
                   { label: 'Deposit',           value: inputs.deposit,                                                         muted: false },
                   { label: 'Transfer Duty',     value: inputs.transferDutyExempt ? 0 : result.transferDuty,                    muted: inputs.transferDutyExempt },
                   { label: 'Bond Registration', value: inputs.bondRegistrationIncluded ? 0 : result.bondRegistrationCost,      muted: inputs.bondRegistrationIncluded },
+                  { label: 'Utility Connection', value: inputs.utilityConnectionFee ?? 0,                                       muted: (inputs.utilityConnectionFee ?? 0) === 0 },
                 ].map(({ label, value, muted }) => (
                   <div key={label} className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text-muted)' }}>

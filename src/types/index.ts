@@ -9,6 +9,7 @@ export interface MortgageInputs {
   lumpSumAmount: number;
   monthlyServiceFee: number; // bank admin fee, e.g. R69/month
   initiationFee: number;     // once-off upfront fee (NCA cap R6,037 for bonds > R500K)
+  utilityConnectionFee?: number; // once-off utility connection / activation fee (water, electricity, etc.)
   transferDutyExempt: boolean;
   bondRegistrationIncluded: boolean;
 }
@@ -73,6 +74,8 @@ export interface PropertyInputs {
   transferDutyExempt: boolean;
   /** When true, bond registration costs are excluded (e.g. capitalised into loan / bank promotion) */
   bondRegistrationIncluded: boolean;
+  /** Once-off utility connection / activation fee (water, electricity, etc.) — part of upfront cash */
+  utilityConnectionFee?: number;
 }
 
 export interface PropertyResult {
