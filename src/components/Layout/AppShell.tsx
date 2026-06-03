@@ -32,6 +32,7 @@ import {
   Activity,
   BedDouble,
   DoorOpen,
+  Coins,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -113,6 +114,7 @@ const navItems: NavItem[] = [
   { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
   { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
   { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
+  { path: '/dividend-calculator', label: 'Dividend Income', shortLabel: 'Dividends', icon: Coins, color: '#10B981' },
   { path: '/exit-planner', label: 'Optimal Exit Planner', shortLabel: 'Exit', icon: DoorOpen, color: '#8B5CF6' },
   { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
   { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1' },
@@ -156,6 +158,7 @@ const pageTitles: Record<string, string> = {
   '/emergency-fund': 'Emergency Fund Planner',
   '/inflation': 'Inflation & Purchasing Power',
   '/education-savings': 'Education Savings Planner',
+  '/dividend-calculator': 'Dividend Income Calculator',
 };
 
 export function AppShell() {
