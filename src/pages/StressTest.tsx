@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from 'recharts';
 import {
-  AlertTriangle, Shield, TrendingDown, Activity, Building2, Info, ArrowRight, BookOpen,
+  AlertTriangle, Shield, TrendingDown, Activity, Building2, Info, BookOpen,
 } from 'lucide-react';
 import { StatCard } from '../components/ui/StatCard';
+import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcPortfolioStress, STRESS_SCENARIOS } from '../utils/stress';
 import { useAuth } from '../context/AuthContext';
@@ -80,22 +80,14 @@ export function StressTest() {
       </motion.div>
 
       {empty ? (
-        <div className="glass-card p-10 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center" style={{ background: `${C.indigo}18` }}>
-            <Building2 size={26} style={{ color: C.indigo }} />
-          </div>
-          <p className="text-base font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-            No saved properties yet
-          </p>
-          <p className="text-sm max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
-            The stress test reads your saved buy-to-let portfolio. Add and save a property in the Property ROI calculator, then come back here — no extra data entry needed.
-          </p>
-          <Link to="/property-roi">
-            <button className="btn-primary inline-flex items-center gap-2 text-sm">
-              Go to Property ROI <ArrowRight size={14} />
-            </button>
-          </Link>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="No saved properties yet"
+          message="The stress test reads your saved buy-to-let portfolio. Add and save a property in the Property ROI calculator, then come back here — no extra data entry needed."
+          actionLabel="Go to Property ROI"
+          actionTo="/property-roi"
+          color={C.indigo}
+        />
       ) : (
         <>
           {/* Summary cards */}
