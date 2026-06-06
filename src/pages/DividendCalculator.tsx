@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar,
@@ -6,7 +6,9 @@ import {
 } from 'recharts';
 import { TrendingUp, Info, DollarSign, Globe, Repeat, RotateCcw } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
+import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -125,6 +127,12 @@ const DEFAULT_INPUTS: Inputs = {
 export function DividendCalculator() {
   const [inp, setInp] = usePersistentState<Inputs>('fincalc-dividend', DEFAULT_INPUTS);
 
+  // Hydrate from a shared ?s= link on first load
+  useEffect(() => {
+    const shared = readShareParam<Inputs>();
+    if (shared) setInp((prev) => ({ ...prev, ...shared }));
+  }, [setInp]);
+
   const n = (fn: (v: number) => Partial<Inputs>) => (val: string) =>
     setInp((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
 
@@ -178,6 +186,7 @@ export function DividendCalculator() {
           >
             {formatRand(firstRow?.afterTaxDividend ?? 0, 0)}/yr net yr 1
           </span>
+          <ShareButton state={inp} />
           <button
             onClick={() => setInp(DEFAULT_INPUTS)}
             className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"

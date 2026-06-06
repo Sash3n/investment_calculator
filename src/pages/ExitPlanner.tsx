@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell,
@@ -10,7 +10,9 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcExitPlanner, type ExitPlannerInputs } from '../utils/exitPlanner';
 import type { AgeGroup } from '../types';
@@ -55,6 +57,11 @@ const DEFAULT_INPUTS: ExitPlannerInputs = {
 export function ExitPlanner() {
   const [inputs, setInputs] = usePersistentState<ExitPlannerInputs>('fincalc-exit', DEFAULT_INPUTS);
 
+  useEffect(() => {
+    const shared = readShareParam<ExitPlannerInputs>();
+    if (shared) setInputs((prev) => ({ ...prev, ...shared }));
+  }, [setInputs]);
+
   const result = useMemo(() => calcExitPlanner(inputs), [inputs]);
   const set = (fn: (v: number) => Partial<ExitPlannerInputs>) => (val: string) =>
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
@@ -82,6 +89,7 @@ export function ExitPlanner() {
             <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'rgba(139,92,246,0.12)', color: C.violet, border: `1px solid ${C.violet}44` }}>
               SARS 2026 · 40% inclusion
             </span>
+            <ShareButton state={inputs} />
             <button
               onClick={() => setInputs(DEFAULT_INPUTS)}
               className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"

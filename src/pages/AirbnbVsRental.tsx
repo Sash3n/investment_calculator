@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
@@ -9,7 +9,9 @@ import {
 import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcSTRvsLTR, type STRvsLTRInputs } from '../utils/shortTermRental';
 
@@ -49,6 +51,11 @@ const DEFAULT_INPUTS: STRvsLTRInputs = {
 export function AirbnbVsRental() {
   const [inputs, setInputs] = usePersistentState<STRvsLTRInputs>('fincalc-airbnb', DEFAULT_INPUTS);
 
+  useEffect(() => {
+    const shared = readShareParam<STRvsLTRInputs>();
+    if (shared) setInputs((prev) => ({ ...prev, ...shared }));
+  }, [setInputs]);
+
   const result = useMemo(() => calcSTRvsLTR(inputs), [inputs]);
   const set = (fn: (v: number) => Partial<STRvsLTRInputs>) => (val: string) =>
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
@@ -82,14 +89,17 @@ export function AirbnbVsRental() {
             Which rental strategy earns more on the same property — short-term let or a traditional lease?
           </p>
         </div>
-        <button
-          onClick={() => setInputs(DEFAULT_INPUTS)}
-          className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
-          title="Reset to defaults"
-        >
-          <RotateCcw size={13} /> Reset
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <ShareButton state={inputs} />
+          <button
+            onClick={() => setInputs(DEFAULT_INPUTS)}
+            className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            title="Reset to defaults"
+          >
+            <RotateCcw size={13} /> Reset
+          </button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
