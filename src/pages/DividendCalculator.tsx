@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { TrendingUp, Info, DollarSign, Globe, Repeat } from 'lucide-react';
+import { TrendingUp, Info, DollarSign, Globe, Repeat, RotateCcw } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -109,18 +110,20 @@ function project(inp: Inputs): ProjectionRow[] {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+const DEFAULT_INPUTS: Inputs = {
+  investmentAmount:      200_000,
+  dividendYield:         4.5,
+  dividendGrowthRate:    7,
+  annualReturnRate:      10,
+  market:                'SA',
+  foreignWithholdingTax: 15,
+  exchangeRate:          18.5,
+  drip:                  true,
+  years:                 20,
+};
+
 export function DividendCalculator() {
-  const [inp, setInp] = useState<Inputs>({
-    investmentAmount:      200_000,
-    dividendYield:         4.5,
-    dividendGrowthRate:    7,
-    annualReturnRate:      10,
-    market:                'SA',
-    foreignWithholdingTax: 15,
-    exchangeRate:          18.5,
-    drip:                  true,
-    years:                 20,
-  });
+  const [inp, setInp] = usePersistentState<Inputs>('fincalc-dividend', DEFAULT_INPUTS);
 
   const n = (fn: (v: number) => Partial<Inputs>) => (val: string) =>
     setInp((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
@@ -175,6 +178,14 @@ export function DividendCalculator() {
           >
             {formatRand(firstRow?.afterTaxDividend ?? 0, 0)}/yr net yr 1
           </span>
+          <button
+            onClick={() => setInp(DEFAULT_INPUTS)}
+            className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            title="Reset to defaults"
+          >
+            <RotateCcw size={13} /> Reset
+          </button>
         </div>
       </motion.div>
 

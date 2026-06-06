@@ -1,15 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell,
 } from 'recharts';
 import {
-  DoorOpen, TrendingUp, Info, BookOpen, Trophy, AlertTriangle, Receipt,
+  DoorOpen, TrendingUp, Info, BookOpen, Trophy, AlertTriangle, Receipt, RotateCcw,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcExitPlanner, type ExitPlannerInputs } from '../utils/exitPlanner';
 import type { AgeGroup } from '../types';
@@ -39,18 +40,20 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
   );
 }
 
+const DEFAULT_INPUTS: ExitPlannerInputs = {
+  purchasePrice: 1500000,
+  buildingCostExclLand: 1100000,
+  isLowCostHousing: false,
+  claimingS13: true,
+  annualAppreciation: 7,
+  saleCostsPercent: 5,
+  otherAnnualTaxableIncome: 800000,
+  ageGroup: 'under65',
+  saleYears: SALE_YEARS,
+};
+
 export function ExitPlanner() {
-  const [inputs, setInputs] = useState<ExitPlannerInputs>({
-    purchasePrice: 1500000,
-    buildingCostExclLand: 1100000,
-    isLowCostHousing: false,
-    claimingS13: true,
-    annualAppreciation: 7,
-    saleCostsPercent: 5,
-    otherAnnualTaxableIncome: 800000,
-    ageGroup: 'under65',
-    saleYears: SALE_YEARS,
-  });
+  const [inputs, setInputs] = usePersistentState<ExitPlannerInputs>('fincalc-exit', DEFAULT_INPUTS);
 
   const result = useMemo(() => calcExitPlanner(inputs), [inputs]);
   const set = (fn: (v: number) => Partial<ExitPlannerInputs>) => (val: string) =>
@@ -75,9 +78,19 @@ export function ExitPlanner() {
               When should you sell? Combines CGT, Section 13sex recoupment, and your marginal rate
             </p>
           </div>
-          <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'rgba(139,92,246,0.12)', color: C.violet, border: `1px solid ${C.violet}44` }}>
-            SARS 2026 · 40% inclusion
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'rgba(139,92,246,0.12)', color: C.violet, border: `1px solid ${C.violet}44` }}>
+              SARS 2026 · 40% inclusion
+            </span>
+            <button
+              onClick={() => setInputs(DEFAULT_INPUTS)}
+              className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+              title="Reset to defaults"
+            >
+              <RotateCcw size={13} /> Reset
+            </button>
+          </div>
         </div>
       </motion.div>
 
