@@ -101,6 +101,11 @@ export const NAV_CATEGORIES: NavCategory[] = [
 /** Flat list of every nav item, in display order. */
 export const NAV_ITEMS: NavItem[] = NAV_CATEGORIES.flatMap((c) => c.items);
 
+/** Lookup a nav item by its route path. */
+export const NAV_BY_PATH: Record<string, NavItem> = Object.fromEntries(
+  NAV_ITEMS.map((i) => [i.path, i]),
+);
+
 /** Page titles keyed by path, derived from the nav config. */
 export const PAGE_TITLES: Record<string, string> = Object.fromEntries(
   NAV_ITEMS.map((i) => [i.path, i.label]),

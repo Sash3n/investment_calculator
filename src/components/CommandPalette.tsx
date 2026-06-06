@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, CornerDownLeft } from 'lucide-react';
-import { NAV_CATEGORIES, NAV_ITEMS, type NavItem } from '../config/nav';
+import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, type NavItem } from '../config/nav';
+import { useNavPrefs } from '../hooks/useNavPrefs';
 
 interface Scored {
   item: NavItem;
@@ -41,8 +42,19 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { recents } = useNavPrefs();
 
-  const results = useMemo(() => scoreItems(query), [query]);
+  // With no query, surface recently used calculators first.
+  const results = useMemo(() => {
+    if (query.trim()) return scoreItems(query);
+    const recentItems = recents
+      .map((p) => NAV_BY_PATH[p])
+      .filter(Boolean)
+      .map((item) => ({ item, category: 'Recent', score: 0 }));
+    const recentPaths = new Set(recentItems.map((r) => r.item.path));
+    const rest = scoreItems('').filter((r) => !recentPaths.has(r.item.path));
+    return [...recentItems, ...rest];
+  }, [query, recents]);
 
   // Global open shortcut: Ctrl/Cmd+K
   useEffect(() => {

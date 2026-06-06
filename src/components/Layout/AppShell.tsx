@@ -4,11 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
   Menu, X, ChevronRight, ChevronDown, BarChart3, Sun, Moon,
-  AlertTriangle, LogIn, LogOut,
+  AlertTriangle, LogIn, LogOut, Star, Clock,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { NAV_CATEGORIES, NAV_ITEMS, PAGE_TITLES, type NavItem } from '../../config/nav';
+import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, PAGE_TITLES, type NavItem } from '../../config/nav';
 import { CommandPalette } from '../CommandPalette';
+import { useNavPrefs } from '../../hooks/useNavPrefs';
 
 function DisclaimerBanner() {
   const [visible, setVisible] = useState(false);
@@ -57,8 +58,8 @@ function DisclaimerBanner() {
   );
 }
 
-/** Single sidebar nav row. */
-function SidebarLink({ item }: { item: NavItem }) {
+/** Single sidebar nav row, with a pin/favourite toggle on hover. */
+function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourite: boolean; onToggleFav: (path: string) => void }) {
   const Icon = item.icon;
   return (
     <NavLink
@@ -85,8 +86,16 @@ function SidebarLink({ item }: { item: NavItem }) {
           >
             <Icon size={15} style={{ color: isActive ? item.color : 'var(--color-text-subtle)' }} />
           </span>
-          <span className="flex-1">{item.label}</span>
-          {isActive && <ChevronRight size={14} className="text-[#6366F1] opacity-60" />}
+          <span className="flex-1 truncate">{item.label}</span>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFav(item.path); }}
+            className={clsx('flex-shrink-0 p-0.5 rounded transition-opacity', favourite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}
+            aria-label={favourite ? 'Unpin from favourites' : 'Pin to favourites'}
+            title={favourite ? 'Unpin' : 'Pin to favourites'}
+          >
+            <Star size={13} style={{ color: favourite ? '#F59E0B' : 'var(--color-text-subtle)' }} fill={favourite ? '#F59E0B' : 'none'} />
+          </button>
+          {isActive && !favourite && <ChevronRight size={14} className="text-[#6366F1] opacity-60 group-hover:hidden" />}
         </>
       )}
     </NavLink>
@@ -104,6 +113,19 @@ export function AppShell() {
   const { user, signIn, signOut } = useAuth();
   const location = useLocation();
   const pageTitle = PAGE_TITLES[location.pathname] ?? 'FinCalc ZA';
+
+  const { favourites, recents, toggleFavourite, isFavourite, recordVisit } = useNavPrefs();
+  const favItems = favourites.map((p) => NAV_BY_PATH[p]).filter(Boolean);
+  const recentItems = recents
+    .filter((p) => !favourites.includes(p))
+    .map((p) => NAV_BY_PATH[p])
+    .filter(Boolean)
+    .slice(0, 5);
+
+  // Record each visited calculator for the "Recent" list
+  useEffect(() => {
+    recordVisit(location.pathname);
+  }, [location.pathname, recordVisit]);
 
   // Collapsible sidebar categories (persisted)
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
@@ -183,17 +205,45 @@ export function AppShell() {
           </button>
         </div>
 
-        {/* Nav — grouped + collapsible */}
+        {/* Nav — grouped + collapsible, with favourites & recents */}
         <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
-          {NAV_CATEGORIES.map((cat) => {
-            // Single-item "Overview" group renders headerless (just the Dashboard link)
-            if (cat.id === 'overview') {
-              return (
-                <div key={cat.id} className="space-y-1">
-                  {cat.items.map((item) => <SidebarLink key={item.path} item={item} />)}
-                </div>
-              );
-            }
+          {/* Dashboard (overview) */}
+          {NAV_CATEGORIES.filter((c) => c.id === 'overview').map((cat) => (
+            <div key={cat.id} className="space-y-1">
+              {cat.items.map((item) => (
+                <SidebarLink key={item.path} item={item} favourite={isFavourite(item.path)} onToggleFav={toggleFavourite} />
+              ))}
+            </div>
+          ))}
+
+          {/* Favourites */}
+          {favItems.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 px-3 mb-1">
+                <Star size={11} style={{ color: '#F59E0B' }} fill="#F59E0B" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Favourites</span>
+              </div>
+              {favItems.map((item) => (
+                <SidebarLink key={item.path} item={item} favourite onToggleFav={toggleFavourite} />
+              ))}
+            </div>
+          )}
+
+          {/* Recent */}
+          {recentItems.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 px-3 mb-1">
+                <Clock size={11} style={{ color: 'var(--color-text-subtle)' }} />
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Recent</span>
+              </div>
+              {recentItems.map((item) => (
+                <SidebarLink key={item.path} item={item} favourite={isFavourite(item.path)} onToggleFav={toggleFavourite} />
+              ))}
+            </div>
+          )}
+
+          {/* Categories */}
+          {NAV_CATEGORIES.filter((c) => c.id !== 'overview').map((cat) => {
             const isCollapsed = collapsed.has(cat.id);
             return (
               <div key={cat.id} className="space-y-1">
@@ -210,7 +260,9 @@ export function AppShell() {
                     style={{ color: 'var(--color-text-subtle)', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
                   />
                 </button>
-                {!isCollapsed && cat.items.map((item) => <SidebarLink key={item.path} item={item} />)}
+                {!isCollapsed && cat.items.map((item) => (
+                  <SidebarLink key={item.path} item={item} favourite={isFavourite(item.path)} onToggleFav={toggleFavourite} />
+                ))}
               </div>
             );
           })}
