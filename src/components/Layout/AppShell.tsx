@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { NAV_CATEGORIES, NAV_ITEMS, PAGE_TITLES, type NavItem } from '../../config/nav';
+import { CommandPalette } from '../CommandPalette';
 
 function DisclaimerBanner() {
   const [visible, setVisible] = useState(false);
@@ -285,7 +286,8 @@ export function AppShell() {
           </h1>
 
           <div className="ml-auto flex items-center gap-3">
-            <span className="text-xs hidden sm:block" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
+            <CommandPalette />
+            <span className="text-xs hidden lg:block" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
               ZAR • South Africa
             </span>
             <button
