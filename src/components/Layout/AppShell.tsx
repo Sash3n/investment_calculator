@@ -3,38 +3,11 @@ import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
-  Home,
-  Building2,
-  MapPin,
-  Car,
-  TrendingUp,
-  Menu,
-  X,
-  ChevronRight,
-  BarChart3,
-  Sun,
-  Moon,
-  Receipt,
-  Wallet,
-  AlertTriangle,
-  LogIn,
-  LogOut,
-  History,
-  Landmark,
-  Shield,
-  Scale,
-  PieChart,
-  House,
-  Briefcase,
-  Snowflake,
-  GraduationCap,
-  TrendingDown,
-  Activity,
-  BedDouble,
-  DoorOpen,
-  Coins,
+  Menu, X, ChevronRight, ChevronDown, BarChart3, Sun, Moon,
+  AlertTriangle, LogIn, LogOut,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { NAV_CATEGORIES, NAV_ITEMS, PAGE_TITLES, type NavItem } from '../../config/nav';
 
 function DisclaimerBanner() {
   const [visible, setVisible] = useState(false);
@@ -83,83 +56,43 @@ function DisclaimerBanner() {
   );
 }
 
-interface NavItem {
-  path: string;
-  label: string;
-  shortLabel: string;
-  icon: typeof Home;
-  color: string;
+/** Single sidebar nav row. */
+function SidebarLink({ item }: { item: NavItem }) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.path}
+      end={item.path === '/'}
+      className={({ isActive }) =>
+        clsx(
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
+          isActive
+            ? 'bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.25)]'
+            : 'hover:bg-[rgba(99,102,241,0.08)]'
+        )
+      }
+      style={({ isActive }) => ({
+        fontFamily: 'var(--font-body)',
+        color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
+            style={{ background: isActive ? `${item.color}22` : 'rgba(255,255,255,0.04)' }}
+          >
+            <Icon size={15} style={{ color: isActive ? item.color : 'var(--color-text-subtle)' }} />
+          </span>
+          <span className="flex-1">{item.label}</span>
+          {isActive && <ChevronRight size={14} className="text-[#6366F1] opacity-60" />}
+        </>
+      )}
+    </NavLink>
+  );
 }
 
-const navItems: NavItem[] = [
-  { path: '/', label: 'Dashboard', shortLabel: 'Home', icon: Home, color: '#6366F1' },
-  // ── Property & Loans ──
-  { path: '/mortgage', label: 'Mortgage Calculator', shortLabel: 'Mortgage', icon: Building2, color: '#F59E0B' },
-  { path: '/property-roi', label: 'Property ROI', shortLabel: 'Property', icon: MapPin, color: '#10B981' },
-  { path: '/affordability', label: 'Bond Affordability', shortLabel: 'Afford', icon: Wallet, color: '#6366F1' },
-  { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: House, color: '#10B981' },
-  { path: '/rental-yield', label: 'Rental Yield Finder', shortLabel: 'Yield', icon: House, color: '#10B981' },
-  { path: '/airbnb-vs-rental', label: 'Airbnb vs Rental', shortLabel: 'Airbnb', icon: BedDouble, color: '#EC4899' },
-  { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B' },
-  // ── Income & Budget ──
-  { path: '/salary', label: 'Salary Calculator', shortLabel: 'Salary', icon: Briefcase, color: '#6366F1' },
-  { path: '/budget', label: 'Budget Planner', shortLabel: 'Budget', icon: Wallet, color: '#10B981' },
-  { path: '/debt-snowball', label: 'Debt Snowball', shortLabel: 'Debt', icon: Snowflake, color: '#06B6D4' },
-  { path: '/emergency-fund', label: 'Emergency Fund', shortLabel: 'Emergency', icon: Shield, color: '#10B981' },
-  // ── Vehicles ──
-  { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899' },
-  { path: '/car-extra-vs-investing', label: 'Car: Extra vs Investing', shortLabel: 'Car vs Invest', icon: TrendingUp, color: '#EC4899' },
-  // ── Investing & Tax ──
-  { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
-  { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
-  { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
-  { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4' },
-  { path: '/dividend-calculator', label: 'Dividend Income', shortLabel: 'Dividends', icon: Coins, color: '#10B981' },
-  { path: '/exit-planner', label: 'Optimal Exit Planner', shortLabel: 'Exit', icon: DoorOpen, color: '#8B5CF6' },
-  { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6' },
-  { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1' },
-  { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444' },
-  // ── Planning ──
-  { path: '/net-worth', label: 'Net Worth Dashboard', shortLabel: 'Net Worth', icon: PieChart, color: '#6366F1' },
-  { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981' },
-  { path: '/stress-test', label: 'Portfolio Stress Test', shortLabel: 'Stress Test', icon: Activity, color: '#EF4444' },
-  { path: '/inflation', label: 'Inflation Calculator', shortLabel: 'Inflation', icon: TrendingDown, color: '#EF4444' },
-  { path: '/education-savings', label: 'Education Savings', shortLabel: 'Education', icon: GraduationCap, color: '#8B5CF6' },
-  // ── History ──
-  { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
-];
-
-const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
-  '/mortgage': 'Mortgage Calculator',
-  '/property-roi': 'Property ROI Calculator',
-  '/car-finance': 'Car Finance Calculator',
-  '/car-extra-vs-investing': 'Car: Extra Payment vs Investing',
-  '/extra-vs-investing': 'Extra Payments vs Investing',
-  '/tax-planner': 'Property Tax Planner',
-  '/investment-strategy': 'SA Investment Strategy',
-  '/history': 'Calculation History',
-  '/portfolio': 'Portfolio Summary',
-  '/stress-test': 'Portfolio Stress Test',
-  '/affordability': 'Bond Affordability Qualifier',
-  '/airbnb-vs-rental': 'Airbnb vs Long-term Rental',
-  '/exit-planner': 'Optimal Exit Planner',
-  '/tax-projections': 'Tax Projections',
-  '/tfsa': 'TFSA Optimizer',
-  '/fire': 'FIRE Calculator',
-  '/ra-planner': 'RA Planner',
-  '/buy-vs-rent': 'Buy vs Rent',
-  '/loan-comparison': 'Loan Comparison Tool',
-  '/net-worth': 'Net Worth Dashboard',
-  '/rental-yield': 'Rental Yield Finder',
-  '/salary': 'Salary / Take-Home Calculator',
-  '/budget': 'Budget Planner',
-  '/debt-snowball': 'Debt Snowball / Avalanche',
-  '/emergency-fund': 'Emergency Fund Planner',
-  '/inflation': 'Inflation & Purchasing Power',
-  '/education-savings': 'Education Savings Planner',
-  '/dividend-calculator': 'Dividend Income Calculator',
-};
+const COLLAPSE_KEY = 'fincalc-nav-collapsed';
 
 export function AppShell() {
   const liveRate = usePrimeRate();
@@ -169,7 +102,22 @@ export function AppShell() {
   });
   const { user, signIn, signOut } = useAuth();
   const location = useLocation();
-  const pageTitle = pageTitles[location.pathname] ?? 'FinCalc ZA';
+  const pageTitle = PAGE_TITLES[location.pathname] ?? 'FinCalc ZA';
+
+  // Collapsible sidebar categories (persisted)
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSE_KEY);
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+  const toggleCategory = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...next]));
+      return next;
+    });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -217,10 +165,7 @@ export function AppShell() {
             <BarChart3 size={18} className="text-[#6366F1]" />
           </div>
           <div>
-            <p
-              className="text-base font-bold leading-none"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
-            >
+            <p className="text-base font-bold leading-none" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
               FinCalc ZA
             </p>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
@@ -237,53 +182,35 @@ export function AppShell() {
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <p className="text-[10px] font-semibold uppercase tracking-widest px-3 mb-3" style={{ color: 'var(--color-text-subtle)' }}>
-            Calculators
-          </p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        {/* Nav — grouped + collapsible */}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          {NAV_CATEGORIES.map((cat) => {
+            // Single-item "Overview" group renders headerless (just the Dashboard link)
+            if (cat.id === 'overview') {
+              return (
+                <div key={cat.id} className="space-y-1">
+                  {cat.items.map((item) => <SidebarLink key={item.path} item={item} />)}
+                </div>
+              );
+            }
+            const isCollapsed = collapsed.has(cat.id);
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) =>
-                  clsx(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
-                    isActive
-                      ? 'bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.25)]'
-                      : 'hover:bg-[rgba(99,102,241,0.08)]'
-                  )
-                }
-                style={({ isActive }) => ({
-                  fontFamily: 'var(--font-body)',
-                  color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
-                })}
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                      style={{
-                        background: isActive
-                          ? `${item.color}22`
-                          : 'rgba(255,255,255,0.04)',
-                      }}
-                    >
-                      <Icon
-                        size={15}
-                        style={{ color: isActive ? item.color : 'var(--color-text-subtle)' }}
-                      />
-                    </span>
-                    <span className="flex-1">{item.label}</span>
-                    {isActive && (
-                      <ChevronRight size={14} className="text-[#6366F1] opacity-60" />
-                    )}
-                  </>
-                )}
-              </NavLink>
+              <div key={cat.id} className="space-y-1">
+                <button
+                  onClick={() => toggleCategory(cat.id)}
+                  className="w-full flex items-center justify-between px-3 mb-1 group"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>
+                    {cat.label}
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    className="transition-transform duration-200"
+                    style={{ color: 'var(--color-text-subtle)', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
+                  />
+                </button>
+                {!isCollapsed && cat.items.map((item) => <SidebarLink key={item.path} item={item} />)}
+              </div>
             );
           })}
         </nav>
@@ -353,18 +280,12 @@ export function AppShell() {
             <Menu size={17} />
           </button>
 
-          <h1
-            className="text-base font-semibold"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
-          >
+          <h1 className="text-base font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
             {pageTitle}
           </h1>
 
           <div className="ml-auto flex items-center gap-3">
-            <span
-              className="text-xs hidden sm:block"
-              style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
-            >
+            <span className="text-xs hidden sm:block" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
               ZAR • South Africa
             </span>
             <button
@@ -382,19 +303,11 @@ export function AppShell() {
             </button>
             {/* Auth */}
             {user ? (
-              <div
-                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl"
-                style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}
-              >
+              <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
                 {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName ?? 'User'}
-                    className="w-6 h-6 rounded-full flex-shrink-0"
-                  />
+                  <img src={user.photoURL} alt={user.displayName ?? 'User'} className="w-6 h-6 rounded-full flex-shrink-0" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                    style={{ background: 'rgba(99,102,241,0.3)', color: '#818CF8' }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: 'rgba(99,102,241,0.3)', color: '#818CF8' }}>
                     {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
                   </div>
                 )}
@@ -442,18 +355,13 @@ export function AppShell() {
         {/* Scroll-hint fade on right edge */}
         <div
           className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10"
-          style={{
-            background: 'linear-gradient(to left, var(--color-bg) 10%, transparent 100%)',
-          }}
+          style={{ background: 'linear-gradient(to left, var(--color-bg) 10%, transparent 100%)' }}
         />
         <nav
           className="flex overflow-x-auto backdrop-blur-xl scrollbar-hidden"
-          style={{
-            backdropFilter: 'blur(20px)',
-            scrollbarWidth: 'none',
-          }}
+          style={{ backdropFilter: 'blur(20px)', scrollbarWidth: 'none' }}
         >
-          {navItems.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -473,14 +381,9 @@ export function AppShell() {
                   <>
                     <span
                       className="w-8 h-6 flex items-center justify-center rounded-lg transition-all duration-200"
-                      style={{
-                        background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent',
-                      }}
+                      style={{ background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent' }}
                     >
-                      <Icon
-                        size={16}
-                        style={{ color: isActive ? '#6366F1' : 'var(--color-text-subtle)' }}
-                      />
+                      <Icon size={16} style={{ color: isActive ? '#6366F1' : 'var(--color-text-subtle)' }} />
                     </span>
                     <span className="truncate w-full text-center">{item.shortLabel}</span>
                   </>

@@ -1,0 +1,107 @@
+import {
+  Home, Building2, MapPin, Car, TrendingUp, Receipt, Wallet, Landmark,
+  Shield, Scale, PieChart, House, Briefcase, Snowflake, GraduationCap,
+  TrendingDown, History, Activity, BedDouble, DoorOpen, Coins,
+} from 'lucide-react';
+
+export interface NavItem {
+  path: string;
+  label: string;
+  shortLabel: string;
+  icon: typeof Home;
+  color: string;
+  /** Extra search terms for the command palette / dashboard search. */
+  keywords?: string;
+}
+
+export interface NavCategory {
+  id: string;
+  label: string;
+  items: NavItem[];
+}
+
+/**
+ * Single source of truth for app navigation — consumed by the sidebar,
+ * mobile tab bar, command palette (Ctrl+K), and the Home dashboard.
+ */
+export const NAV_CATEGORIES: NavCategory[] = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    items: [
+      { path: '/', label: 'Dashboard', shortLabel: 'Home', icon: Home, color: '#6366F1', keywords: 'home start landing' },
+    ],
+  },
+  {
+    id: 'property',
+    label: 'Property & Loans',
+    items: [
+      { path: '/mortgage', label: 'Mortgage Calculator', shortLabel: 'Mortgage', icon: Building2, color: '#F59E0B', keywords: 'bond home loan repayment amortization' },
+      { path: '/property-roi', label: 'Property ROI', shortLabel: 'Property', icon: MapPin, color: '#10B981', keywords: 'buy to let rental yield cash flow investment' },
+      { path: '/affordability', label: 'Bond Affordability', shortLabel: 'Afford', icon: Wallet, color: '#6366F1', keywords: 'qualify how much can i borrow income dti' },
+      { path: '/buy-vs-rent', label: 'Buy vs Rent', shortLabel: 'Buy/Rent', icon: House, color: '#10B981', keywords: 'renting owning compare' },
+      { path: '/rental-yield', label: 'Rental Yield Finder', shortLabel: 'Yield', icon: House, color: '#10B981', keywords: 'gross net yield breakeven rent' },
+      { path: '/airbnb-vs-rental', label: 'Airbnb vs Rental', shortLabel: 'Airbnb', icon: BedDouble, color: '#EC4899', keywords: 'short term let occupancy nightly' },
+      { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B', keywords: 'compare offers apr fees' },
+    ],
+  },
+  {
+    id: 'income',
+    label: 'Income & Budget',
+    items: [
+      { path: '/salary', label: 'Salary Calculator', shortLabel: 'Salary', icon: Briefcase, color: '#6366F1', keywords: 'paye uif take home net pay tax' },
+      { path: '/budget', label: 'Budget Planner', shortLabel: 'Budget', icon: Wallet, color: '#10B981', keywords: '50 30 20 spending savings' },
+      { path: '/debt-snowball', label: 'Debt Snowball', shortLabel: 'Debt', icon: Snowflake, color: '#06B6D4', keywords: 'avalanche payoff credit card loans' },
+      { path: '/emergency-fund', label: 'Emergency Fund', shortLabel: 'Emergency', icon: Shield, color: '#10B981', keywords: 'safety net savings months' },
+    ],
+  },
+  {
+    id: 'vehicles',
+    label: 'Vehicles',
+    items: [
+      { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899', keywords: 'vehicle balloon depreciation instalment' },
+      { path: '/car-extra-vs-investing', label: 'Car: Extra vs Investing', shortLabel: 'Car vs Invest', icon: TrendingUp, color: '#EC4899', keywords: 'extra payment invest opportunity' },
+    ],
+  },
+  {
+    id: 'investing',
+    label: 'Investing & Tax',
+    items: [
+      { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4', keywords: 'bond etf prepay compare' },
+      { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6', keywords: 'ra tfsa etf 2-pot allocation' },
+      { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981', keywords: 'rental cgt section 13sex 13quat sars' },
+      { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4', keywords: 'multi year forecast rental cgt' },
+      { path: '/dividend-calculator', label: 'Dividend Income', shortLabel: 'Dividends', icon: Coins, color: '#10B981', keywords: 'drip yield on cost dividends tax 20%' },
+      { path: '/exit-planner', label: 'Optimal Exit Planner', shortLabel: 'Exit', icon: DoorOpen, color: '#8B5CF6', keywords: 'when to sell recoupment cgt' },
+      { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6', keywords: 'tax free savings account compounding' },
+      { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1', keywords: 'retirement annuity deduction 27.5%' },
+      { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444', keywords: 'financial independence retire early' },
+    ],
+  },
+  {
+    id: 'planning',
+    label: 'Planning',
+    items: [
+      { path: '/net-worth', label: 'Net Worth Dashboard', shortLabel: 'Net Worth', icon: PieChart, color: '#6366F1', keywords: 'assets liabilities track' },
+      { path: '/portfolio', label: 'Portfolio Summary', shortLabel: 'Portfolio', icon: Building2, color: '#10B981', keywords: 'aggregate properties equity' },
+      { path: '/stress-test', label: 'Portfolio Stress Test', shortLabel: 'Stress Test', icon: Activity, color: '#EF4444', keywords: 'rate hike vacancy breaking point risk' },
+      { path: '/inflation', label: 'Inflation Calculator', shortLabel: 'Inflation', icon: TrendingDown, color: '#EF4444', keywords: 'purchasing power cpi real return' },
+      { path: '/education-savings', label: 'Education Savings', shortLabel: 'Education', icon: GraduationCap, color: '#8B5CF6', keywords: 'school university fees' },
+    ],
+  },
+  {
+    id: 'history',
+    label: 'History',
+    items: [
+      { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B', keywords: 'saved snapshots compare' },
+    ],
+  },
+];
+
+/** Flat list of every nav item, in display order. */
+export const NAV_ITEMS: NavItem[] = NAV_CATEGORIES.flatMap((c) => c.items);
+
+/** Page titles keyed by path, derived from the nav config. */
+export const PAGE_TITLES: Record<string, string> = Object.fromEntries(
+  NAV_ITEMS.map((i) => [i.path, i.label]),
+);
