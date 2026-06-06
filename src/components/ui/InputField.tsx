@@ -1,4 +1,4 @@
-import { type ChangeEvent, type KeyboardEvent, useState, useEffect } from 'react';
+import { type ChangeEvent, type KeyboardEvent, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import clsx from 'clsx';
 
 interface InputFieldProps {
@@ -16,6 +16,46 @@ interface InputFieldProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Show thousands separators while typing. Defaults to true for Rand (prefix "R") fields. */
+  group?: boolean;
+}
+
+/** Insert spaces as thousands separators into a sanitized numeric string. */
+function groupDigits(s: string): string {
+  const neg = s.startsWith('-') ? '-' : '';
+  const body = neg ? s.slice(1) : s;
+  const sepMatch = body.match(/[.,]/);
+  let intPart = body;
+  let tail = '';
+  if (sepMatch) {
+    const idx = body.indexOf(sepMatch[0]);
+    intPart = body.slice(0, idx);
+    // keep the decimal separator + remaining digits (strip any further separators)
+    tail = sepMatch[0] + body.slice(idx + 1).replace(/[.,]/g, '');
+  }
+  intPart = intPart.replace(/\D/g, '');
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return neg + grouped + tail;
+}
+
+/** Count digit characters in str up to position pos. */
+function digitsBefore(str: string, pos: number): number {
+  let n = 0;
+  for (let i = 0; i < pos && i < str.length; i++) if (/\d/.test(str[i])) n++;
+  return n;
+}
+
+/** Find the caret index just after the Nth digit in a formatted string. */
+function caretAfterNthDigit(formatted: string, digitCount: number): number {
+  if (digitCount <= 0) return 0;
+  let n = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) {
+      n++;
+      if (n === digitCount) return i + 1;
+    }
+  }
+  return formatted.length;
 }
 
 export function InputField({
@@ -30,21 +70,36 @@ export function InputField({
   placeholder,
   className,
   disabled = false,
+  group,
 }: InputFieldProps) {
   const isNumeric = type === 'number';
+  const shouldGroup = isNumeric && (group ?? prefix === 'R');
+  const fmt = (s: string) => (shouldGroup ? groupDigits(s) : s);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const caretRef = useRef<number | null>(null);
 
   // Internal display string — lets user type freely without snapping to 0
-  const [display, setDisplay] = useState(String(value));
+  const [display, setDisplay] = useState(() => fmt(String(value)));
+
+  // Restore caret after a grouped reformat changes the string length
+  useLayoutEffect(() => {
+    if (caretRef.current != null && inputRef.current) {
+      const pos = caretRef.current;
+      inputRef.current.setSelectionRange(pos, pos);
+      caretRef.current = null;
+    }
+  });
 
   // Sync when parent resets value externally (e.g. load preset)
   useEffect(() => {
     const incoming = String(value);
     // Only override if the parsed numeric value actually changed to avoid
     // clobbering mid-edit state (e.g. user typed "1," — parsed is still 1)
-    const parsedDisplay = parseFloat(display.replace(/,/g, '.'));
+    const parsedDisplay = parseFloat(display.replace(/\s/g, '').replace(/,/g, '.'));
     const parsedIncoming = parseFloat(incoming);
     if (isNaN(parsedDisplay) || parsedDisplay !== parsedIncoming) {
-      setDisplay(incoming);
+      setDisplay(fmt(incoming));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -56,19 +111,23 @@ export function InputField({
     }
 
     const raw = e.target.value;
+    const selStart = e.target.selectionStart ?? raw.length;
 
     // Allow: digits, one decimal separator (. or ,), leading minus
-    // Strip any character that isn't a digit, . , or leading -
     const sanitised = raw.replace(/[^\d.,-]/g, '');
 
-    setDisplay(sanitised);
+    if (shouldGroup) {
+      const formatted = groupDigits(sanitised);
+      // Preserve caret by digit count, since grouping shifts characters
+      const digitCount = digitsBefore(raw, selStart);
+      caretRef.current = caretAfterNthDigit(formatted, digitCount);
+      setDisplay(formatted);
+    } else {
+      setDisplay(sanitised);
+    }
 
-    // Normalise for parent: treat comma as decimal separator only when no
-    // period is present and it appears to be a decimal comma (e.g. "1,5")
-    // Otherwise strip commas (thousand separators) and parse.
-    const normalised = sanitised.replace(/,/g, '.');
-
-    // If multiple periods, keep only the first
+    // Normalise for parent: strip spaces (thousand sep) and treat comma as decimal
+    const normalised = sanitised.replace(/\s/g, '').replace(/,/g, '.');
     const parts = normalised.split('.');
     const clean = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : normalised;
 
@@ -85,14 +144,14 @@ export function InputField({
 
   const handleBlur = () => {
     if (!isNumeric) return;
-    const normalised = display.replace(/,/g, '.');
+    const normalised = display.replace(/\s/g, '').replace(/,/g, '.');
     const num = parseFloat(normalised);
     if (isNaN(num) || display.trim() === '') {
-      setDisplay('0');
+      setDisplay(fmt('0'));
       onChange('0');
     } else {
       // Tidy display to the parsed value
-      setDisplay(String(num));
+      setDisplay(fmt(String(num)));
       onChange(String(num));
     }
   };
@@ -141,6 +200,7 @@ export function InputField({
           </span>
         )}
         <input
+          ref={inputRef}
           id={id}
           type="text"
           inputMode={isNumeric ? 'decimal' : 'text'}

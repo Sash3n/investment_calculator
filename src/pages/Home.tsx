@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { usePrimeRate } from '../hooks/usePrimeRate';
+import { NAV_CATEGORIES } from '../config/nav';
 import {
   Building2,
   MapPin,
@@ -9,6 +11,7 @@ import {
   ArrowRight,
   Shield,
   Zap,
+  Search,
   BarChart3,
   Landmark,
   Scale,
@@ -209,8 +212,29 @@ const quickStats = [
   { label: 'Avg JSE ETF Return', value: '13–18% p.a.', icon: BarChart3, color: '#06B6D4' },
 ];
 
+// Map each card's path to its nav category for chip filtering
+const CAT_BY_PATH: Record<string, { id: string; label: string }> = {};
+NAV_CATEGORIES.forEach((c) => c.items.forEach((i) => { CAT_BY_PATH[i.path] = { id: c.id, label: c.label }; }));
+
 export function Home() {
   const liveRate = usePrimeRate();
+  const [query, setQuery] = useState('');
+  const [activeCat, setActiveCat] = useState('all');
+
+  // Categories that actually have dashboard cards
+  const presentCats = useMemo(
+    () => NAV_CATEGORIES.filter((c) => c.id !== 'overview' && c.id !== 'history' && featureCards.some((fc) => CAT_BY_PATH[fc.path]?.id === c.id)),
+    [],
+  );
+
+  const filteredCards = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return featureCards.filter((fc) => {
+      if (activeCat !== 'all' && CAT_BY_PATH[fc.path]?.id !== activeCat) return false;
+      if (!q) return true;
+      return `${fc.title} ${fc.description} ${fc.tag}`.toLowerCase().includes(q);
+    });
+  }, [query, activeCat]);
 
   return (
     <motion.div
@@ -302,15 +326,54 @@ export function Home() {
 
       {/* ── Feature cards ───────────────────────────────── */}
       <div className="mb-12">
-        <motion.p
-          variants={cardVariants}
-          className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-6"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          Available Calculators
-        </motion.p>
+        <motion.div variants={cardVariants} className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+            Available Calculators
+          </p>
+
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-subtle)' }} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search calculators…"
+              className="input-dark w-full"
+              style={{ fontFamily: 'var(--font-body)', paddingLeft: '34px' }}
+            />
+          </div>
+
+          {/* Category chips */}
+          <div className="flex flex-wrap gap-2">
+            {[{ id: 'all', label: 'All' }, ...presentCats].map((c) => {
+              const active = activeCat === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveCat(c.id)}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  style={{
+                    background: active ? 'rgba(99,102,241,0.2)' : 'var(--color-surface)',
+                    color: active ? '#818CF8' : 'var(--color-text-muted)',
+                    border: `1px solid ${active ? 'rgba(99,102,241,0.4)' : 'var(--color-border)'}`,
+                    fontFamily: 'var(--font-body)',
+                  }}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {filteredCards.length === 0 ? (
+          <div className="glass-card-static p-10 text-center">
+            <Search size={24} className="mx-auto mb-3" style={{ color: 'var(--color-text-subtle)' }} />
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No calculators match “{query}”.</p>
+          </div>
+        ) : (
         <div className="grid sm:grid-cols-2 gap-5">
-          {featureCards.map((card) => {
+          {filteredCards.map((card) => {
             const Icon = card.icon;
             return (
               <motion.div key={card.path} variants={cardVariants}>
@@ -368,6 +431,7 @@ export function Home() {
             );
           })}
         </div>
+        )}
       </div>
 
       {/* ── Features strip ──────────────────────────────── */}

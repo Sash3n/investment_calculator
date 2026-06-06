@@ -1,14 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts';
 import {
-  House, BedDouble, Info, BookOpen, Trophy, CalendarDays, Percent,
+  House, BedDouble, Info, BookOpen, Trophy, CalendarDays, Percent, RotateCcw,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { ShareButton } from '../components/ui/ShareButton';
+import { usePersistentState } from '../hooks/usePersistentState';
+import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcSTRvsLTR, type STRvsLTRInputs } from '../utils/shortTermRental';
 
@@ -29,22 +32,29 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
   );
 }
 
+const DEFAULT_INPUTS: STRvsLTRInputs = {
+  propertyValue: 1800000,
+  monthlyBondCost: 14000,
+  nightlyRate: 1200,
+  occupancyPercent: 65,
+  avgNightsPerStay: 3,
+  platformFeePercent: 15,
+  cleaningCostPerStay: 350,
+  strManagementPercent: 18,
+  monthlyStrExtraCosts: 3500,
+  monthlyRent: 13000,
+  ltrVacancyPercent: 5,
+  ltrManagementPercent: 8,
+  monthlyLtrExpenses: 3200,
+};
+
 export function AirbnbVsRental() {
-  const [inputs, setInputs] = useState<STRvsLTRInputs>({
-    propertyValue: 1800000,
-    monthlyBondCost: 14000,
-    nightlyRate: 1200,
-    occupancyPercent: 65,
-    avgNightsPerStay: 3,
-    platformFeePercent: 15,
-    cleaningCostPerStay: 350,
-    strManagementPercent: 18,
-    monthlyStrExtraCosts: 3500,
-    monthlyRent: 13000,
-    ltrVacancyPercent: 5,
-    ltrManagementPercent: 8,
-    monthlyLtrExpenses: 3200,
-  });
+  const [inputs, setInputs] = usePersistentState<STRvsLTRInputs>('fincalc-airbnb', DEFAULT_INPUTS);
+
+  useEffect(() => {
+    const shared = readShareParam<STRvsLTRInputs>();
+    if (shared) setInputs((prev) => ({ ...prev, ...shared }));
+  }, [setInputs]);
 
   const result = useMemo(() => calcSTRvsLTR(inputs), [inputs]);
   const set = (fn: (v: number) => Partial<STRvsLTRInputs>) => (val: string) =>
@@ -69,13 +79,27 @@ export function AirbnbVsRental() {
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
-          Airbnb vs Long-term Rental
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-          Which rental strategy earns more on the same property — short-term let or a traditional lease?
-        </p>
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            Airbnb vs Long-term Rental
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            Which rental strategy earns more on the same property — short-term let or a traditional lease?
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <ShareButton state={inputs} />
+          <button
+            onClick={() => setInputs(DEFAULT_INPUTS)}
+            className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            title="Reset to defaults"
+          >
+            <RotateCcw size={13} /> Reset
+          </button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
