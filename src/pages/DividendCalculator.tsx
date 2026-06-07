@@ -4,7 +4,7 @@ import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { TrendingUp, Info, DollarSign, Globe, Repeat, RotateCcw } from 'lucide-react';
+import { TrendingUp, Info, DollarSign, Globe, Repeat, RotateCcw, Target } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
@@ -46,6 +46,7 @@ interface Inputs {
   drip:                 boolean;
   tfsa:                 boolean;
   years:                number;
+  targetMonthlyIncome:  number;
 }
 
 interface ProjectionRow {
@@ -137,6 +138,7 @@ const DEFAULT_INPUTS: Inputs = {
   drip:                  true,
   tfsa:                  false,
   years:                 20,
+  targetMonthlyIncome:   10_000,
 };
 
 export function DividendCalculator() {
@@ -165,6 +167,13 @@ export function DividendCalculator() {
   const tfsaSaving = inp.tfsa
     ? (totalIncome - (taxableRows[taxableRows.length - 1]?.cumulativeIncome ?? 0))
     : 0;
+
+  // ── Income goal (reverse calc) ──────────────────────────────────────────────
+  const netYieldFrac    = (inp.dividendYield / 100) * (1 - taxRate);
+  const targetAnnual    = inp.targetMonthlyIncome * 12;
+  const capitalForGoal  = netYieldFrac > 0 ? targetAnnual / netYieldFrac : 0;
+  const goalRow         = rows.find((r) => r.afterTaxDividend >= targetAnnual);
+  const goalYear        = goalRow?.year ?? null;
 
   // Chart data: annual income (DRIP vs no-DRIP comparison)
   const noDripRows = useMemo(() => project({ ...inp, drip: false }), [inp]);
@@ -432,6 +441,51 @@ export function DividendCalculator() {
           </div>
         </div>
       </div>
+
+      {/* Income Goal (reverse calculator) */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        className="glass-card p-5"
+        style={{ borderColor: 'rgba(139,92,246,0.25)' }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)' }}>
+            <Target size={15} style={{ color: C.violet }} />
+          </div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            Income Goal
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <InputField id="targetIncome" label="Target Monthly Income" value={inp.targetMonthlyIncome}
+            onChange={n((v) => ({ targetMonthlyIncome: v }))} prefix="R"
+            help="Net (after-tax) passive income you want" />
+
+          <div className="rounded-xl p-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Capital needed today</p>
+            <p className="text-lg font-bold" style={{ color: C.indigo, fontFamily: 'var(--font-heading)' }}>
+              {netYieldFrac > 0 ? formatRandShort(capitalForGoal) : '—'}
+            </p>
+            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+              at a {formatPercent(netYieldFrac * 100, 2)} net yield
+            </p>
+          </div>
+
+          <div className="rounded-xl p-3" style={{ background: goalYear ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)', border: `1px solid ${goalYear ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)'}` }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Your plan reaches it</p>
+            <p className="text-lg font-bold" style={{ color: goalYear ? C.emerald : C.red, fontFamily: 'var(--font-heading)' }}>
+              {goalYear ? `Year ${goalYear}` : `Not within ${inp.years} yrs`}
+            </p>
+            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+              {goalYear
+                ? `${formatRand(inp.targetMonthlyIncome, 0)}/mo net dividends`
+                : 'Raise contributions, yield, or horizon'}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
