@@ -36,6 +36,7 @@ type Market = 'SA' | 'International';
 
 interface Inputs {
   investmentAmount:     number;
+  monthlyContribution:  number;
   dividendYield:        number;
   dividendGrowthRate:   number;
   annualReturnRate:     number;
@@ -53,6 +54,7 @@ interface ProjectionRow {
   afterTaxDividend:  number;
   yieldOnCost:       number;
   cumulativeIncome:  number;
+  totalContributed:  number;
   zarIncome:         number;
 }
 
@@ -76,6 +78,8 @@ function project(inp: Inputs): ProjectionRow[] {
   let portfolioValue   = inp.investmentAmount;
   let currentYield     = yieldRate;
   let cumulativeIncome = 0;
+  let totalContributed = inp.investmentAmount;
+  const annualContribution = (inp.monthlyContribution ?? 0) * 12;
 
   for (let year = 1; year <= inp.years; year++) {
     const grossDividend    = portfolioValue * currentYield;
@@ -87,7 +91,8 @@ function project(inp: Inputs): ProjectionRow[] {
 
     cumulativeIncome += afterTaxDividend;
 
-    const yieldOnCost = (portfolioValue * currentYield) / inp.investmentAmount * 100;
+    // Yield on invested capital (initial + contributions made so far)
+    const yieldOnCost = totalContributed > 0 ? (grossDividend / totalContributed) * 100 : 0;
 
     rows.push({
       year,
@@ -96,13 +101,15 @@ function project(inp: Inputs): ProjectionRow[] {
       afterTaxDividend: Math.round(afterTaxDividend),
       yieldOnCost,
       cumulativeIncome: Math.round(cumulativeIncome),
+      totalContributed: Math.round(totalContributed),
       zarIncome: Math.round(zarIncome),
     });
 
-    // Grow portfolio: capital appreciation + DRIP (reinvested dividends)
+    // Grow portfolio: capital appreciation + DRIP (reinvested dividends) + new contributions
     const capAppreciation = portfolioValue * capGain;
     const reinvested      = inp.drip ? afterTaxDividend : 0;
-    portfolioValue       += capAppreciation + reinvested;
+    portfolioValue       += capAppreciation + reinvested + annualContribution;
+    totalContributed     += annualContribution;
 
     // Dividend yield grows at dividend growth rate
     currentYield *= (1 + growthRate);
@@ -114,6 +121,7 @@ function project(inp: Inputs): ProjectionRow[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 const DEFAULT_INPUTS: Inputs = {
   investmentAmount:      200_000,
+  monthlyContribution:   2_500,
   dividendYield:         4.5,
   dividendGrowthRate:    7,
   annualReturnRate:      10,
@@ -143,6 +151,7 @@ export function DividendCalculator() {
   const firstRow    = rows[0];
   const totalIncome = lastRow?.cumulativeIncome ?? 0;
   const finalValue  = lastRow?.portfolioValue ?? 0;
+  const totalContributed = inp.investmentAmount + inp.monthlyContribution * 12 * inp.years;
 
   // Chart data: annual income (DRIP vs no-DRIP comparison)
   const noDripRows = useMemo(() => project({ ...inp, drip: false }), [inp]);
@@ -204,7 +213,7 @@ export function DividendCalculator() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         {[
-          { label: 'Year 1 Net Income', value: formatRand(firstRow?.afterTaxDividend ?? 0, 0), color: C.emerald },
+          { label: 'Total Contributed', value: formatRandShort(totalContributed), color: C.emerald },
           { label: `Year ${inp.years} Net Income`, value: formatRand(lastRow?.afterTaxDividend ?? 0, 0), color: C.cyan },
           { label: 'Total Net Income', value: formatRandShort(totalIncome), color: C.indigo },
           { label: `Final Portfolio`, value: formatRandShort(finalValue), color: C.amber },
@@ -235,6 +244,9 @@ export function DividendCalculator() {
             <InputField id="investment" label="Investment Amount" value={inp.investmentAmount}
               onChange={n((v) => ({ investmentAmount: v }))} prefix="R"
               help="Starting capital deployed" />
+            <InputField id="monthlyContribution" label="Monthly Contribution" value={inp.monthlyContribution}
+              onChange={n((v) => ({ monthlyContribution: v }))} prefix="R"
+              help="Recurring amount added every month (added yearly)" />
             <InputField id="yield" label="Dividend Yield" value={inp.dividendYield}
               onChange={n((v) => ({ dividendYield: v }))} suffix="% p.a." step={0.5}
               help="e.g. Satrix Divi Plus ~4–5%, MSCI World ~1.5–2%" />
