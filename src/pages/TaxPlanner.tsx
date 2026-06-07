@@ -336,7 +336,7 @@ export function TaxPlanner() {
                     <BarChart data={rentalResult.deductionsBreakdown} layout="vertical" margin={{ left: 8, right: 16 }}>
                       <XAxis type="number" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} width={110} />
-                      <Tooltip content={<RandTooltip />} />
+                      <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                       <Bar dataKey="value" name="Amount" fill={C.indigo} radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -364,7 +364,7 @@ export function TaxPlanner() {
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => formatRand(Number(v), 0)} />
+                    <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -691,7 +691,7 @@ export function TaxPlanner() {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                             <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                             <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={v => `R${(v / 1000).toFixed(0)}K`} />
-                            <Tooltip content={<RandTooltip />} />
+                            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                             <Line type="monotone" dataKey="cumulativeSaving" name="S13 Only" stroke={C.emerald} strokeWidth={2} dot={false} />
                             {s13sexResult.raTaxSaving > 0 && (
                               <Line type="monotone" dataKey="combinedCumulative" name="S13 + RA" stroke={C.violet} strokeWidth={2} dot={false} strokeDasharray="5 3" />
@@ -713,7 +713,7 @@ export function TaxPlanner() {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                             <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'var(--color-text-subtle)' }} />
                             <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={v => `R${(v / 1000).toFixed(0)}K`} />
-                            <Tooltip content={<RandTooltip />} />
+                            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                             <Bar dataKey="cashflow" name="Monthly CF" radius={[3, 3, 0, 0]}>
                               {s13sexResult.unitResults.map((u, i) => (
                                 <Cell key={i} fill={u.monthlyCashFlow >= 0 ? C.emerald : C.red} />
@@ -875,7 +875,7 @@ export function TaxPlanner() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                       <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                       <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
-                      <Tooltip content={<RandTooltip />} />
+                      <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                       <Bar dataKey="deduction" name="Annual Deduction" fill={C.amber} radius={[3, 3, 0, 0]} />
                       <Bar dataKey="taxSaving" name="Tax Saving" fill={C.emerald} radius={[3, 3, 0, 0]} />
                     </BarChart>
@@ -1028,7 +1028,7 @@ export function TaxPlanner() {
                   >
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                     <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1_000_000).toFixed(1)}M`} />
-                    <Tooltip content={<RandTooltip />} />
+                    <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                     <Bar dataKey="value" name="Amount" radius={[4, 4, 0, 0]}>
                       {[C.indigo, C.amber, C.red, C.emerald].map((fill, i) => (
                         <Cell key={i} fill={fill} />
@@ -1062,7 +1062,7 @@ export function TaxPlanner() {
                         <Cell key={i} fill={fill} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => formatRand(Number(v), 0)} />
+                    <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>

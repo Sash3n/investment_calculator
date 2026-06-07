@@ -546,7 +546,7 @@ export function PortfolioSummary() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
               <Bar dataKey="cashFlow" radius={[4,4,0,0]} name="Cash Flow">
                 {cashFlowData.map((e, i) => <Cell key={i} fill={e.fill} />)}
               </Bar>
@@ -564,7 +564,7 @@ export function PortfolioSummary() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `${v}%`} />
-              <Tooltip formatter={(v) => `${Number(v).toFixed(2)}%`} contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, color: '#F1F5F9' }} />
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => `${Number(v).toFixed(2)}%`} contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, color: '#F1F5F9' }} />
               <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
               <Bar dataKey="grossYield" name="Gross Yield" fill="#6366F1" radius={[4,4,0,0]} />
               <Bar dataKey="netYield"   name="Net Yield"   fill="#10B981" radius={[4,4,0,0]} />
@@ -592,7 +592,7 @@ export function PortfolioSummary() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `R${(v/1_000_000).toFixed(1)}M`} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
               {properties.map((p, i) => {
                 const name = p.inputs.propertyName?.substring(0, 12) ?? `P${i+1}`;

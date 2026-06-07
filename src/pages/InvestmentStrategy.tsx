@@ -578,7 +578,7 @@ export function InvestmentStrategy() {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Years', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
             <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => formatRandShort(v)} width={70} />
-            <Tooltip content={<ProjectionTooltip />} />
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<ProjectionTooltip />} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Line type="monotone" dataKey="Your Plan"    stroke={C.cyan}   strokeWidth={2} dot={false} strokeDasharray="5 3" />
             <Line type="monotone" dataKey="Conservative" stroke={C.violet} strokeWidth={2} dot={false} />

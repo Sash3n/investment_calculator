@@ -188,7 +188,7 @@ export function ExitPlanner() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Year sold', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                 <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v / 1_000_000).toFixed(1)}M`} />
-                <Tooltip content={<RandTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
                 <Bar dataKey="netProceeds" name="Net Proceeds After Tax" radius={[3, 3, 0, 0]} fill={C.emerald}>
                   {chartData.map((_, i) => <Cell key={i} fill={C.emerald} />)}

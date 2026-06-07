@@ -514,11 +514,8 @@ export function DividendCalculator() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} interval={Math.floor(inp.years / 5)} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip
-                formatter={(v, name) => [
-                  formatRand(Number(v), 0),
-                  name === 'portfolio' ? 'Portfolio Value' : 'Cumulative Net Income',
-                ]}
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+                formatter={(v, name) => [formatRand(Number(v), 0), name]}
                 contentStyle={TOOLTIP_STYLE}
               />
               <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
@@ -547,11 +544,8 @@ export function DividendCalculator() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} interval={Math.floor(inp.years / 5)} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip
-                formatter={(v, name) => [
-                  formatRand(Number(v), 0),
-                  name === 'drip' ? 'With DRIP' : 'Without DRIP',
-                ]}
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+                formatter={(v, name) => [formatRand(Number(v), 0), name]}
                 contentStyle={TOOLTIP_STYLE}
               />
               <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />

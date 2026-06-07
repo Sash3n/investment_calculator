@@ -225,7 +225,7 @@ export function InflationCalc() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} interval={Math.floor(years / 5)} />
             <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
             <Area type="monotone" dataKey="invested"      name="Investment Value"     stroke={C.emerald} strokeWidth={2.5} fill="url(#gradInv)" />
             <Area type="monotone" dataKey="realValue"     name="Purchasing Power"     stroke={C.red}     strokeWidth={1.5} fill="url(#gradPP)" />

@@ -565,7 +565,7 @@ export function PropertyROI() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000).toFixed(1)}K`} />
-                  <Tooltip
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                     formatter={(v: unknown) => [formatRand(Number(v)), 'Amount']}
                     contentStyle={{
                       background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)',
@@ -602,7 +602,7 @@ export function PropertyROI() {
                   <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000000).toFixed(1)}M`} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                   <Area type="monotone" dataKey="Property Value" stroke={CHART_COLORS.amber}
                     fill="url(#gradValue)" strokeWidth={2} />
@@ -627,7 +627,7 @@ export function PropertyROI() {
                       <Cell key={i} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip content={<PieTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<PieTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -776,7 +776,7 @@ export function PropertyROI() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} angle={-20} textAnchor="end" />
                       <YAxis tick={{ fontSize: 11, fill: '#64748B' }} tickFormatter={(v) => `${v}%`} />
-                      <Tooltip
+                      <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                         formatter={(v: unknown) => [`${v}%`, '']}
                         contentStyle={{
                           background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)',

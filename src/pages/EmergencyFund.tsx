@@ -272,7 +272,7 @@ export function EmergencyFund() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `Mo ${v}`} />
             <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <ReferenceLine y={target} stroke={C.indigo} strokeDasharray="5 4"
               label={{ value: 'Target', position: 'right', fontSize: 10, fill: C.indigo }} />
             <Area type="monotone" dataKey="balance" name="Fund Balance" stroke={C.emerald} strokeWidth={2} fill="url(#gradEF)" />

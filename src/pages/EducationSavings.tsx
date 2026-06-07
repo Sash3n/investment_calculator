@@ -268,7 +268,7 @@ export function EducationSavings() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
                 <YAxis type="category" dataKey="vehicle" tick={{ fontSize: 10, fill: '#94A3B8' }} width={100} />
-                <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
                 <ReferenceLine x={totalFutureCost} stroke={C.red} strokeDasharray="5 4"
                   label={{ value: 'Target', position: 'top', fontSize: 9, fill: C.red }} />
                 <Bar dataKey="fv" name="Projected Fund" fill={C.indigo} radius={[0, 4, 4, 0]} />
@@ -311,7 +311,7 @@ export function EducationSavings() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
             <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
             <Line type="monotone" dataKey="fund"   name="Your Fund"         stroke={C.indigo} strokeWidth={2.5} dot={false} />
             <Line type="monotone" dataKey="target" name="Education Cost"    stroke={C.red}    strokeWidth={1.5} dot={false} strokeDasharray="5 4" />

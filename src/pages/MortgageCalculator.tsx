@@ -578,7 +578,7 @@ export function MortgageCalculator() {
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                 <Area type="monotone" dataKey="Standard" stroke={CHART_COLORS.indigo}
                   fill="url(#gradStd)" strokeWidth={2} />
@@ -600,7 +600,7 @@ export function MortgageCalculator() {
                   <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 10, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                   <Line type="monotone" dataKey="Principal" stroke={CHART_COLORS.indigo}
                     strokeWidth={2} dot={false} />
@@ -631,7 +631,7 @@ export function MortgageCalculator() {
                       <Cell key={i} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip content={<PieTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<PieTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -649,7 +649,7 @@ export function MortgageCalculator() {
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                   formatter={(v: unknown) => [formatRand(Number(v)), 'Total Interest']}
                   contentStyle={{
                     background: 'rgba(15,20,40,0.95)',
