@@ -4,7 +4,7 @@ import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { TrendingUp, Info, DollarSign, Globe, Repeat, RotateCcw } from 'lucide-react';
+import { TrendingUp, Info, DollarSign, Globe, Repeat, RotateCcw, Target } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
@@ -36,6 +36,7 @@ type Market = 'SA' | 'International';
 
 interface Inputs {
   investmentAmount:     number;
+  monthlyContribution:  number;
   dividendYield:        number;
   dividendGrowthRate:   number;
   annualReturnRate:     number;
@@ -43,7 +44,9 @@ interface Inputs {
   foreignWithholdingTax: number;
   exchangeRate:         number;
   drip:                 boolean;
+  tfsa:                 boolean;
   years:                number;
+  targetMonthlyIncome:  number;
 }
 
 interface ProjectionRow {
@@ -53,22 +56,28 @@ interface ProjectionRow {
   afterTaxDividend:  number;
   yieldOnCost:       number;
   cumulativeIncome:  number;
+  totalContributed:  number;
   zarIncome:         number;
 }
 
 // ── Core math ─────────────────────────────────────────────────────────────────
-function effectiveTaxRate(market: Market, foreignWithholdingTax: number): number {
+function effectiveTaxRate(market: Market, foreignWithholdingTax: number, tfsa = false): number {
+  const foreign = foreignWithholdingTax / 100;
+  if (tfsa) {
+    // A TFSA exempts SA Dividends Tax entirely. Foreign withholding tax is still
+    // deducted at source by the foreign country — the TFSA can't reclaim it.
+    return market === 'SA' ? 0 : foreign;
+  }
   if (market === 'SA') return SA_DIVIDENDS_TAX;
   // Foreign withholding applied first; SA dividends tax (20%) applied to remainder
   // Double-taxation agreements typically allow credit for foreign tax paid up to SA rate
   // Effective rate = max(SA_DIVIDENDS_TAX, foreignWithholdingTax) — conservative estimate
-  const foreign = foreignWithholdingTax / 100;
   return Math.max(SA_DIVIDENDS_TAX, foreign);
 }
 
 function project(inp: Inputs): ProjectionRow[] {
   const rows: ProjectionRow[] = [];
-  const taxRate    = effectiveTaxRate(inp.market, inp.foreignWithholdingTax);
+  const taxRate    = effectiveTaxRate(inp.market, inp.foreignWithholdingTax, inp.tfsa);
   const yieldRate  = inp.dividendYield / 100;
   const growthRate = inp.dividendGrowthRate / 100;
   const capGain    = inp.annualReturnRate / 100;
@@ -76,6 +85,8 @@ function project(inp: Inputs): ProjectionRow[] {
   let portfolioValue   = inp.investmentAmount;
   let currentYield     = yieldRate;
   let cumulativeIncome = 0;
+  let totalContributed = inp.investmentAmount;
+  const annualContribution = (inp.monthlyContribution ?? 0) * 12;
 
   for (let year = 1; year <= inp.years; year++) {
     const grossDividend    = portfolioValue * currentYield;
@@ -87,7 +98,8 @@ function project(inp: Inputs): ProjectionRow[] {
 
     cumulativeIncome += afterTaxDividend;
 
-    const yieldOnCost = (portfolioValue * currentYield) / inp.investmentAmount * 100;
+    // Yield on invested capital (initial + contributions made so far)
+    const yieldOnCost = totalContributed > 0 ? (grossDividend / totalContributed) * 100 : 0;
 
     rows.push({
       year,
@@ -96,13 +108,15 @@ function project(inp: Inputs): ProjectionRow[] {
       afterTaxDividend: Math.round(afterTaxDividend),
       yieldOnCost,
       cumulativeIncome: Math.round(cumulativeIncome),
+      totalContributed: Math.round(totalContributed),
       zarIncome: Math.round(zarIncome),
     });
 
-    // Grow portfolio: capital appreciation + DRIP (reinvested dividends)
+    // Grow portfolio: capital appreciation + DRIP (reinvested dividends) + new contributions
     const capAppreciation = portfolioValue * capGain;
     const reinvested      = inp.drip ? afterTaxDividend : 0;
-    portfolioValue       += capAppreciation + reinvested;
+    portfolioValue       += capAppreciation + reinvested + annualContribution;
+    totalContributed     += annualContribution;
 
     // Dividend yield grows at dividend growth rate
     currentYield *= (1 + growthRate);
@@ -114,6 +128,7 @@ function project(inp: Inputs): ProjectionRow[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 const DEFAULT_INPUTS: Inputs = {
   investmentAmount:      200_000,
+  monthlyContribution:   2_500,
   dividendYield:         4.5,
   dividendGrowthRate:    7,
   annualReturnRate:      10,
@@ -121,7 +136,9 @@ const DEFAULT_INPUTS: Inputs = {
   foreignWithholdingTax: 15,
   exchangeRate:          18.5,
   drip:                  true,
+  tfsa:                  false,
   years:                 20,
+  targetMonthlyIncome:   10_000,
 };
 
 export function DividendCalculator() {
@@ -138,11 +155,25 @@ export function DividendCalculator() {
 
   const rows = useMemo(() => project(inp), [inp]);
 
-  const taxRate     = effectiveTaxRate(inp.market, inp.foreignWithholdingTax);
+  const taxRate     = effectiveTaxRate(inp.market, inp.foreignWithholdingTax, inp.tfsa);
   const lastRow     = rows[rows.length - 1];
   const firstRow    = rows[0];
   const totalIncome = lastRow?.cumulativeIncome ?? 0;
   const finalValue  = lastRow?.portfolioValue ?? 0;
+  const totalContributed = inp.investmentAmount + inp.monthlyContribution * 12 * inp.years;
+
+  // How much the TFSA wrapper saves vs the same holding in a taxable account
+  const taxableRows = useMemo(() => project({ ...inp, tfsa: false }), [inp]);
+  const tfsaSaving = inp.tfsa
+    ? (totalIncome - (taxableRows[taxableRows.length - 1]?.cumulativeIncome ?? 0))
+    : 0;
+
+  // ── Income goal (reverse calc) ──────────────────────────────────────────────
+  const netYieldFrac    = (inp.dividendYield / 100) * (1 - taxRate);
+  const targetAnnual    = inp.targetMonthlyIncome * 12;
+  const capitalForGoal  = netYieldFrac > 0 ? targetAnnual / netYieldFrac : 0;
+  const goalRow         = rows.find((r) => r.afterTaxDividend >= targetAnnual);
+  const goalYear        = goalRow?.year ?? null;
 
   // Chart data: annual income (DRIP vs no-DRIP comparison)
   const noDripRows = useMemo(() => project({ ...inp, drip: false }), [inp]);
@@ -204,7 +235,7 @@ export function DividendCalculator() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         {[
-          { label: 'Year 1 Net Income', value: formatRand(firstRow?.afterTaxDividend ?? 0, 0), color: C.emerald },
+          { label: 'Total Contributed', value: formatRandShort(totalContributed), color: C.emerald },
           { label: `Year ${inp.years} Net Income`, value: formatRand(lastRow?.afterTaxDividend ?? 0, 0), color: C.cyan },
           { label: 'Total Net Income', value: formatRandShort(totalIncome), color: C.indigo },
           { label: `Final Portfolio`, value: formatRandShort(finalValue), color: C.amber },
@@ -235,6 +266,9 @@ export function DividendCalculator() {
             <InputField id="investment" label="Investment Amount" value={inp.investmentAmount}
               onChange={n((v) => ({ investmentAmount: v }))} prefix="R"
               help="Starting capital deployed" />
+            <InputField id="monthlyContribution" label="Monthly Contribution" value={inp.monthlyContribution}
+              onChange={n((v) => ({ monthlyContribution: v }))} prefix="R"
+              help="Recurring amount added every month (added yearly)" />
             <InputField id="yield" label="Dividend Yield" value={inp.dividendYield}
               onChange={n((v) => ({ dividendYield: v }))} suffix="% p.a." step={0.5}
               help="e.g. Satrix Divi Plus ~4–5%, MSCI World ~1.5–2%" />
@@ -310,8 +344,49 @@ export function DividendCalculator() {
             </div>
           </div>
 
+          {/* TFSA wrapper toggle */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2"
+              style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+              Account Type
+            </p>
+            <div className="flex gap-2">
+              {([false, true] as const).map((v) => (
+                <button
+                  key={String(v)}
+                  onClick={() => setInp((p) => ({ ...p, tfsa: v }))}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: inp.tfsa === v ? (v ? 'rgba(16,185,129,0.2)' : 'rgba(99,102,241,0.2)') : 'rgba(255,255,255,0.04)',
+                    color: inp.tfsa === v ? (v ? C.emerald : C.indigo) : 'var(--color-text-muted)',
+                    border: `1px solid ${inp.tfsa === v ? (v ? C.emerald + '55' : C.indigo + '55') : 'rgba(255,255,255,0.08)'}`,
+                  }}
+                >
+                  {v ? '✓ Tax-Free (TFSA)' : 'Taxable Account'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* TFSA benefit callout */}
+          {inp.tfsa && (
+            <div className="rounded-xl p-3 space-y-1"
+              style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
+              <p className="text-xs font-bold" style={{ color: C.emerald }}>Tax-Free Savings Account</p>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                {inp.market === 'SA'
+                  ? 'No 20% Dividends Tax inside a TFSA — you keep the full dividend.'
+                  : 'No SA Dividends Tax inside a TFSA. Foreign withholding tax is still deducted at source and cannot be reclaimed.'}
+                {' '}This plan keeps an extra <strong style={{ color: 'var(--color-text)' }}>{formatRand(tfsaSaving, 0)}</strong> over {inp.years} years vs a taxable account.
+              </p>
+              <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                Remember TFSA limits: R36,000/year and R500,000 lifetime in contributions.
+              </p>
+            </div>
+          )}
+
           {/* SA tax info */}
-          {inp.market === 'SA' && (
+          {!inp.tfsa && inp.market === 'SA' && (
             <div className="rounded-xl p-3 space-y-1"
               style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
               <p className="text-xs font-bold" style={{ color: C.emerald }}>SA Dividends Tax</p>
@@ -335,17 +410,19 @@ export function DividendCalculator() {
                   onChange={n((v) => ({ exchangeRate: v }))} prefix="R"
                   help="e.g. R18.50 per USD" />
               </div>
-              <div className="rounded-xl p-3"
-                style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
-                <p className="text-xs font-bold mb-1" style={{ color: C.amber }}>International Tax Treatment</p>
-                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  Foreign withholding tax is deducted first. SA then applies a 20% Dividends Tax — but under
-                  most double-taxation agreements (e.g. SA–US DTA), credit is given for foreign tax paid.
-                  Effective rate used: <strong style={{ color: 'var(--color-text)' }}>
-                    {formatPercent(taxRate * 100, 0)}
-                  </strong> (the higher of the two rates).
-                </p>
-              </div>
+              {!inp.tfsa && (
+                <div className="rounded-xl p-3"
+                  style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
+                  <p className="text-xs font-bold mb-1" style={{ color: C.amber }}>International Tax Treatment</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                    Foreign withholding tax is deducted first. SA then applies a 20% Dividends Tax — but under
+                    most double-taxation agreements (e.g. SA–US DTA), credit is given for foreign tax paid.
+                    Effective rate used: <strong style={{ color: 'var(--color-text)' }}>
+                      {formatPercent(taxRate * 100, 0)}
+                    </strong> (the higher of the two rates).
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -364,6 +441,51 @@ export function DividendCalculator() {
           </div>
         </div>
       </div>
+
+      {/* Income Goal (reverse calculator) */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        className="glass-card p-5"
+        style={{ borderColor: 'rgba(139,92,246,0.25)' }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)' }}>
+            <Target size={15} style={{ color: C.violet }} />
+          </div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            Income Goal
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <InputField id="targetIncome" label="Target Monthly Income" value={inp.targetMonthlyIncome}
+            onChange={n((v) => ({ targetMonthlyIncome: v }))} prefix="R"
+            help="Net (after-tax) passive income you want" />
+
+          <div className="rounded-xl p-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Capital needed today</p>
+            <p className="text-lg font-bold" style={{ color: C.indigo, fontFamily: 'var(--font-heading)' }}>
+              {netYieldFrac > 0 ? formatRandShort(capitalForGoal) : '—'}
+            </p>
+            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+              at a {formatPercent(netYieldFrac * 100, 2)} net yield
+            </p>
+          </div>
+
+          <div className="rounded-xl p-3" style={{ background: goalYear ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)', border: `1px solid ${goalYear ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)'}` }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Your plan reaches it</p>
+            <p className="text-lg font-bold" style={{ color: goalYear ? C.emerald : C.red, fontFamily: 'var(--font-heading)' }}>
+              {goalYear ? `Year ${goalYear}` : `Not within ${inp.years} yrs`}
+            </p>
+            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+              {goalYear
+                ? `${formatRand(inp.targetMonthlyIncome, 0)}/mo net dividends`
+                : 'Raise contributions, yield, or horizon'}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
