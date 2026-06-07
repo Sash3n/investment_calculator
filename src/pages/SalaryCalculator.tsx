@@ -307,7 +307,7 @@ export function SalaryCalculator() {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex-1 space-y-2 w-full">
@@ -380,7 +380,7 @@ export function SalaryCalculator() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis dataKey="salary" tick={{ fontSize: 10, fill: '#64748B' }} />
             <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Bar dataKey="net"  name="Net Pay"  stackId="a" fill={C.emerald} radius={[0, 0, 0, 0]} />
             <Bar dataKey="paye" name="PAYE"     stackId="a" fill={C.red}     radius={[4, 4, 0, 0]} />
           </BarChart>

@@ -411,7 +411,7 @@ export function CarFinance() {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                 <Area type="monotone" dataKey="Car Value" stroke={CHART_COLORS.emerald}
                   fill="url(#gradCarVal)" strokeWidth={2} />
@@ -437,7 +437,7 @@ export function CarFinance() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000).toFixed(1)}K`} />
-                  <Tooltip
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                     formatter={(v: unknown) => [formatRand(Number(v)), 'Monthly']}
                     contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '12px', color: '#F1F5F9' }}
                   />
@@ -463,7 +463,7 @@ export function CarFinance() {
                       <Cell key={i} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                     formatter={(v: unknown) => [formatRand(Number(v)), '']}
                     contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '12px', color: '#F1F5F9' }}
                   />
@@ -487,7 +487,7 @@ export function CarFinance() {
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                 <Line type="monotone" dataKey="Vehicle Value" stroke={CHART_COLORS.emerald}
                   strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS.emerald }} />

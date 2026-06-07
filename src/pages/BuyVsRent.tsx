@@ -519,7 +519,7 @@ export function BuyVsRent() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name === 'buying' ? 'Buy (net)' : name === 'renting' ? 'Rent + Invest (net)' : 'Property Equity']}
                 contentStyle={TOOLTIP_STYLE}
               />
@@ -550,7 +550,7 @@ export function BuyVsRent() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name === 'buy' ? 'Buying (total cost)' : 'Rent paid']}
                 contentStyle={TOOLTIP_STYLE}
               />

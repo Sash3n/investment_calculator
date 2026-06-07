@@ -357,7 +357,7 @@ export function RentalYieldFinder() {
             <XAxis dataKey="rent" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
             <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(v)} />
             <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `${v}%`} />
-            <Tooltip
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
               formatter={(v, name) => name === 'Gross Yield' ? [`${v}%`, name] : [formatRand(Number(v), 0), name]}
               contentStyle={TOOLTIP_STYLE}
               labelFormatter={(l) => `Rent: ${formatRand(Number(l), 0)}/mo`}
@@ -387,7 +387,7 @@ export function RentalYieldFinder() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
             <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
             <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
             <Line type="monotone" dataKey="equity" name="Equity"          stroke={C.indigo}  strokeWidth={2} dot={false} />

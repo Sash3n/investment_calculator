@@ -354,7 +354,7 @@ export function DebtSnowball() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
                 <YAxis type="category" dataKey="strategy" tick={{ fontSize: 11, fill: '#94A3B8' }} />
-                <Tooltip formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
                 <Bar dataKey="interest" name="Total Interest" fill={C.red} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -377,7 +377,7 @@ export function DebtSnowball() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `Mo ${v}`} />
             <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip
+            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
               formatter={(v, name) => [formatRand(Number(v), 0), name]}
               labelFormatter={(l) => `Month ${l}`}
               contentStyle={TOOLTIP_STYLE}

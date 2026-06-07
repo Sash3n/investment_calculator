@@ -436,7 +436,7 @@ export function TaxProjections() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(v)} />
-              <Tooltip
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                 formatter={(v, name) => [
                   formatRand(Number(v), 0),
                   name === 'netCash' ? 'Net Rental Profit' : 'Tax Paid',
@@ -471,7 +471,7 @@ export function TaxProjections() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
               <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(v)} />
-              <Tooltip
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                 formatter={(v, name) => [
                   formatRand(Number(v), 0),
                   name === 'cumulativeNet' ? 'Cumulative Net' : 'Cumulative Tax',

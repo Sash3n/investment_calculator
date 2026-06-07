@@ -149,7 +149,7 @@ export function StressTest() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                 <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<RandTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                 <ReferenceLine y={0} stroke="var(--color-text-subtle)" strokeWidth={1} />
                 <Bar dataKey="cashflow" name="Monthly Cash Flow" radius={[3, 3, 0, 0]}>
                   {scenarioChart.map((d, i) => (

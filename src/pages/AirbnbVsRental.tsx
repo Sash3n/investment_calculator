@@ -180,7 +180,7 @@ export function AirbnbVsRental() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                   <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip content={<RandTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                   <Bar dataKey="noi" name="Net Income" radius={[4, 4, 0, 0]}>
                     {noiChart.map((d, i) => <Cell key={i} fill={d.fill} />)}
                   </Bar>
@@ -194,7 +194,7 @@ export function AirbnbVsRental() {
                 <BarChart data={strBreakdown} layout="vertical" margin={{ left: 8, right: 16 }}>
                   <XAxis type="number" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(0)}K`} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} width={100} />
-                  <Tooltip content={<RandTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                   <Bar dataKey="value" name="Amount" radius={[0, 4, 4, 0]}>
                     {strBreakdown.map((d, i) => <Cell key={i} fill={d.value < 0 ? C.red : i === strBreakdown.length - 1 ? C.emerald : C.indigo} />)}
                   </Bar>
