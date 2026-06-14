@@ -157,6 +157,7 @@ export function FireCalculator() {
     annualInflationPercent:      5.5,
     monthlyExpensesInRetirement: 30_000,
   });
+  const [selectedSwr, setSelectedSwr] = useState(0.04);
 
   const n = (fn: (v: number) => Partial<Inputs>) => (val: string) =>
     setInp((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
@@ -170,13 +171,13 @@ export function FireCalculator() {
   const retirementAnnualExp = inp.monthlyExpensesInRetirement * 12
     * Math.pow(1 + infR, yearsToRetirement);
 
-  const target4 = retirementAnnualExp / 0.04;
+  const target4 = retirementAnnualExp / selectedSwr;
 
   const yrs4  = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, target4);
 
   const fireAge4  = inp.currentAge + (isFinite(yrs4)  ? yrs4  : 0);
 
-  // Coast FIRE at 4% SWR
+  // Coast FIRE at selected SWR
   const coastBalance = coastFireBalance(target4, yearsToRetirement, inp.annualReturnPercent);
   const coastReached = rows.find((r) => r.balance >= coastBalance);
 
@@ -185,7 +186,7 @@ export function FireCalculator() {
   const balanceAtRetirement = retirementRow?.balance ?? 0;
   const onTrack4 = balanceAtRetirement >= target4;
 
-  // Contribution bump impact (at 4% SWR)
+  // Contribution bump impact (at selected SWR)
   const bumps = bumpImpact(inp, target4, [500, 1000, 2000, 5000]);
 
   // Chart: cap at retirement age + 5 for main chart
@@ -264,7 +265,7 @@ export function FireCalculator() {
                 : `Behind target — at age ${inp.targetRetirementAge} you'll have ${formatRand(balanceAtRetirement, 0)} vs target ${formatRand(target4, 0)}`}
             </p>
             <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              Based on 4% SWR · {inp.monthlyExpensesInRetirement > 0
+              Based on {(selectedSwr * 100).toFixed(1)}% SWR · {inp.monthlyExpensesInRetirement > 0
                 ? `R${(inp.monthlyExpensesInRetirement / 1000).toFixed(0)}k/month retirement expenses (today's money)`
                 : 'Enter monthly expenses in retirement'}
             </p>
@@ -352,19 +353,28 @@ export function FireCalculator() {
           style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
           FIRE Number by Safe Withdrawal Rate
         </p>
+        <p className="text-[11px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
+          Click a card to set it as your active SWR target.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {SWR_OPTIONS.map(({ swr, label, sub }) => {
             const target = retirementAnnualExp / swr;
             const yrs = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, target);
             const fireAge = inp.currentAge + (isFinite(yrs) ? yrs : Infinity);
             const achieved = isFinite(yrs);
+            const isActive = selectedSwr === swr;
             return (
               <motion.div
                 key={swr}
+                onClick={() => setSelectedSwr(swr)}
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: swr * 5 }}
-                className="glass-card-static p-4 rounded-xl"
-                style={{ borderLeft: `3px solid ${swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo}` }}
+                className="glass-card-static p-4 rounded-xl cursor-pointer transition-all"
+                style={{
+                  borderLeft: `3px solid ${swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo}`,
+                  outline: isActive ? `2px solid ${swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo}` : 'none',
+                  outlineOffset: 2,
+                }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-bold" style={{ color: swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo }}>

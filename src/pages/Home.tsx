@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { usePrimeRate } from '../hooks/usePrimeRate';
-import { NAV_CATEGORIES } from '../config/nav';
+import { NAV_CATEGORIES, NAV_BY_PATH } from '../config/nav';
+import { useNavPrefs } from '../hooks/useNavPrefs';
 import {
   Building2,
   MapPin,
@@ -203,6 +204,60 @@ const featureCards = [
     colorDim: 'rgba(16,185,129,0.12)',
     tag: 'DRIP + Tax',
   },
+  {
+    path: '/wealth-target',
+    title: 'Wealth Target Planner',
+    description: 'How much do you need to save monthly to reach R2M? Reverse-calculate from any goal — choose TFSA, S&P 500, JSE or fixed deposit, see milestones and the cost of waiting.',
+    icon: TrendingUp,
+    color: '#6366F1',
+    colorDim: 'rgba(99,102,241,0.12)',
+    tag: 'Goal Calculator',
+  },
+  {
+    path: '/bond-extra',
+    title: 'Bond Extra Payment',
+    description: 'See exactly how much interest and time you save by paying extra on your home loan. Enter any extra monthly amount and watch years melt off your bond.',
+    icon: Building2,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'Interest Saver',
+  },
+  {
+    path: '/provisional-tax',
+    title: 'Provisional Tax',
+    description: 'Freelancers and side hustlers: calculate your August and February provisional tax payments, how much to set aside monthly, and your 90% penalty threshold.',
+    icon: Receipt,
+    color: '#F59E0B',
+    colorDim: 'rgba(245,158,11,0.12)',
+    tag: '2025/26',
+  },
+  {
+    path: '/retrenchment',
+    title: 'Retrenchment Calculator',
+    description: 'Calculate your severance pay (BCEA), the tax on your lump sum using the retirement tax table, and how many months your net payout will last.',
+    icon: Briefcase,
+    color: '#8B5CF6',
+    colorDim: 'rgba(139,92,246,0.12)',
+    tag: 'BCEA + Tax',
+  },
+  {
+    path: '/offshore-allowance',
+    title: 'Offshore Allowance Planner',
+    description: 'Model your R1M Single Discretionary Allowance — compare offshore USD returns vs local JSE returns with ZAR depreciation factored in over any time horizon.',
+    icon: TrendingUp,
+    color: '#06B6D4',
+    colorDim: 'rgba(6,182,212,0.12)',
+    tag: 'SDA + FIA',
+  },
+  {
+    path: '/vat',
+    title: 'VAT Calculator',
+    description: 'Add or extract 15% VAT instantly. Check whether your turnover triggers mandatory registration and how many months until you hit the R1M threshold.',
+    icon: Receipt,
+    color: '#F59E0B',
+    colorDim: 'rgba(245,158,11,0.12)',
+    tag: '15% VAT',
+  },
 ];
 
 const quickStats = [
@@ -220,6 +275,15 @@ export function Home() {
   const liveRate = usePrimeRate();
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState('all');
+  const { recents } = useNavPrefs();
+  const recentItems = useMemo(
+    () => recents
+      .filter((p) => p !== '/')
+      .map((p) => NAV_BY_PATH[p])
+      .filter(Boolean)
+      .slice(0, 3),
+    [recents],
+  );
 
   // Categories that actually have dashboard cards
   const presentCats = useMemo(
@@ -323,6 +387,40 @@ export function Home() {
           })}
         </div>
       </motion.div>
+
+      {/* ── Recently used ───────────────────────────────── */}
+      {recentItems.length > 0 && (
+        <motion.div variants={cardVariants} className="mb-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+            Recently Used
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {recentItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.path} to={item.path}>
+                  <div
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+                    style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      color: 'var(--color-text)',
+                    }}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${item.color}22` }}
+                    >
+                      <Icon size={13} style={{ color: item.color }} />
+                    </span>
+                    {item.shortLabel}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Feature cards ───────────────────────────────── */}
       <div className="mb-12">

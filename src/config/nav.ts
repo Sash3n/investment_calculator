@@ -2,6 +2,7 @@ import {
   Home, Building2, MapPin, Car, TrendingUp, Receipt, Wallet, Landmark,
   Shield, Scale, PieChart, House, Briefcase, Snowflake, GraduationCap,
   TrendingDown, History, Activity, BedDouble, DoorOpen, Coins,
+  Target, Globe, Scissors,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -43,6 +44,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
       { path: '/rental-yield', label: 'Rental Yield Finder', shortLabel: 'Yield', icon: House, color: '#10B981', keywords: 'gross net yield breakeven rent' },
       { path: '/airbnb-vs-rental', label: 'Airbnb vs Rental', shortLabel: 'Airbnb', icon: BedDouble, color: '#EC4899', keywords: 'short term let occupancy nightly' },
       { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B', keywords: 'compare offers apr fees' },
+      { path: '/bond-extra', label: 'Bond Extra Payment', shortLabel: 'Bond Extra', icon: Building2, color: '#10B981', keywords: 'extra payment interest saved years saved home loan' },
     ],
   },
   {
@@ -53,6 +55,9 @@ export const NAV_CATEGORIES: NavCategory[] = [
       { path: '/budget', label: 'Budget Planner', shortLabel: 'Budget', icon: Wallet, color: '#10B981', keywords: '50 30 20 spending savings' },
       { path: '/debt-snowball', label: 'Debt Snowball', shortLabel: 'Debt', icon: Snowflake, color: '#06B6D4', keywords: 'avalanche payoff credit card loans' },
       { path: '/emergency-fund', label: 'Emergency Fund', shortLabel: 'Emergency', icon: Shield, color: '#10B981', keywords: 'safety net savings months' },
+      { path: '/provisional-tax', label: 'Provisional Tax', shortLabel: 'Prov. Tax', icon: Receipt, color: '#F59E0B', keywords: 'freelance side income iet sars august february' },
+      { path: '/retrenchment', label: 'Retrenchment Calculator', shortLabel: 'Retrenchment', icon: Briefcase, color: '#8B5CF6', keywords: 'severance pay bcea lump sum runway' },
+      { path: '/vat', label: 'VAT Calculator', shortLabel: 'VAT', icon: Scissors, color: '#F59E0B', keywords: '15% add extract registration threshold sme' },
     ],
   },
   {
@@ -68,6 +73,8 @@ export const NAV_CATEGORIES: NavCategory[] = [
     label: 'Investing & Tax',
     items: [
       { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4', keywords: 'bond etf prepay compare' },
+      { path: '/wealth-target', label: 'Wealth Target Planner', shortLabel: 'Wealth Goal', icon: Target, color: '#6366F1', keywords: 'savings goal target monthly lump sum etf tfsa' },
+      { path: '/offshore-allowance', label: 'Offshore Allowance Planner', shortLabel: 'Offshore', icon: Globe, color: '#06B6D4', keywords: 'forex usd zar depreciation single discretionary allowance sda' },
       { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6', keywords: 'ra tfsa etf 2-pot allocation' },
       { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981', keywords: 'rental cgt section 13sex 13quat sars' },
       { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4', keywords: 'multi year forecast rental cgt' },

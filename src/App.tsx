@@ -35,7 +35,13 @@ const DebtSnowball = lazy(() => import('./pages/DebtSnowball').then((m) => ({ de
 const EmergencyFund = lazy(() => import('./pages/EmergencyFund').then((m) => ({ default: m.EmergencyFund })));
 const InflationCalc = lazy(() => import('./pages/InflationCalc').then((m) => ({ default: m.InflationCalc })));
 const EducationSavings = lazy(() => import('./pages/EducationSavings').then((m) => ({ default: m.EducationSavings })));
-const DividendCalculator = lazy(() => import('./pages/DividendCalculator').then((m) => ({ default: m.DividendCalculator })));
+const DividendCalculator  = lazy(() => import('./pages/DividendCalculator').then((m) => ({ default: m.DividendCalculator })));
+const WealthTargetPlanner = lazy(() => import('./pages/WealthTargetPlanner').then((m) => ({ default: m.WealthTargetPlanner })));
+const BondExtra           = lazy(() => import('./pages/BondExtra').then((m) => ({ default: m.BondExtra })));
+const ProvisionalTax      = lazy(() => import('./pages/ProvisionalTax').then((m) => ({ default: m.ProvisionalTax })));
+const RetrenchmentCalc    = lazy(() => import('./pages/RetrenchmentCalc').then((m) => ({ default: m.RetrenchmentCalc })));
+const OffshoreAllowance   = lazy(() => import('./pages/OffshoreAllowance').then((m) => ({ default: m.OffshoreAllowance })));
+const VatCalculator       = lazy(() => import('./pages/VatCalculator').then((m) => ({ default: m.VatCalculator })));
 
 function PageFallback() {
   return (
@@ -86,7 +92,13 @@ function App() {
                 <Route path="/emergency-fund" element={<EmergencyFund />} />
                 <Route path="/inflation" element={<InflationCalc />} />
                 <Route path="/education-savings" element={<EducationSavings />} />
-                <Route path="/dividend-calculator" element={<DividendCalculator />} />
+                <Route path="/dividend-calculator"  element={<DividendCalculator />} />
+                <Route path="/wealth-target"       element={<WealthTargetPlanner />} />
+                <Route path="/bond-extra"          element={<BondExtra />} />
+                <Route path="/provisional-tax"     element={<ProvisionalTax />} />
+                <Route path="/retrenchment"        element={<RetrenchmentCalc />} />
+                <Route path="/offshore-allowance"  element={<OffshoreAllowance />} />
+                <Route path="/vat"                 element={<VatCalculator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
