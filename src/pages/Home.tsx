@@ -25,7 +25,7 @@ import {
   TrendingDown,
   Activity,
   BedDouble,
-  DoorOpen,
+  DoorOpen, Receipt,
 } from 'lucide-react';
 
 const containerVariants = {

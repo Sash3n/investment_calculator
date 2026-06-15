@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   PieChart, Pie, Cell, Tooltip as ReTooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { Building2, Info, AlertTriangle, TrendingUp, Droplets } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
@@ -10,7 +10,7 @@ import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
-import { buildShareUrl, readShareParam } from '../utils/share';
+import { readShareParam } from '../utils/share';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
@@ -253,7 +253,6 @@ export function MunicipalRates() {
     return rows;
   }, [bill.total, escalation]);
 
-  const shareUrl = buildShareUrl({ propValue, cityId, rebateType, waterKl, escalation } satisfies ShareState);
 
   const estimated = city.rateEstimated;
 
@@ -279,7 +278,7 @@ export function MunicipalRates() {
             </p>
           </div>
         </div>
-        <ShareButton url={shareUrl} />
+        <ShareButton state={{ propValue, cityId, rebateType, waterKl, escalation }} />
       </div>
 
       {/* Tariff year badge */}
@@ -305,22 +304,14 @@ export function MunicipalRates() {
             Property details
           </h2>
 
-          <InputField
-            label="Municipal property value (R)"
-            value={propValue}
-            onChange={setPropValue}
-            prefix="R"
-            min={0}
-          />
+          <InputField id="mr-val" label="Municipal property value (R)" value={propValue}
+            onChange={(v) => setPropValue(Number(v))} prefix="R" min={0} />
+
+          <SelectField id="mr-city" label="Municipality" value={cityId} onChange={setCityId}
+            options={MUNICIPALITIES.map((m) => ({ value: m.id, label: m.name }))} />
 
           <SelectField
-            label="Municipality"
-            value={cityId}
-            onChange={setCityId}
-            options={MUNICIPALITIES.map((m) => ({ value: m.id, label: m.name }))}
-          />
-
-          <SelectField
+            id="mr-rebate"
             label="Rebate type"
             value={rebateType}
             onChange={(v) => setRebateType(v as 'standard' | 'pensioner' | 'indigent')}
@@ -331,14 +322,8 @@ export function MunicipalRates() {
             ]}
           />
 
-          <InputField
-            label="Monthly water usage (kL)"
-            value={waterKl}
-            onChange={setWaterKl}
-            suffix="kL"
-            min={0}
-            max={100}
-          />
+          <InputField id="mr-water" label="Monthly water usage (kL)" value={waterKl}
+            onChange={(v) => setWaterKl(Number(v))} suffix="kL" min={0} max={100} />
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl text-xs"
@@ -353,14 +338,8 @@ export function MunicipalRates() {
 
           <hr style={{ borderColor: 'var(--color-border)' }} />
 
-          <InputField
-            label="Annual tariff escalation (for projection)"
-            value={escalation}
-            onChange={setEscalation}
-            suffix="%"
-            min={0}
-            max={25}
-          />
+          <InputField id="mr-esc" label="Annual tariff escalation (for projection)" value={escalation}
+            onChange={(v) => setEscalation(Number(v))} suffix="%" min={0} max={25} />
 
           {/* City rebate & rate reference */}
           <div
@@ -406,10 +385,10 @@ export function MunicipalRates() {
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Monthly total"   value={formatRand(bill.total)}          color={C.indigo}  icon={<Building2 size={15} />} />
-            <StatCard label="Annual total"    value={formatRandShort(bill.total * 12)} color={C.emerald} icon={<TrendingUp size={15} />} />
-            <StatCard label="Monthly rates"   value={formatRand(bill.rates)}           color={C.violet}  icon={<Building2 size={15} />} />
-            <StatCard label="Monthly water"   value={formatRand(bill.water)}           color={C.cyan}    icon={<Droplets size={15} />} />
+            <StatCard label="Monthly total"  value={formatRand(bill.total)}           color="indigo"  icon={Building2} />
+            <StatCard label="Annual total"   value={formatRandShort(bill.total * 12)} color="emerald" icon={TrendingUp} />
+            <StatCard label="Monthly rates"  value={formatRand(bill.rates)}           color="indigo"  icon={Building2} />
+            <StatCard label="Monthly water"  value={formatRand(bill.water)}           color="emerald" icon={Droplets} />
           </div>
 
           {/* Bill breakdown + Donut */}
@@ -470,7 +449,7 @@ export function MunicipalRates() {
                   </Pie>
                   <ReTooltip
                     contentStyle={TOOLTIP_STYLE}
-                    formatter={(val: number, name: string) => [formatRand(val), name]}
+                    formatter={(val) => [formatRand(Number(val)), '']}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -503,7 +482,7 @@ export function MunicipalRates() {
                 <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(1)}k`} width={52} />
                 <ReTooltip
                   contentStyle={TOOLTIP_STYLE}
-                  formatter={(val: number) => [formatRand(val), 'Monthly total']}
+                  formatter={(val) => [formatRand(Number(val)), 'Monthly total']}
                 />
                 <Bar dataKey="total" radius={[6, 6, 0, 0]}>
                   {comparisonData.map((entry) => (

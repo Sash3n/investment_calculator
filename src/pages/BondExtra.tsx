@@ -4,19 +4,18 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts';
-import { Building2, TrendingDown, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Building2, TrendingDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
-import { buildShareUrl, readShareParam } from '../utils/share';
+import { readShareParam } from '../utils/share';
 
 const C = {
   indigo:  '#6366F1',
   emerald: '#10B981',
   amber:   '#F59E0B',
   red:     '#EF4444',
-  violet:  '#8B5CF6',
 };
 
 const TOOLTIP_STYLE = {
@@ -28,11 +27,10 @@ const TOOLTIP_STYLE = {
 };
 
 interface AmortRow {
-  month: number;
-  balance: number;
-  interest: number;
-  principal: number;
-  extraPrincipal: number;
+  month:          number;
+  balance:        number;
+  interest:       number;
+  principal:      number;
 }
 
 function amortize(
@@ -41,9 +39,9 @@ function amortize(
   termMonths: number,
   extraMonthly: number,
 ): { rows: AmortRow[]; totalInterest: number; monthsPaid: number } {
-  const r = annualRate / 100 / 12;
-  const pmt = (principal * r) / (1 - Math.pow(1 + r, -termMonths));
-  let balance = principal;
+  const r   = annualRate / 100 / 12;
+  const pmt = r > 0 ? (principal * r) / (1 - Math.pow(1 + r, -termMonths)) : principal / termMonths;
+  let balance       = principal;
   let totalInterest = 0;
   const rows: AmortRow[] = [];
 
@@ -53,13 +51,7 @@ function amortize(
     const principal_ = Math.min(pmt - interest + extraMonthly, balance);
     balance -= principal_;
     totalInterest += interest;
-    rows.push({
-      month:          m,
-      balance:        Math.max(0, balance),
-      interest,
-      principal:      pmt - interest,
-      extraPrincipal: extraMonthly,
-    });
+    rows.push({ month: m, balance: Math.max(0, balance), interest, principal: pmt - interest });
     if (balance <= 0.01) break;
   }
   return { rows, totalInterest, monthsPaid: rows.length };
@@ -75,37 +67,36 @@ interface ShareState {
 export function BondExtra() {
   const shared = readShareParam<ShareState>();
 
-  const [loan,  setLoan]  = useState(shared?.loan ?? 2_000_000);
-  const [rate,  setRate]  = useState(shared?.rate ?? 11.75);
-  const [term,  setTerm]  = useState(shared?.term ?? 20);
+  const [loan,  setLoan]  = useState(shared?.loan  ?? 2_000_000);
+  const [rate,  setRate]  = useState(shared?.rate  ?? 11.75);
+  const [term,  setTerm]  = useState(shared?.term  ?? 20);
   const [extra, setExtra] = useState(shared?.extra ?? 1_500);
 
-  const { base, withExtra } = useMemo(() => {
-    const base      = amortize(loan, rate, term * 12, 0);
-    const withExtra = amortize(loan, rate, term * 12, extra);
-    return { base, withExtra };
-  }, [loan, rate, term, extra]);
+  const { base, withExtra } = useMemo(() => ({
+    base:      amortize(loan, rate, term * 12, 0),
+    withExtra: amortize(loan, rate, term * 12, extra),
+  }), [loan, rate, term, extra]);
 
-  const interestSaved   = base.totalInterest - withExtra.totalInterest;
-  const monthsSaved     = base.monthsPaid - withExtra.monthsPaid;
-  const yearsSaved      = Math.floor(monthsSaved / 12);
-  const remMonthsSaved  = monthsSaved % 12;
+  const interestSaved  = base.totalInterest - withExtra.totalInterest;
+  const monthsSaved    = base.monthsPaid    - withExtra.monthsPaid;
+  const yearsSaved     = Math.floor(monthsSaved / 12);
+  const remMonthsSaved = monthsSaved % 12;
 
   const chartData = useMemo(() => {
     const maxYears = Math.ceil(base.monthsPaid / 12);
     return Array.from({ length: maxYears }, (_, i) => {
-      const yr = i + 1;
-      const baseRow    = base.rows[yr * 12 - 1];
-      const extraRow   = withExtra.rows[yr * 12 - 1];
+      const yr      = i + 1;
+      const baseRow = base.rows[yr * 12 - 1];
+      const exRow   = withExtra.rows[yr * 12 - 1];
       return {
         year:      yr,
-        standard:  baseRow  ? Math.round(baseRow.balance)  : 0,
-        withExtra: extraRow ? Math.round(extraRow.balance) : 0,
+        standard:  baseRow ? Math.round(baseRow.balance)  : 0,
+        withExtra: exRow   ? Math.round(exRow.balance)    : 0,
       };
     });
   }, [base, withExtra]);
 
-  const shareUrl = buildShareUrl({ loan, rate, term, extra } satisfies ShareState);
+  const shareState: ShareState = { loan, rate, term, extra };
 
   return (
     <motion.div
@@ -126,73 +117,44 @@ export function BondExtra() {
             </p>
           </div>
         </div>
-        <ShareButton url={shareUrl} />
+        <ShareButton state={shareState} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Inputs */}
-        <div
-          className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-        >
+        <div className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
             Bond details
           </h2>
-          <InputField label="Outstanding loan (R)" value={loan} onChange={setLoan} prefix="R" min={1} />
-          <InputField label="Interest rate" value={rate} onChange={setRate} suffix="%" min={0} max={30} />
-          <InputField label="Remaining term" value={term} onChange={setTerm} suffix="yrs" min={1} max={30} />
-          <InputField label="Extra payment per month" value={extra} onChange={setExtra} prefix="R" min={0} />
+          <InputField id="be-loan"  label="Outstanding loan (R)"       value={loan}  onChange={(v) => setLoan(Number(v))}  prefix="R" min={1} />
+          <InputField id="be-rate"  label="Interest rate"              value={rate}  onChange={(v) => setRate(Number(v))}  suffix="%" min={0} max={30} />
+          <InputField id="be-term"  label="Remaining term"             value={term}  onChange={(v) => setTerm(Number(v))}  suffix="yrs" min={1} max={30} />
+          <InputField id="be-extra" label="Extra payment per month"    value={extra} onChange={(v) => setExtra(Number(v))} prefix="R" min={0} />
 
           {extra === 0 && (
-            <div
-              className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}
-            >
+            <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
+              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}>
               <AlertCircle size={13} style={{ color: C.amber }} />
               <span style={{ color: 'var(--color-text-muted)' }}>Enter an extra amount to see the impact.</span>
             </div>
           )}
         </div>
 
-        {/* Results */}
         <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <StatCard
-              label="Interest saved"
-              value={formatRandShort(interestSaved)}
-              color={C.emerald}
-              icon={<TrendingDown size={16} />}
-            />
-            <StatCard
-              label="Time saved"
-              value={`${yearsSaved}yr ${remMonthsSaved}mo`}
-              color={C.indigo}
-              icon={<CheckCircle2 size={16} />}
-            />
-            <StatCard
-              label="Total interest (standard)"
-              value={formatRandShort(base.totalInterest)}
-              color={C.red}
-              icon={<TrendingDown size={16} />}
-            />
-            <StatCard
-              label="Total interest (with extra)"
-              value={formatRandShort(withExtra.totalInterest)}
-              color={C.violet}
-              icon={<TrendingDown size={16} />}
-            />
+            <StatCard label="Interest saved"            value={formatRandShort(interestSaved)}      color="emerald" icon={TrendingDown} />
+            <StatCard label="Time saved"                value={`${yearsSaved}yr ${remMonthsSaved}mo`} color="indigo"  icon={CheckCircle2} />
+            <StatCard label="Total interest (standard)" value={formatRandShort(base.totalInterest)} color="red"     icon={TrendingDown} />
+            <StatCard label="Total interest (w/ extra)" value={formatRandShort(withExtra.totalInterest)} color="amber" icon={TrendingDown} />
           </div>
 
-          {/* Summary callout */}
           {extra > 0 && interestSaved > 0 && (
-            <div
-              className="p-4 rounded-xl text-sm"
-              style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}
-            >
-              <span style={{ color: 'var(--color-text)' }}>
+            <div className="p-4 rounded-xl text-sm"
+              style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}>
+              <span style={{ color: 'var(--color-text-muted)' }}>
                 Paying an extra{' '}
                 <span style={{ color: C.emerald, fontWeight: 600 }}>{formatRand(extra)}/month</span>
-                {' '}saves you{' '}
+                {' '}saves{' '}
                 <span style={{ color: C.emerald, fontWeight: 600 }}>{formatRandShort(interestSaved)}</span>
                 {' '}in interest and pays off your bond{' '}
                 <span style={{ color: C.emerald, fontWeight: 600 }}>
@@ -205,11 +167,8 @@ export function BondExtra() {
             </div>
           )}
 
-          {/* Chart */}
-          <div
-            className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-          >
+          <div className="p-5 rounded-2xl"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
             <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
               Outstanding balance over time
             </h2>
@@ -217,8 +176,8 @@ export function BondExtra() {
               <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="be-std" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.red}    stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={C.red}    stopOpacity={0.03} />
+                    <stop offset="5%"  stopColor={C.red}     stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={C.red}     stopOpacity={0.03} />
                   </linearGradient>
                   <linearGradient id="be-extra" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.4} />
@@ -226,25 +185,19 @@ export function BondExtra() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis
-                  dataKey="year"
-                  tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-                  tickFormatter={(v) => `Yr ${v}`}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-                  tickFormatter={formatRandShort}
-                  width={64}
-                />
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                  tickFormatter={(v) => `Yr ${v}`} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                  tickFormatter={formatRandShort} width={64} />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
-                  formatter={(val: number, name: string) => [formatRand(val), name]}
+                  formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
                   cursor={{ stroke: `${C.indigo}55`, strokeWidth: 1 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="standard"  name="Standard"        stroke={C.red}     fill="url(#be-std)"   strokeWidth={2} />
-                <Area type="monotone" dataKey="withExtra" name="With extra pmt"   stroke={C.emerald} fill="url(#be-extra)" strokeWidth={2} />
+                <Area type="monotone" dataKey="standard"  name="Standard"      stroke={C.red}     fill="url(#be-std)"   strokeWidth={2} />
+                <Area type="monotone" dataKey="withExtra" name="With extra pmt" stroke={C.emerald} fill="url(#be-extra)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

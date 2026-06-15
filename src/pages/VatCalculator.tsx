@@ -5,22 +5,21 @@ import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand } from '../utils/format';
-import { buildShareUrl, readShareParam } from '../utils/share';
+import { readShareParam } from '../utils/share';
 
 const C = {
   indigo:  '#6366F1',
   emerald: '#10B981',
   amber:   '#F59E0B',
   red:     '#EF4444',
-  violet:  '#8B5CF6',
 };
 
-const VAT_RATE           = 0.15;
-const VAT_REG_THRESHOLD  = 1_000_000;
+const VAT_RATE          = 0.15;
+const VAT_REG_THRESHOLD = 1_000_000;
 
 interface ShareState {
-  mode: string;
-  amount: number;
+  mode:           string;
+  amount:         number;
   annualTurnover: number;
 }
 
@@ -32,21 +31,19 @@ export function VatCalculator() {
   const [annualTurnover, setAnnualTurnover] = useState(shared?.annualTurnover ?? 0);
 
   const result = useMemo(() => {
-    const vatAmount   = mode === 'add'
+    const vatAmount = mode === 'add'
       ? amount * VAT_RATE
       : amount - amount / (1 + VAT_RATE);
-
-    const exclVat = mode === 'add' ? amount : amount / (1 + VAT_RATE);
+    const exclVat = mode === 'add' ? amount           : amount / (1 + VAT_RATE);
     const inclVat = mode === 'add' ? amount + vatAmount : amount;
-
-    const monthsTillRegistration = annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD
-      ? Math.ceil(((VAT_REG_THRESHOLD - annualTurnover) / annualTurnover) * 12)
-      : 0;
-
+    const monthsTillRegistration =
+      annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD
+        ? Math.ceil(((VAT_REG_THRESHOLD - annualTurnover) / annualTurnover) * 12)
+        : 0;
     return { vatAmount, exclVat, inclVat, monthsTillRegistration };
   }, [mode, amount, annualTurnover]);
 
-  const shareUrl = buildShareUrl({ mode, amount, annualTurnover } satisfies ShareState);
+  const shareState: ShareState = { mode, amount, annualTurnover };
 
   return (
     <motion.div
@@ -63,52 +60,47 @@ export function VatCalculator() {
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>VAT Calculator</h1>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Add or extract 15% VAT, and check your VAT registration threshold.
+              Add or extract 15% VAT, and check your registration threshold.
             </p>
           </div>
         </div>
-        <ShareButton url={shareUrl} />
+        <ShareButton state={shareState} />
       </div>
 
       {/* Mode toggle */}
       <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
-        {([['add', 'Add VAT to amount'], ['extract', 'Extract VAT from amount']] as const).map(([m, label]) => (
+        {(['add', 'extract'] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
             className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors"
             style={{
               background: mode === m ? C.amber : 'transparent',
-              color: mode === m ? '#fff' : 'var(--color-text-muted)',
+              color:      mode === m ? '#fff'   : 'var(--color-text-muted)',
             }}
           >
             <ArrowLeftRight size={14} />
-            {label}
+            {m === 'add' ? 'Add VAT to amount' : 'Extract VAT from amount'}
           </button>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Inputs */}
-        <div
-          className="space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-        >
+        <div className="space-y-4 p-5 rounded-2xl"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
             {mode === 'add' ? 'Amount excl. VAT' : 'Amount incl. VAT'}
           </h2>
           <InputField
+            id="vat-amount"
             label={mode === 'add' ? 'Excl. VAT amount (R)' : 'Incl. VAT amount (R)'}
             value={amount}
-            onChange={setAmount}
-            prefix="R"
-            min={0}
+            onChange={(v) => setAmount(Number(v))}
+            prefix="R" min={0}
           />
 
-          <div
-            className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}
-          >
+          <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
+            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
             <Info size={13} style={{ color: C.indigo }} />
             <span style={{ color: 'var(--color-text-muted)' }}>SA VAT rate is 15% (effective 1 May 2025).</span>
           </div>
@@ -119,17 +111,16 @@ export function VatCalculator() {
             VAT registration check
           </h2>
           <InputField
+            id="vat-turnover"
             label="Annual turnover (R)"
             value={annualTurnover}
-            onChange={setAnnualTurnover}
-            prefix="R"
-            min={0}
+            onChange={(v) => setAnnualTurnover(Number(v))}
+            prefix="R" min={0}
           />
+
           {annualTurnover >= VAT_REG_THRESHOLD && (
-            <div
-              className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: `${C.red}11`, border: `1px solid ${C.red}33` }}
-            >
+            <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
+              style={{ background: `${C.red}11`, border: `1px solid ${C.red}33` }}>
               <Receipt size={13} style={{ color: C.red }} />
               <span style={{ color: 'var(--color-text-muted)' }}>
                 Your turnover exceeds R1,000,000 — you must register for VAT within 21 business days.
@@ -137,59 +128,37 @@ export function VatCalculator() {
             </div>
           )}
           {annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD && result.monthsTillRegistration > 0 && (
-            <div
-              className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}
-            >
+            <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
+              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}>
               <Info size={13} style={{ color: C.amber }} />
               <span style={{ color: 'var(--color-text-muted)' }}>
-                At this revenue run rate you will hit the VAT threshold in approximately{' '}
+                At this run rate you will hit the VAT threshold in approximately{' '}
                 {result.monthsTillRegistration} month{result.monthsTillRegistration !== 1 ? 's' : ''}.
-                You may voluntarily register once turnover exceeds R50,000 in 12 months.
               </span>
             </div>
           )}
         </div>
 
-        {/* Results */}
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-3">
-            <StatCard
-              label="VAT amount (15%)"
-              value={formatRand(result.vatAmount)}
-              color={C.amber}
-              icon={<Receipt size={16} />}
-            />
-            <StatCard
-              label="Amount excl. VAT"
-              value={formatRand(result.exclVat)}
-              color={C.indigo}
-              icon={<Receipt size={16} />}
-            />
-            <StatCard
-              label="Amount incl. VAT"
-              value={formatRand(result.inclVat)}
-              color={C.emerald}
-              icon={<Receipt size={16} />}
-            />
+            <StatCard label="VAT amount (15%)"    value={formatRand(result.vatAmount)} color="amber"   icon={Receipt} />
+            <StatCard label="Amount excl. VAT"    value={formatRand(result.exclVat)}   color="indigo"  icon={Receipt} />
+            <StatCard label="Amount incl. VAT"    value={formatRand(result.inclVat)}   color="emerald" icon={Receipt} />
           </div>
 
-          {/* Quick reference */}
-          <div
-            className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-          >
+          <div className="p-5 rounded-2xl"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
             <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Quick reference</h2>
-            <div className="space-y-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="space-y-0 text-xs">
               {[
-                ['VAT rate',                          '15%'],
-                ['Mandatory registration threshold',  'R1,000,000 / 12 months'],
-                ['Voluntary registration threshold',  'R50,000 / 12 months'],
-                ['VAT return periods',                'Monthly or bi-monthly'],
-                ['Penalty for late registration',     '10% of VAT owed'],
+                ['VAT rate',                         '15%'],
+                ['Mandatory registration threshold', 'R1,000,000 / 12 months'],
+                ['Voluntary registration threshold', 'R50,000 / 12 months'],
+                ['VAT return periods',               'Monthly or bi-monthly'],
+                ['Penalty for late registration',    '10% of VAT owed'],
               ].map(([label, val]) => (
                 <div key={label} className="flex justify-between py-1.5"
-                  style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
                   <span>{label}</span>
                   <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>{val}</span>
                 </div>
