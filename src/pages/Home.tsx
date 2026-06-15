@@ -258,6 +258,15 @@ const featureCards = [
     colorDim: 'rgba(245,158,11,0.12)',
     tag: '15% VAT',
   },
+  {
+    path: '/municipal-rates',
+    title: 'Municipal Rates Calculator',
+    description: 'Estimate your monthly property rates, water, sewerage and refuse across 7 SA municipalities. Compare cities, model pensioner rebates, and see a 5-year cost projection.',
+    icon: Building2,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: '7 Metros',
+  },
 ];
 
 const quickStats = [

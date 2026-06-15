@@ -45,6 +45,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
       { path: '/airbnb-vs-rental', label: 'Airbnb vs Rental', shortLabel: 'Airbnb', icon: BedDouble, color: '#EC4899', keywords: 'short term let occupancy nightly' },
       { path: '/loan-comparison', label: 'Loan Comparison', shortLabel: 'Loans', icon: Scale, color: '#F59E0B', keywords: 'compare offers apr fees' },
       { path: '/bond-extra', label: 'Bond Extra Payment', shortLabel: 'Bond Extra', icon: Building2, color: '#10B981', keywords: 'extra payment interest saved years saved home loan' },
+      { path: '/municipal-rates', label: 'Municipal Rates Calculator', shortLabel: 'Rates', icon: Landmark, color: '#10B981', keywords: 'property rates joburg cape town tshwane ekurhuleni durban refuse sewerage water' },
     ],
   },
   {

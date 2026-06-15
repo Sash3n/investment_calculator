@@ -42,6 +42,7 @@ const ProvisionalTax      = lazy(() => import('./pages/ProvisionalTax').then((m)
 const RetrenchmentCalc    = lazy(() => import('./pages/RetrenchmentCalc').then((m) => ({ default: m.RetrenchmentCalc })));
 const OffshoreAllowance   = lazy(() => import('./pages/OffshoreAllowance').then((m) => ({ default: m.OffshoreAllowance })));
 const VatCalculator       = lazy(() => import('./pages/VatCalculator').then((m) => ({ default: m.VatCalculator })));
+const MunicipalRates      = lazy(() => import('./pages/MunicipalRates').then((m) => ({ default: m.MunicipalRates })));
 
 function PageFallback() {
   return (
@@ -99,6 +100,7 @@ function App() {
                 <Route path="/retrenchment"        element={<RetrenchmentCalc />} />
                 <Route path="/offshore-allowance"  element={<OffshoreAllowance />} />
                 <Route path="/vat"                 element={<VatCalculator />} />
+                <Route path="/municipal-rates"     element={<MunicipalRates />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
