@@ -27,6 +27,14 @@ const TOOLTIP_STYLE = {
   color:        '#F1F5F9',
 };
 
+type Currency = 'USD' | 'EUR' | 'GBP';
+
+const CURRENCY_DEFAULTS: Record<Currency, { rate: number; label: string; symbol: string }> = {
+  USD: { rate: 18.50, label: 'USD (US Dollar)',        symbol: '$'  },
+  EUR: { rate: 20.20, label: 'EUR (Euro)',              symbol: '€'  },
+  GBP: { rate: 23.60, label: 'GBP (British Pound)',    symbol: '£'  },
+};
+
 interface ShareState {
   zarAmount:       number;
   spotRate:        number;
@@ -34,20 +42,24 @@ interface ShareState {
   localReturn:     number;
   zarDepreciation: number;
   years:           number;
+  currency:        string;
 }
 
 export function OffshoreAllowance() {
   const shared = readShareParam<ShareState>();
 
   const [zarAmount,       setZarAmount]       = useState(shared?.zarAmount       ?? 1_000_000);
-  const [spotRate,        setSpotRate]        = useState(shared?.spotRate        ?? 18.50);
+  const [currency,        setCurrency]        = useState<Currency>((shared?.currency as Currency) ?? 'USD');
+  const [spotRate,        setSpotRate]        = useState(shared?.spotRate        ?? CURRENCY_DEFAULTS.USD.rate);
   const [offshoreReturn,  setOffshoreReturn]  = useState(shared?.offshoreReturn  ?? 12);
   const [localReturn,     setLocalReturn]     = useState(shared?.localReturn     ?? 10);
   const [zarDepreciation, setZarDepreciation] = useState(shared?.zarDepreciation ?? 4);
   const [years,           setYears]           = useState(shared?.years           ?? 10);
 
+  const currencyInfo = CURRENCY_DEFAULTS[currency];
+
   const result = useMemo(() => {
-    const usdInvested = zarAmount / spotRate;
+    const usdInvested = zarAmount / spotRate; // works for any currency — variable name kept as-is
     const chartData: { year: number; local: number; offshore: number }[] = [];
     let localBal = zarAmount;
     let usdBal   = usdInvested;
@@ -70,7 +82,7 @@ export function OffshoreAllowance() {
   const advantage = result.finalOffshore - result.finalLocal;
 
   const shareState: ShareState = {
-    zarAmount, spotRate, offshoreReturn, localReturn, zarDepreciation, years,
+    zarAmount, spotRate, offshoreReturn, localReturn, zarDepreciation, years, currency,
   };
 
   return (
@@ -112,8 +124,31 @@ export function OffshoreAllowance() {
             Scenario inputs
           </h2>
           <InputField id="oa-zar"   label="ZAR amount to invest"          value={zarAmount}       onChange={(v) => setZarAmount(Number(v))}       prefix="R"      min={1} />
-          <InputField id="oa-spot"  label="Current ZAR/USD spot rate"     value={spotRate}        onChange={(v) => setSpotRate(Number(v))}        suffix="R/USD"  min={1} />
-          <InputField id="oa-off"   label="Offshore return (USD p.a.)"    value={offshoreReturn}  onChange={(v) => setOffshoreReturn(Number(v))}  suffix="%"      min={0} max={40} />
+
+          {/* Currency selector */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted)' }}>
+              Foreign currency
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(Object.keys(CURRENCY_DEFAULTS) as Currency[]).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => { setCurrency(c); setSpotRate(CURRENCY_DEFAULTS[c].rate); }}
+                  className="py-2 rounded-lg text-xs font-semibold transition-colors"
+                  style={{
+                    background: currency === c ? C.cyan : `${C.cyan}11`,
+                    color:      currency === c ? '#fff' : C.cyan,
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <InputField id="oa-spot"  label={`ZAR/${currency} spot rate`}       value={spotRate}        onChange={(v) => setSpotRate(Number(v))}        suffix={`R/${currency}`} min={1} />
+          <InputField id="oa-off"   label={`Offshore return (${currency} p.a.)`} value={offshoreReturn} onChange={(v) => setOffshoreReturn(Number(v))}  suffix="%"      min={0} max={40} />
           <InputField id="oa-local" label="Local JSE return (ZAR p.a.)"   value={localReturn}     onChange={(v) => setLocalReturn(Number(v))}     suffix="%"      min={0} max={40} />
           <InputField id="oa-dep"   label="ZAR depreciation p.a."         value={zarDepreciation} onChange={(v) => setZarDepreciation(Number(v))} suffix="%"      min={0} max={20} />
           <InputField id="oa-yrs"   label="Investment horizon"            value={years}           onChange={(v) => setYears(Number(v))}           suffix="yrs"    min={1} max={40} />
@@ -129,7 +164,7 @@ export function OffshoreAllowance() {
               color={advantage >= 0 ? 'emerald' : 'amber'}
               icon={DollarSign}
             />
-            <StatCard label={`USD value in ${years}yr`} value={`$${Math.round(result.usdFinal).toLocaleString()}`} color="indigo" icon={DollarSign} />
+            <StatCard label={`${currency} value in ${years}yr`} value={`${currencyInfo.symbol}${Math.round(result.usdFinal).toLocaleString()}`} color="indigo" icon={DollarSign} />
           </div>
 
           <div className="p-4 rounded-xl text-sm"
@@ -161,8 +196,8 @@ export function OffshoreAllowance() {
                   cursor={{ stroke: `${C.indigo}55`, strokeWidth: 1 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="local"    name="Local (JSE)"   stroke={C.indigo} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="offshore" name="Offshore (USD)" stroke={C.cyan}   strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="local"    name="Local (JSE)"               stroke={C.indigo} strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="offshore" name={`Offshore (${currency})`} stroke={C.cyan}   strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
