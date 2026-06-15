@@ -210,16 +210,31 @@ interface ShareState {
 export function MunicipalRates() {
   const shared = readShareParam<ShareState>();
 
-  const [propValue,  setPropValue]  = useState(shared?.propValue  ?? 1_500_000);
-  const [cityId,     setCityId]     = useState(shared?.cityId     ?? 'coj');
-  const [rebateType, setRebateType] = useState<'standard' | 'pensioner' | 'indigent'>(
+  const [propValue,       setPropValue]       = useState(shared?.propValue  ?? 1_500_000);
+  const [cityId,          setCityId]          = useState(shared?.cityId     ?? 'coj');
+  const [rebateType,      setRebateType]      = useState<'standard' | 'pensioner' | 'indigent'>(
     (shared?.rebateType as 'standard' | 'pensioner' | 'indigent') ?? 'standard',
   );
-  const [waterKl,    setWaterKl]    = useState(shared?.waterKl    ?? 15);
-  const [escalation, setEscalation] = useState(shared?.escalation ?? 8);
+  const [waterKl,         setWaterKl]         = useState(shared?.waterKl    ?? 15);
+  const [escalation,      setEscalation]      = useState(shared?.escalation ?? 8);
+  const [electricityBasic, setElectricityBasic] = useState(0);
+  const [customRate,      setCustomRate]      = useState<number | null>(null);
 
-  const city = MUNICIPALITIES.find((m) => m.id === cityId) ?? MUNICIPALITIES[0];
-  const bill = useMemo(() => calcBill(city, propValue, rebateType, waterKl), [city, propValue, rebateType, waterKl]);
+  const city     = MUNICIPALITIES.find((m) => m.id === cityId) ?? MUNICIPALITIES[0];
+  const activeRate = customRate !== null ? customRate : city.rateInRand;
+
+  // Override city rateInRand with user-edited value when calculating
+  const cityWithCustomRate = useMemo(
+    () => ({ ...city, rateInRand: activeRate }),
+    [city, activeRate],
+  );
+
+  const bill = useMemo(
+    () => calcBill(cityWithCustomRate, propValue, rebateType, waterKl),
+    [cityWithCustomRate, propValue, rebateType, waterKl],
+  );
+
+  const billTotal = bill.total + electricityBasic;
 
   // Donut chart data
   const donutData = useMemo(() => [
@@ -241,7 +256,7 @@ export function MunicipalRates() {
   // 5-year projection
   const projectionRows = useMemo(() => {
     const rows = [];
-    let monthly = bill.total;
+    let monthly = billTotal;
     for (let y = 0; y <= 5; y++) {
       rows.push({
         year:    y === 0 ? 'Current' : `Year ${y}`,
@@ -251,7 +266,7 @@ export function MunicipalRates() {
       monthly *= (1 + escalation / 100);
     }
     return rows;
-  }, [bill.total, escalation]);
+  }, [billTotal, escalation]);
 
 
   const estimated = city.rateEstimated;
@@ -307,7 +322,7 @@ export function MunicipalRates() {
           <InputField id="mr-val" label="Municipal property value (R)" value={propValue}
             onChange={(v) => setPropValue(Number(v))} prefix="R" min={0} />
 
-          <SelectField id="mr-city" label="Municipality" value={cityId} onChange={setCityId}
+          <SelectField id="mr-city" label="Municipality" value={cityId} onChange={(v) => { setCityId(v); setCustomRate(null); }}
             options={MUNICIPALITIES.map((m) => ({ value: m.id, label: m.name }))} />
 
           <SelectField
@@ -324,6 +339,44 @@ export function MunicipalRates() {
 
           <InputField id="mr-water" label="Monthly water usage (kL)" value={waterKl}
             onChange={(v) => setWaterKl(Number(v))} suffix="kL" min={0} max={100} />
+
+          <hr style={{ borderColor: 'var(--color-border)' }} />
+
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--color-text-muted)' }}>
+              Rate in the rand (override)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step={0.000001}
+                min={0}
+                value={customRate !== null ? customRate : city.rateInRand}
+                onChange={(e) => setCustomRate(Number(e.target.value))}
+                className="flex-1 px-3 py-2 rounded-lg text-sm"
+                style={{
+                  background: 'var(--color-bg)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
+              />
+              {customRate !== null && (
+                <button
+                  onClick={() => setCustomRate(null)}
+                  className="text-xs px-2 py-1 rounded"
+                  style={{ background: `${C.amber}22`, color: C.amber }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+              Default: {city.rateInRand.toFixed(6)} — edit if your notice of assessment differs.
+            </p>
+          </div>
+
+          <InputField id="mr-elec" label="Electricity basic charge (monthly)" value={electricityBasic}
+            onChange={(v) => setElectricityBasic(Number(v))} prefix="R" min={0} />
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl text-xs"
@@ -385,11 +438,31 @@ export function MunicipalRates() {
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Monthly total"  value={formatRand(bill.total)}           color="indigo"  icon={Building2} />
-            <StatCard label="Annual total"   value={formatRandShort(bill.total * 12)} color="emerald" icon={TrendingUp} />
-            <StatCard label="Monthly rates"  value={formatRand(bill.rates)}           color="indigo"  icon={Building2} />
-            <StatCard label="Monthly water"  value={formatRand(bill.water)}           color="emerald" icon={Droplets} />
+            <StatCard label="Monthly total"  value={formatRand(billTotal)}           color="indigo"  icon={Building2} />
+            <StatCard label="Annual total"   value={formatRandShort(billTotal * 12)} color="emerald" icon={TrendingUp} />
+            <StatCard label="Monthly rates"  value={formatRand(bill.rates)}          color="indigo"  icon={Building2} />
+            <StatCard label="Monthly water"  value={formatRand(bill.water)}          color="emerald" icon={Droplets} />
           </div>
+
+          {/* Move-city callout */}
+          {(() => {
+            const cheapest = comparisonData.reduce((min, c) => c.total < min.total ? c : min, comparisonData[0]);
+            const saving   = billTotal - cheapest.total;
+            if (saving <= 50 || cheapest.name === city.shortName) return null;
+            return (
+              <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
+                style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}>
+                <TrendingUp size={15} style={{ color: C.emerald }} />
+                <span style={{ color: 'var(--color-text-muted)' }}>
+                  Moving to{' '}
+                  <span style={{ color: C.emerald, fontWeight: 600 }}>{cheapest.name}</span>
+                  {' '}could save you{' '}
+                  <span style={{ color: C.emerald, fontWeight: 600 }}>{formatRand(saving)}/month</span>
+                  {' '}({formatRandShort(saving * 12)}/year) on the same property value.
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Bill breakdown + Donut */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -401,11 +474,12 @@ export function MunicipalRates() {
               <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Monthly breakdown</h2>
               <div className="space-y-0 text-sm">
                 {[
-                  { label: 'Property rates',   value: bill.rates,    color: C.indigo  },
-                  { label: 'Water',            value: bill.water,    color: C.cyan    },
-                  { label: 'Sewerage',         value: bill.sewerage, color: C.emerald },
-                  { label: 'Refuse removal',   value: bill.refuse,   color: C.amber   },
-                  { label: 'Basic services',   value: bill.basic,    color: C.violet  },
+                  { label: 'Property rates',        value: bill.rates,        color: C.indigo  },
+                  { label: 'Water',                 value: bill.water,        color: C.cyan    },
+                  { label: 'Sewerage',              value: bill.sewerage,     color: C.emerald },
+                  { label: 'Refuse removal',        value: bill.refuse,       color: C.amber   },
+                  { label: 'Basic services',        value: bill.basic,        color: C.violet  },
+                  ...(electricityBasic > 0 ? [{ label: 'Electricity basic', value: electricityBasic, color: C.teal }] : []),
                 ].map(({ label, value, color }) => (
                   <div
                     key={label}
@@ -421,7 +495,7 @@ export function MunicipalRates() {
                 ))}
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-semibold" style={{ color: 'var(--color-text)' }}>Total</span>
-                  <span className="font-semibold" style={{ color: C.indigo }}>{formatRand(bill.total)}</span>
+                  <span className="font-semibold" style={{ color: C.indigo }}>{formatRand(billTotal)}</span>
                 </div>
               </div>
             </div>
