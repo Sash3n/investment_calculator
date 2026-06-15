@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Receipt, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { Receipt, AlertTriangle, CheckCircle2, Info, TrendingDown } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
@@ -49,6 +49,7 @@ interface ShareState {
   freelanceIncome:  number;
   otherIncome:      number;
   deductions:       number;
+  raContribution:   number;
   age:              number;
   medAidMembers:    number;
   period:           string;
@@ -61,34 +62,47 @@ export function ProvisionalTax() {
   const [freelanceIncome,  setFreelanceIncome]  = useState(shared?.freelanceIncome  ?? 200_000);
   const [otherIncome,      setOtherIncome]      = useState(shared?.otherIncome      ?? 0);
   const [deductions,       setDeductions]       = useState(shared?.deductions       ?? 0);
+  const [raContribution,   setRaContribution]   = useState(shared?.raContribution   ?? 0);
   const [age,              setAge]              = useState(shared?.age              ?? 30);
   const [medAidMembers,    setMedAidMembers]    = useState(shared?.medAidMembers    ?? 1);
   const [period,           setPeriod]           = useState(shared?.period           ?? 'first');
 
+  // RA slider steps: 0 to max deductible (27.5% of income, capped R350k)
+  const totalIncomePre = employmentIncome + freelanceIncome + otherIncome;
+  const raDeductCap    = Math.min(350_000, totalIncomePre * 0.275);
+  const raSliderMax    = Math.max(raDeductCap, 350_000);
+
   const result = useMemo(() => {
     const totalIncome     = employmentIncome + freelanceIncome + otherIncome;
-    const taxableIncome   = Math.max(0, totalIncome - deductions);
+    // RA deduction: 27.5% of income, capped at R350,000
+    const raAllowed       = Math.min(350_000, totalIncome * 0.275);
+    const raDeducted      = Math.min(raContribution, raAllowed);
+    const taxableIncome   = Math.max(0, totalIncome - deductions - raDeducted);
     const annualTax       = calcPAYE(taxableIncome, age, medAidMembers);
-    const payeOnEmploy    = calcPAYE(Math.max(0, employmentIncome - deductions), age, medAidMembers);
+    const payeOnEmploy    = calcPAYE(Math.max(0, employmentIncome - deductions - raDeducted), age, medAidMembers);
     const taxOnFreelance  = Math.max(0, annualTax - payeOnEmploy);
     const firstPayment    = taxOnFreelance / 2;
     const secondPayment   = taxOnFreelance - firstPayment;
     const monthlySetAside = taxOnFreelance / 12;
-    const effectiveRate   = taxableIncome > 0 ? (annualTax / taxableIncome) * 100 : 0;
+    const effectiveRate    = taxableIncome > 0 ? (annualTax / taxableIncome) * 100 : 0;
     const penaltyThreshold = taxOnFreelance * 0.9;
+    // RA saving: tax without RA vs with RA
+    const taxWithoutRA     = calcPAYE(Math.max(0, totalIncome - deductions), age, medAidMembers);
+    const raTaxSaving      = Math.max(0, taxWithoutRA - annualTax);
     return {
       totalIncome, taxableIncome, annualTax, taxOnFreelance,
       payeOnEmploy, firstPayment, secondPayment,
       monthlySetAside, effectiveRate, penaltyThreshold,
+      raDeducted, raAllowed, raTaxSaving,
     };
-  }, [employmentIncome, freelanceIncome, otherIncome, deductions, age, medAidMembers]);
+  }, [employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers]);
 
   const displayPayment = period === 'first' ? result.firstPayment : result.secondPayment;
   const paymentLabel   = period === 'first' ? '1st payment (Aug)' : '2nd payment (Feb)';
   const paymentDue     = period === 'first' ? '31 August' : '28 February';
 
   const shareState: ShareState = {
-    employmentIncome, freelanceIncome, otherIncome, deductions, age, medAidMembers, period,
+    employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers, period,
   };
 
   return (
@@ -122,7 +136,27 @@ export function ProvisionalTax() {
           <InputField id="pt-employ"  label="Employment income (annual)"          value={employmentIncome} onChange={(v) => setEmploymentIncome(Number(v))} prefix="R" min={0} />
           <InputField id="pt-free"    label="Freelance / side income (annual)"    value={freelanceIncome}  onChange={(v) => setFreelanceIncome(Number(v))}  prefix="R" min={0} />
           <InputField id="pt-other"   label="Other income (interest, rental)"     value={otherIncome}      onChange={(v) => setOtherIncome(Number(v))}      prefix="R" min={0} />
-          <InputField id="pt-deduct"  label="Allowable deductions (RA, etc.)"     value={deductions}       onChange={(v) => setDeductions(Number(v))}       prefix="R" min={0} />
+          <InputField id="pt-deduct"  label="Other deductions"                    value={deductions}       onChange={(v) => setDeductions(Number(v))}       prefix="R" min={0} />
+
+          <hr style={{ borderColor: 'var(--color-border)' }} />
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+            RA contribution
+          </h2>
+          <InputField id="pt-ra"      label="Annual RA contribution"              value={raContribution}   onChange={(v) => setRaContribution(Number(v))}   prefix="R" min={0} />
+          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Max deductible: {formatRand(raDeductCap)} (27.5% of income, capped R350k)
+          </div>
+          {/* Slider for RA */}
+          <input
+            type="range"
+            min={0}
+            max={raSliderMax}
+            step={1000}
+            value={raContribution}
+            onChange={(e) => setRaContribution(Number(e.target.value))}
+            className="w-full"
+            style={{ accentColor: '#6366F1' }}
+          />
           <InputField id="pt-age"     label="Your age"                            value={age}              onChange={(v) => setAge(Number(v))}              suffix="yrs" min={18} max={100} />
           <InputField id="pt-med"     label="Medical aid members (incl. yourself)" value={medAidMembers}   onChange={(v) => setMedAidMembers(Number(v))}    min={0} max={10} />
           <SelectField
@@ -143,6 +177,11 @@ export function ProvisionalTax() {
             <StatCard label="Monthly set aside"              value={formatRand(result.monthlySetAside)}  color="indigo"  icon={CheckCircle2} />
             <StatCard label="Tax on freelance income"        value={formatRand(result.taxOnFreelance)}   color="red"     icon={Receipt} />
             <StatCard label="Effective tax rate"             value={`${result.effectiveRate.toFixed(1)}%`} color="amber" icon={Info} />
+            {raContribution > 0 && (
+              <div className="col-span-2">
+                <StatCard label="RA tax saving this year"  value={formatRand(result.raTaxSaving)}      color="emerald" icon={TrendingDown} />
+              </div>
+            )}
           </div>
 
           <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
@@ -161,6 +200,7 @@ export function ProvisionalTax() {
               {[
                 ['Total income',                   formatRand(result.totalIncome)],
                 ['Less deductions',                `- ${formatRand(deductions)}`],
+                ['Less RA contribution',           `- ${formatRand(result.raDeducted)}`],
                 ['Taxable income',                 formatRand(result.taxableIncome)],
                 ['Annual tax (SARS table)',         formatRand(result.annualTax)],
                 ['PAYE already deducted',          `- ${formatRand(result.payeOnEmploy)}`],
