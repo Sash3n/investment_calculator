@@ -249,10 +249,11 @@ export function MunicipalRates() {
   // City comparison bar data — include electricityBasic so the saving callout is apples-to-apples
   const comparisonData = useMemo(() =>
     MUNICIPALITIES.map((m) => {
-      const b = calcBill(m, propValue, rebateType, waterKl);
+      const mEff = m.id === cityId ? cityWithCustomRate : m;
+      const b = calcBill(mEff, propValue, rebateType, waterKl);
       return { name: m.shortName, total: Math.round(b.total + electricityBasic), rates: Math.round(b.rates), color: m.color };
     }),
-  [propValue, rebateType, waterKl, electricityBasic]);
+  [cityId, cityWithCustomRate, propValue, rebateType, waterKl, electricityBasic]);
 
   // 5-year projection
   const projectionRows = useMemo(() => {
