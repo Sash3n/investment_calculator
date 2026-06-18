@@ -184,7 +184,7 @@ export function RetrenchmentCalc() {
           </div>
 
           {/* Runway callout */}
-          {result.totalNet > 0 && (
+          {result.totalNet > 0 && monthlyExpenses > 0 && (
           <div className="p-4 rounded-xl text-sm"
             style={{
               background: result.monthsRunway < 3 ? `${C.red}11` : `${C.emerald}11`,
