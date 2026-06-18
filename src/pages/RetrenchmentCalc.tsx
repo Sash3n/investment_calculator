@@ -25,20 +25,20 @@ function calcLumpSumTax(lumpSum: number): number {
 
 // SA UIF benefit: sliding scale based on daily remuneration
 // Max benefit = 58% of daily income, capped at R17,712/month (2024 ceiling)
-function calcUIF(monthlySalary: number): { monthlyBenefit: number; weeksEntitled: number } {
+function calcUIF(monthlySalary: number, yearsService: number): { monthlyBenefit: number; weeksEntitled: number } {
   const UIF_INCOME_CAP = 17_712;
   const cappedMonthly  = Math.min(monthlySalary, UIF_INCOME_CAP);
   const dailyIncome    = cappedMonthly / 21.67;
 
-  // IRR (income replacement rate) slides from 38% to 58% — approximation
-  // Higher earners get lower %; use a simple linear interpolation
+  // IRR (income replacement rate) slides from 38% to 58%
   const irrPct = dailyIncome <= 0 ? 0.58 : Math.max(0.38, 0.58 - (dailyIncome / 1000) * 0.02);
   const dailyBenefit   = dailyIncome * irrPct;
   const monthlyBenefit = dailyBenefit * 21.67;
 
-  // Entitlement: 1 credit day per 4 days worked, max 238 days (34 weeks)
-  // Simplified: max 8 months of benefit
-  const weeksEntitled = Math.min(34, Math.floor(34));
+  // 1 credit day per 4 calendar days worked, max 238 credit days (34 weeks)
+  const daysWorked    = yearsService * 365;
+  const creditDays    = Math.floor(daysWorked / 4);
+  const weeksEntitled = Math.min(34, Math.floor(creditDays / 7));
 
   return { monthlyBenefit: Math.round(monthlyBenefit), weeksEntitled };
 }
@@ -94,7 +94,7 @@ export function RetrenchmentCalc() {
     const netLeavePayout = leavePayout * 0.75;
 
     // UIF
-    const uif = calcUIF(monthlySalary);
+    const uif = calcUIF(monthlySalary, yearsService);
 
     // Total net payout
     const totalNet = netSeverance + netNoticePay + netLeavePayout;
@@ -184,6 +184,7 @@ export function RetrenchmentCalc() {
           </div>
 
           {/* Runway callout */}
+          {result.totalNet > 0 && (
           <div className="p-4 rounded-xl text-sm"
             style={{
               background: result.monthsRunway < 3 ? `${C.red}11` : `${C.emerald}11`,
@@ -211,6 +212,7 @@ export function RetrenchmentCalc() {
               </span>
             )}
           </div>
+          )}
 
           {/* Full breakdown table */}
           <div className="p-5 rounded-2xl"
