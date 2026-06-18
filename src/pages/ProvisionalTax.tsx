@@ -67,10 +67,9 @@ export function ProvisionalTax() {
   const [medAidMembers,    setMedAidMembers]    = useState(shared?.medAidMembers    ?? 1);
   const [period,           setPeriod]           = useState(shared?.period           ?? 'first');
 
-  // RA slider steps: 0 to max deductible (27.5% of income, capped R350k)
+  // RA slider bounded to the actual allowable deduction (27.5% of income, capped R350k)
   const totalIncomePre = employmentIncome + freelanceIncome + otherIncome;
   const raDeductCap    = Math.min(350_000, totalIncomePre * 0.275);
-  const raSliderMax    = Math.max(raDeductCap, 350_000);
 
   const result = useMemo(() => {
     const totalIncome     = employmentIncome + freelanceIncome + otherIncome;
@@ -79,7 +78,10 @@ export function ProvisionalTax() {
     const raDeducted      = Math.min(raContribution, raAllowed);
     const taxableIncome   = Math.max(0, totalIncome - deductions - raDeducted);
     const annualTax       = calcPAYE(taxableIncome, age, medAidMembers);
-    const payeOnEmploy    = calcPAYE(Math.max(0, employmentIncome - deductions - raDeducted), age, medAidMembers);
+    // Split RA deduction pro-rata across income sources so payeOnEmploy isn't understated
+    const employRatio  = totalIncome > 0 ? employmentIncome / totalIncome : 0;
+    const raOnEmploy   = raDeducted * employRatio;
+    const payeOnEmploy = calcPAYE(Math.max(0, employmentIncome - deductions * employRatio - raOnEmploy), age, medAidMembers);
     const taxOnFreelance  = Math.max(0, annualTax - payeOnEmploy);
     const firstPayment    = taxOnFreelance / 2;
     const secondPayment   = taxOnFreelance - firstPayment;
@@ -150,7 +152,7 @@ export function ProvisionalTax() {
           <input
             type="range"
             min={0}
-            max={raSliderMax}
+            max={raDeductCap}
             step={1000}
             value={raContribution}
             onChange={(e) => setRaContribution(Number(e.target.value))}
