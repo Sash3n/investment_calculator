@@ -29,10 +29,10 @@ const TOOLTIP_STYLE = {
 
 type Currency = 'USD' | 'EUR' | 'GBP';
 
-const CURRENCY_DEFAULTS: Record<Currency, { rate: number; label: string; symbol: string }> = {
-  USD: { rate: 18.50, label: 'USD (US Dollar)',        symbol: '$'  },
-  EUR: { rate: 20.20, label: 'EUR (Euro)',              symbol: '€'  },
-  GBP: { rate: 23.60, label: 'GBP (British Pound)',    symbol: '£'  },
+const CURRENCY_DEFAULTS: Record<Currency, { rate: number; label: string; symbol: string; defaultReturn: number }> = {
+  USD: { rate: 18.50, label: 'USD (US Dollar)',     symbol: '$', defaultReturn: 12 },
+  EUR: { rate: 20.20, label: 'EUR (Euro)',           symbol: '€', defaultReturn: 9  },
+  GBP: { rate: 23.60, label: 'GBP (British Pound)', symbol: '£', defaultReturn: 8  },
 };
 
 interface ShareState {
@@ -134,7 +134,7 @@ export function OffshoreAllowance() {
               {(Object.keys(CURRENCY_DEFAULTS) as Currency[]).map((c) => (
                 <button
                   key={c}
-                  onClick={() => { setCurrency(c); setSpotRate(CURRENCY_DEFAULTS[c].rate); }}
+                  onClick={() => { setCurrency(c); setSpotRate(CURRENCY_DEFAULTS[c].rate); setOffshoreReturn(CURRENCY_DEFAULTS[c].defaultReturn); }}
                   className="py-2 rounded-lg text-xs font-semibold transition-colors"
                   style={{
                     background: currency === c ? C.cyan : `${C.cyan}11`,
