@@ -218,12 +218,13 @@ export function MunicipalRates() {
   const [waterKl,         setWaterKl]         = useState(shared?.waterKl    ?? 15);
   const [escalation,      setEscalation]      = useState(shared?.escalation ?? 8);
   const [electricityBasic, setElectricityBasic] = useState(0);
-  const [customRate,      setCustomRate]      = useState<number | null>(null);
+  const [customRate,       setCustomRate]       = useState<number | null>(null);
 
-  const city     = MUNICIPALITIES.find((m) => m.id === cityId) ?? MUNICIPALITIES[0];
+  // Memoize city lookup so its reference is stable — otherwise useMemos that depend on it
+  // recompute on every render even when cityId hasn't changed
+  const city      = useMemo(() => MUNICIPALITIES.find((m) => m.id === cityId) ?? MUNICIPALITIES[0], [cityId]);
   const activeRate = customRate !== null ? customRate : city.rateInRand;
 
-  // Override city rateInRand with user-edited value when calculating
   const cityWithCustomRate = useMemo(
     () => ({ ...city, rateInRand: activeRate }),
     [city, activeRate],
@@ -245,13 +246,13 @@ export function MunicipalRates() {
     { name: 'Basic services', value: Math.round(bill.basic),    color: C.violet  },
   ].filter((d) => d.value > 0), [bill]);
 
-  // City comparison bar data
+  // City comparison bar data — include electricityBasic so the saving callout is apples-to-apples
   const comparisonData = useMemo(() =>
     MUNICIPALITIES.map((m) => {
       const b = calcBill(m, propValue, rebateType, waterKl);
-      return { name: m.shortName, total: Math.round(b.total), rates: Math.round(b.rates), color: m.color };
+      return { name: m.shortName, total: Math.round(b.total + electricityBasic), rates: Math.round(b.rates), color: m.color };
     }),
-  [propValue, rebateType, waterKl]);
+  [propValue, rebateType, waterKl, electricityBasic]);
 
   // 5-year projection
   const projectionRows = useMemo(() => {
