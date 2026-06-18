@@ -47,21 +47,30 @@ function amortize(
   let totalInterest = 0;
   const rows: AmortRow[] = [];
 
+  // Clamp extra to non-negative so a user typing negative values can't inflate balance
+  const safeExtra = Math.max(0, extraMonthly);
+
   for (let m = 1; m <= termMonths; m++) {
     if (balance <= 0) break;
-    const interest   = balance * r;
-    let   principalPmt = Math.min(pmt - interest + extraMonthly, balance);
+    const interest     = balance * r;
+    let   principalPmt = Math.min(pmt - interest + safeExtra, balance);
     balance -= principalPmt;
     totalInterest += interest;
 
-    // Annual lump sum applied at end of each year
+    // Annual lump sum applied at end of each year — tracked as additional principal
+    let lumpApplied = 0;
     if (m % 12 === 0 && annualLumpSum > 0 && balance > 0) {
-      const lumpApplied = Math.min(annualLumpSum, balance);
-      balance -= lumpApplied;
-      // Lump sum counted as principal, not tracked separately for simplicity
+      lumpApplied = Math.min(annualLumpSum, balance);
+      balance    -= lumpApplied;
     }
 
-    rows.push({ month: m, year: Math.ceil(m / 12), balance: Math.max(0, balance), interest, principal: principalPmt });
+    rows.push({
+      month:     m,
+      year:      Math.ceil(m / 12),
+      balance:   Math.max(0, balance),
+      interest,
+      principal: principalPmt + lumpApplied,
+    });
     if (balance <= 0.01) break;
   }
   return { rows, totalInterest, monthsPaid: rows.length };
