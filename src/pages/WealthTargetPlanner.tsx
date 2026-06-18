@@ -171,6 +171,20 @@ export function WealthTargetPlanner() {
     return pmtLater - result.pmt;
   }, [mode, target, years, rate, lump, escalation, result.pmt]);
 
+  // Scenario comparison — memoised to avoid re-running 3×binary-search on every keystroke
+  const scenarios = useMemo(() => [
+    { label: 'Conservative', r: Math.max(1, rate - 2), color: '#F59E0B' },
+    { label: 'Current',      r: rate,                  color: '#6366F1' },
+    { label: 'Aggressive',   r: rate + 2,             color: '#10B981' },
+  ].map(({ label, r, color }) => {
+    const pmt = mode === 'target'
+      ? findMonthly(target, years, r, lump, escalation)
+      : monthly;
+    const { finalBalance } = simulate(pmt, years, r, lump, escalation);
+    const realVal = (mode === 'target' ? target : finalBalance) / Math.pow(1 + inflation / 100, years);
+    return { label, r, color, pmt, finalBalance, realVal };
+  }), [mode, target, monthly, years, rate, lump, escalation, inflation]);
+
   const shareState: ShareState = {
     mode, target, monthly, years, lump,
     vehicleIdx, rate, escalation, inflation,
@@ -359,7 +373,7 @@ export function WealthTargetPlanner() {
             </ResponsiveContainer>
           </div>
 
-          {/* Scenario comparison */}
+          {/* Scenario comparison — data memoised above to avoid keystroke jank */}
           <div className="p-5 rounded-2xl"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
             <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
@@ -369,42 +383,31 @@ export function WealthTargetPlanner() {
               Conservative (-2%), Current, Aggressive (+2%) return rates
             </p>
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Conservative', r: Math.max(1, rate - 2), color: C.amber  },
-                { label: 'Current',      r: rate,                  color: C.indigo },
-                { label: 'Aggressive',   r: rate + 2,             color: C.emerald },
-              ].map(({ label, r, color }) => {
-                const pmt = mode === 'target'
-                  ? findMonthly(target, years, r, lump, escalation)
-                  : monthly;
-                const { finalBalance } = simulate(pmt, years, r, lump, escalation);
-                const realVal = (mode === 'target' ? target : finalBalance) / Math.pow(1 + inflation / 100, years);
-                return (
-                  <div key={label} className="p-3 rounded-xl text-xs"
-                    style={{ background: `${color}11`, border: `1px solid ${color}33` }}>
-                    <div className="font-semibold mb-2" style={{ color }}>{label} ({r}%)</div>
-                    {mode === 'target' ? (
-                      <>
-                        <div style={{ color: 'var(--color-text-muted)' }}>Monthly needed</div>
-                        <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
-                          {formatRand(pmt)}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ color: 'var(--color-text-muted)' }}>Final value</div>
-                        <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
-                          {formatRandShort(finalBalance)}
-                        </div>
-                      </>
-                    )}
-                    <div className="mt-1" style={{ color: 'var(--color-text-muted)' }}>Real value</div>
-                    <div className="font-medium mt-0.5" style={{ color: 'var(--color-text)' }}>
-                      {formatRandShort(realVal)}
-                    </div>
+              {scenarios.map(({ label, r, color, pmt, finalBalance, realVal }) => (
+                <div key={label} className="p-3 rounded-xl text-xs"
+                  style={{ background: `${color}11`, border: `1px solid ${color}33` }}>
+                  <div className="font-semibold mb-2" style={{ color }}>{label} ({r}%)</div>
+                  {mode === 'target' ? (
+                    <>
+                      <div style={{ color: 'var(--color-text-muted)' }}>Monthly needed</div>
+                      <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
+                        {formatRand(pmt)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ color: 'var(--color-text-muted)' }}>Final value</div>
+                      <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
+                        {formatRandShort(finalBalance)}
+                      </div>
+                    </>
+                  )}
+                  <div className="mt-1" style={{ color: 'var(--color-text-muted)' }}>Real value</div>
+                  <div className="font-medium mt-0.5" style={{ color: 'var(--color-text)' }}>
+                    {formatRandShort(realVal)}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
 
