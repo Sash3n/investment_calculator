@@ -148,17 +148,19 @@ export function ProvisionalTax() {
           <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
             Max deductible: {formatRand(raDeductCap)} (27.5% of income, capped R350k)
           </div>
-          {/* Slider for RA */}
-          <input
-            type="range"
-            min={0}
-            max={raDeductCap}
-            step={1000}
-            value={raContribution}
-            onChange={(e) => setRaContribution(Number(e.target.value))}
-            className="w-full"
-            style={{ accentColor: '#6366F1' }}
-          />
+          {/* Slider for RA — hidden when income is zero (max would be 0, slider breaks) */}
+          {raDeductCap > 0 && (
+            <input
+              type="range"
+              min={0}
+              max={raDeductCap}
+              step={1000}
+              value={Math.min(raContribution, raDeductCap)}
+              onChange={(e) => setRaContribution(Number(e.target.value))}
+              className="w-full"
+              style={{ accentColor: '#6366F1' }}
+            />
+          )}
           <InputField id="pt-age"     label="Your age"                            value={age}              onChange={(v) => setAge(Number(v))}              suffix="yrs" min={18} max={100} />
           <InputField id="pt-med"     label="Medical aid members (incl. yourself)" value={medAidMembers}   onChange={(v) => setMedAidMembers(Number(v))}    min={0} max={10} />
           <SelectField
