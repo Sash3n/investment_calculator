@@ -1,31 +1,11 @@
 # FinCalc ZA
 
 > **Smart Investment Tools for South African Investors**
-> A production-grade, dark-themed financial calculator suite built with React + TypeScript + Vite. Covers mortgages, buy-to-let property ROI, car finance, the classic extra-payment vs. investing dilemma, SA tax planning, and investment strategy — all calibrated for South African conditions (ZAR, Prime Rate, JSE ETFs, CGT, SARS tax brackets).
+> A production-grade, dark-themed financial calculator suite built with React + TypeScript + Vite. Calibrated for South African conditions — ZAR, live SA Prime Rate, SARS 2026 tax brackets, JSE ETFs, CGT, transfer duty, TFSA, and more.
 
----
+**Live:** [financial-calculator-za.vercel.app](https://financial-calculator-za.vercel.app)
+**Repo:** [github.com/Sash3n/investment_calculator](https://github.com/Sash3n/investment_calculator)
 
-## Screenshots
-
-| Dashboard (Dark) | Dashboard (Light) |
-|---|---|
-| ![Dashboard Dark](docs/screenshots/dashboard.png) | ![Dashboard Light](docs/screenshots/dashboard-light.png) |
-
-| Mortgage Calculator | Property ROI |
-|---|---|
-| ![Mortgage](docs/screenshots/mortgage.png) | ![Property ROI](docs/screenshots/property-roi.png) |
-
-| Car Finance | Extra Payments vs Investing |
-|---|---|
-| ![Car Finance](docs/screenshots/car-finance.png) | ![Extra vs Investing](docs/screenshots/extra-vs-investing.png) |
-
-| Tax Planner | Investment Strategy |
-|---|---|
-| ![Tax Planner](docs/screenshots/tax-planner.png) | ![Investment Strategy](docs/screenshots/investment-strategy.png) |
-
-| Calculation History | Light Mode |
-|---|---|
-| ![History](docs/screenshots/history.png) | ![Light Mode](docs/screenshots/light-mode.png) |
 ---
 
 ## Features
@@ -35,23 +15,23 @@
 - Extra monthly payments + once-off lump-sum injection
 - Full amortization schedule (collapsible, paginated)
 - Interest saved & months saved vs. standard schedule
+- Transfer duty (SARS 2026) + bond registration costs panel
+- Upfront Cash Required summary (deposit + transfer duty + bond reg)
 - Monthly bank service fee with true total-cost banner
-- Payoff date projection with and without extras
-- Excel (XLSX) export of the full schedule
+- Live SA Prime Rate via SARB API (Vercel serverless proxy)
+- PDF export (jsPDF, dark theme, amortization table)
 - Save & load snapshots (Google sign-in required)
 
 ### Property ROI Calculator
 - Dual rental scenario comparison (conservative vs. optimistic)
-- Vacancy rate adjustment
-- Management fee (% of effective rent)
-- Full cost breakdown: bond repayment, levies, rates, insurance, effluent fees, misc fees
-- Gross yield, net yield, 5-year ROI, 10-year ROI
+- Vacancy rate, management fee, full operating cost breakdown
+- Transfer duty + bond registration costs in acquisition panel
+- Gross yield, net yield, 5-year & 10-year ROI
 - Property value + equity growth chart (10 years)
-- Income vs. Expenses bar chart
-- Cost composition pie chart
-- **Portfolio Manager**: save multiple properties, compare side-by-side, bulk Excel export
-- Edit saved portfolio properties — loads back into calculator with one click
-- Cloud sync when signed in (Firestore); localStorage fallback when offline
+- Income vs. Expenses bar chart + cost composition pie chart
+- **Portfolio Manager**: save multiple properties to Firestore
+- Edit saved portfolio properties — one-click reload into calculator
+- PDF export (jsPDF, dark theme, 10-year projection table)
 
 ### Car Finance Calculator
 - Balloon payment support (common SA practice)
@@ -62,54 +42,125 @@
 - Underwater months detection (loan balance > vehicle value)
 - Opportunity cost comparison: cash purchase vs. financed
 - Full amortization table — Standard & With Extras tabs, paginated
+- PDF export
 - Save & load snapshots (Google sign-in required)
 
 ### Extra Payments vs. JSE ETF Investing
 - Side-by-side: paying extra into your bond vs. investing the same amount
-- JSE ETF benchmarks: Satrix 40 (13%), S&P 500 ETF (18%), Sygnia Itrix (15%), Ashburton (14%), Coronation (12%)
-- South African CGT: 18% effective rate (40% inclusion × 45% marginal)
+- JSE ETF benchmarks: Satrix 40 (13%), S&P 500 ETF (18%), Sygnia Itrix (15%), Ashburton (14%)
+- South African CGT applied on ETF returns
 - Inflation-adjusted comparison
-- Year-by-year table showing bond balance (both scenarios) and portfolio value
-- Clear winner callout with rand advantage
+- Year-by-year table + clear winner callout with rand advantage
 - Save & load snapshots (Google sign-in required)
 
-### Tax Planner
-- SARS 2024/25 income tax brackets
-- Medical aid credits (principal + dependants)
-- Retirement annuity (RA) and pension fund deduction modelling
-- Monthly and annual tax breakdown
-- Net take-home pay after all deductions
-- Save & load snapshots (Google sign-in required)
+### Property Tax Planner
+- **Rental Income Tax** — SARS 2026 brackets, all allowable deductions (bond interest, rates, levies, insurance, repairs, management fee), marginal rate on rental income
+- **Section 13sex** — new residential unit depreciation allowance (5% / 10% for 20 / 10 years), now fully **multi-unit**:
+  - Each unit has its own price, rent, bond, levies, rates, insurance, management fee and vacancy (no longer assumes 5 identical units)
+  - **Import from Portfolio** — pull saved Property ROI properties straight in as units (price auto-adjusted for land exclusion)
+  - **RA stacking** — model a retirement-annuity contribution alongside the S13 allowance and see the combined tax saving
+  - Per-unit analysis table (yield, cash flow), portfolio cash-flow chart, year-by-year schedule, and an in-page education section
+- **Section 13quat (UDZ)** — Urban Development Zone allowances (new/improvements/low-cost), full deduction schedule
+- **CGT Planner** — primary residence exclusion (R3M, 2026), annual exclusion (R50k), 40% inclusion rate, net proceeds after CGT, joint ownership support
 
 ### Investment Strategy Calculator
 - Gross-to-net salary breakdown with PAYE, UIF, SDL
 - RA vs. TFSA vs. direct ETF contribution optimisation
 - Monthly tax saving from RA contributions
+- 2-Pot retirement system modelling
 - Recommended strategy tag based on income and goals
-- Save & load snapshots (Google sign-in required)
+- Exact ZAR figures displayed (no abbreviated K/M values)
+
+### Tax Projections (Multi-Year)
+- Year-by-year rental tax forecast over 5–20 year hold period
+- Rent escalation modelling (configurable % p.a.)
+- Declining bond interest deductions as loan amortises
+- Annual net rental profit vs. tax paid (bar chart)
+- Cumulative net cash vs. cumulative tax (area chart)
+- CGT at each potential exit year — full table with optimal exit ★
+- Total Return = net sale proceeds + cumulative rental net − purchase price
+
+### TFSA Optimizer
+- Lifetime allowance tracker (R500k) with animated progress bar
+- Annual contribution cap enforcement (R46,000/year, SARS 2026/27)
+- TFSA vs. taxable investment comparison (same balance, same contributions)
+- Tax drag modelling by investment type:
+  - ETF: 20% dividend withholding tax on yield, CGT on disposal
+  - Balanced fund: higher income yield assumption
+  - Cash/money market: income tax on interest after exemption (R23,800/R34,500)
+- TFSA vs. taxable area chart (compounding divergence over time)
+- Annual tax avoided bar chart
+- Year-by-year table with lifetime-maxed marker (★)
+- Key SARS rules callout (limits, withdrawal rules, zero-tax guarantee)
+
+### Portfolio Summary
+- Aggregate view across all saved Property ROI properties
+- Total portfolio value, equity, outstanding debt, monthly cash flow, blended yield
+- Monthly cash flow bar chart (green/red per property)
+- Gross vs. net yield comparison bar chart
+- Equity growth area chart (per-property series)
+- Per-property breakdown table with totals row
+- One-click "Open" to load any property back into the ROI calculator
+
+### Portfolio Stress Test
+- Reads your saved Property ROI portfolio — **no extra data entry**
+- Runs every property through adverse scenarios: prime +1/+2/+3%, 15% vacancy, −10% value, and a combined worst case
+- Monthly cash-flow matrix (property × scenario) with negatives flagged
+- **Breaking-point rate** per property — the interest rate at which it turns cash-flow negative — plus rate headroom
+- Most-fragile property callout, portfolio totals, and a how-to-read-it education section
+
+### Bond Affordability Qualifier
+- Max home loan & property price using SA bank rules: 30% instalment-to-income + NCA ~36% debt-to-income
+- Live prime rate seeded as the default interest rate
+- **Rate stress test** — how much your qualifying loan shrinks if rates rise
+- Upfront cash needed (deposit + transfer duty + bond registration)
+- "Can I afford this specific home?" target-price check with required-income estimate
+- Income-allocation pie + affordability-vs-stress bar chart, education section
+
+### Airbnb vs Long-term Rental
+- Compares short-term letting vs a traditional lease on the same property
+- Net operating income (before bond, like-for-like), net yield, and after-bond monthly cash flow for each
+- **Break-even occupancy** — the Airbnb occupancy needed to match the long-term lease
+- Models platform fees, cleaning per stay, co-host/management %, utilities, and vacancy
+- Winner banner, side-by-side comparison table, income-breakdown chart, education section
+
+### Optimal Exit Planner
+- Answers "when should I sell?" across years 1 / 3 / 5 / 10 / 15 / 20 / 25
+- Combines **CGT**, **Section 13sex recoupment** (allowances clawed back as income on sale), and your marginal rate
+- Surfaces the recoupment trap and the **net lifetime tax position** (S13 savings received − tax paid on exit)
+- Best-cash-year and best-tax-year callouts, net-proceeds vs exit-tax chart, scenario table, education section
+
+### Comparison Mode
+- Select any two saved snapshots of the same calculator type
+- Side-by-side A/B table with diff column
+- Green = better, red = worse, per metric (lower-better / higher-better / neutral)
+- Diff badge shows amount and direction arrow
+- Supports: Mortgage, Property ROI, Car Finance comparisons
 
 ### Calculation History
 - All saved snapshots from every calculator in one place
-- Open any snapshot — navigates to the correct calculator and restores all inputs in "Edit" mode so you can update and save back
+- Open any snapshot — navigates to the correct calculator in edit mode
 - Delete individual entries or clear all history
-- Automatically populated when saving from any calculator
+- Compare mode: select two entries → navigate to `/compare`
 
 ### Save / Load Snapshots (all calculators)
 - **Google sign-in** — one-click Google Auth via Firebase
 - **Save snapshot** — captures current inputs + key result as a named entry
-- **Edit mode** — click Edit on any saved entry to load its inputs and switch the Save button to "Update snapshot", overwriting the same Firestore document
+- **Edit mode** — load saved snapshot back, overwrite same Firestore document
 - **Rename** — inline title editing without touching inputs
-- **New** button — exit edit mode to save a brand-new snapshot instead of updating
-- Snapshots persist in Firestore, synced across devices
+- **New** button — exit edit mode to save a fresh snapshot
+- Synced to Firestore, accessible across devices
 
 ### App-wide
+- **Route-based code splitting** — calculator pages are lazy-loaded as on-demand chunks (initial bundle trimmed from ~2.3 MB to ~620 KB); heavy libs (jsPDF, xlsx, html2canvas, Recharts) load only when their page is opened
+- Live SA Prime Rate — fetched from SARB API via Vercel serverless proxy, cached 6hrs in sessionStorage, shown in sidebar footer
 - Dark/light mode toggle — persisted to `localStorage`
-- Responsive layout: desktop sidebar + mobile bottom tab bar
-- Glassmorphism dark theme (#0A0F1E, indigo/amber palette)
+- Responsive: desktop sidebar + scrollable mobile bottom tab bar
+- Glassmorphism dark theme (#0A0F1E, indigo/amber palette, Outfit + DM Sans)
 - Framer Motion page transitions and card animations
 - South African Rand (ZAR) formatting throughout
-- Prime Rate displayed in sidebar footer (11.25%)
-- Disclaimer banner with full legal text
+- 404 and Error pages (status-aware, fintech-styled)
+- Educational disclaimer banner
 
 ---
 
@@ -120,16 +171,17 @@
 | Build | Vite | 8.x |
 | UI Framework | React | 19.x |
 | Language | TypeScript | 5.x (strict) |
-| Styling | Tailwind CSS v4 | 4.x (CSS-only config) |
+| Styling | Tailwind CSS v4 | 4.x |
 | Component Library | DaisyUI | 5.x |
 | Routing | React Router | 7.x |
-| Charts | Recharts | 2.x |
-| Animations | Framer Motion | 11.x |
+| Charts | Recharts | 3.x |
+| Animations | Framer Motion | 12.x |
 | Icons | Lucide React | latest |
+| PDF Export | jsPDF | latest |
 | Excel Export | SheetJS (xlsx) | latest |
 | Auth | Firebase Auth (Google) | 11.x |
 | Database | Firebase Firestore | 11.x |
-| CSS Utilities | clsx | latest |
+| Hosting | Vercel (+ serverless functions) | — |
 
 ---
 
@@ -139,40 +191,58 @@
 src/
 ├── components/
 │   ├── Layout/
-│   │   └── AppShell.tsx        # Sidebar, header, mobile nav, theme toggle, auth pill
+│   │   └── AppShell.tsx          # Sidebar, header, mobile nav, theme toggle, auth
 │   └── ui/
-│       ├── InputField.tsx      # Labelled number/text input with prefix/suffix
-│       ├── SelectField.tsx     # Styled select dropdown
-│       ├── StatCard.tsx        # Metric card with icon and trend
-│       ├── SectionHeader.tsx   # Section heading with optional icon
-│       └── SaveLoadBar.tsx     # Reusable save/load/edit panel for all calculators
+│       ├── InputField.tsx
+│       ├── SelectField.tsx
+│       ├── StatCard.tsx
+│       ├── SectionHeader.tsx
+│       └── SaveLoadBar.tsx       # Reusable save/load/edit panel
 ├── context/
-│   └── AuthContext.tsx         # Firebase Auth provider (Google sign-in)
+│   └── AuthContext.tsx           # Firebase Auth provider
 ├── hooks/
-│   └── useFirestore.ts         # useSavedProperties + useHistory Firestore hooks
+│   ├── useFirestore.ts           # useSavedProperties + useHistory hooks
+│   └── usePrimeRate.ts           # Live SARB prime rate fetch + sessionStorage cache
 ├── lib/
-│   └── firebase.ts             # Firebase app + Firestore + Auth initialisation
+│   └── firebase.ts               # Firebase initialisation
 ├── pages/
-│   ├── Dashboard.tsx           # Overview landing page
+│   ├── Dashboard.tsx
 │   ├── MortgageCalculator.tsx
-│   ├── PropertyROI.tsx         # Includes portfolio manager + cloud sync
+│   ├── PropertyROI.tsx
 │   ├── CarFinance.tsx
 │   ├── PaymentVsInvesting.tsx
-│   ├── TaxPlanner.tsx
+│   ├── TaxPlanner.tsx            # Rental tax, Section 13sex/quat, CGT
 │   ├── InvestmentStrategy.tsx
-│   └── History.tsx             # Unified calculation history with Open/Delete
+│   ├── TaxProjections.tsx        # Multi-year rental tax forecast
+│   ├── TfsaOptimizer.tsx         # TFSA vs taxable comparison
+│   ├── PortfolioSummary.tsx      # Aggregate property portfolio view
+│   ├── StressTest.tsx            # Portfolio stress test (rate/vacancy/value)
+│   ├── Affordability.tsx         # Bond affordability qualifier
+│   ├── AirbnbVsRental.tsx        # Short-term vs long-term rental
+│   ├── ExitPlanner.tsx           # Optimal exit (CGT + S13 recoupment)
+│   ├── History.tsx               # Unified history + compare mode
+│   ├── Compare.tsx               # A/B snapshot comparison
+│   ├── NotFound.tsx              # 404 page
+│   └── ErrorPage.tsx             # Error boundary page
 ├── utils/
-│   ├── mortgage.ts             # Bond maths (annuity, amortization, lump sum)
-│   ├── roi.ts                  # Property ROI, yields, equity projections
-│   ├── car.ts                  # Car finance, balloon, depreciation, underwater
-│   ├── investing.ts            # Extra vs. invest comparison, CGT adjustment
-│   ├── tax.ts                  # SARS tax brackets, medical credits, RA deductions
-│   └── format.ts               # ZAR, percent, date formatters
+│   ├── mortgage.ts
+│   ├── roi.ts
+│   ├── car.ts
+│   ├── investing.ts
+│   ├── tax.ts                    # SARS brackets, transfer duty, CGT, Section 13
+│   ├── stress.ts                 # Portfolio stress-test scenarios
+│   ├── affordability.ts          # Bond affordability (30% rule + NCA DTI)
+│   ├── shortTermRental.ts        # Airbnb vs long-term rental comparison
+│   ├── exitPlanner.ts            # CGT + S13 recoupment by sale year
+│   ├── pdf.ts                    # jsPDF exporters (Mortgage, Property, Car)
+│   └── format.ts
 ├── types/
-│   └── index.ts                # All TypeScript interfaces
-├── App.tsx                     # React Router route definitions
-├── main.tsx                    # Entry point
-└── index.css                   # Tailwind v4 + DaisyUI + CSS custom properties
+│   └── index.ts
+├── App.tsx
+├── main.tsx
+└── index.css
+api/
+└── prime-rate.ts                 # Vercel serverless proxy for SARB rate
 ```
 
 ---
@@ -182,7 +252,8 @@ src/
 ### Prerequisites
 - Node.js 20+
 - npm 10+
-- A Firebase project (for Auth + Firestore — see below)
+- A Firebase project (Auth + Firestore)
+- A Vercel account (for serverless prime rate proxy)
 
 ### Installation
 
@@ -208,37 +279,23 @@ npm install
      }
    }
    ```
-5. Register a web app and copy the config into `.env.local`:
+5. Register a web app and copy config into `.env.local`:
    ```
    VITE_FIREBASE_API_KEY=...
-   VITE_FIREBASE_AUTH_DOMAIN=...
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
    VITE_FIREBASE_PROJECT_ID=...
    VITE_FIREBASE_STORAGE_BUCKET=...
    VITE_FIREBASE_MESSAGING_SENDER_ID=...
    VITE_FIREBASE_APP_ID=...
    ```
+   > **Note:** `VITE_FIREBASE_AUTH_DOMAIN` must be the `.firebaseapp.com` domain, not your Vercel domain — otherwise Google OAuth redirect will fail.
 
 ### Run
 
 ```bash
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173)
-
-### Build for Production
-
-```bash
-npm run build
-npm run preview
-```
-
-### Regenerate Screenshots
-
-```bash
-npm install --save-dev playwright
-npx playwright install chromium
-node scripts/screenshot.mjs
+npm run dev       # dev server at http://localhost:5173
+npm run build     # production build (runs tsc + vite)
+npm run preview   # preview production build locally
 ```
 
 ---
@@ -247,82 +304,44 @@ node scripts/screenshot.mjs
 
 | Parameter | Default | Notes |
 |---|---|---|
-| Prime Rate | 11.25% | As of early 2025 |
+| Prime Rate | Live (SARB API) | Falls back to 10.25% if unavailable |
+| Repo Rate | Live (SARB API) | Falls back to 6.75% |
+| CGT inclusion rate | 40% | SARS 2026 |
+| CGT annual exclusion | R50,000 | Increased from R40k in 2026 budget |
+| Primary residence exclusion | R3,000,000 | Increased from R2M in 2026 budget |
+| TFSA annual limit | R46,000 | Per tax year (increased from R36k in 2026/27 budget) |
+| TFSA lifetime limit | R500,000 | Total contributions |
+| Bond term | 20 years | SA standard |
 | Bank service fee | R69/month | Typical bond admin fee |
-| CGT effective rate | 18% | 40% inclusion × 45% marginal rate |
 | Vacancy rate | 8% | ~1 month/year industry estimate |
 | Management fee | 10% | Letting agent standard |
 | Annual appreciation | 5% | Long-run SA property average |
-| Effluent fees | R350/month | Municipal sewage charge |
 
 ---
 
-## Key Financial Formulas
+## Roadmap
 
-### Bond Repayment (PMT)
-```
-PMT = PV × [r(1+r)^n] / [(1+r)^n - 1]
-
-where:
-  PV = loan amount
-  r  = monthly interest rate (annual rate / 12)
-  n  = total number of payments (years × 12)
-```
-
-### Gross Rental Yield
-```
-Gross Yield = (Annual Rent / Purchase Price) × 100
-```
-
-### Net Cash Flow
-```
-Effective Rent = Monthly Rent × (1 - Vacancy Rate)
-Management Fee = Effective Rent × Management Fee %
-Cash Flow = Effective Rent - Bond Repayment - Levies - Rates
-           - Insurance - Effluent - Misc - Management Fee
-```
-
-### ROI (5 / 10 Year)
-```
-Capital Gain   = Future Value - Purchase Price
-Total Return   = Capital Gain + (Monthly Cash Flow × 12 × Years)
-ROI %          = (Total Return / Deposit) × 100
-```
-
-### Car Finance with Balloon
-```
-Financed Amount = Loan Amount - Balloon Amount
-Monthly PMT     = annuity(Financed Amount, rate, term)
-Effective PMT   = max(Calculated PMT, Bank Minimum)
-```
-
----
-
-## Git Flow
-
-```
-main          ← stable releases
-  └── dev     ← integration branch
-        └── feature/*  ← individual features
-```
-
-Branches merged to `dev` then promoted to `main` for releases.
-
----
-
-## Roadmap / Future Enhancements
-
-- [x] **Google Auth + Cloud Sync** — sign in with Google to persist snapshots and portfolios across devices
-- [x] **Calculation History** — unified history page with open/edit/delete per entry
-- [x] **Investment Strategy Calculator** — RA vs. TFSA vs. ETF optimisation with tax saving
-- [x] **Tax Planner** — SARS brackets, medical credits, RA deductions
-- [ ] **Transfer duty calculator** integrated into Property ROI acquisition costs
-- [ ] **Live Prime Rate feed** from SARB API
-- [ ] **PDF export** for shareable reports (jsPDF)
-- [ ] **Shareable report links** — generate a URL that restores a specific snapshot
-- [ ] **Currency selector** for USD/EUR expats
-- [ ] **Sectional Title vs. Full-Title** comparison mode in Property ROI
-- [ ] **Multi-currency mortgage** — rand-denominated bond on foreign-currency property
+- [x] Google Auth + Cloud Sync (Firestore)
+- [x] Calculation History with edit/delete
+- [x] Investment Strategy Calculator (RA, TFSA, ETF, 2-Pot)
+- [x] Property Tax Planner (rental tax, Section 13sex/quat, CGT)
+- [x] Transfer duty (SARS 2026) + bond registration costs
+- [x] Live SA Prime Rate (SARB API via Vercel serverless proxy)
+- [x] PDF export — Mortgage, Property ROI, Car Finance
+- [x] Comparison Mode (A/B snapshot comparison)
+- [x] Portfolio Summary (aggregate property dashboard)
+- [x] Tax Projections (multi-year rental + CGT forecast)
+- [x] TFSA Optimizer (tax-free vs taxable compounding)
+- [x] Section 13sex multi-unit overhaul (per-unit pricing, portfolio import, RA stacking)
+- [x] Portfolio Stress Test (rate/vacancy/value scenarios + breaking-point rates)
+- [x] Bond Affordability Qualifier (30% rule, NCA DTI, rate stress test)
+- [x] Airbnb vs Long-term Rental comparison (NOI, yield, break-even occupancy)
+- [x] Optimal Exit Planner (CGT + S13sex recoupment by sale year)
+- [x] Route-based lazy loading / code splitting
+- [ ] FIRE Calculator — time to financial independence
+- [ ] Retirement Annuity Planner (27.5% deduction, 2-Pot rules)
+- [ ] Buy vs. Rent Calculator
+- [ ] Shareable report links (URL-encoded snapshots)
 
 ---
 
@@ -332,4 +351,4 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-*Built for South African investors. All calculations are for informational purposes only and do not constitute financial advice.*
+*Built for South African investors. All calculations are for educational purposes only and do not constitute financial advice. Consult a certified financial planner (CFP) or SARS-registered tax practitioner before making financial decisions.*

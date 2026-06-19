@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import {
-  Building2, Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Zap,
+  Building2, Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Zap, FileText,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
@@ -17,11 +17,13 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
+import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
+import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
+import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 
 const ROWS_PER_PAGE = 24;
-const PRIME_RATE = 11.25;
 
 const CHART_COLORS = {
   indigo: '#6366F1',
@@ -73,13 +75,17 @@ export function MortgageCalculator() {
   const [inputs, setInputs] = useState<MortgageInputs>({
     purchasePrice: 1150000,
     deposit: 100000,
-    interestRate: PRIME_RATE,
+    interestRate: FALLBACK_PRIME,
     termYears: 20,
     frequency: 'monthly',
     extraPayment: 0,
     lumpSumYear: 0,
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
+    initiationFee: 6037,
+    utilityConnectionFee: 1500,
+    transferDutyExempt: false,
+    bondRegistrationIncluded: false,
   });
 
   const [tableOpen, setTableOpen] = useState(false);
@@ -101,7 +107,20 @@ export function MortgageCalculator() {
     if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
   }, [locationState]);
 
+  const liveRate = usePrimeRate();
+
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
+
+  const upfrontCosts = useMemo(() => {
+    const transferDuty = inputs.transferDutyExempt ? 0 : calcTransferDuty(inputs.purchasePrice);
+    const bondRegCost = inputs.bondRegistrationIncluded ? 0 : calcBondRegistrationCost(result.loanAmount);
+    const utilityFee = inputs.utilityConnectionFee ?? 0;
+    return {
+      transferDuty,
+      bondRegCost,
+      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + inputs.initiationFee + utilityFee,
+    };
+  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, inputs.initiationFee, inputs.utilityConnectionFee, result.loanAmount]);
 
   // ── Chart data ─────────────────────────────────────────────
   const balanceChartData = useMemo(() => {
@@ -187,6 +206,7 @@ export function MortgageCalculator() {
       ['Interest Rate', `${inputs.interestRate}%`],
       ['Term', `${inputs.termYears} years`],
       ['Monthly Payment', result.standardPayment.toFixed(2)],
+      ['Initiation Fee', inputs.initiationFee.toFixed(2)],
       ['Total Interest (Standard)', result.totalInterestStandard.toFixed(2)],
       ['Total Interest (With Extras)', result.totalInterestWithExtras.toFixed(2)],
       ['Interest Saved', result.interestSaved.toFixed(2)],
@@ -255,9 +275,10 @@ export function MortgageCalculator() {
             <button
               className="text-xs text-[#6366F1] hover:text-[#818CF8] transition-colors flex items-center gap-1"
               style={{ fontFamily: 'var(--font-body)' }}
-              onClick={() => setInputs((p) => ({ ...p, interestRate: PRIME_RATE }))}
+              onClick={() => setInputs((p) => ({ ...p, interestRate: liveRate.primeRate }))}
             >
-              <Zap size={11} /> Use SA Prime Rate ({PRIME_RATE}%)
+              <Zap size={11} />
+              {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
             </button>
           </div>
 
@@ -282,6 +303,61 @@ export function MortgageCalculator() {
             step={1}
             help="Bank admin fee (e.g. R69/month). Doesn't reduce principal — pure extra cost."
           />
+
+          <InputField
+            label="Initiation Fee"
+            id="initiationFee"
+            value={inputs.initiationFee}
+            onChange={(v) => set('initiationFee', v)}
+            prefix="R"
+            min={0}
+            step={100}
+            help="Once-off upfront fee. NCA cap: R6,037 for bonds above R500K."
+          />
+
+          <InputField
+            label="Utility Connection Fee"
+            id="utilityConnectionFee"
+            value={inputs.utilityConnectionFee ?? 0}
+            onChange={(v) => set('utilityConnectionFee', v)}
+            prefix="R"
+            min={0}
+            step={100}
+            help="Once-off water/electricity connection & activation deposit charged by the municipality."
+          />
+
+          {/* Upfront cost toggles */}
+          <div className="space-y-2 pt-1">
+            {[
+              {
+                key: 'transferDutyExempt' as const,
+                label: 'Transfer Duty Exempt',
+                help: 'VAT-registered seller or new build — no transfer duty payable.',
+              },
+              {
+                key: 'bondRegistrationIncluded' as const,
+                label: 'Bond Registration Capitalised',
+                help: 'Bank promotion or costs rolled into the loan — no upfront bond reg fee.',
+              },
+            ].map(({ key, label, help }) => (
+              <label key={key} className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative mt-0.5 flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={inputs[key]}
+                    onChange={(e) => setInputs((prev) => ({ ...prev, [key]: e.target.checked }))}
+                  />
+                  <div className={`w-9 h-5 rounded-full transition-colors ${inputs[key] ? 'bg-[#6366F1]' : 'bg-[#334155]'}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${inputs[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-[#CBD5E1]" style={{ fontFamily: 'var(--font-body)' }}>{label}</p>
+                  <p className="text-[10px] text-[#475569] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{help}</p>
+                </div>
+              </label>
+            ))}
+          </div>
 
           <SelectField
             label="Payment Frequency"
@@ -341,6 +417,52 @@ export function MortgageCalculator() {
 
         {/* ── Results panel ────────────────────────────── */}
         <div className="space-y-5">
+          {/* PDF export */}
+          <div className="flex justify-end">
+            <button
+              className="btn-ghost text-xs py-2 px-3 flex items-center gap-1.5"
+              onClick={() => exportMortgagePDF(inputs, result, upfrontCosts)}
+            >
+              <FileText size={13} /> Export PDF
+            </button>
+          </div>
+
+          {/* Upfront cash required */}
+          <div className="glass-card-static p-4 border-l-[3px] border-l-[#6366F1] grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Deposit</p>
+              <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(inputs.deposit)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Transfer Duty</p>
+              <p className={`text-base font-bold ${inputs.transferDutyExempt ? 'text-[#10B981]' : 'text-[#EF4444]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.transferDutyExempt ? 'Exempt' : formatRand(upfrontCosts.transferDuty)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Bond Registration</p>
+              <p className={`text-base font-bold ${inputs.bondRegistrationIncluded ? 'text-[#10B981]' : 'text-[#EF4444]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(upfrontCosts.bondRegCost)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Initiation Fee</p>
+              <p className={`text-base font-bold ${inputs.initiationFee > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Utility Connection</p>
+              <p className={`text-base font-bold ${(inputs.utilityConnectionFee ?? 0) > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {(inputs.utilityConnectionFee ?? 0) > 0 ? formatRand(inputs.utilityConnectionFee ?? 0) : 'None'}
+              </p>
+            </div>
+            <div className="col-span-2 sm:col-span-4 border-t border-[rgba(255,255,255,0.07)] pt-3 flex items-center justify-between">
+              <p className="text-xs text-[#94A3B8]" style={{ fontFamily: 'var(--font-body)' }}>Total Cash Required on Transfer Day</p>
+              <p className="text-lg font-bold text-[#6366F1]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(upfrontCosts.totalCashRequired)}</p>
+            </div>
+          </div>
+
           {/* Stat cards */}
           <div className="four-col-stats">
             <StatCard
@@ -456,7 +578,7 @@ export function MortgageCalculator() {
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                 <Area type="monotone" dataKey="Standard" stroke={CHART_COLORS.indigo}
                   fill="url(#gradStd)" strokeWidth={2} />
@@ -478,7 +600,7 @@ export function MortgageCalculator() {
                   <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 10, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                   <Line type="monotone" dataKey="Principal" stroke={CHART_COLORS.indigo}
                     strokeWidth={2} dot={false} />
@@ -509,7 +631,7 @@ export function MortgageCalculator() {
                       <Cell key={i} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip content={<PieTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<PieTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -527,7 +649,7 @@ export function MortgageCalculator() {
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                   formatter={(v: unknown) => [formatRand(Number(v)), 'Total Interest']}
                   contentStyle={{
                     background: 'rgba(15,20,40,0.95)',

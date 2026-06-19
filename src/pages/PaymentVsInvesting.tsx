@@ -351,7 +351,7 @@ export function PaymentVsInvesting() {
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                 <Area type="monotone" dataKey="Interest Saved (A)" stroke={CHART_COLORS.indigo}
                   fill="url(#gradIntSaved)" strokeWidth={2} />
@@ -375,7 +375,7 @@ export function PaymentVsInvesting() {
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                 <Line type="monotone" dataKey="Net Worth A (Bond↓)" stroke={CHART_COLORS.indigo}
                   strokeWidth={2} dot={false} />

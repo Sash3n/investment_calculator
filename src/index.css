@@ -296,6 +296,11 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* ── Hide scrollbar (mobile nav) ──────────────────────────── */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Glow utilities ────────────────────────────────────────── */
 .glow-indigo {
   box-shadow: 0 0 24px rgba(99, 102, 241, 0.3);

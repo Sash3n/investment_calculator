@@ -1,26 +1,15 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
-  Home,
-  Building2,
-  MapPin,
-  Car,
-  TrendingUp,
-  Menu,
-  X,
-  ChevronRight,
-  BarChart3,
-  Sun,
-  Moon,
-  Receipt,
-  Wallet,
-  AlertTriangle,
-  LogIn,
-  LogOut,
-  History,
+  Menu, X, ChevronRight, ChevronDown, BarChart3, Sun, Moon,
+  AlertTriangle, LogIn, LogOut, Star, Clock,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, PAGE_TITLES, type NavItem } from '../../config/nav';
+import { CommandPalette } from '../CommandPalette';
+import { useNavPrefs } from '../../hooks/useNavPrefs';
 
 function DisclaimerBanner() {
   const [visible, setVisible] = useState(false);
@@ -69,44 +58,89 @@ function DisclaimerBanner() {
   );
 }
 
-interface NavItem {
-  path: string;
-  label: string;
-  shortLabel: string;
-  icon: typeof Home;
-  color: string;
+/** Single sidebar nav row, with a pin/favourite toggle on hover. */
+function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourite: boolean; onToggleFav: (path: string) => void }) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.path}
+      end={item.path === '/'}
+      className={({ isActive }) =>
+        clsx(
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
+          isActive
+            ? 'bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.25)]'
+            : 'hover:bg-[rgba(99,102,241,0.08)]'
+        )
+      }
+      style={({ isActive }) => ({
+        fontFamily: 'var(--font-body)',
+        color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
+            style={{ background: isActive ? `${item.color}22` : 'rgba(255,255,255,0.04)' }}
+          >
+            <Icon size={15} style={{ color: isActive ? item.color : 'var(--color-text-subtle)' }} />
+          </span>
+          <span className="flex-1 truncate">{item.label}</span>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFav(item.path); }}
+            className={clsx('flex-shrink-0 p-0.5 rounded transition-opacity', favourite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}
+            aria-label={favourite ? 'Unpin from favourites' : 'Pin to favourites'}
+            title={favourite ? 'Unpin' : 'Pin to favourites'}
+          >
+            <Star size={13} style={{ color: favourite ? '#F59E0B' : 'var(--color-text-subtle)' }} fill={favourite ? '#F59E0B' : 'none'} />
+          </button>
+          {isActive && !favourite && <ChevronRight size={14} className="text-[#6366F1] opacity-60 group-hover:hidden" />}
+        </>
+      )}
+    </NavLink>
+  );
 }
 
-const navItems: NavItem[] = [
-  { path: '/', label: 'Dashboard', shortLabel: 'Home', icon: Home, color: '#6366F1' },
-  { path: '/mortgage', label: 'Mortgage Calculator', shortLabel: 'Mortgage', icon: Building2, color: '#F59E0B' },
-  { path: '/property-roi', label: 'Property ROI', shortLabel: 'Property', icon: MapPin, color: '#10B981' },
-  { path: '/car-finance', label: 'Car Finance', shortLabel: 'Car', icon: Car, color: '#EC4899' },
-  { path: '/extra-vs-investing', label: 'Extra vs Investing', shortLabel: 'Invest', icon: TrendingUp, color: '#06B6D4' },
-  { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981' },
-  { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6' },
-  { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B' },
-];
-
-const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
-  '/mortgage': 'Mortgage Calculator',
-  '/property-roi': 'Property ROI Calculator',
-  '/car-finance': 'Car Finance Calculator',
-  '/extra-vs-investing': 'Extra Payments vs Investing',
-  '/tax-planner': 'Property Tax Planner',
-  '/investment-strategy': 'SA Investment Strategy',
-  '/history': 'Calculation History',
-};
+const COLLAPSE_KEY = 'fincalc-nav-collapsed';
 
 export function AppShell() {
+  const liveRate = usePrimeRate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('fincalc-theme') as 'dark' | 'light') ?? 'dark';
   });
   const { user, signIn, signOut } = useAuth();
   const location = useLocation();
-  const pageTitle = pageTitles[location.pathname] ?? 'FinCalc ZA';
+  const pageTitle = PAGE_TITLES[location.pathname] ?? 'FinCalc ZA';
+
+  const { favourites, recents, toggleFavourite, isFavourite, recordVisit } = useNavPrefs();
+  const favItems = favourites.map((p) => NAV_BY_PATH[p]).filter(Boolean);
+  const recentItems = recents
+    .filter((p) => !favourites.includes(p))
+    .map((p) => NAV_BY_PATH[p])
+    .filter(Boolean)
+    .slice(0, 5);
+
+  // Record each visited calculator for the "Recent" list
+  useEffect(() => {
+    recordVisit(location.pathname);
+  }, [location.pathname, recordVisit]);
+
+  // Collapsible sidebar categories (persisted)
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSE_KEY);
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+  const toggleCategory = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...next]));
+      return next;
+    });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -154,10 +188,7 @@ export function AppShell() {
             <BarChart3 size={18} className="text-[#6366F1]" />
           </div>
           <div>
-            <p
-              className="text-base font-bold leading-none"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
-            >
+            <p className="text-base font-bold leading-none" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
               FinCalc ZA
             </p>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
@@ -174,53 +205,65 @@ export function AppShell() {
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <p className="text-[10px] font-semibold uppercase tracking-widest px-3 mb-3" style={{ color: 'var(--color-text-subtle)' }}>
-            Calculators
-          </p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        {/* Nav — grouped + collapsible, with favourites & recents */}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          {/* Dashboard (overview) */}
+          {NAV_CATEGORIES.filter((c) => c.id === 'overview').map((cat) => (
+            <div key={cat.id} className="space-y-1">
+              {cat.items.map((item) => (
+                <SidebarLink key={item.path} item={item} favourite={isFavourite(item.path)} onToggleFav={toggleFavourite} />
+              ))}
+            </div>
+          ))}
+
+          {/* Favourites */}
+          {favItems.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 px-3 mb-1">
+                <Star size={11} style={{ color: '#F59E0B' }} fill="#F59E0B" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Favourites</span>
+              </div>
+              {favItems.map((item) => (
+                <SidebarLink key={item.path} item={item} favourite onToggleFav={toggleFavourite} />
+              ))}
+            </div>
+          )}
+
+          {/* Recent */}
+          {recentItems.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 px-3 mb-1">
+                <Clock size={11} style={{ color: 'var(--color-text-subtle)' }} />
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Recent</span>
+              </div>
+              {recentItems.map((item) => (
+                <SidebarLink key={item.path} item={item} favourite={isFavourite(item.path)} onToggleFav={toggleFavourite} />
+              ))}
+            </div>
+          )}
+
+          {/* Categories */}
+          {NAV_CATEGORIES.filter((c) => c.id !== 'overview').map((cat) => {
+            const isCollapsed = collapsed.has(cat.id);
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) =>
-                  clsx(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
-                    isActive
-                      ? 'bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.25)]'
-                      : 'hover:bg-[rgba(99,102,241,0.08)]'
-                  )
-                }
-                style={({ isActive }) => ({
-                  fontFamily: 'var(--font-body)',
-                  color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
-                })}
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                      style={{
-                        background: isActive
-                          ? `${item.color}22`
-                          : 'rgba(255,255,255,0.04)',
-                      }}
-                    >
-                      <Icon
-                        size={15}
-                        style={{ color: isActive ? item.color : 'var(--color-text-subtle)' }}
-                      />
-                    </span>
-                    <span className="flex-1">{item.label}</span>
-                    {isActive && (
-                      <ChevronRight size={14} className="text-[#6366F1] opacity-60" />
-                    )}
-                  </>
-                )}
-              </NavLink>
+              <div key={cat.id} className="space-y-1">
+                <button
+                  onClick={() => toggleCategory(cat.id)}
+                  className="w-full flex items-center justify-between px-3 mb-1 group"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>
+                    {cat.label}
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    className="transition-transform duration-200"
+                    style={{ color: 'var(--color-text-subtle)', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
+                  />
+                </button>
+                {!isCollapsed && cat.items.map((item) => (
+                  <SidebarLink key={item.path} item={item} favourite={isFavourite(item.path)} onToggleFav={toggleFavourite} />
+                ))}
+              </div>
             );
           })}
         </nav>
@@ -237,7 +280,13 @@ export function AppShell() {
             </div>
           )}
           <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
-            Prime Rate: <span className="text-[#F59E0B] font-semibold">11.25%</span>
+            Prime Rate:{' '}
+            <span className="text-[#F59E0B] font-semibold">
+              {liveRate.loading ? '…' : `${liveRate.primeRate}%`}
+            </span>
+            {!liveRate.loading && !liveRate.fallback && liveRate.asOf && (
+              <span className="text-[#475569]"> · {new Date(liveRate.asOf).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            )}
           </p>
           <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
             All values in South African Rand
@@ -284,18 +333,13 @@ export function AppShell() {
             <Menu size={17} />
           </button>
 
-          <h1
-            className="text-base font-semibold"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
-          >
+          <h1 className="text-base font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
             {pageTitle}
           </h1>
 
           <div className="ml-auto flex items-center gap-3">
-            <span
-              className="text-xs hidden sm:block"
-              style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
-            >
+            <CommandPalette />
+            <span className="text-xs hidden lg:block" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>
               ZAR • South Africa
             </span>
             <button
@@ -313,19 +357,11 @@ export function AppShell() {
             </button>
             {/* Auth */}
             {user ? (
-              <div
-                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl"
-                style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}
-              >
+              <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
                 {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName ?? 'User'}
-                    className="w-6 h-6 rounded-full flex-shrink-0"
-                  />
+                  <img src={user.photoURL} alt={user.displayName ?? 'User'} className="w-6 h-6 rounded-full flex-shrink-0" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                    style={{ background: 'rgba(99,102,241,0.3)', color: '#818CF8' }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: 'rgba(99,102,241,0.3)', color: '#818CF8' }}>
                     {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
                   </div>
                 )}
@@ -363,47 +399,54 @@ export function AppShell() {
       </div>
 
       {/* ── Mobile bottom tab bar ──────────────────────── */}
-      <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 flex backdrop-blur-xl"
+      <div
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30"
         style={{
           background: 'var(--color-bg)',
-          backdropFilter: 'blur(20px)',
           borderTop: '1px solid var(--color-border)',
         }}
       >
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-1 text-[10px] font-medium transition-all duration-200"
-              style={({ isActive }) => ({
-                fontFamily: 'var(--font-body)',
-                color: isActive ? '#6366F1' : 'var(--color-text-subtle)',
-              })}
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className="w-8 h-6 flex items-center justify-center rounded-lg transition-all duration-200"
-                    style={{
-                      background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent',
-                    }}
-                  >
-                    <Icon
-                      size={16}
-                      style={{ color: isActive ? '#6366F1' : 'var(--color-text-subtle)' }}
-                    />
-                  </span>
-                  <span>{item.shortLabel}</span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
+        {/* Scroll-hint fade on right edge */}
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10"
+          style={{ background: 'linear-gradient(to left, var(--color-bg) 10%, transparent 100%)' }}
+        />
+        <nav
+          className="flex overflow-x-auto backdrop-blur-xl scrollbar-hidden"
+          style={{ backdropFilter: 'blur(20px)', scrollbarWidth: 'none' }}
+        >
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className="flex flex-col items-center justify-center py-2.5 gap-1 text-[10px] font-medium transition-all duration-200 flex-shrink-0"
+                style={({ isActive }) => ({
+                  fontFamily: 'var(--font-body)',
+                  color: isActive ? '#6366F1' : 'var(--color-text-subtle)',
+                  minWidth: '64px',
+                  paddingLeft: '8px',
+                  paddingRight: '8px',
+                })}
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className="w-8 h-6 flex items-center justify-center rounded-lg transition-all duration-200"
+                      style={{ background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent' }}
+                    >
+                      <Icon size={16} style={{ color: isActive ? '#6366F1' : 'var(--color-text-subtle)' }} />
+                    </span>
+                    <span className="truncate w-full text-center">{item.shortLabel}</span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }

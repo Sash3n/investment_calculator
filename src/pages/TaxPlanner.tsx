@@ -7,6 +7,7 @@ import {
 import {
   Receipt, Building2, TrendingUp, Info, AlertCircle,
   CheckCircle2, XCircle, ChevronDown, ChevronUp, FileText,
+  Plus, Trash2, BookOpen, X,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
@@ -19,14 +20,18 @@ import {
   calc13quat,
   calcCGT,
 } from '../utils/tax';
+import { calcPropertyROI } from '../utils/roi';
+import { useAuth } from '../context/AuthContext';
+import { useSavedProperties } from '../hooks/useFirestore';
 import type {
   RentalTaxInputs,
-  Section13sexInputs,
   Section13quatInputs,
   CGTInputs,
   AgeGroup,
   UDZBuildingType,
   PropertyType,
+  PropertyInputs,
+  S13Unit,
 } from '../types';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
@@ -74,6 +79,19 @@ export function TaxPlanner() {
   const [s13Tab, setS13Tab] = useState<S13Tab>('13sex');
   const [showSchedule, setShowSchedule] = useState(false);
 
+  // ── Portfolio loading for Section 13sex ────────────────────────────────────
+  const { user } = useAuth();
+  const { properties: cloudProperties } = useSavedProperties(user?.uid ?? null);
+  const [localPortfolio] = useState<(PropertyInputs & { id: string })[]>(() => {
+    try {
+      const stored = localStorage.getItem('fincalc_portfolio');
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+  const portfolio = user
+    ? cloudProperties.map((p) => ({ ...p.inputs, id: p.id }))
+    : localPortfolio;
+
   // ── Rental Tax inputs ──────────────────────────────────────────────────────
   const [rental, setRental] = useState<RentalTaxInputs>({
     monthlyGrossRent: 12000,
@@ -90,13 +108,64 @@ export function TaxPlanner() {
   });
 
   // ── Section 13sex inputs ───────────────────────────────────────────────────
-  const [s13sex, setS13sex] = useState<Section13sexInputs>({
-    numberOfUnits: 5,
-    purchasePricePerUnit: 900000,
+  const makeDefaultUnit = (n: number): S13Unit => ({
+    id: `unit-${n}`,
+    name: `Unit ${n}`,
+    purchasePrice: 900_000,
+    monthlyRent: 8_500,
     isLowCostHousing: false,
-    annualTaxableIncome: 800000,
-    ageGroup: 'under65',
+    monthlyBondRepayment: 7_200,
+    monthlyLevies: 1_200,
+    monthlyRates: 800,
+    monthlyInsurance: 400,
+    managementFeePercent: 10,
+    vacancyRate: 5,
   });
+  const [s13Units, setS13Units] = useState<S13Unit[]>(() => [1, 2, 3, 4, 5].map(makeDefaultUnit));
+  const [s13Income, setS13Income] = useState(800_000);
+  const [s13RA, setS13RA] = useState(0);
+  const [s13AgeGroup, setS13AgeGroup] = useState<AgeGroup>('under65');
+  const [expandedUnitIds, setExpandedUnitIds] = useState<Set<string>>(new Set());
+  const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
+
+  const updateUnit = (id: string, patch: Partial<S13Unit>) =>
+    setS13Units(prev => prev.map(u => u.id === id ? { ...u, ...patch } : u));
+  const removeUnit = (id: string) =>
+    setS13Units(prev => prev.filter(u => u.id !== id));
+  const addUnit = () => {
+    const newId = `unit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    setS13Units(prev => [...prev, {
+      id: newId, name: `Unit ${prev.length + 1}`, purchasePrice: 900_000,
+      monthlyRent: 8_500, isLowCostHousing: false, monthlyBondRepayment: 7_200,
+      monthlyLevies: 1_200, monthlyRates: 800, monthlyInsurance: 400,
+      managementFeePercent: 10, vacancyRate: 5,
+    }]);
+  };
+  const toggleUnitExpand = (id: string) =>
+    setExpandedUnitIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const importFromPortfolio = (p: PropertyInputs & { id: string }) => {
+    const roi = calcPropertyROI(p);
+    const unit: S13Unit = {
+      id: `p-${p.id}-${Date.now()}`,
+      name: p.propertyName || 'Portfolio Unit',
+      purchasePrice: Math.round(p.purchasePrice * 0.85),
+      monthlyRent: p.rentScenario1,
+      isLowCostHousing: p.purchasePrice <= 350_000,
+      monthlyBondRepayment: Math.round(roi.monthlyBondRepayment),
+      monthlyLevies: p.monthlyLevies,
+      monthlyRates: p.monthlyRates,
+      monthlyInsurance: p.insurance,
+      managementFeePercent: p.managementFeePercent,
+      vacancyRate: p.vacancyRate,
+      portfolioId: p.id,
+    };
+    setS13Units(prev => [...prev, unit]);
+    setShowPortfolioPicker(false);
+  };
 
   // ── Section 13quat inputs ──────────────────────────────────────────────────
   const [s13quat, setS13quat] = useState<Section13quatInputs>({
@@ -120,15 +189,15 @@ export function TaxPlanner() {
 
   // ── Results ────────────────────────────────────────────────────────────────
   const rentalResult = useMemo(() => calcRentalIncomeTax(rental), [rental]);
-  const s13sexResult = useMemo(() => calc13sex(s13sex), [s13sex]);
+  const s13sexResult = useMemo(() => calc13sex({
+    units: s13Units, annualTaxableIncome: s13Income, raMonthlyContrib: s13RA, ageGroup: s13AgeGroup,
+  }), [s13Units, s13Income, s13RA, s13AgeGroup]);
   const s13quatResult = useMemo(() => calc13quat(s13quat), [s13quat]);
   const cgtResult = useMemo(() => calcCGT(cgt), [cgt]);
 
   // ── Input helpers ──────────────────────────────────────────────────────────
   const nr = (fn: (v: number) => Partial<RentalTaxInputs>) => (val: string) =>
     setRental((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
-  const ns = (fn: (v: number) => Partial<Section13sexInputs>) => (val: string) =>
-    setS13sex((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
   const nq = (fn: (v: number) => Partial<Section13quatInputs>) => (val: string) =>
     setS13quat((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
   const nc = (fn: (v: number) => Partial<CGTInputs>) => (val: string) =>
@@ -267,7 +336,7 @@ export function TaxPlanner() {
                     <BarChart data={rentalResult.deductionsBreakdown} layout="vertical" margin={{ left: 8, right: 16 }}>
                       <XAxis type="number" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} width={110} />
-                      <Tooltip content={<RandTooltip />} />
+                      <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                       <Bar dataKey="value" name="Amount" fill={C.indigo} radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -295,7 +364,7 @@ export function TaxPlanner() {
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => formatRand(Number(v), 0)} />
+                    <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -357,35 +426,163 @@ export function TaxPlanner() {
 
           {/* ── 13sex ─────────────────────────────────────────────────────── */}
           {s13Tab === '13sex' && (
-            <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
-              {/* Inputs */}
-              <div className="glass-card p-5 space-y-4">
-                <SectionHeader title="Section 13sex" icon={Building2} />
-                <InfoBadge text="Own 5+ new, unused residential units rented out. Deduct 5% of building cost (excl. land) annually for 20 years. Low-cost housing: 10% for 10 years." />
-
-                <InputField label="Number of Residential Units" id="s-units" value={s13sex.numberOfUnits} onChange={ns((v) => ({ numberOfUnits: Math.round(v) }))} min={1} help="Must be 5 or more to qualify" />
-                <InputField label="Purchase Price per Unit (Excl. Land)" id="s-price" value={s13sex.purchasePricePerUnit} onChange={ns((v) => ({ purchasePricePerUnit: v }))} prefix="R" help="Building cost only — exclude land value" />
-
-                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                  <input
-                    type="checkbox"
-                    id="s-lowcost"
-                    checked={s13sex.isLowCostHousing}
-                    onChange={(e) => setS13sex((p) => ({ ...p, isLowCostHousing: e.target.checked }))}
-                    className="w-4 h-4 accent-[#6366F1]"
-                  />
-                  <label htmlFor="s-lowcost" className="text-sm cursor-pointer" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-                    Low-cost housing (10% deduction rate, 10 years)
-                  </label>
+            <div className="grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-5">
+              {/* LEFT — Inputs */}
+              <div className="space-y-4">
+                {/* Global settings */}
+                <div className="glass-card p-5 space-y-4">
+                  <SectionHeader title="Section 13sex" icon={Building2} />
+                  <InfoBadge text="Own 5+ new, unused residential units rented out. Deduct 5% of building cost (excl. land) for 20 years. Low-cost housing (≤R350K): 10% for 10 years." />
+                  <InputField label="Annual Taxable Income (other income)" id="s-income" value={s13Income} onChange={v => setS13Income(parseFloat(v) || 0)} prefix="R" help="Your income before S13 deduction is applied (e.g. salary)" />
+                  <InputField label="Monthly RA Contribution" id="s-ra" value={s13RA} onChange={v => setS13RA(parseFloat(v) || 0)} prefix="R" help="Stacks with Section 13 allowance — further reduces taxable income (27.5% of income, max R350k p.a.)" />
+                  <SelectField label="Age Group" id="s-age" value={s13AgeGroup} onChange={v => setS13AgeGroup(v as AgeGroup)} options={AGE_OPTIONS} />
                 </div>
 
-                <InputField label="Annual Taxable Income (Other Income)" id="s-income" value={s13sex.annualTaxableIncome} onChange={ns((v) => ({ annualTaxableIncome: v }))} prefix="R" help="Your income before this deduction is applied" />
-                <SelectField label="Age Group" id="s-age" value={s13sex.ageGroup} onChange={(v) => setS13sex((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
+                {/* Units header */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                    Residential Units ({s13Units.length}{s13Units.length < 5 ? ` — need ${5 - s13Units.length} more` : ''})
+                  </p>
+                  <div className="flex gap-2">
+                    {portfolio.length > 0 && (
+                      <button
+                        onClick={() => setShowPortfolioPicker(p => !p)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: `${C.cyan}15`, color: C.cyan, border: `1px solid ${C.cyan}33` }}
+                      >
+                        <Building2 size={11} />
+                        Portfolio
+                      </button>
+                    )}
+                    <button
+                      onClick={addUnit}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                      style={{ background: `${C.indigo}15`, color: C.indigo, border: `1px solid ${C.indigo}33` }}
+                    >
+                      <Plus size={11} />
+                      Add Unit
+                    </button>
+                  </div>
+                </div>
+
+                {/* Portfolio picker */}
+                {showPortfolioPicker && portfolio.length > 0 && (
+                  <div className="glass-card-static p-4 space-y-2 rounded-xl" style={{ border: `1px solid ${C.cyan}33` }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs font-semibold" style={{ color: C.cyan }}>Select from Portfolio</p>
+                      <button onClick={() => setShowPortfolioPicker(false)}><X size={13} color="var(--color-text-muted)" /></button>
+                    </div>
+                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Purchase price auto-reduced by 15% to estimate land exclusion. Adjust per unit after importing.</p>
+                    {portfolio.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => importFromPortfolio(p)}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs transition-all"
+                        style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)', background: 'transparent' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = `${C.cyan}08`)}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span className="font-medium">{p.propertyName || 'Unnamed Property'}</span>
+                        <span className="ml-2" style={{ color: 'var(--color-text-muted)' }}>
+                          R{(p.purchasePrice / 1_000_000).toFixed(2)}M · R{p.rentScenario1.toLocaleString()}/mo
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Unit cards */}
+                {s13Units.map((unit, idx) => {
+                  const expanded = expandedUnitIds.has(unit.id);
+                  const grossYield = unit.purchasePrice > 0
+                    ? ((unit.monthlyRent * 12 / unit.purchasePrice) * 100).toFixed(1)
+                    : '—';
+                  return (
+                    <div key={unit.id} className="glass-card-static rounded-xl overflow-hidden">
+                      {/* Always-visible header row */}
+                      <div
+                        className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none"
+                        onClick={() => toggleUnitExpand(unit.id)}
+                        style={{ background: expanded ? `${C.indigo}07` : undefined }}
+                      >
+                        <span
+                          className="text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0"
+                          style={{ background: `${C.indigo}20`, color: C.indigo }}
+                        >
+                          {idx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={unit.name}
+                          onChange={e => { e.stopPropagation(); updateUnit(unit.id, { name: e.target.value }); }}
+                          onClick={e => e.stopPropagation()}
+                          className="text-sm font-medium flex-1 bg-transparent outline-none min-w-0"
+                          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+                          placeholder={`Unit ${idx + 1}`}
+                        />
+                        {unit.portfolioId && (
+                          <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: `${C.cyan}15`, color: C.cyan }}>
+                            portfolio
+                          </span>
+                        )}
+                        <span className="text-xs font-semibold flex-shrink-0" style={{ color: C.amber }}>{grossYield}%</span>
+                        <span className="text-xs font-mono flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+                          R{(unit.purchasePrice / 1_000_000).toFixed(2)}M
+                        </span>
+                        {s13Units.length > 5 && (
+                          <button className="p-1 rounded flex-shrink-0" onClick={e => { e.stopPropagation(); removeUnit(unit.id); }}>
+                            <Trash2 size={12} color={C.red} />
+                          </button>
+                        )}
+                        {expanded
+                          ? <ChevronUp size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                          : <ChevronDown size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />}
+                      </div>
+
+                      {/* Expanded inputs */}
+                      {expanded && (
+                        <div className="px-3 pb-3 space-y-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+                          <div className="grid grid-cols-2 gap-3">
+                            <InputField label="Price (excl. land)" id={`u-price-${unit.id}`} value={unit.purchasePrice} onChange={v => updateUnit(unit.id, { purchasePrice: parseFloat(v) || 0 })} prefix="R" help="Building cost only — exclude land value" />
+                            <InputField label="Monthly Rent" id={`u-rent-${unit.id}`} value={unit.monthlyRent} onChange={v => updateUnit(unit.id, { monthlyRent: parseFloat(v) || 0 })} prefix="R" />
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                            <input
+                              type="checkbox"
+                              id={`u-lc-${unit.id}`}
+                              checked={unit.isLowCostHousing}
+                              onChange={e => updateUnit(unit.id, { isLowCostHousing: e.target.checked })}
+                              className="w-4 h-4 accent-[#6366F1]"
+                            />
+                            <label htmlFor={`u-lc-${unit.id}`} className="text-xs cursor-pointer" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                              Low-cost housing — 10% deduction for 10 years (≤R350K)
+                            </label>
+                          </div>
+                          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Monthly Expenses</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <InputField label="Bond Repayment" id={`u-bond-${unit.id}`} value={unit.monthlyBondRepayment} onChange={v => updateUnit(unit.id, { monthlyBondRepayment: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Levies" id={`u-lev-${unit.id}`} value={unit.monthlyLevies} onChange={v => updateUnit(unit.id, { monthlyLevies: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Rates" id={`u-rates-${unit.id}`} value={unit.monthlyRates} onChange={v => updateUnit(unit.id, { monthlyRates: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Insurance" id={`u-ins-${unit.id}`} value={unit.monthlyInsurance} onChange={v => updateUnit(unit.id, { monthlyInsurance: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Mgmt Fee" id={`u-mgmt-${unit.id}`} value={unit.managementFeePercent} onChange={v => updateUnit(unit.id, { managementFeePercent: parseFloat(v) || 0 })} suffix="%" />
+                            <InputField label="Vacancy" id={`u-vac-${unit.id}`} value={unit.vacancyRate} onChange={v => updateUnit(unit.id, { vacancyRate: parseFloat(v) || 0 })} suffix="%" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {s13Units.length < 5 && (
+                  <div className="p-3 rounded-xl text-xs text-center" style={{ background: 'rgba(239,68,68,0.07)', color: C.red, border: `1px solid ${C.red}33` }}>
+                    Add {5 - s13Units.length} more unit{5 - s13Units.length !== 1 ? 's' : ''} to qualify for Section 13sex
+                  </div>
+                )}
               </div>
 
-              {/* Results */}
+              {/* RIGHT — Results */}
               <div className="space-y-5">
-                {/* Qualification status */}
+                {/* Qualification banner */}
                 <div
                   className="flex items-center gap-3 p-4 rounded-xl"
                   style={{
@@ -393,19 +590,15 @@ export function TaxPlanner() {
                     border: `1px solid ${s13sexResult.qualifies ? C.emerald : C.red}44`,
                   }}
                 >
-                  {s13sexResult.qualifies
-                    ? <CheckCircle2 size={20} color={C.emerald} />
-                    : <XCircle size={20} color={C.red} />}
+                  {s13sexResult.qualifies ? <CheckCircle2 size={20} color={C.emerald} /> : <XCircle size={20} color={C.red} />}
                   <div>
                     <p className="text-sm font-semibold" style={{ color: s13sexResult.qualifies ? C.emerald : C.red, fontFamily: 'var(--font-heading)' }}>
-                      {s13sexResult.qualifies ? 'Qualifies for Section 13sex' : 'Does Not Qualify'}
+                      {s13sexResult.qualifies ? 'Qualifies for Section 13sex' : 'Does Not Yet Qualify'}
                     </p>
-                    {!s13sexResult.qualifies && (
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{s13sexResult.reason}</p>
-                    )}
+                    {!s13sexResult.qualifies && <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{s13sexResult.reason}</p>}
                     {s13sexResult.qualifies && (
                       <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                        {s13sex.numberOfUnits} units · {s13sexResult.deductionRate * 100}% rate · {s13sexResult.deductionPeriodYears} year period
+                        {s13sexResult.numberOfUnits} units · {(s13sexResult.deductionRate * 100).toFixed(1)}% eff. rate · up to {s13sexResult.deductionPeriodYears}-year period
                       </p>
                     )}
                   </div>
@@ -413,32 +606,128 @@ export function TaxPlanner() {
 
                 {s13sexResult.qualifies && (
                   <>
+                    {/* Stat cards */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <StatCard label="Total Building Cost" value={formatRandShort(s13sexResult.totalCostExclLand)} sub="Excl. land" icon={Building2} color="indigo" delay={0} />
-                      <StatCard label="Annual Deduction" value={formatRandShort(s13sexResult.annualDeduction)} sub={`${s13sexResult.deductionRate * 100}% of cost`} icon={Receipt} color="amber" delay={0.05} />
-                      <StatCard label="Annual Tax Saving" value={formatRandShort(s13sexResult.annualTaxSaving)} sub="Per tax year" icon={TrendingUp} color="emerald" delay={0.1} />
-                      <StatCard label={`Total Saving (${s13sexResult.deductionPeriodYears} yrs)`} value={formatRandShort(s13sexResult.totalTaxSavingOverPeriod)} sub="Cumulative" icon={CheckCircle2} color="emerald" delay={0.15} />
+                      <StatCard label="Annual S13 Deduction" value={formatRandShort(s13sexResult.annualDeduction)} sub="From taxable income" icon={Receipt} color="amber" delay={0.05} />
+                      <StatCard label="Annual Tax Saving" value={formatRandShort(s13sexResult.annualTaxSaving)} sub={`${formatPercent(s13sexResult.marginalRate, 0)} marginal bracket`} icon={TrendingUp} color="emerald" delay={0.1} />
+                      <StatCard label="S13 + RA Combined" value={formatRandShort(s13sexResult.combinedAnnualTaxSaving)} sub="Total annual saving" icon={CheckCircle2} color="emerald" delay={0.15} />
                     </div>
 
-                    {/* Chart */}
+                    {/* Tax Impact Summary */}
                     <div className="glass-card-static p-5">
-                      <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Cumulative Tax Saving Over {s13sexResult.deductionPeriodYears} Years</p>
-                      <ResponsiveContainer width="100%" height={220}>
-                        <LineChart data={s13sexResult.schedule} margin={{ left: 8, right: 16, bottom: 4 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
-                          <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
-                          <Tooltip content={<RandTooltip />} />
-                          <Line type="monotone" dataKey="cumulativeSaving" name="Cumulative Saving" stroke={C.emerald} strokeWidth={2} dot={false} />
-                          <Line type="monotone" dataKey="taxSaving" name="Annual Saving" stroke={C.indigo} strokeWidth={2} dot={false} strokeDasharray="4 2" />
-                        </LineChart>
-                      </ResponsiveContainer>
+                      <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Tax Impact Summary</p>
+                      <table className="w-full text-xs">
+                        <tbody>
+                          {[
+                            { label: 'Annual Taxable Income (before deductions)', value: s13Income, bold: false, color: undefined },
+                            { label: '− Section 13sex Annual Deduction', value: -s13sexResult.annualDeduction, bold: false, color: C.amber },
+                            ...(s13sexResult.raAnnualDeduction > 0 ? [{ label: '− RA Deduction (27.5%, max R350k)', value: -s13sexResult.raAnnualDeduction, bold: false, color: C.violet }] : []),
+                            { label: 'Taxable Income After All Deductions', value: s13Income - s13sexResult.annualDeduction - s13sexResult.raAnnualDeduction, bold: true, color: undefined },
+                            { label: 'Annual Tax Saving — Section 13sex', value: s13sexResult.annualTaxSaving, bold: false, color: C.emerald },
+                            ...(s13sexResult.raTaxSaving > 0 ? [{ label: 'Annual Tax Saving — RA Contribution', value: s13sexResult.raTaxSaving, bold: false, color: C.violet }] : []),
+                            { label: 'Combined Annual Tax Saving', value: s13sexResult.combinedAnnualTaxSaving, bold: true, color: C.emerald },
+                            { label: `Total S13 Saving Over ${s13sexResult.deductionPeriodYears} Years`, value: s13sexResult.totalTaxSavingOverPeriod, bold: false, color: C.indigo },
+                            { label: 'Portfolio Monthly Cash Flow (all units)', value: s13sexResult.totalAnnualCashFlow / 12, bold: true, color: s13sexResult.totalAnnualCashFlow >= 0 ? C.emerald : C.red },
+                          ].map((row, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                              <td className="py-2 pr-4" style={{ color: row.bold ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: row.bold ? 600 : 400 }}>
+                                {row.label}
+                              </td>
+                              <td className="py-2 text-right font-mono" style={{ color: row.color ?? (row.value < 0 ? C.red : row.bold ? 'var(--color-text)' : 'var(--color-text-muted)'), fontWeight: row.bold ? 600 : 400 }}>
+                                {formatRand(row.value)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
 
-                    {/* Schedule table (collapsible) */}
+                    {/* Per-unit table */}
+                    <div className="glass-card-static p-5">
+                      <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Per-Unit Analysis</p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
+                              {['Unit', 'Price (excl. land)', 'Annual Deduction', 'Gross Yield', 'Net Yield', 'Monthly CF'].map(h => (
+                                <th key={h} className="py-2 text-right first:text-left font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {s13sexResult.unitResults.map(u => (
+                              <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                <td className="py-2" style={{ color: 'var(--color-text)' }}>{u.name}</td>
+                                <td className="py-2 text-right" style={{ color: 'var(--color-text-muted)' }}>{formatRand(u.purchasePrice, 0)}</td>
+                                <td className="py-2 text-right font-medium" style={{ color: C.amber }}>{formatRand(u.annualDeductionPerUnit, 0)}</td>
+                                <td className="py-2 text-right" style={{ color: u.grossYield >= 8 ? C.emerald : u.grossYield >= 6 ? C.amber : C.red }}>{u.grossYield.toFixed(1)}%</td>
+                                <td className="py-2 text-right" style={{ color: u.netYield >= 0 ? C.emerald : C.red }}>{u.netYield.toFixed(1)}%</td>
+                                <td className="py-2 text-right font-semibold" style={{ color: u.monthlyCashFlow >= 0 ? C.emerald : C.red }}>{formatRand(u.monthlyCashFlow, 0)}</td>
+                              </tr>
+                            ))}
+                            <tr style={{ borderTop: '2px solid var(--color-border)' }}>
+                              <td className="py-2 font-semibold" style={{ color: 'var(--color-text)' }}>Portfolio Total</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: 'var(--color-text)' }}>{formatRand(s13sexResult.totalCostExclLand, 0)}</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: C.amber }}>{formatRand(s13sexResult.annualDeduction, 0)}</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: C.amber }}>{s13sexResult.totalGrossYield.toFixed(1)}%</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: s13sexResult.totalNetYield >= 0 ? C.emerald : C.red }}>{s13sexResult.totalNetYield.toFixed(1)}%</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: s13sexResult.totalAnnualCashFlow >= 0 ? C.emerald : C.red }}>{formatRand(s13sexResult.totalAnnualCashFlow / 12, 0)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                      {/* Cumulative savings */}
+                      <div className="glass-card-static p-5">
+                        <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                          Cumulative Tax Saving — {s13sexResult.deductionPeriodYears} Years
+                        </p>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <LineChart data={s13sexResult.schedule} margin={{ left: 8, right: 16, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                            <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
+                            <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={v => `R${(v / 1000).toFixed(0)}K`} />
+                            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
+                            <Line type="monotone" dataKey="cumulativeSaving" name="S13 Only" stroke={C.emerald} strokeWidth={2} dot={false} />
+                            {s13sexResult.raTaxSaving > 0 && (
+                              <Line type="monotone" dataKey="combinedCumulative" name="S13 + RA" stroke={C.violet} strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                            )}
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Monthly cashflow per unit */}
+                      <div className="glass-card-static p-5">
+                        <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                          Monthly Cash Flow per Unit
+                        </p>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <BarChart
+                            data={s13sexResult.unitResults.map(u => ({ name: u.name, cashflow: Math.round(u.monthlyCashFlow) }))}
+                            margin={{ left: 8, right: 8, bottom: 4 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'var(--color-text-subtle)' }} />
+                            <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={v => `R${(v / 1000).toFixed(0)}K`} />
+                            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
+                            <Bar dataKey="cashflow" name="Monthly CF" radius={[3, 3, 0, 0]}>
+                              {s13sexResult.unitResults.map((u, i) => (
+                                <Cell key={i} fill={u.monthlyCashFlow >= 0 ? C.emerald : C.red} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Full schedule — collapsible */}
                     <div className="glass-card-static overflow-hidden">
                       <button
-                        onClick={() => setShowSchedule((p) => !p)}
+                        onClick={() => setShowSchedule(p => !p)}
                         className="w-full flex items-center justify-between p-4 transition-colors hover:bg-[rgba(99,102,241,0.05)]"
                       >
                         <span className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
@@ -451,17 +740,27 @@ export function TaxPlanner() {
                           <table className="w-full text-xs">
                             <thead>
                               <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
-                                {['Year', 'Annual Deduction', 'Tax Saving', 'Cumulative Saving'].map((h) => (
+                                {[
+                                  'Year', 'Annual Deduction', 'Tax Saving (S13)',
+                                  ...(s13sexResult.raTaxSaving > 0 ? ['RA Saving', 'Combined'] : []),
+                                  'Cumulative (S13)',
+                                ].map(h => (
                                   <th key={h} className="py-2 text-right first:text-left font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{h}</th>
                                 ))}
                               </tr>
                             </thead>
                             <tbody>
-                              {s13sexResult.schedule.map((row) => (
+                              {s13sexResult.schedule.map(row => (
                                 <tr key={row.year} style={{ borderBottom: '1px solid var(--color-border)' }}>
                                   <td className="py-2" style={{ color: 'var(--color-text-muted)' }}>{row.year}</td>
                                   <td className="py-2 text-right" style={{ color: 'var(--color-text)' }}>{formatRand(row.deduction, 0)}</td>
                                   <td className="py-2 text-right font-medium" style={{ color: C.emerald }}>{formatRand(row.taxSaving, 0)}</td>
+                                  {s13sexResult.raTaxSaving > 0 && (
+                                    <>
+                                      <td className="py-2 text-right" style={{ color: C.violet }}>{formatRand(row.raTaxSaving, 0)}</td>
+                                      <td className="py-2 text-right font-semibold" style={{ color: C.amber }}>{formatRand(row.combinedSaving, 0)}</td>
+                                    </>
+                                  )}
                                   <td className="py-2 text-right font-semibold" style={{ color: C.indigo }}>{formatRand(row.cumulativeSaving, 0)}</td>
                                 </tr>
                               ))}
@@ -475,6 +774,57 @@ export function TaxPlanner() {
               </div>
             </div>
           )}
+
+          {/* ── Education Section (always shown on this tab) ─────────────── */}
+          <div className="glass-card-static p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen size={16} color={C.amber} />
+              <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                Understanding Section 13 Incentives
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {[
+                {
+                  title: 'What is Section 13sex?',
+                  color: C.indigo,
+                  body: 'Section 13sex lets individual taxpayers who own 5 or more new, unused residential units (actively rented out) deduct 5% of the building cost (excluding land) from their taxable income annually for 20 years. It creates a "paper loss" that reduces your tax bill without an actual cash outflow.',
+                },
+                {
+                  title: 'Qualifying Conditions',
+                  color: C.amber,
+                  body: '• You must own at least 5 residential units\n• Units must be new and unused at acquisition\n• Units must be used for rental income purposes\n• Deduction applies to building cost only — land is excluded\n• Low-cost housing (≤R350K) qualifies for 10% over 10 years\n• All units must be owned in your personal name',
+                },
+                {
+                  title: 'How the Deduction Works',
+                  color: C.emerald,
+                  body: 'Each year you deduct 5% of total building cost from your other taxable income (e.g. salary). This reduces the tax owed at your marginal rate. At a 36% marginal rate, a R225,000 deduction saves R81,000 in tax annually — even if the properties are cash-flow negative, the tax saving can offset that.',
+                },
+                {
+                  title: 'Section 13quat — UDZ',
+                  color: C.cyan,
+                  body: 'Section 13quat offers accelerated depreciation in Urban Development Zones (Joburg, Cape Town, Tshwane, Durban etc.). New buildings: 20% year 1, then 8% × 10 years. Improvements: 20% × 5 years. Low-cost: 25% × 4 years. The incentive has been extended to 31 March 2030.',
+                },
+                {
+                  title: 'Combining with an RA',
+                  color: C.violet,
+                  body: 'An RA contribution is deductible at up to 27.5% of taxable income (max R350,000 p.a.). Stacked with Section 13sex, both deductions reduce your taxable income before tax is calculated. The combined effect can pull you into a lower bracket, amplifying the saving beyond what each deduction achieves alone.',
+                },
+                {
+                  title: 'Key Caveats',
+                  color: C.red,
+                  body: '• Recoupment on sale: prior deductions are clawed back as taxable income when you sell (at your marginal rate at that time)\n• "Building cost excl. land" requires a professional appraisal or developer\'s split\n• SARS scrutinises schemes arranged purely for tax — ensure genuine rental activity\n• Get a tax practitioner\'s advice before implementing',
+                },
+              ].map(item => (
+                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: `${item.color}08`, border: `1px solid ${item.color}22` }}>
+                  <p className="text-xs font-bold" style={{ color: item.color }}>{item.title}</p>
+                  <p className="text-xs leading-relaxed whitespace-pre-line" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                    {item.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* ── 13quat ─────────────────────────────────────────────────────── */}
           {s13Tab === '13quat' && (
@@ -525,7 +875,7 @@ export function TaxPlanner() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                       <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} label={{ value: 'Year', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                       <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
-                      <Tooltip content={<RandTooltip />} />
+                      <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                       <Bar dataKey="deduction" name="Annual Deduction" fill={C.amber} radius={[3, 3, 0, 0]} />
                       <Bar dataKey="taxSaving" name="Tax Saving" fill={C.emerald} radius={[3, 3, 0, 0]} />
                     </BarChart>
@@ -678,7 +1028,7 @@ export function TaxPlanner() {
                   >
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} />
                     <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v) => `R${(v/1_000_000).toFixed(1)}M`} />
-                    <Tooltip content={<RandTooltip />} />
+                    <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<RandTooltip />} />
                     <Bar dataKey="value" name="Amount" radius={[4, 4, 0, 0]}>
                       {[C.indigo, C.amber, C.red, C.emerald].map((fill, i) => (
                         <Cell key={i} fill={fill} />
@@ -712,7 +1062,7 @@ export function TaxPlanner() {
                         <Cell key={i} fill={fill} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => formatRand(Number(v), 0)} />
+                    <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>

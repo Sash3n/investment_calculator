@@ -1,10 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil } from 'lucide-react';
+import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil, FileText, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
@@ -12,9 +13,11 @@ import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
+import { exportPropertyPDF } from '../utils/pdf';
 import { formatRand, formatPercent } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
+import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
 
 const CHART_COLORS = {
@@ -31,18 +34,22 @@ const DEFAULT_INPUTS: PropertyInputs = {
   purchasePrice: 1200000,
   discount: 0,
   deposit: 120000,
-  interestRate: 11.25,
+  interestRate: FALLBACK_PRIME,
   bondTerm: 20,
   monthlyLevies: 1500,
   monthlyRates: 800,
   insurance: 600,
   effluentFees: 350,
   miscFees: 0,
+  monthlyServiceFee: 69,
   managementFeePercent: 8,
   vacancyRate: 5,
   rentScenario1: 9500,
   rentScenario2: 11000,
   annualAppreciation: 7,
+  transferDutyExempt: false,
+  bondRegistrationIncluded: false,
+  utilityConnectionFee: 1500,
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -70,8 +77,29 @@ function PieTooltip({ active, payload }: any) {
 }
 
 export function PropertyROI() {
+  const liveRate = usePrimeRate();
+  const location = useLocation();
+  const locationState = location.state as { loadedInputs?: PropertyInputs; editingId?: string } | null;
+
   const [activeTab, setActiveTab] = useState<'quick' | 'portfolio'>('quick');
-  const [inputs, setInputs] = useState<PropertyInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<PropertyInputs>(
+    locationState?.loadedInputs ?? DEFAULT_INPUTS
+  );
+  // Track which saved property we're editing (null = creating new)
+  const [editingId, setEditingId] = useState<string | null>(locationState?.editingId ?? null);
+
+  // Pre-fill with live prime rate once loaded (only if user hasn't changed it yet)
+  const [rateApplied, setRateApplied] = useState(false);
+  useEffect(() => {
+    if (!liveRate.loading && !liveRate.fallback && !rateApplied) {
+      setInputs((prev) =>
+        prev.interestRate === FALLBACK_PRIME
+          ? { ...prev, interestRate: liveRate.primeRate }
+          : prev
+      );
+      setRateApplied(true);
+    }
+  }, [liveRate.loading, liveRate.fallback, liveRate.primeRate, rateApplied]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -108,6 +136,7 @@ export function PropertyROI() {
     { name: 'S1 Rent', value: result.monthlyEffectiveRentS1, fill: CHART_COLORS.emerald },
     { name: 'S2 Rent', value: result.monthlyEffectiveRentS2, fill: CHART_COLORS.cyan },
     { name: 'Bond', value: result.monthlyBondRepayment, fill: CHART_COLORS.indigo },
+    { name: 'Service Fee', value: inputs.monthlyServiceFee, fill: '#818CF8' },
     { name: 'Levies', value: inputs.monthlyLevies, fill: CHART_COLORS.amber },
     { name: 'Rates', value: inputs.monthlyRates, fill: CHART_COLORS.pink },
     { name: 'Insurance', value: inputs.insurance, fill: CHART_COLORS.red },
@@ -127,6 +156,7 @@ export function PropertyROI() {
 
   const costPieData = useMemo(() => [
     { name: 'Bond Repayment', value: Math.round(result.monthlyBondRepayment), fill: CHART_COLORS.indigo },
+    { name: 'Service Fee', value: inputs.monthlyServiceFee, fill: '#818CF8' },
     { name: 'Levies', value: inputs.monthlyLevies, fill: CHART_COLORS.amber },
     { name: 'Rates & Taxes', value: inputs.monthlyRates, fill: CHART_COLORS.cyan },
     { name: 'Insurance', value: inputs.insurance, fill: CHART_COLORS.pink },
@@ -141,7 +171,7 @@ export function PropertyROI() {
     setSaveError(null);
     try {
       if (user) {
-        await saveCloud(inputs.propertyName || 'Property', inputs);
+        await saveCloud(inputs.propertyName || 'Property', inputs, editingId ?? undefined);
         // Also push to calculation history
         await pushHistory({
           type: 'property',
@@ -310,8 +340,86 @@ export function PropertyROI() {
                 help="Reduces effective purchase price (e.g. distressed sale)" />
               <InputField label="Deposit" id="dep" value={inputs.deposit}
                 onChange={(v) => set('deposit', v)} prefix="R" step={5000} />
-              <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
-                onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
+              <InputField label="Utility Connection Fee" id="ucf" value={inputs.utilityConnectionFee ?? 0}
+                onChange={(v) => set('utilityConnectionFee', v)} prefix="R" step={100}
+                help="Once-off water/electricity connection & activation deposit (upfront)" />
+
+              {/* Acquisition cost toggles */}
+              {[
+                {
+                  label: 'Include transfer duty',
+                  hint: 'Disable for VAT-registered seller / new build',
+                  active: !inputs.transferDutyExempt,
+                  onToggle: () => setInputs((prev) => ({ ...prev, transferDutyExempt: !prev.transferDutyExempt })),
+                },
+                {
+                  label: 'Include bond registration costs',
+                  hint: 'Disable if capitalised into loan or covered by bank promotion',
+                  active: !inputs.bondRegistrationIncluded,
+                  onToggle: () => setInputs((prev) => ({ ...prev, bondRegistrationIncluded: !prev.bondRegistrationIncluded })),
+                },
+              ].map(({ label, hint, active, onToggle }) => (
+                <label key={label} className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={onToggle}
+                    className="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
+                    style={{ background: active ? '#6366F1' : 'rgba(100,116,139,0.3)' }}
+                  >
+                    <span
+                      className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow"
+                      style={{ transform: active ? 'translateX(16px)' : 'translateX(0)' }}
+                    />
+                  </div>
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {label}
+                    <span className="ml-1.5 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                      ({hint})
+                    </span>
+                  </span>
+                </label>
+              ))}
+
+              {/* Acquisition cost breakdown */}
+              <div className="rounded-xl p-3.5 space-y-2" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: '#818CF8' }}>
+                  Acquisition Costs
+                </p>
+                {[
+                  { label: 'Deposit',           value: inputs.deposit,                                                         muted: false },
+                  { label: 'Transfer Duty',     value: inputs.transferDutyExempt ? 0 : result.transferDuty,                    muted: inputs.transferDutyExempt },
+                  { label: 'Bond Registration', value: inputs.bondRegistrationIncluded ? 0 : result.bondRegistrationCost,      muted: inputs.bondRegistrationIncluded },
+                  { label: 'Utility Connection', value: inputs.utilityConnectionFee ?? 0,                                       muted: (inputs.utilityConnectionFee ?? 0) === 0 },
+                ].map(({ label, value, muted }) => (
+                  <div key={label} className="flex justify-between items-center">
+                    <span className="text-xs" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text-muted)' }}>
+                      {label}{muted ? ' (excluded)' : ''}
+                    </span>
+                    <span className="text-xs font-semibold tabular-nums" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text)' }}>
+                      {formatRand(value)}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid rgba(99,102,241,0.2)' }}>
+                  <span className="text-xs font-bold" style={{ color: '#818CF8' }}>Total Cash Required</span>
+                  <span className="text-sm font-bold" style={{ color: '#818CF8' }}>{formatRand(result.totalCashRequired)}</span>
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                  Bond registration costs are estimated — get a quote from your attorney.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
+                  onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
+                <button
+                  className="text-xs text-[#6366F1] hover:text-[#818CF8] transition-colors flex items-center gap-1"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  onClick={() => set('interestRate', String(liveRate.primeRate))}
+                >
+                  <Zap size={11} />
+                  {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
+                </button>
+              </div>
               <InputField label="Bond Term" id="bt" value={inputs.bondTerm}
                 onChange={(v) => set('bondTerm', v)} suffix="yrs" min={1} max={30} step={1} />
             </div>
@@ -327,6 +435,9 @@ export function PropertyROI() {
                 onChange={(v) => set('monthlyRates', v)} prefix="R" step={100} />
               <InputField label="Insurance" id="ins" value={inputs.insurance}
                 onChange={(v) => set('insurance', v)} prefix="R" step={100} />
+              <InputField label="Monthly Service Fee" id="msf" value={inputs.monthlyServiceFee}
+                onChange={(v) => set('monthlyServiceFee', v)} prefix="R" step={1}
+                help="Bank bond admin fee (e.g. R69/month)" />
               <InputField label="Effluent Fees" id="eff" value={inputs.effluentFees}
                 onChange={(v) => set('effluentFees', v)} prefix="R" step={50}
                 help="Municipal sewage/effluent charges" />
@@ -390,6 +501,16 @@ export function PropertyROI() {
 
           {/* Results panel */}
           <div className="space-y-5">
+            {/* PDF export */}
+            <div className="flex justify-end">
+              <button
+                className="btn-ghost text-xs py-2 px-3 flex items-center gap-1.5"
+                onClick={() => exportPropertyPDF(inputs, result)}
+              >
+                <FileText size={13} /> Export PDF
+              </button>
+            </div>
+
             {/* Key metrics */}
             <div className="four-col-stats">
               <StatCard label="Monthly Bond" value={formatRand(result.monthlyBondRepayment)}
@@ -444,7 +565,7 @@ export function PropertyROI() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000).toFixed(1)}K`} />
-                  <Tooltip
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                     formatter={(v: unknown) => [formatRand(Number(v)), 'Amount']}
                     contentStyle={{
                       background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)',
@@ -481,7 +602,7 @@ export function PropertyROI() {
                   <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
                     tickFormatter={(v) => `R ${(v / 1000000).toFixed(1)}M`} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
                   <Area type="monotone" dataKey="Property Value" stroke={CHART_COLORS.amber}
                     fill="url(#gradValue)" strokeWidth={2} />
@@ -506,7 +627,7 @@ export function PropertyROI() {
                       <Cell key={i} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip content={<PieTooltip />} />
+                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<PieTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -565,6 +686,7 @@ export function PropertyROI() {
                               // eslint-disable-next-line @typescript-eslint/no-unused-vars
                               const { id: _id, ...propInputs } = prop;
                               setInputs(propInputs as PropertyInputs);
+                              setEditingId(prop.id);
                               setActiveTab('quick');
                             }}
                           >
@@ -654,7 +776,7 @@ export function PropertyROI() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} angle={-20} textAnchor="end" />
                       <YAxis tick={{ fontSize: 11, fill: '#64748B' }} tickFormatter={(v) => `${v}%`} />
-                      <Tooltip
+                      <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
                         formatter={(v: unknown) => [`${v}%`, '']}
                         contentStyle={{
                           background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)',

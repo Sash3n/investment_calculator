@@ -1,5 +1,9 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { usePrimeRate } from '../hooks/usePrimeRate';
+import { NAV_CATEGORIES, NAV_BY_PATH } from '../config/nav';
+import { useNavPrefs } from '../hooks/useNavPrefs';
 import {
   Building2,
   MapPin,
@@ -8,8 +12,20 @@ import {
   ArrowRight,
   Shield,
   Zap,
+  Search,
   BarChart3,
   Landmark,
+  Scale,
+  PieChart,
+  House,
+  Briefcase,
+  Wallet,
+  Snowflake,
+  GraduationCap,
+  TrendingDown,
+  Activity,
+  BedDouble,
+  DoorOpen, Receipt,
 } from 'lucide-react';
 
 const containerVariants = {
@@ -45,6 +61,24 @@ const featureCards = [
     tag: 'Portfolio Manager',
   },
   {
+    path: '/stress-test',
+    title: 'Portfolio Stress Test',
+    description: 'Run your saved properties through rate hikes, vacancy spikes and value drops. See breaking-point rates and which properties go cash-flow negative — no extra input needed.',
+    icon: Activity,
+    color: '#EF4444',
+    colorDim: 'rgba(239,68,68,0.12)',
+    tag: 'Risk Analysis',
+  },
+  {
+    path: '/affordability',
+    title: 'Bond Affordability',
+    description: 'Find out how much home loan you qualify for using SA bank rules (30% instalment, NCA debt-to-income), with a rate stress test and upfront cash needed.',
+    icon: Wallet,
+    color: '#6366F1',
+    colorDim: 'rgba(99,102,241,0.12)',
+    tag: 'Qualify Instantly',
+  },
+  {
     path: '/car-finance',
     title: 'Car Finance',
     description: 'Model SA car finance with balloon payments, depreciation schedules, and true cost of ownership vs cash purchase analysis.',
@@ -62,16 +96,219 @@ const featureCards = [
     colorDim: 'rgba(6,182,212,0.12)',
     tag: 'ETF Comparison',
   },
+  {
+    path: '/loan-comparison',
+    title: 'Loan Comparison Tool',
+    description: 'Compare up to 3 loan offers side by side — true total cost including initiation fees, service fees, interest, and effective APR.',
+    icon: Scale,
+    color: '#F59E0B',
+    colorDim: 'rgba(245,158,11,0.12)',
+    tag: 'Side-by-Side',
+  },
+  {
+    path: '/net-worth',
+    title: 'Net Worth Dashboard',
+    description: 'Track assets (property, TFSA, RA, ETF, cash, car) vs liabilities over time. Snapshots saved to your account for trend tracking.',
+    icon: PieChart,
+    color: '#6366F1',
+    colorDim: 'rgba(99,102,241,0.12)',
+    tag: 'Firestore Backed',
+  },
+  {
+    path: '/rental-yield',
+    title: 'Rental Yield Finder',
+    description: 'Calculate gross and net yield, find your breakeven rent, see monthly cash flow, and project 10-year returns on SA rental property.',
+    icon: House,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'Cash Flow Analysis',
+  },
+  {
+    path: '/airbnb-vs-rental',
+    title: 'Airbnb vs Long-term Rental',
+    description: 'Compare short-term letting against a traditional lease on the same property — net income, yield, break-even occupancy, and the costs and effort each strategy demands.',
+    icon: BedDouble,
+    color: '#EC4899',
+    colorDim: 'rgba(236,72,153,0.12)',
+    tag: 'Strategy Compare',
+  },
+  {
+    path: '/salary',
+    title: 'Salary / Take-Home',
+    description: 'Exact SA PAYE, UIF and medical aid tax credit calculation. See where every rand of your gross salary goes — monthly and annually.',
+    icon: Briefcase,
+    color: '#6366F1',
+    colorDim: 'rgba(99,102,241,0.12)',
+    tag: 'SARS 2025/26',
+  },
+  {
+    path: '/budget',
+    title: 'Budget Planner',
+    description: '50/30/20 analysis with AI-style insights. Track needs, wants and savings — with personalised suggestions and Firestore snapshot history.',
+    icon: Wallet,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'With Insights',
+  },
+  {
+    path: '/debt-snowball',
+    title: 'Debt Snowball / Avalanche',
+    description: 'List all your debts, pick a payoff strategy, and see the fastest route to debt freedom — interest saved and month-by-month balance.',
+    icon: Snowflake,
+    color: '#06B6D4',
+    colorDim: 'rgba(6,182,212,0.12)',
+    tag: 'Strategy Comparison',
+  },
+  {
+    path: '/emergency-fund',
+    title: 'Emergency Fund Planner',
+    description: 'Calculate your target fund, track your build-up progress, and find the right vehicle to keep it accessible and growing.',
+    icon: Shield,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'Safety Net',
+  },
+  {
+    path: '/exit-planner',
+    title: 'Optimal Exit Planner',
+    description: 'When should you sell an investment property? Models CGT, Section 13sex recoupment and your marginal rate across sale years to reveal the recoupment trap and the best exit.',
+    icon: DoorOpen,
+    color: '#8B5CF6',
+    colorDim: 'rgba(139,92,246,0.12)',
+    tag: 'Tax-Smart Exit',
+  },
+  {
+    path: '/inflation',
+    title: 'Inflation & Purchasing Power',
+    description: 'See what your money really buys in 10, 20, 30 years. Find the real return on investments and how much more you need to save to beat CPI.',
+    icon: TrendingDown,
+    color: '#EF4444',
+    colorDim: 'rgba(239,68,68,0.12)',
+    tag: 'Rule of 72',
+  },
+  {
+    path: '/education-savings',
+    title: 'Education Savings',
+    description: 'Plan for SA school or university costs with education inflation, TFSA vs unit trust comparison, and required monthly savings calculation.',
+    icon: GraduationCap,
+    color: '#8B5CF6',
+    colorDim: 'rgba(139,92,246,0.12)',
+    tag: 'Inflation-Adjusted',
+  },
+  {
+    path: '/dividend-calculator',
+    title: 'Dividend Income Calculator',
+    description: 'Project dividend income from SA or international stocks with DRIP compounding, yield on cost growth, and SA Dividends Tax (20%) applied.',
+    icon: BarChart3,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'DRIP + Tax',
+  },
+  {
+    path: '/wealth-target',
+    title: 'Wealth Target Planner',
+    description: 'How much do you need to save monthly to reach R2M? Reverse-calculate from any goal — choose TFSA, S&P 500, JSE or fixed deposit, see milestones and the cost of waiting.',
+    icon: TrendingUp,
+    color: '#6366F1',
+    colorDim: 'rgba(99,102,241,0.12)',
+    tag: 'Goal Calculator',
+  },
+  {
+    path: '/bond-extra',
+    title: 'Bond Extra Payment',
+    description: 'See exactly how much interest and time you save by paying extra on your home loan. Enter any extra monthly amount and watch years melt off your bond.',
+    icon: Building2,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: 'Interest Saver',
+  },
+  {
+    path: '/provisional-tax',
+    title: 'Provisional Tax',
+    description: 'Freelancers and side hustlers: calculate your August and February provisional tax payments, how much to set aside monthly, and your 90% penalty threshold.',
+    icon: Receipt,
+    color: '#F59E0B',
+    colorDim: 'rgba(245,158,11,0.12)',
+    tag: '2025/26',
+  },
+  {
+    path: '/retrenchment',
+    title: 'Retrenchment Calculator',
+    description: 'Calculate your severance pay (BCEA), the tax on your lump sum using the retirement tax table, and how many months your net payout will last.',
+    icon: Briefcase,
+    color: '#8B5CF6',
+    colorDim: 'rgba(139,92,246,0.12)',
+    tag: 'BCEA + Tax',
+  },
+  {
+    path: '/offshore-allowance',
+    title: 'Offshore Allowance Planner',
+    description: 'Model your R1M Single Discretionary Allowance — compare offshore USD returns vs local JSE returns with ZAR depreciation factored in over any time horizon.',
+    icon: TrendingUp,
+    color: '#06B6D4',
+    colorDim: 'rgba(6,182,212,0.12)',
+    tag: 'SDA + FIA',
+  },
+  {
+    path: '/vat',
+    title: 'VAT Calculator',
+    description: 'Add or extract 15% VAT instantly. Check whether your turnover triggers mandatory registration and how many months until you hit the R1M threshold.',
+    icon: Receipt,
+    color: '#F59E0B',
+    colorDim: 'rgba(245,158,11,0.12)',
+    tag: '15% VAT',
+  },
+  {
+    path: '/municipal-rates',
+    title: 'Municipal Rates Calculator',
+    description: 'Estimate your monthly property rates, water, sewerage and refuse across 7 SA municipalities. Compare cities, model pensioner rebates, and see a 5-year cost projection.',
+    icon: Building2,
+    color: '#10B981',
+    colorDim: 'rgba(16,185,129,0.12)',
+    tag: '7 Metros',
+  },
 ];
 
 const quickStats = [
-  { label: 'SA Prime Rate', value: '11.25%', icon: Landmark, color: '#F59E0B' },
+  { label: 'SA Prime Rate', value: null, icon: Landmark, color: '#F59E0B' },
   { label: 'Avg Property Appreciation', value: '7% p.a.', icon: TrendingUp, color: '#10B981' },
   { label: 'Typical Bond Term', value: '20 years', icon: Building2, color: '#6366F1' },
   { label: 'Avg JSE ETF Return', value: '13–18% p.a.', icon: BarChart3, color: '#06B6D4' },
 ];
 
+// Map each card's path to its nav category for chip filtering
+const CAT_BY_PATH: Record<string, { id: string; label: string }> = {};
+NAV_CATEGORIES.forEach((c) => c.items.forEach((i) => { CAT_BY_PATH[i.path] = { id: c.id, label: c.label }; }));
+
 export function Home() {
+  const liveRate = usePrimeRate();
+  const [query, setQuery] = useState('');
+  const [activeCat, setActiveCat] = useState('all');
+  const { recents } = useNavPrefs();
+  const recentItems = useMemo(
+    () => recents
+      .filter((p) => p !== '/')
+      .map((p) => NAV_BY_PATH[p])
+      .filter(Boolean)
+      .slice(0, 3),
+    [recents],
+  );
+
+  // Categories that actually have dashboard cards
+  const presentCats = useMemo(
+    () => NAV_CATEGORIES.filter((c) => c.id !== 'overview' && c.id !== 'history' && featureCards.some((fc) => CAT_BY_PATH[fc.path]?.id === c.id)),
+    [],
+  );
+
+  const filteredCards = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return featureCards.filter((fc) => {
+      if (activeCat !== 'all' && CAT_BY_PATH[fc.path]?.id !== activeCat) return false;
+      if (!q) return true;
+      return `${fc.title} ${fc.description} ${fc.tag}`.toLowerCase().includes(q);
+    });
+  }, [query, activeCat]);
+
   return (
     <motion.div
       variants={containerVariants}
@@ -144,7 +381,9 @@ export function Home() {
                   className="text-lg font-bold text-[#F1F5F9]"
                   style={{ fontFamily: 'var(--font-heading)' }}
                 >
-                  {stat.value}
+                  {stat.label === 'SA Prime Rate'
+                    ? liveRate.loading ? '…' : `${liveRate.primeRate}%`
+                    : stat.value}
                 </p>
                 <p
                   className="text-[11px] text-[#64748B] mt-0.5"
@@ -158,17 +397,90 @@ export function Home() {
         </div>
       </motion.div>
 
+      {/* ── Recently used ───────────────────────────────── */}
+      {recentItems.length > 0 && (
+        <motion.div variants={cardVariants} className="mb-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+            Recently Used
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {recentItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.path} to={item.path}>
+                  <div
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+                    style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      color: 'var(--color-text)',
+                    }}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${item.color}22` }}
+                    >
+                      <Icon size={13} style={{ color: item.color }} />
+                    </span>
+                    {item.shortLabel}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Feature cards ───────────────────────────────── */}
       <div className="mb-12">
-        <motion.p
-          variants={cardVariants}
-          className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-6"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          Available Calculators
-        </motion.p>
+        <motion.div variants={cardVariants} className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+            Available Calculators
+          </p>
+
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-subtle)' }} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search calculators…"
+              className="input-dark w-full"
+              style={{ fontFamily: 'var(--font-body)', paddingLeft: '34px' }}
+            />
+          </div>
+
+          {/* Category chips */}
+          <div className="flex flex-wrap gap-2">
+            {[{ id: 'all', label: 'All' }, ...presentCats].map((c) => {
+              const active = activeCat === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveCat(c.id)}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  style={{
+                    background: active ? 'rgba(99,102,241,0.2)' : 'var(--color-surface)',
+                    color: active ? '#818CF8' : 'var(--color-text-muted)',
+                    border: `1px solid ${active ? 'rgba(99,102,241,0.4)' : 'var(--color-border)'}`,
+                    fontFamily: 'var(--font-body)',
+                  }}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {filteredCards.length === 0 ? (
+          <div className="glass-card-static p-10 text-center">
+            <Search size={24} className="mx-auto mb-3" style={{ color: 'var(--color-text-subtle)' }} />
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No calculators match “{query}”.</p>
+          </div>
+        ) : (
         <div className="grid sm:grid-cols-2 gap-5">
-          {featureCards.map((card) => {
+          {filteredCards.map((card) => {
             const Icon = card.icon;
             return (
               <motion.div key={card.path} variants={cardVariants}>
@@ -226,6 +538,7 @@ export function Home() {
             );
           })}
         </div>
+        )}
       </div>
 
       {/* ── Features strip ──────────────────────────────── */}
