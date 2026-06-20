@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
@@ -54,6 +55,16 @@ export function Affordability() {
       setInputs((p) => ({ ...p, interestRate: liveRate.primeRate }));
     }
   }, [liveRate.loading, liveRate.primeRate, rateTouched]);
+
+  // Load preset/snapshot inputs navigated in via router state (e.g. Home scenario presets)
+  const location = useLocation();
+  const locationState = location.state as { loadedInputs?: AffordabilityInputs } | null;
+  useEffect(() => {
+    if (locationState?.loadedInputs) {
+      setInputs(locationState.loadedInputs);
+      setRateTouched(true);
+    }
+  }, [locationState]);
 
   const result = useMemo(() => calcAffordability(inputs), [inputs]);
 

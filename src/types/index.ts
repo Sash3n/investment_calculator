@@ -9,6 +9,7 @@ export interface MortgageInputs {
   lumpSumAmount: number;
   monthlyServiceFee: number; // bank admin fee, e.g. R69/month
   initiationFee: number;     // once-off upfront fee (NCA cap R6,037 for bonds > R500K)
+  initiationFeeCapitalised: boolean; // true = financed into the loan instead of paid upfront in cash
   utilityConnectionFee?: number; // once-off utility connection / activation fee (water, electricity, etc.)
   transferDutyExempt: boolean;
   bondRegistrationIncluded: boolean;
@@ -16,6 +17,7 @@ export interface MortgageInputs {
 
 export interface MortgageResult {
   loanAmount: number;
+  bondRegCost: number;
   depositPercent: number;
   standardPayment: number;
   totalPaidStandard: number;

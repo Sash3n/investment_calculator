@@ -1,4 +1,5 @@
 import type { AmortizationRow, MortgageInputs, MortgageResult } from '../types';
+import { calcBondRegistrationCost } from './tax';
 
 /**
  * Calculate periodic payment using standard annuity formula.
@@ -110,9 +111,15 @@ export function calcMortgageSummary(inputs: MortgageInputs): MortgageResult {
     lumpSumYear,
     lumpSumAmount,
     monthlyServiceFee,
+    initiationFee,
+    initiationFeeCapitalised,
+    bondRegistrationIncluded,
   } = inputs;
 
-  const loanAmount = Math.max(0, purchasePrice - deposit);
+  // Loan principal before any capitalised once-off fees are rolled in.
+  const baseLoan = Math.max(0, purchasePrice - deposit) + (initiationFeeCapitalised ? initiationFee : 0);
+  const bondRegCost = calcBondRegistrationCost(baseLoan);
+  const loanAmount = baseLoan + (bondRegistrationIncluded ? bondRegCost : 0);
   const depositPercent = purchasePrice > 0 ? (deposit / purchasePrice) * 100 : 0;
 
   // ── Standard monthly schedule ─────────────────────────────
@@ -177,6 +184,7 @@ export function calcMortgageSummary(inputs: MortgageInputs): MortgageResult {
 
   return {
     loanAmount,
+    bondRegCost,
     depositPercent,
     standardPayment: frequency === 'biweekly' ? biweeklyPayment : standardPayment,
     totalPaidStandard,
