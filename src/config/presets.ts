@@ -33,8 +33,8 @@ export const PRESETS: Preset[] = [
         inputs: {
           purchasePrice: 1_500_000, deposit: 150_000, interestRate: 11.0, termYears: 20,
           frequency: 'monthly', extraPayment: 0, lumpSumYear: 0, lumpSumAmount: 0,
-          monthlyServiceFee: 69, initiationFee: 6037, utilityConnectionFee: 1500,
-          transferDutyExempt: false, bondRegistrationIncluded: false,
+          monthlyServiceFee: 69, initiationFee: 6037, initiationFeeCapitalised: false,
+          utilityConnectionFee: 1500, transferDutyExempt: false, bondRegistrationIncluded: false,
         },
       },
       {

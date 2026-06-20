@@ -110,9 +110,11 @@ export function calcMortgageSummary(inputs: MortgageInputs): MortgageResult {
     lumpSumYear,
     lumpSumAmount,
     monthlyServiceFee,
+    initiationFee,
+    initiationFeeCapitalised,
   } = inputs;
 
-  const loanAmount = Math.max(0, purchasePrice - deposit);
+  const loanAmount = Math.max(0, purchasePrice - deposit) + (initiationFeeCapitalised ? initiationFee : 0);
   const depositPercent = purchasePrice > 0 ? (deposit / purchasePrice) * 100 : 0;
 
   // ── Standard monthly schedule ─────────────────────────────

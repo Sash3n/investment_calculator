@@ -83,6 +83,7 @@ export function MortgageCalculator() {
     lumpSumAmount: 0,
     monthlyServiceFee: 69,
     initiationFee: 6037,
+    initiationFeeCapitalised: false,
     utilityConnectionFee: 1500,
     transferDutyExempt: false,
     bondRegistrationIncluded: false,
@@ -115,12 +116,13 @@ export function MortgageCalculator() {
     const transferDuty = inputs.transferDutyExempt ? 0 : calcTransferDuty(inputs.purchasePrice);
     const bondRegCost = inputs.bondRegistrationIncluded ? 0 : calcBondRegistrationCost(result.loanAmount);
     const utilityFee = inputs.utilityConnectionFee ?? 0;
+    const initiationFeeCash = inputs.initiationFeeCapitalised ? 0 : inputs.initiationFee;
     return {
       transferDuty,
       bondRegCost,
-      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + inputs.initiationFee + utilityFee,
+      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + initiationFeeCash + utilityFee,
     };
-  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, inputs.initiationFee, inputs.utilityConnectionFee, result.loanAmount]);
+  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, inputs.initiationFee, inputs.initiationFeeCapitalised, inputs.utilityConnectionFee, result.loanAmount]);
 
   // ── Chart data ─────────────────────────────────────────────
   const balanceChartData = useMemo(() => {
@@ -339,6 +341,11 @@ export function MortgageCalculator() {
                 label: 'Bond Registration Capitalised',
                 help: 'Bank promotion or costs rolled into the loan — no upfront bond reg fee.',
               },
+              {
+                key: 'initiationFeeCapitalised' as const,
+                label: 'Initiation Fee Capitalised',
+                help: 'Add the initiation fee to the loan instead of paying it upfront in cash — increases the balance and total interest.',
+              },
             ].map(({ key, label, help }) => (
               <label key={key} className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative mt-0.5 flex-shrink-0">
@@ -447,8 +454,8 @@ export function MortgageCalculator() {
             </div>
             <div>
               <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Initiation Fee</p>
-              <p className={`text-base font-bold ${inputs.initiationFee > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
-                {inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
+              <p className={`text-base font-bold ${inputs.initiationFeeCapitalised || inputs.initiationFee === 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
+                {inputs.initiationFeeCapitalised ? 'Capitalised' : inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
               </p>
             </div>
             <div>
