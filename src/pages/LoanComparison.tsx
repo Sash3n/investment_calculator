@@ -34,6 +34,7 @@ interface Loan {
   interestRate:        number;
   termYears:           number;
   initiationFee:       number;
+  capitaliseInitiationFee: boolean;
   monthlyServiceFee:   number;
   transferDutyOverride:    number | null; // null = auto-calculate
   bondRegFeeOverride:      number | null;
@@ -56,11 +57,12 @@ interface LoanResult {
 }
 
 function calcLoanResult(loan: Loan, color: string): LoanResult {
-  const monthlyPayment  = calcPayment(loan.amount, loan.interestRate, loan.termYears, 12);
+  const effectiveAmount = loan.amount + (loan.capitaliseInitiationFee ? loan.initiationFee : 0);
+  const monthlyPayment  = calcPayment(effectiveAmount, loan.interestRate, loan.termYears, 12);
   const totalMonthly    = monthlyPayment + loan.monthlyServiceFee;
   const totalPayments   = totalMonthly * loan.termYears * 12;
-  const totalRepaid     = totalPayments + loan.initiationFee;
-  const totalInterest   = totalPayments - loan.amount;
+  const totalRepaid     = totalPayments + (loan.capitaliseInitiationFee ? 0 : loan.initiationFee);
+  const totalInterest   = totalPayments - effectiveAmount;
   const totalCost       = totalRepaid - loan.amount;
 
   const effectiveRate = totalCost > 0
@@ -69,7 +71,7 @@ function calcLoanResult(loan: Loan, color: string): LoanResult {
 
   const transferDuty = loan.transferDutyOverride ?? calcTransferDuty(loan.amount);
   const bondRegFee   = loan.bondRegFeeOverride   ?? calcBondRegistrationCost(loan.amount);
-  const totalUpfront = loan.initiationFee + transferDuty + bondRegFee;
+  const totalUpfront = (loan.capitaliseInitiationFee ? 0 : loan.initiationFee) + transferDuty + bondRegFee;
   const grandTotal   = totalRepaid + transferDuty + bondRegFee;
 
   return {
@@ -86,10 +88,11 @@ function buildBalanceChart(loans: Loan[]): Record<string, number | string>[] {
   for (let m = 0; m <= maxMonths; m += Math.max(1, Math.floor(maxMonths / 30))) {
     const row: Record<string, number | string> = { month: m === 0 ? 'Start' : `M${m}` };
     for (const loan of loans) {
+      const effectiveAmount = loan.amount + (loan.capitaliseInitiationFee ? loan.initiationFee : 0);
       const r   = loan.interestRate / 100 / 12;
       const n   = loan.termYears * 12;
-      const pmt = calcPayment(loan.amount, loan.interestRate, loan.termYears, 12);
-      let bal   = loan.amount;
+      const pmt = calcPayment(effectiveAmount, loan.interestRate, loan.termYears, 12);
+      let bal   = effectiveAmount;
       for (let i = 0; i < Math.min(m, n); i++) {
         const interest  = bal * r;
         const principal = Math.min(pmt - interest, bal);
@@ -104,8 +107,8 @@ function buildBalanceChart(loans: Loan[]): Record<string, number | string>[] {
 }
 
 const DEFAULT_LOANS: Loan[] = [
-  { id: 1, label: 'Option A', amount: 1_200_000, interestRate: 11.5, termYears: 20, initiationFee: 6_037, monthlyServiceFee: 69, transferDutyOverride: null, bondRegFeeOverride: null },
-  { id: 2, label: 'Option B', amount: 1_200_000, interestRate: 11.0, termYears: 20, initiationFee: 6_037, monthlyServiceFee: 69, transferDutyOverride: null, bondRegFeeOverride: null },
+  { id: 1, label: 'Option A', amount: 1_200_000, interestRate: 11.5, termYears: 20, initiationFee: 6_037, capitaliseInitiationFee: false, monthlyServiceFee: 69, transferDutyOverride: null, bondRegFeeOverride: null },
+  { id: 2, label: 'Option B', amount: 1_200_000, interestRate: 11.0, termYears: 20, initiationFee: 6_037, capitaliseInitiationFee: false, monthlyServiceFee: 69, transferDutyOverride: null, bondRegFeeOverride: null },
 ];
 
 export function LoanComparison() {
@@ -123,6 +126,7 @@ export function LoanComparison() {
       interestRate: last.interestRate + 0.5,
       termYears: last.termYears,
       initiationFee: last.initiationFee,
+      capitaliseInitiationFee: last.capitaliseInitiationFee,
       monthlyServiceFee: last.monthlyServiceFee,
       transferDutyOverride: null,
       bondRegFeeOverride: null,
@@ -145,6 +149,12 @@ export function LoanComparison() {
   const setOverride = (id: number, field: 'transferDutyOverride' | 'bondRegFeeOverride', val: string) => {
     setLoans(loans.map((l) =>
       l.id === id ? { ...l, [field]: parseFloat(val) || 0 } : l
+    ));
+  };
+
+  const toggleCapitaliseInitiationFee = (id: number) => {
+    setLoans(loans.map((l) =>
+      l.id === id ? { ...l, capitaliseInitiationFee: !l.capitaliseInitiationFee } : l
     ));
   };
 
@@ -227,6 +237,22 @@ export function LoanComparison() {
               <InputField id={`fee-${loan.id}`} label="Monthly Service Fee" value={loan.monthlyServiceFee}
                 onChange={(v) => updateLoan(loan.id, 'monthlyServiceFee', v)} prefix="R" />
             </div>
+
+            <label className="flex items-start gap-2 cursor-pointer group pt-1">
+              <div className="relative mt-0.5 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={loan.capitaliseInitiationFee}
+                  onChange={() => toggleCapitaliseInitiationFee(loan.id)}
+                />
+                <div className={`w-8 h-4.5 rounded-full transition-colors ${loan.capitaliseInitiationFee ? 'bg-[#6366F1]' : 'bg-[#334155]'}`} />
+                <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white transition-transform ${loan.capitaliseInitiationFee ? 'translate-x-3.5' : 'translate-x-0'}`} />
+              </div>
+              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                Add initiation fee to loan (finance it instead of paying upfront)
+              </p>
+            </label>
 
             <p className="text-[10px] font-semibold uppercase tracking-widest pt-1" style={{ color: 'var(--color-text-subtle)' }}>Property Costs (auto-calculated)</p>
             <div className="grid grid-cols-2 gap-3">
