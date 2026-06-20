@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import { NAV_CATEGORIES, NAV_BY_PATH } from '../config/nav';
+import { PRESETS, openPresetTarget } from '../config/presets';
 import { useNavPrefs } from '../hooks/useNavPrefs';
 import {
   Building2,
@@ -281,6 +282,7 @@ const CAT_BY_PATH: Record<string, { id: string; label: string }> = {};
 NAV_CATEGORIES.forEach((c) => c.items.forEach((i) => { CAT_BY_PATH[i.path] = { id: c.id, label: c.label }; }));
 
 export function Home() {
+  const navigate = useNavigate();
   const liveRate = usePrimeRate();
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState('all');
@@ -425,6 +427,56 @@ export function Home() {
                     {item.shortLabel}
                   </div>
                 </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Scenario presets ────────────────────────────── */}
+      {PRESETS.length > 0 && (
+        <motion.div variants={cardVariants} className="mb-12">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+            Scenario Presets
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {PRESETS.map((preset) => {
+              const Icon = preset.icon;
+              return (
+                <div key={preset.id} className="glass-card-static p-5">
+                  <div className="flex items-start gap-3 mb-2">
+                    <span
+                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${preset.color}22` }}
+                    >
+                      <Icon size={16} style={{ color: preset.color }} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                        {preset.title}
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                        {preset.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {preset.targets.map((target) => (
+                      <button
+                        key={target.path}
+                        onClick={() => openPresetTarget(navigate, target)}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+                        style={{
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          color: 'var(--color-text)',
+                        }}
+                      >
+                        {target.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               );
             })}
           </div>
