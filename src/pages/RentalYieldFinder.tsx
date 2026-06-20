@@ -76,6 +76,7 @@ export function RentalYieldFinder() {
   const [purchasePrice,   setPurchasePrice]   = useState(1_200_000);
   const [deposit,         setDeposit]         = useState(120_000);
   const [initiationFee,   setInitiationFee]   = useState(6_037);
+  const [capitaliseInitiationFee, setCapitaliseInitiationFee] = useState(false);
   const [monthlyRent,     setMonthlyRent]     = useState(8_500);
   const [bondRate,        setBondRate]        = useState(11.5);
   const [bondTerm,        setBondTerm]        = useState(20);
@@ -88,12 +89,12 @@ export function RentalYieldFinder() {
   const [agentFeePct,     setAgentFeePct]     = useState(8.5);
   const [vacancyMonths,   setVacancyMonths]   = useState(1);
 
-  const loanAmount = Math.max(0, purchasePrice - deposit);
+  const loanAmount = Math.max(0, purchasePrice - deposit) + (capitaliseInitiationFee ? initiationFee : 0);
 
   // Upfront costs
   const transferDuty     = useMemo(() => calcTransferDuty(purchasePrice), [purchasePrice]);
   const bondRegCost      = useMemo(() => calcBondRegistrationCost(loanAmount), [loanAmount]);
-  const totalUpfront     = deposit + initiationFee + transferDuty + bondRegCost;
+  const totalUpfront     = deposit + (capitaliseInitiationFee ? 0 : initiationFee) + transferDuty + bondRegCost;
 
   const costs = useMemo(
     () => calcMonthlyCosts(loanAmount, bondRate, bondTerm, levy, rates, insurance, maintenancePct, agentFeePct, monthlyRent, purchasePrice, effluent, misc),
@@ -268,6 +269,24 @@ export function RentalYieldFinder() {
             <InputField id="init" label="Initiation Fee" value={initiationFee}
               onChange={(v) => setInitiationFee(parseFloat(v) || 0)} prefix="R" step={100}
               help="NCA cap R6,037 for bonds > R500K" />
+            <label className="flex items-start gap-3 cursor-pointer group pt-1">
+              <div className="relative mt-0.5 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={capitaliseInitiationFee}
+                  onChange={(e) => setCapitaliseInitiationFee(e.target.checked)}
+                />
+                <div className={`w-9 h-5 rounded-full transition-colors ${capitaliseInitiationFee ? 'bg-[#6366F1]' : 'bg-[#334155]'}`} />
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${capitaliseInitiationFee ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+              <div>
+                <p className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>Add Initiation Fee to Loan</p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>
+                  Finance it instead of paying upfront — increases the bond and monthly repayment.
+                </p>
+              </div>
+            </label>
             <div className="space-y-1.5 pt-1">
               {[
                 { label: 'Transfer Duty',     value: transferDuty },
