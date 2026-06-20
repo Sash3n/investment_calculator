@@ -133,4 +133,17 @@ describe('calcMortgageSummary', () => {
     const capitalised = calcMortgageSummary({ ...baseInputs, initiationFeeCapitalised: true });
     expect(capitalised.totalInterestStandard).toBeGreaterThan(standard.totalInterestStandard);
   });
+
+  it('capitalising bond registration adds its cost to the loan amount', () => {
+    const standard = calcMortgageSummary(baseInputs);
+    const capitalised = calcMortgageSummary({ ...baseInputs, bondRegistrationIncluded: true });
+    expect(capitalised.loanAmount).toBe(standard.loanAmount + standard.bondRegCost);
+    expect(capitalised.bondRegCost).toBe(standard.bondRegCost);
+  });
+
+  it('capitalising bond registration increases total interest', () => {
+    const standard = calcMortgageSummary(baseInputs);
+    const capitalised = calcMortgageSummary({ ...baseInputs, bondRegistrationIncluded: true });
+    expect(capitalised.totalInterestStandard).toBeGreaterThan(standard.totalInterestStandard);
+  });
 });

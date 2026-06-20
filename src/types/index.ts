@@ -17,6 +17,7 @@ export interface MortgageInputs {
 
 export interface MortgageResult {
   loanAmount: number;
+  bondRegCost: number;
   depositPercent: number;
   standardPayment: number;
   totalPaidStandard: number;

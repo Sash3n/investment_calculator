@@ -17,7 +17,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
-import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
+import { calcTransferDuty } from '../utils/tax';
 import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
@@ -114,15 +114,15 @@ export function MortgageCalculator() {
 
   const upfrontCosts = useMemo(() => {
     const transferDuty = inputs.transferDutyExempt ? 0 : calcTransferDuty(inputs.purchasePrice);
-    const bondRegCost = inputs.bondRegistrationIncluded ? 0 : calcBondRegistrationCost(result.loanAmount);
+    const bondRegCostCash = inputs.bondRegistrationIncluded ? 0 : result.bondRegCost;
     const utilityFee = inputs.utilityConnectionFee ?? 0;
     const initiationFeeCash = inputs.initiationFeeCapitalised ? 0 : inputs.initiationFee;
     return {
       transferDuty,
-      bondRegCost,
-      totalCashRequired: inputs.deposit + transferDuty + bondRegCost + initiationFeeCash + utilityFee,
+      bondRegCost: bondRegCostCash,
+      totalCashRequired: inputs.deposit + transferDuty + bondRegCostCash + initiationFeeCash + utilityFee,
     };
-  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, inputs.initiationFee, inputs.initiationFeeCapitalised, inputs.utilityConnectionFee, result.loanAmount]);
+  }, [inputs.purchasePrice, inputs.deposit, inputs.transferDutyExempt, inputs.bondRegistrationIncluded, inputs.initiationFee, inputs.initiationFeeCapitalised, inputs.utilityConnectionFee, result.bondRegCost]);
 
   // ── Chart data ─────────────────────────────────────────────
   const balanceChartData = useMemo(() => {
