@@ -24,6 +24,7 @@ const ExitPlanner = lazy(() => import('./pages/ExitPlanner').then((m) => ({ defa
 const TaxProjections = lazy(() => import('./pages/TaxProjections').then((m) => ({ default: m.TaxProjections })));
 const TfsaOptimizer = lazy(() => import('./pages/TfsaOptimizer').then((m) => ({ default: m.TfsaOptimizer })));
 const FireCalculator = lazy(() => import('./pages/FireCalculator').then((m) => ({ default: m.FireCalculator })));
+const RetirementIncomeGoal = lazy(() => import('./pages/RetirementIncomeGoal').then((m) => ({ default: m.RetirementIncomeGoal })));
 const RaPlanner = lazy(() => import('./pages/RaPlanner').then((m) => ({ default: m.RaPlanner })));
 const BuyVsRent = lazy(() => import('./pages/BuyVsRent').then((m) => ({ default: m.BuyVsRent })));
 const LoanComparison = lazy(() => import('./pages/LoanComparison').then((m) => ({ default: m.LoanComparison })));
@@ -82,6 +83,7 @@ function App() {
                 <Route path="/tax-projections" element={<TaxProjections />} />
                 <Route path="/tfsa" element={<TfsaOptimizer />} />
                 <Route path="/fire" element={<FireCalculator />} />
+                <Route path="/retirement-income-goal" element={<RetirementIncomeGoal />} />
                 <Route path="/ra-planner" element={<RaPlanner />} />
                 <Route path="/buy-vs-rent" element={<BuyVsRent />} />
                 <Route path="/loan-comparison" element={<LoanComparison />} />
