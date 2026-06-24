@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcRetirementIncomeGoal, simulateRetirementSavings, findRequiredMonthly } from '../utils/retirementIncome';
+import { calcRetirementIncomeGoal, simulateRetirementSavings, findRequiredMonthly, simulateDrawdown } from '../utils/retirementIncome';
 
 const baseInputs = {
   currentAge:             30,
@@ -9,6 +9,7 @@ const baseInputs = {
   currentSavings:         0,
   annualReturnPercent:    11,
   annualInflationPercent: 5.5,
+  contributionEscalation: 0,
 };
 
 describe('simulateRetirementSavings', () => {
@@ -76,5 +77,31 @@ describe('calcRetirementIncomeGoal', () => {
     const conservative = calcRetirementIncomeGoal({ ...baseInputs, swr: 0.03 });
     const traditional  = calcRetirementIncomeGoal({ ...baseInputs, swr: 0.04 });
     expect(traditional.lumpSumTarget).toBeLessThan(conservative.lumpSumTarget);
+  });
+
+  it('escalating contributions reduce the required starting monthly amount', () => {
+    const flat       = calcRetirementIncomeGoal(baseInputs);
+    const escalating = calcRetirementIncomeGoal({ ...baseInputs, contributionEscalation: 5 });
+    expect(escalating.requiredMonthly).toBeLessThan(flat.requiredMonthly);
+  });
+
+  it('the drawdown simulation starts at the nest egg balance and depletes or sustains over the horizon', () => {
+    const result = calcRetirementIncomeGoal(baseInputs);
+    expect(result.drawdown.length).toBeGreaterThan(0);
+    expect(result.drawdown[result.drawdown.length - 1].balance).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('simulateDrawdown', () => {
+  it('sustains a balance when withdrawals are well below the safe withdrawal rate', () => {
+    const { rows, depletionAge } = simulateDrawdown(10_000_000, 10_000, 8, 5, 60, 40);
+    expect(depletionAge).toBeNull();
+    expect(rows[rows.length - 1].balance).toBeGreaterThan(0);
+  });
+
+  it('depletes a balance when withdrawals exceed what the balance can sustain', () => {
+    const { depletionAge } = simulateDrawdown(1_000_000, 50_000, 5, 5, 60, 40);
+    expect(depletionAge).not.toBeNull();
+    expect(depletionAge).toBeGreaterThan(60);
   });
 });

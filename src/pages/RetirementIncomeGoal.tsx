@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { Sunset, TrendingUp, Info, AlertTriangle } from 'lucide-react';
+import { Sunset, TrendingUp, Info, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
@@ -42,6 +42,7 @@ interface ShareState {
   currentSavings:         number;
   annualReturnPercent:    number;
   annualInflationPercent: number;
+  contributionEscalation: number;
 }
 
 export function RetirementIncomeGoal() {
@@ -54,18 +55,27 @@ export function RetirementIncomeGoal() {
   const [currentSavings,         setCurrentSavings]         = useState(shared?.currentSavings          ?? 0);
   const [annualReturnPercent,    setAnnualReturnPercent]    = useState(shared?.annualReturnPercent     ?? 11);
   const [annualInflationPercent, setAnnualInflationPercent] = useState(shared?.annualInflationPercent  ?? 5.5);
+  const [contributionEscalation, setContributionEscalation] = useState(shared?.contributionEscalation  ?? 0);
 
   const inputs = {
     currentAge, retirementAge, desiredMonthlyIncome, swr,
-    currentSavings, annualReturnPercent, annualInflationPercent,
+    currentSavings, annualReturnPercent, annualInflationPercent, contributionEscalation,
   };
 
   const result = useMemo(() => calcRetirementIncomeGoal(inputs), [
     currentAge, retirementAge, desiredMonthlyIncome, swr,
-    currentSavings, annualReturnPercent, annualInflationPercent,
+    currentSavings, annualReturnPercent, annualInflationPercent, contributionEscalation,
   ]);
 
   const retirementNotInFuture = retirementAge <= currentAge;
+
+  // "Start later" penalty — reusing the binary-search solver at years-2
+  const startLaterPenalty = useMemo(() => {
+    const pmtLater = findRequiredMonthly(
+      result.lumpSumTarget, Math.max(1, result.years - 2), annualReturnPercent, currentSavings, contributionEscalation,
+    );
+    return pmtLater - result.requiredMonthly;
+  }, [result.lumpSumTarget, result.years, annualReturnPercent, currentSavings, contributionEscalation, result.requiredMonthly]);
 
   // Scenario comparison — memoised to avoid re-running 3x binary-search on every keystroke
   const scenarios = useMemo(() => [
@@ -73,14 +83,14 @@ export function RetirementIncomeGoal() {
     { label: 'Current',      r: annualReturnPercent,                  color: C.indigo },
     { label: 'Aggressive',   r: annualReturnPercent + 2,               color: C.emerald },
   ].map(({ label, r, color }) => {
-    const pmt = findRequiredMonthly(result.lumpSumTarget, result.years, r, currentSavings);
-    const { finalBalance } = simulateRetirementSavings(pmt, result.years, r, currentSavings);
+    const pmt = findRequiredMonthly(result.lumpSumTarget, result.years, r, currentSavings, contributionEscalation);
+    const { finalBalance } = simulateRetirementSavings(pmt, result.years, r, currentSavings, contributionEscalation);
     return { label, r, color, pmt, finalBalance };
-  }), [result.lumpSumTarget, result.years, annualReturnPercent, currentSavings]);
+  }), [result.lumpSumTarget, result.years, annualReturnPercent, currentSavings, contributionEscalation]);
 
   const shareState: ShareState = {
     currentAge, retirementAge, desiredMonthlyIncome, swr,
-    currentSavings, annualReturnPercent, annualInflationPercent,
+    currentSavings, annualReturnPercent, annualInflationPercent, contributionEscalation,
   };
 
   return (
@@ -165,6 +175,10 @@ export function RetirementIncomeGoal() {
           <InputField id="rig-inflation" label="Inflation rate" value={annualInflationPercent}
             onChange={(v) => setAnnualInflationPercent(Number(v))} suffix="%" min={0} max={20} />
 
+          <InputField id="rig-escalation" label="Annual contribution escalation" value={contributionEscalation}
+            onChange={(v) => setContributionEscalation(Number(v))} suffix="%" min={0} max={30}
+            help="Increase your monthly contribution each year, e.g. with salary growth" />
+
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
             style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
             <Info size={13} style={{ color: C.indigo }} />
@@ -194,6 +208,18 @@ export function RetirementIncomeGoal() {
               {' '}invested over the next {result.years} years at {annualReturnPercent}% p.a.
             </span>
           </div>
+
+          {startLaterPenalty > 0 && (
+            <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
+              style={{ background: `${C.red}11`, border: `1px solid ${C.red}33` }}>
+              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+              <span style={{ color: 'var(--color-text-muted)' }}>
+                If you wait 2 years to start, you would need{' '}
+                <span style={{ color: C.red, fontWeight: 600 }}>{formatRand(startLaterPenalty)} more per month</span>
+                {' '}to reach the same nest egg.
+              </span>
+            </div>
+          )}
 
           {/* Chart */}
           <div className="p-5 rounded-2xl"
@@ -230,6 +256,63 @@ export function RetirementIncomeGoal() {
                   stroke={C.violet} fill="url(#rig-contrib)" strokeWidth={2} />
                 <Area type="monotone" dataKey="returns" name="Returns" stackId="1"
                   stroke={C.indigo} fill="url(#rig-returns)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Drawdown sustainability */}
+          <div className="p-5 rounded-2xl"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+              Will it last? Drawdown simulation
+            </h2>
+            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+              Withdrawing {formatRandShort(result.futureAnnualIncome / 12)}/month (inflation-adjusted) from age {retirementAge}, while the balance keeps growing at {annualReturnPercent}% p.a.
+            </p>
+            <div className="flex items-start gap-3 p-3 rounded-xl text-sm mb-4"
+              style={{
+                background: result.depletionAge ? `${C.red}11` : `${C.emerald}11`,
+                border: `1px solid ${result.depletionAge ? C.red : C.emerald}33`,
+              }}>
+              {result.depletionAge ? (
+                <>
+                  <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+                  <span style={{ color: 'var(--color-text-muted)' }}>
+                    At this withdrawal rate and return, the nest egg runs out at age{' '}
+                    <span style={{ color: C.red, fontWeight: 600 }}>{result.depletionAge}</span>. Consider a lower
+                    SWR, a higher return, or a smaller desired income.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.emerald }} />
+                  <span style={{ color: 'var(--color-text-muted)' }}>
+                    The nest egg sustains this income for at least {result.drawdown.length} years into retirement
+                    (to around age {retirementAge + result.drawdown.length}).
+                  </span>
+                </>
+              )}
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={result.drawdown} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="rig-drawdown" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor={C.amber} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={C.amber} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="age" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                  tickFormatter={(v) => `Age ${v}`} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                  tickFormatter={formatRandShort} width={64} />
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  formatter={(val) => [formatRand(Number(val)), 'Balance']}
+                  labelFormatter={(l) => `Age ${l}`}
+                  cursor={{ stroke: `${C.amber}55`, strokeWidth: 1 }}
+                />
+                <Area type="monotone" dataKey="balance" name="Balance" stroke={C.amber} fill="url(#rig-drawdown)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

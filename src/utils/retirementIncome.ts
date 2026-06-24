@@ -6,6 +6,7 @@ export interface RetirementIncomeInputs {
   currentSavings:         number;
   annualReturnPercent:    number;
   annualInflationPercent: number;
+  contributionEscalation: number; // annual % increase in monthly contribution
 }
 
 export interface RetirementYearRow {
@@ -13,6 +14,12 @@ export interface RetirementYearRow {
   balance:     number;
   contributed: number;
   returns:     number;
+}
+
+export interface DrawdownYearRow {
+  year:    number;
+  age:     number;
+  balance: number;
 }
 
 export interface RetirementIncomeResult {
@@ -25,14 +32,19 @@ export interface RetirementIncomeResult {
   totalContrib:        number;
   totalReturns:        number;
   chartData:           RetirementYearRow[];
+  drawdown:            DrawdownYearRow[];
+  depletionAge:        number | null; // age at which the nest egg runs out, or null if it lasts the full horizon
 }
 
-/** Grows a lump sum + monthly contributions over `years` at `annualRate`. */
+const DRAWDOWN_HORIZON_YEARS = 40;
+
+/** Grows a lump sum + escalating monthly contributions over `years` at `annualRate`. */
 export function simulateRetirementSavings(
-  basePMT:    number,
-  years:      number,
-  annualRate: number,
-  lumpSum:    number,
+  basePMT:       number,
+  years:         number,
+  annualRate:    number,
+  lumpSum:       number,
+  escalationPct: number = 0,
 ): { chartData: RetirementYearRow[]; finalBalance: number } {
   const monthlyRate = annualRate / 100 / 12;
   let balance = lumpSum;
@@ -40,9 +52,10 @@ export function simulateRetirementSavings(
   const chartData: RetirementYearRow[] = [];
 
   for (let y = 1; y <= years; y++) {
+    const pmt = basePMT * Math.pow(1 + escalationPct / 100, y - 1);
     for (let m = 0; m < 12; m++) {
-      balance = balance * (1 + monthlyRate) + basePMT;
-      totalContributed += basePMT;
+      balance = balance * (1 + monthlyRate) + pmt;
+      totalContributed += pmt;
     }
     chartData.push({
       year:        y,
@@ -56,24 +69,62 @@ export function simulateRetirementSavings(
 
 /** Binary search for the monthly contribution needed to reach `target` by `years`. */
 export function findRequiredMonthly(
-  target:     number,
-  years:      number,
-  annualRate: number,
-  lumpSum:    number,
+  target:        number,
+  years:         number,
+  annualRate:    number,
+  lumpSum:       number,
+  escalationPct: number = 0,
 ): number {
   if (lumpSum >= target) return 0;
   let lo = 0, hi = target;
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2;
-    const { finalBalance } = simulateRetirementSavings(mid, years, annualRate, lumpSum);
+    const { finalBalance } = simulateRetirementSavings(mid, years, annualRate, lumpSum, escalationPct);
     if (finalBalance < target) lo = mid; else hi = mid;
   }
   return (lo + hi) / 2;
 }
 
 /**
+ * Simulates drawing down a nest egg in retirement: withdraws `monthlyIncome` (escalating
+ * with inflation so real income stays constant) while the remaining balance keeps growing
+ * at `annualRate`. Stops early if the balance is depleted.
+ */
+export function simulateDrawdown(
+  startBalance:         number,
+  monthlyIncome:        number,
+  annualRate:           number,
+  annualInflationPct:   number,
+  retirementAge:        number,
+  horizonYears:          number = DRAWDOWN_HORIZON_YEARS,
+): { rows: DrawdownYearRow[]; depletionAge: number | null } {
+  const monthlyRate = annualRate / 100 / 12;
+  const monthlyInfl = annualInflationPct / 100 / 12;
+  let balance = startBalance;
+  let withdrawal = monthlyIncome;
+  const rows: DrawdownYearRow[] = [];
+  let depletionAge: number | null = null;
+
+  for (let y = 1; y <= horizonYears; y++) {
+    for (let m = 0; m < 12; m++) {
+      balance = balance * (1 + monthlyRate) - withdrawal;
+      withdrawal *= (1 + monthlyInfl);
+      if (balance <= 0) {
+        balance = 0;
+        if (depletionAge === null) depletionAge = retirementAge + y - 1 + m / 12;
+        break;
+      }
+    }
+    rows.push({ year: y, age: retirementAge + y, balance: Math.round(balance) });
+    if (balance <= 0) break;
+  }
+  return { rows, depletionAge: depletionAge !== null ? Math.round(depletionAge) : null };
+}
+
+/**
  * Converts a desired retirement income into a required monthly contribution:
  * income -> inflated future annual income -> lump sum (via SWR) -> monthly contribution (via binary search).
+ * Also simulates the post-retirement drawdown to check the nest egg actually sustains that income.
  */
 export function calcRetirementIncomeGoal(inputs: RetirementIncomeInputs): RetirementIncomeResult {
   const years = Math.max(1, inputs.retirementAge - inputs.currentAge);
@@ -83,13 +134,23 @@ export function calcRetirementIncomeGoal(inputs: RetirementIncomeInputs): Retire
   const lumpSumTarget      = inputs.swr > 0 ? futureAnnualIncome / inputs.swr : 0;
   const realLumpSumTarget  = lumpSumTarget / Math.pow(1 + infR, years);
 
-  const requiredMonthly = findRequiredMonthly(lumpSumTarget, years, inputs.annualReturnPercent, inputs.currentSavings);
-  const { chartData, finalBalance } = simulateRetirementSavings(requiredMonthly, years, inputs.annualReturnPercent, inputs.currentSavings);
+  const requiredMonthly = findRequiredMonthly(
+    lumpSumTarget, years, inputs.annualReturnPercent, inputs.currentSavings, inputs.contributionEscalation,
+  );
+  const { chartData, finalBalance } = simulateRetirementSavings(
+    requiredMonthly, years, inputs.annualReturnPercent, inputs.currentSavings, inputs.contributionEscalation,
+  );
   const totalContrib = chartData[chartData.length - 1]?.contributed ?? inputs.currentSavings;
   const totalReturns = finalBalance - totalContrib;
+
+  const futureMonthlyIncome = futureAnnualIncome / 12;
+  const { rows: drawdown, depletionAge } = simulateDrawdown(
+    finalBalance, futureMonthlyIncome, inputs.annualReturnPercent, inputs.annualInflationPercent, inputs.retirementAge,
+  );
 
   return {
     years, futureAnnualIncome, lumpSumTarget, realLumpSumTarget,
     requiredMonthly, finalBalance, totalContrib, totalReturns, chartData,
+    drawdown, depletionAge,
   };
 }
