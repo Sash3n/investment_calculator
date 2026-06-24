@@ -271,10 +271,10 @@ export function RetirementIncomeGoal() {
             </p>
             <div className="flex items-start gap-3 p-3 rounded-xl text-sm mb-4"
               style={{
-                background: result.depletionAge ? `${C.red}11` : `${C.emerald}11`,
-                border: `1px solid ${result.depletionAge ? C.red : C.emerald}33`,
+                background: result.depletionAge !== null ? `${C.red}11` : `${C.emerald}11`,
+                border: `1px solid ${result.depletionAge !== null ? C.red : C.emerald}33`,
               }}>
-              {result.depletionAge ? (
+              {result.depletionAge !== null ? (
                 <>
                   <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
                   <span style={{ color: 'var(--color-text-muted)' }}>
