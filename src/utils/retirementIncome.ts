@@ -36,6 +36,32 @@ export interface RetirementIncomeResult {
   depletionAge:        number | null; // age at which the nest egg runs out, or null if it lasts the full horizon
 }
 
+export interface RetirementAffordabilityInputs {
+  currentAge:             number;
+  retirementAge:          number;
+  currentMonthlyIncome:   number; // in today's Rands
+  savingsRatePercent:     number; // % of current income invested monthly
+  swr:                    number;
+  currentSavings:         number;
+  annualReturnPercent:    number;
+  annualInflationPercent: number;
+  contributionEscalation: number;
+}
+
+export interface RetirementAffordabilityResult {
+  years:                         number;
+  monthlyContribution:           number; // currentMonthlyIncome * savingsRatePercent, today's Rands
+  finalBalance:                  number;
+  totalContrib:                  number;
+  totalReturns:                  number;
+  chartData:                     RetirementYearRow[];
+  achievableMonthlyIncomeFuture: number; // in retirement-year Rands
+  achievableMonthlyIncomeToday:  number; // deflated to today's Rands, for comparison with current income
+  incomeReplacementPct:          number; // achievableMonthlyIncomeToday / currentMonthlyIncome * 100
+  drawdown:                      DrawdownYearRow[];
+  depletionAge:                  number | null;
+}
+
 const DRAWDOWN_HORIZON_YEARS = 40;
 
 /** Grows a lump sum + escalating monthly contributions over `years` at `annualRate`. */
@@ -151,6 +177,41 @@ export function calcRetirementIncomeGoal(inputs: RetirementIncomeInputs): Retire
   return {
     years, futureAnnualIncome, lumpSumTarget, realLumpSumTarget,
     requiredMonthly, finalBalance, totalContrib, totalReturns, chartData,
+    drawdown, depletionAge,
+  };
+}
+
+/**
+ * The reverse direction: given current income and a savings rate, computes the achievable
+ * retirement income. monthly contribution -> nest egg at retirement (forward simulation) ->
+ * achievable income (via SWR) -> deflated to today's Rands for comparison with current income.
+ */
+export function calcRetirementAffordability(inputs: RetirementAffordabilityInputs): RetirementAffordabilityResult {
+  const years = Math.max(1, inputs.retirementAge - inputs.currentAge);
+  const infR  = inputs.annualInflationPercent / 100;
+
+  const monthlyContribution = inputs.currentMonthlyIncome * (inputs.savingsRatePercent / 100);
+
+  const { chartData, finalBalance } = simulateRetirementSavings(
+    monthlyContribution, years, inputs.annualReturnPercent, inputs.currentSavings, inputs.contributionEscalation,
+  );
+  const totalContrib = chartData[chartData.length - 1]?.contributed ?? inputs.currentSavings;
+  const totalReturns = finalBalance - totalContrib;
+
+  const achievableAnnualIncomeFuture  = finalBalance * inputs.swr;
+  const achievableMonthlyIncomeFuture = achievableAnnualIncomeFuture / 12;
+  const achievableMonthlyIncomeToday  = achievableMonthlyIncomeFuture / Math.pow(1 + infR, years);
+  const incomeReplacementPct = inputs.currentMonthlyIncome > 0
+    ? (achievableMonthlyIncomeToday / inputs.currentMonthlyIncome) * 100
+    : 0;
+
+  const { rows: drawdown, depletionAge } = simulateDrawdown(
+    finalBalance, achievableMonthlyIncomeFuture, inputs.annualReturnPercent, inputs.annualInflationPercent, inputs.retirementAge,
+  );
+
+  return {
+    years, monthlyContribution, finalBalance, totalContrib, totalReturns, chartData,
+    achievableMonthlyIncomeFuture, achievableMonthlyIncomeToday, incomeReplacementPct,
     drawdown, depletionAge,
   };
 }

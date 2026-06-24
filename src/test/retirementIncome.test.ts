@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcRetirementIncomeGoal, simulateRetirementSavings, findRequiredMonthly, simulateDrawdown } from '../utils/retirementIncome';
+import { calcRetirementIncomeGoal, calcRetirementAffordability, simulateRetirementSavings, findRequiredMonthly, simulateDrawdown } from '../utils/retirementIncome';
 
 const baseInputs = {
   currentAge:             30,
@@ -103,5 +103,47 @@ describe('simulateDrawdown', () => {
     const { depletionAge } = simulateDrawdown(1_000_000, 50_000, 5, 5, 60, 40);
     expect(depletionAge).not.toBeNull();
     expect(depletionAge).toBeGreaterThan(60);
+  });
+});
+
+describe('calcRetirementAffordability', () => {
+  const affordBase = {
+    currentAge:             30,
+    retirementAge:          50,
+    currentMonthlyIncome:   50_000,
+    savingsRatePercent:     15,
+    swr:                    0.04,
+    currentSavings:         0,
+    annualReturnPercent:    11,
+    annualInflationPercent: 5.5,
+    contributionEscalation: 0,
+  };
+
+  it('monthly contribution is the savings rate applied to current income', () => {
+    const result = calcRetirementAffordability(affordBase);
+    expect(result.monthlyContribution).toBeCloseTo(7_500, 2);
+  });
+
+  it('a higher savings rate produces a higher achievable income', () => {
+    const lower  = calcRetirementAffordability(affordBase);
+    const higher = calcRetirementAffordability({ ...affordBase, savingsRatePercent: 25 });
+    expect(higher.achievableMonthlyIncomeToday).toBeGreaterThan(lower.achievableMonthlyIncomeToday);
+  });
+
+  it('income replacement % is the achievable income over current income', () => {
+    const result = calcRetirementAffordability(affordBase);
+    expect(result.incomeReplacementPct).toBeCloseTo(
+      (result.achievableMonthlyIncomeToday / affordBase.currentMonthlyIncome) * 100, 5,
+    );
+  });
+
+  it('the achievable income is sustainable at the same SWR it was derived from', () => {
+    const result = calcRetirementAffordability(affordBase);
+    expect(result.depletionAge).toBeNull();
+  });
+
+  it('returns 0 income replacement when current income is 0 (avoids divide by zero)', () => {
+    const result = calcRetirementAffordability({ ...affordBase, currentMonthlyIncome: 0 });
+    expect(result.incomeReplacementPct).toBe(0);
   });
 });
