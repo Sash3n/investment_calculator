@@ -2,7 +2,7 @@ import {
   Home, Building2, MapPin, Car, TrendingUp, Receipt, Wallet, Landmark,
   Shield, Scale, PieChart, House, Briefcase, Snowflake, GraduationCap,
   TrendingDown, History, Activity, BedDouble, DoorOpen, Coins,
-  Target, Globe, Scissors,
+  Target, Globe, Scissors, Sunset,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -84,6 +84,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
       { path: '/tfsa', label: 'TFSA Optimizer', shortLabel: 'TFSA', icon: Landmark, color: '#8B5CF6', keywords: 'tax free savings account compounding' },
       { path: '/ra-planner', label: 'RA Planner', shortLabel: 'RA', icon: Shield, color: '#6366F1', keywords: 'retirement annuity deduction 27.5%' },
       { path: '/fire', label: 'FIRE Calculator', shortLabel: 'FIRE', icon: TrendingUp, color: '#EF4444', keywords: 'financial independence retire early' },
+      { path: '/retirement-income-goal', label: 'Retirement Income Goal', shortLabel: 'Income Goal', icon: Sunset, color: '#F59E0B', keywords: 'desired income after retirement nest egg safe withdrawal rate monthly contribution' },
     ],
   },
   {
