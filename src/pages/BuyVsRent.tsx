@@ -39,6 +39,8 @@ interface Inputs {
   depositPercent:          number;
   interestRatePercent:     number;
   loanTermYears:           number;
+  initiationFee:           number;
+  initiationFeeCapitalised: boolean;
   monthlyRates:            number;
   monthlyLevies:           number;
   monthlyInsurance:        number;
@@ -77,14 +79,15 @@ interface YearRow {
 // ── Core simulation ───────────────────────────────────────────────────────────
 function simulate(inp: Inputs): YearRow[] {
   const deposit      = inp.purchasePrice * (inp.depositPercent / 100);
-  const loan         = inp.purchasePrice - deposit;
+  const loan         = inp.purchasePrice - deposit + (inp.initiationFeeCapitalised ? inp.initiationFee : 0);
   const monthlyPmt   = calcPayment(loan, inp.interestRatePercent, inp.loanTermYears, 12);
   const r            = inp.investmentReturnPercent / 100 / 12;
 
-  // Upfront buying costs (transfer duty + bond reg + deposit)
+  // Upfront buying costs (transfer duty + bond reg + deposit + initiation fee if paid as cash)
   const transferDuty    = calcTransferDuty(inp.purchasePrice);
   const bondReg         = calcBondRegistrationCost(loan);
-  const totalUpfront    = deposit + transferDuty + bondReg;
+  const initiationFeeCash = inp.initiationFeeCapitalised ? 0 : inp.initiationFee;
+  const totalUpfront    = deposit + transferDuty + bondReg + initiationFeeCash;
 
   // Renter invests the deposit + transfer duty + bond reg from day 1
   let investPortfolio = totalUpfront;
@@ -191,6 +194,8 @@ export function BuyVsRent() {
     depositPercent:          10,
     interestRatePercent:     11.5,
     loanTermYears:           20,
+    initiationFee:           6_037,
+    initiationFeeCapitalised: false,
     monthlyRates:            1_500,
     monthlyLevies:           1_200,
     monthlyInsurance:        500,
@@ -212,11 +217,12 @@ export function BuyVsRent() {
 
   // Derived
   const deposit       = inp.purchasePrice * (inp.depositPercent / 100);
-  const loan          = inp.purchasePrice - deposit;
+  const loan          = inp.purchasePrice - deposit + (inp.initiationFeeCapitalised ? inp.initiationFee : 0);
   const monthlyPmt    = calcPayment(loan, inp.interestRatePercent, inp.loanTermYears, 12);
   const transferDuty  = calcTransferDuty(inp.purchasePrice);
   const bondReg       = calcBondRegistrationCost(loan);
-  const totalUpfront  = deposit + transferDuty + bondReg;
+  const initiationFeeCash = inp.initiationFeeCapitalised ? 0 : inp.initiationFee;
+  const totalUpfront  = deposit + transferDuty + bondReg + initiationFeeCash;
   const monthlySaving = monthlyPmt - inp.monthlyRent; // positive = bond > rent, renter invests diff
 
   // Break-even year
@@ -322,12 +328,13 @@ export function BuyVsRent() {
           style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
           Buying — Upfront Cash Required
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
           {[
-            { label: 'Deposit',          value: deposit,       color: C.indigo },
-            { label: 'Transfer Duty',    value: transferDuty,  color: C.amber  },
-            { label: 'Bond Registration',value: bondReg,       color: C.amber  },
-            { label: 'Total Upfront',    value: totalUpfront,  color: C.red, bold: true },
+            { label: 'Deposit',          value: deposit,           color: C.indigo },
+            { label: 'Transfer Duty',    value: transferDuty,       color: C.amber  },
+            { label: 'Bond Registration',value: bondReg,            color: C.amber  },
+            { label: 'Initiation Fee',   value: initiationFeeCash,  color: C.amber  },
+            { label: 'Total Upfront',    value: totalUpfront,       color: C.red, bold: true },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3"
               style={{ background: `${item.color}0D`, border: `1px solid ${item.color}25` }}>
@@ -391,6 +398,9 @@ export function BuyVsRent() {
             <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome}
               onChange={n((v) => ({ otherAnnualIncome: v }))} prefix="R"
               help="Sets CGT marginal rate" />
+            <InputField id="initiationFee" label="Initiation Fee" value={inp.initiationFee}
+              onChange={n((v) => ({ initiationFee: v }))} prefix="R"
+              help="Bank-charged bond initiation fee" />
           </div>
           <label className="flex items-center gap-2 cursor-pointer text-xs mt-1"
             style={{ color: 'var(--color-text-muted)' }}>
@@ -398,6 +408,13 @@ export function BuyVsRent() {
               onChange={(e) => setInp((p) => ({ ...p, isPrimaryResidence: e.target.checked }))}
               className="w-3.5 h-3.5 rounded accent-indigo-500" />
             Primary residence (R3M CGT exclusion)
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer text-xs"
+            style={{ color: 'var(--color-text-muted)' }}>
+            <input type="checkbox" checked={inp.initiationFeeCapitalised}
+              onChange={(e) => setInp((p) => ({ ...p, initiationFeeCapitalised: e.target.checked }))}
+              className="w-3.5 h-3.5 rounded accent-indigo-500" />
+            Initiation fee capitalised (add to loan instead of cash)
           </label>
         </div>
 
@@ -423,7 +440,7 @@ export function BuyVsRent() {
             style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}>
             <p className="font-semibold mb-1" style={{ color: C.indigo }}>Renter invests:</p>
             <ul className="space-y-1" style={{ color: 'var(--color-text-muted)' }}>
-              <li>• Deposit + transfer duty + bond reg upfront ({formatRand(totalUpfront, 0)})</li>
+              <li>• Deposit + transfer duty + bond reg + initiation fee upfront ({formatRand(totalUpfront, 0)})</li>
               <li>• Monthly saving if bond &gt; rent ({formatRand(Math.max(0, monthlySaving), 0)}/mo)</li>
             </ul>
           </div>

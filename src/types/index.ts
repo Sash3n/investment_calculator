@@ -78,6 +78,10 @@ export interface PropertyInputs {
   bondRegistrationIncluded: boolean;
   /** Once-off utility connection / activation fee (water, electricity, etc.) — part of upfront cash */
   utilityConnectionFee?: number;
+  /** Bank-charged bond initiation fee */
+  initiationFee: number;
+  /** When true, the initiation fee is added to the loan amount instead of paid as cash upfront */
+  initiationFeeCapitalised: boolean;
 }
 
 export interface PropertyResult {

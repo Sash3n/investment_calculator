@@ -22,6 +22,8 @@ const baseInputs = {
   annualAppreciation: 5,
   transferDutyExempt: false,
   bondRegistrationIncluded: false,
+  initiationFee: 6_037,
+  initiationFeeCapitalised: false,
 };
 
 describe('calcPropertyROI', () => {
@@ -92,11 +94,36 @@ describe('calcPropertyROI', () => {
     expect(result.propertyValueYears).toHaveLength(11);
   });
 
-  it('totalCashRequired includes deposit + transfer duty + bond registration', () => {
+  it('totalCashRequired includes deposit + transfer duty + bond registration + initiation fee', () => {
     const result = calcPropertyROI(baseInputs);
     expect(result.totalCashRequired).toBe(
-      baseInputs.deposit + result.transferDuty + result.bondRegistrationCost
+      baseInputs.deposit + result.transferDuty + result.bondRegistrationCost + baseInputs.initiationFee
     );
+  });
+
+  it('capitalising the initiation fee adds it to the loan amount', () => {
+    const cash        = calcPropertyROI(baseInputs);
+    const capitalised = calcPropertyROI({ ...baseInputs, initiationFeeCapitalised: true });
+    expect(capitalised.loanAmount).toBeCloseTo(cash.loanAmount + baseInputs.initiationFee, 0);
+  });
+
+  it('capitalising the initiation fee removes it from cash required', () => {
+    const cash        = calcPropertyROI(baseInputs);
+    const capitalised = calcPropertyROI({ ...baseInputs, initiationFeeCapitalised: true });
+    expect(capitalised.totalCashRequired).toBeCloseTo(cash.totalCashRequired - baseInputs.initiationFee, 0);
+  });
+
+  it('capitalising the initiation fee increases the monthly bond repayment', () => {
+    const cash        = calcPropertyROI(baseInputs);
+    const capitalised = calcPropertyROI({ ...baseInputs, initiationFeeCapitalised: true });
+    expect(capitalised.monthlyBondRepayment).toBeGreaterThan(cash.monthlyBondRepayment);
+  });
+
+  it('financing the bond registration cost (bondRegistrationIncluded) adds it to the loan amount', () => {
+    const cash      = calcPropertyROI({ ...baseInputs, bondRegistrationIncluded: false });
+    const financed  = calcPropertyROI({ ...baseInputs, bondRegistrationIncluded: true });
+    expect(financed.loanAmount).toBeGreaterThan(cash.loanAmount);
+    expect(financed.monthlyBondRepayment).toBeGreaterThan(cash.monthlyBondRepayment);
   });
 
   it('transfer duty is zero when exempt', () => {
