@@ -25,17 +25,22 @@ export function calcPropertyROI(inputs: PropertyInputs): PropertyResult {
     annualAppreciation,
     transferDutyExempt,
     bondRegistrationIncluded,
+    initiationFee,
+    initiationFeeCapitalised,
   } = inputs;
 
   // ── Effective price after discount ───────────────────────
   const effectivePurchasePrice = purchasePrice * (1 - discount / 100);
-  const loanAmount = Math.max(0, effectivePurchasePrice - deposit);
+  const baseLoan = Math.max(0, effectivePurchasePrice - deposit) + (initiationFeeCapitalised ? initiationFee : 0);
 
   // ── Acquisition costs ─────────────────────────────────────
   const transferDuty = transferDutyExempt ? 0 : calcTransferDuty(effectivePurchasePrice);
-  const bondRegistrationCost = bondRegistrationIncluded ? 0 : calcBondRegistrationCost(loanAmount);
+  const bondRegistrationCostFull = calcBondRegistrationCost(baseLoan);
+  const bondRegistrationCost = bondRegistrationIncluded ? 0 : bondRegistrationCostFull;
+  const loanAmount = baseLoan + (bondRegistrationIncluded ? bondRegistrationCostFull : 0);
   const utilityConnectionFee = inputs.utilityConnectionFee ?? 0;
-  const totalAcquisitionCost = deposit + transferDuty + bondRegistrationCost + utilityConnectionFee;
+  const initiationFeeCash = initiationFeeCapitalised ? 0 : initiationFee;
+  const totalAcquisitionCost = deposit + transferDuty + bondRegistrationCost + utilityConnectionFee + initiationFeeCash;
   const totalCashRequired = totalAcquisitionCost;
 
   // ── Monthly bond repayment ────────────────────────────────

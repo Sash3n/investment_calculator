@@ -50,6 +50,8 @@ const DEFAULT_INPUTS: PropertyInputs = {
   transferDutyExempt: false,
   bondRegistrationIncluded: false,
   utilityConnectionFee: 1500,
+  initiationFee: 6037,
+  initiationFeeCapitalised: false,
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -343,6 +345,9 @@ export function PropertyROI() {
               <InputField label="Utility Connection Fee" id="ucf" value={inputs.utilityConnectionFee ?? 0}
                 onChange={(v) => set('utilityConnectionFee', v)} prefix="R" step={100}
                 help="Once-off water/electricity connection & activation deposit (upfront)" />
+              <InputField label="Initiation Fee" id="if" value={inputs.initiationFee}
+                onChange={(v) => set('initiationFee', v)} prefix="R" step={100}
+                help="Bank-charged bond initiation fee" />
 
               {/* Acquisition cost toggles */}
               {[
@@ -357,6 +362,12 @@ export function PropertyROI() {
                   hint: 'Disable if capitalised into loan or covered by bank promotion',
                   active: !inputs.bondRegistrationIncluded,
                   onToggle: () => setInputs((prev) => ({ ...prev, bondRegistrationIncluded: !prev.bondRegistrationIncluded })),
+                },
+                {
+                  label: 'Initiation fee capitalised',
+                  hint: 'Add it to the loan instead of paying cash upfront',
+                  active: inputs.initiationFeeCapitalised,
+                  onToggle: () => setInputs((prev) => ({ ...prev, initiationFeeCapitalised: !prev.initiationFeeCapitalised })),
                 },
               ].map(({ label, hint, active, onToggle }) => (
                 <label key={label} className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -389,10 +400,11 @@ export function PropertyROI() {
                   { label: 'Transfer Duty',     value: inputs.transferDutyExempt ? 0 : result.transferDuty,                    muted: inputs.transferDutyExempt },
                   { label: 'Bond Registration', value: inputs.bondRegistrationIncluded ? 0 : result.bondRegistrationCost,      muted: inputs.bondRegistrationIncluded },
                   { label: 'Utility Connection', value: inputs.utilityConnectionFee ?? 0,                                       muted: (inputs.utilityConnectionFee ?? 0) === 0 },
-                ].map(({ label, value, muted }) => (
+                  { label: 'Initiation Fee',    value: inputs.initiationFeeCapitalised ? 0 : inputs.initiationFee,             muted: inputs.initiationFeeCapitalised, capitalised: inputs.initiationFeeCapitalised },
+                ].map(({ label, value, muted, capitalised }) => (
                   <div key={label} className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text-muted)' }}>
-                      {label}{muted ? ' (excluded)' : ''}
+                      {label}{capitalised ? ' (capitalised)' : muted ? ' (excluded)' : ''}
                     </span>
                     <span className="text-xs font-semibold tabular-nums" style={{ color: muted ? 'var(--color-text-subtle)' : 'var(--color-text)' }}>
                       {formatRand(value)}
