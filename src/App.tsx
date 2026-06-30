@@ -44,6 +44,8 @@ const RetrenchmentCalc    = lazy(() => import('./pages/RetrenchmentCalc').then((
 const OffshoreAllowance   = lazy(() => import('./pages/OffshoreAllowance').then((m) => ({ default: m.OffshoreAllowance })));
 const VatCalculator       = lazy(() => import('./pages/VatCalculator').then((m) => ({ default: m.VatCalculator })));
 const MunicipalRates      = lazy(() => import('./pages/MunicipalRates').then((m) => ({ default: m.MunicipalRates })));
+const LearnHub            = lazy(() => import('./pages/LearnHub').then((m) => ({ default: m.LearnHub })));
+const LearnArticle        = lazy(() => import('./pages/LearnArticle').then((m) => ({ default: m.LearnArticle })));
 
 function PageFallback() {
   return (
@@ -103,6 +105,8 @@ function App() {
                 <Route path="/offshore-allowance"  element={<OffshoreAllowance />} />
                 <Route path="/vat"                 element={<VatCalculator />} />
                 <Route path="/municipal-rates"     element={<MunicipalRates />} />
+                <Route path="/learn"               element={<LearnHub />} />
+                <Route path="/learn/:slug"         element={<LearnArticle />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

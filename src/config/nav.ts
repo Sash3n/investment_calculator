@@ -2,7 +2,7 @@ import {
   Home, Building2, MapPin, Car, TrendingUp, Receipt, Wallet, Landmark,
   Shield, Scale, PieChart, House, Briefcase, Snowflake, GraduationCap,
   TrendingDown, History, Activity, BedDouble, DoorOpen, Coins,
-  Target, Globe, Scissors, Sunset,
+  Target, Globe, Scissors, Sunset, BookOpen,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -103,6 +103,13 @@ export const NAV_CATEGORIES: NavCategory[] = [
     label: 'History',
     items: [
       { path: '/history', label: 'Calculation History', shortLabel: 'History', icon: History, color: '#F59E0B', keywords: 'saved snapshots compare' },
+    ],
+  },
+  {
+    id: 'learn',
+    label: 'Learn',
+    items: [
+      { path: '/learn', label: 'Financial Education', shortLabel: 'Learn', icon: BookOpen, color: '#6366F1', keywords: 'articles guides education compound interest etf tfsa paye cgt fire property debt snowball' },
     ],
   },
 ];
