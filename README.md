@@ -8,6 +8,29 @@
 
 ---
 
+## Screenshots
+
+| Dashboard (Dark) | Dashboard (Light) |
+|---|---|
+| ![Dashboard Dark](docs/screenshots/dashboard.png) | ![Dashboard Light](docs/screenshots/dashboard-light.png) |
+
+| Mortgage Calculator | Property ROI |
+|---|---|
+| ![Mortgage](docs/screenshots/mortgage.png) | ![Property ROI](docs/screenshots/property-roi.png) |
+
+| Car Finance | Extra Payments vs Investing |
+|---|---|
+| ![Car Finance](docs/screenshots/car-finance.png) | ![Extra vs Investing](docs/screenshots/extra-vs-investing.png) |
+
+| Tax Planner | Investment Strategy |
+|---|---|
+| ![Tax Planner](docs/screenshots/tax-planner.png) | ![Investment Strategy](docs/screenshots/investment-strategy.png) |
+
+| Calculation History | Light Mode |
+|---|---|
+| ![History](docs/screenshots/history.png) | ![Light Mode](docs/screenshots/light-mode.png) |
+---
+
 ## Features
 
 30+ calculators organised into the same categories used by the sidebar, mobile nav, and command palette (`Ctrl/Cmd+K`).

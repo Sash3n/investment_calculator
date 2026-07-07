@@ -74,7 +74,11 @@ async function main() {
     await waitForServer(BASE_URL);
     console.log('✓  Dev server ready\n');
 
-    const browser = await chromium.launch();
+    const browser = await chromium.launch(
+      process.env.PLAYWRIGHT_CHROMIUM_PATH
+        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH, args: ['--no-sandbox'] }
+        : undefined
+    );
     const captured = {};
 
     for (const theme of ['dark', 'light']) {
