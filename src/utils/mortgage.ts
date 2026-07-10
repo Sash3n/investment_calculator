@@ -11,9 +11,11 @@ export function calcPayment(
   termYears: number,
   paymentsPerYear: number
 ): number {
-  if (loan <= 0 || annualRate <= 0) return loan / (termYears * paymentsPerYear);
+  // Degenerate terms (0 or negative) would divide by zero — treat as a single payment.
+  const n = Math.max(1, termYears * paymentsPerYear);
+  if (loan <= 0) return 0;
+  if (annualRate <= 0) return loan / n;
   const r = annualRate / 100 / paymentsPerYear;
-  const n = termYears * paymentsPerYear;
   return (loan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 }
 
