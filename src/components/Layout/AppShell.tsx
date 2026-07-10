@@ -45,6 +45,13 @@ function DisclaimerBanner() {
             Consult a <strong style={{ color: '#CBD5E1' }}>certified financial planner (CFP)</strong> or SARS-registered tax practitioner
             before making any financial decisions. Figures are based on publicly available SARS information and may not reflect the latest rates.
           </p>
+          <p className="text-[11px] leading-relaxed mt-2" style={{ color: '#94A3B8' }}>
+            <strong style={{ color: '#CBD5E1' }}>Your data:</strong> calculations run in your browser and are not
+            sent anywhere by default. If you sign in with Google, saved properties and your last 50 calculations
+            (which may include figures you enter, such as incomes and property values) are stored in your private
+            cloud account until you delete them — removable at any time via Calculation History and your portfolio.
+            FinCalc ZA runs no analytics or tracking scripts.
+          </p>
         </div>
         <button
           onClick={accept}
