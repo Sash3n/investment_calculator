@@ -23,6 +23,13 @@ describe('calcPayment degenerate inputs', () => {
   it('zero rate amortises linearly', () => {
     expect(calcPayment(120_000, 0, 10, 12)).toBeCloseTo(1_000, 6);
   });
+
+  it('a tiny positive rate that rounds (1+r) to 1.0 does not return Infinity', () => {
+    // Reachable from a share link: 1e-13 passes the sanitizer's finite+magnitude checks.
+    const pmt = calcPayment(1_000_000, 1e-13, 20, 12);
+    expect(finite(pmt)).toBe(true);
+    expect(pmt).toBeCloseTo(1_000_000 / (20 * 12), 6);
+  });
 });
 
 describe('calcMortgageSummary degenerate inputs', () => {

@@ -28,6 +28,10 @@ function sanitizeShared(value: unknown): unknown {
   if (value !== null && typeof value === 'object') {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value)) {
+      // Skip prototype-polluting keys: JSON.parse makes `__proto__` an own
+      // property, and `out[k] = …` would route it through the prototype
+      // setter, silently reshaping the object a consumer reads via `?.`.
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
       const clean = sanitizeShared(v);
       if (clean !== undefined) out[k] = clean;
     }

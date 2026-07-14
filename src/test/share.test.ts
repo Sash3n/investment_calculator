@@ -21,12 +21,12 @@ describe('decodeState sanitisation', () => {
     expect(decodeState(enc(null))).toBeNull();
   });
 
-  it('drops NaN and Infinity so defaults apply', () => {
-    const decoded = decodeState<Record<string, unknown>>(enc({ rate: null, loan: 5 }));
-    // JSON has no NaN/Infinity literal, so craft via string replace on valid JSON
+  it('rejects literal NaN/Infinity tokens as invalid JSON, and preserves null', () => {
+    // `NaN`/`Infinity` are not valid JSON tokens, so the payload is rejected at parse.
     const raw = btoa(encodeURIComponent('{"rate":NaN,"loan":Infinity,"term":20}'));
-    expect(decodeState(raw)).toBeNull(); // invalid JSON — rejected outright
-    expect(decoded).toEqual({ rate: null, loan: 5 });
+    expect(decodeState(raw)).toBeNull();
+    // A genuine null value passes through untouched (calculators use ?? default on it).
+    expect(decodeState(enc({ rate: null, loan: 5 }))).toEqual({ rate: null, loan: 5 });
   });
 
   it('drops absurd magnitudes beyond 1e12', () => {
@@ -50,5 +50,25 @@ describe('decodeState sanitisation', () => {
   it('passes strings and booleans through unchanged', () => {
     const decoded = decodeState<Record<string, unknown>>(enc({ name: '<b>x</b>', flag: true }));
     expect(decoded).toEqual({ name: '<b>x</b>', flag: true });
+  });
+
+  it('drops Infinity from a raw 1e999 JSON literal (JSON.parse yields Infinity)', () => {
+    // JSON has no NaN/Infinity token, but an overflowing literal parses to Infinity —
+    // this is the only way the isFinite guard is reached in production.
+    const raw = btoa(encodeURIComponent('{"loan":1e999,"rate":11.5}'));
+    expect(decodeState(raw)).toEqual({ rate: 11.5 });
+  });
+
+  it('does not let a __proto__ key pollute the decoded object', () => {
+    const raw = btoa(encodeURIComponent('{"__proto__":{"loan":999},"rate":11.5}'));
+    const decoded = decodeState<Record<string, unknown>>(raw);
+    expect(decoded).toEqual({ rate: 11.5 });
+    // The injected value must NOT be reachable via prototype lookup.
+    expect((decoded as { loan?: number })?.loan).toBeUndefined();
+  });
+
+  it('drops constructor and prototype keys too', () => {
+    const raw = btoa(encodeURIComponent('{"constructor":{"x":1},"prototype":{"y":2},"rate":11.5}'));
+    expect(decodeState(raw)).toEqual({ rate: 11.5 });
   });
 });

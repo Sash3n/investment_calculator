@@ -16,7 +16,12 @@ export function calcPayment(
   if (loan <= 0) return 0;
   if (annualRate <= 0) return loan / n;
   const r = annualRate / 100 / paymentsPerYear;
-  return (loan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  const growth = Math.pow(1 + r, n);
+  // A rate so tiny that (1 + r) rounds to 1.0 makes the denominator 0 → Infinity.
+  // Fall back to a linear split; the interest is negligible at that rate anyway.
+  const denominator = growth - 1;
+  if (denominator <= 0) return loan / n;
+  return (loan * r * growth) / denominator;
 }
 
 /**
