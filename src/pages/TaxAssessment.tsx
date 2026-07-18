@@ -5,8 +5,9 @@ import {
 } from 'recharts';
 import {
   FileText, Wallet, HeartPulse, Receipt, Info,
-  CheckCircle2, AlertCircle, TrendingUp,
+  CheckCircle2, AlertCircle, TrendingUp, Search, Plus, Trash2, ArrowDown, BookOpen,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
@@ -16,6 +17,9 @@ import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand } from '../utils/format';
 import { calcTaxAssessment } from '../utils/taxAssessment';
 import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
+import {
+  SARS_CODE_BY_CODE, searchSarsCodes, sumCodeRows, type CodeRow,
+} from '../data/sarsCodes';
 import type { TaxAssessmentInputs, AgeGroup } from '../types';
 
 const C = {
@@ -65,7 +69,18 @@ const DEFAULT_INPUTS: TaxAssessmentInputs = {
   provisionalPaid: 0,
 };
 
-interface SavedState { inputs: TaxAssessmentInputs; taxYear: TaxYearId }
+interface SavedState { inputs: TaxAssessmentInputs; taxYear: TaxYearId; codeRows?: CodeRow[] }
+
+const FIELD_LABELS: Record<string, string> = {
+  annualSalary:        'Employment income',
+  travelAllowance:     'Travel allowance',
+  otherIncome:         'Other income',
+  raContributions:     'Retirement contributions',
+  medAidContributions: 'Medical contributions',
+  donations:           'Donations',
+  payeWithheld:        'PAYE withheld',
+  interestIncome:      'Local interest',
+};
 
 function RandTooltip({ active, payload }: { active?: boolean; payload?: { value: number; name: string; payload?: { fill?: string } }[] }) {
   if (!active || !payload?.length) return null;
@@ -93,11 +108,160 @@ function BreakdownRow({ label, value, bold, color, negative }: {
   );
 }
 
+/** TaxTim-style "enter your IRP5 by source code" panel. */
+function Irp5CodePanel({ rows, setRows, onApply }: {
+  rows: CodeRow[];
+  setRows: (rows: CodeRow[]) => void;
+  onApply: () => void;
+}) {
+  const [query, setQuery]           = useState('');
+  const [pickedCode, setPickedCode] = useState<string | null>(null);
+  const [amount, setAmount]         = useState(0);
+
+  const matches = useMemo(() => (query.trim() ? searchSarsCodes(query, 6) : []), [query]);
+  const picked  = pickedCode ? SARS_CODE_BY_CODE[pickedCode] : null;
+  const sums    = useMemo(() => sumCodeRows(rows), [rows]);
+  const sumEntries = Object.entries(sums) as [string, number][];
+  const infoRows = rows.filter((r) => !SARS_CODE_BY_CODE[r.code]?.mapsTo);
+
+  const addRow = () => {
+    if (!pickedCode || amount <= 0) return;
+    setRows([...rows, { code: pickedCode, amount }]);
+    setPickedCode(null);
+    setQuery('');
+    setAmount(0);
+  };
+
+  return (
+    <div className="glass-card p-5 space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <SectionHeader title="Fill From Your IRP5 / IT3 Codes" icon={FileText} />
+        <Link to="/sars-codes" className="text-xs underline flex items-center gap-1" style={{ color: C.cyan }}>
+          <BookOpen size={12} /> What do the codes mean?
+        </Link>
+      </div>
+      <p className="text-xs -mt-2" style={{ color: 'var(--color-text-muted)' }}>
+        Enter amounts exactly as they appear next to each source code on your tax certificates,
+        then apply them to the form below.
+      </p>
+
+      {/* Code picker */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_150px_auto] gap-3 items-end">
+        <div className="relative">
+          <label htmlFor="irp5-search" className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+            Source code
+          </label>
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-subtle)' }} />
+            <input
+              id="irp5-search"
+              type="text"
+              value={picked ? `${picked.code} — ${picked.label}` : query}
+              onChange={(e) => { setPickedCode(null); setQuery(e.target.value); }}
+              placeholder="Type a code (3601) or name (bonus, PAYE)…"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              autoComplete="off"
+            />
+          </div>
+          {!picked && matches.length > 0 && (
+            <div className="absolute z-20 mt-1 w-full rounded-xl overflow-hidden shadow-xl"
+              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+              {matches.map((m) => (
+                <button key={m.code} onClick={() => { setPickedCode(m.code); setQuery(''); }}
+                  className="w-full text-left px-3 py-2 text-sm transition-all hover:bg-[rgba(99,102,241,0.10)] flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold" style={{ color: C.indigo }}>{m.code}</span>
+                  <span className="flex-1 truncate" style={{ color: 'var(--color-text)' }}>{m.label}</span>
+                  {!m.mapsTo && <span className="text-[9px] uppercase" style={{ color: C.amber }}>info</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <InputField label="Amount" id="irp5-amount" value={amount}
+          onChange={(v) => setAmount(parseFloat(v) || 0)} prefix="R" />
+        <button onClick={addRow} disabled={!pickedCode || amount <= 0}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
+          style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+          <Plus size={14} /> Add
+        </button>
+      </div>
+      {picked && (
+        <p className="text-[11px] -mt-1" style={{ color: picked.mapsTo ? 'var(--color-text-subtle)' : C.amber }}>
+          {picked.description}
+        </p>
+      )}
+
+      {/* Entered rows */}
+      {rows.length > 0 && (
+        <div className="space-y-1.5">
+          {rows.map((r, i) => {
+            const meta = SARS_CODE_BY_CODE[r.code];
+            return (
+              <div key={`${r.code}-${i}`} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                <span className="font-mono text-xs font-bold" style={{ color: C.indigo }}>{r.code}</span>
+                <span className="flex-1 truncate" style={{ color: 'var(--color-text)' }}>{meta?.label ?? 'Unknown code'}</span>
+                {meta && !meta.mapsTo && (
+                  <span className="text-[9px] uppercase font-bold" style={{ color: C.amber }}>not counted</span>
+                )}
+                <span className="font-semibold" style={{ color: 'var(--color-text)' }}>{formatRand(r.amount, 0)}</span>
+                <button aria-label={`Remove ${r.code}`} onClick={() => setRows(rows.filter((_, j) => j !== i))}
+                  className="p-1 rounded-lg" style={{ color: C.red }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Informational codes note */}
+      {infoRows.length > 0 && (
+        <div className="flex items-start gap-2 p-3 rounded-xl text-[11px]" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
+          <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.amber }} />
+          <span style={{ color: 'var(--color-text-muted)' }}>
+            {infoRows.map((r) => r.code).join(', ')}: informational codes (non-taxable, totals, or items like
+            lump sums this estimator does not model) — they are kept for your record but not added to the estimate.
+          </span>
+        </div>
+      )}
+
+      {/* Apply */}
+      {sumEntries.length > 0 && (
+        <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(16,185,129,0.06)', border: `1px solid ${C.emerald}33` }}>
+          <p className="text-xs font-semibold" style={{ color: C.emerald }}>Will be applied to the form:</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+            {sumEntries.map(([field, value]) => (
+              <div key={field} className="flex justify-between text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                <span>{FIELD_LABELS[field] ?? field}</span>
+                <span className="font-semibold" style={{ color: 'var(--color-text)' }}>{formatRand(value, 0)}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={onApply}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: 'rgba(16,185,129,0.15)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+            <ArrowDown size={14} /> Apply codes to form
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TaxAssessment() {
   const [inputs, setInputs]   = useState<TaxAssessmentInputs>(DEFAULT_INPUTS);
   const [taxYear, setTaxYear] = useState<TaxYearId>(DEFAULT_TAX_YEAR);
+  const [codeRows, setCodeRows] = useState<CodeRow[]>([]);
 
   const result = useMemo(() => calcTaxAssessment(inputs, taxYear), [inputs, taxYear]);
+
+  const applyCodes = () => {
+    const sums = sumCodeRows(codeRows);
+    if (Object.keys(sums).length === 0) return;
+    setInputs((p) => ({ ...p, ...sums }));
+  };
 
   const n = (fn: (v: number) => Partial<TaxAssessmentInputs>) => (val: string) =>
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
@@ -140,9 +304,15 @@ export function TaxAssessment() {
         type="assessment"
         title={saveTitle}
         summary={saveSummary}
-        inputs={{ inputs, taxYear }}
-        onLoad={(s) => { setInputs({ ...DEFAULT_INPUTS, ...s.inputs }); if (s.taxYear) setTaxYear(s.taxYear); }}
+        inputs={{ inputs, taxYear, codeRows }}
+        onLoad={(s) => {
+          setInputs({ ...DEFAULT_INPUTS, ...s.inputs });
+          if (s.taxYear) setTaxYear(s.taxYear);
+          setCodeRows(s.codeRows ?? []);
+        }}
       />
+
+      <Irp5CodePanel rows={codeRows} setRows={setCodeRows} onApply={applyCodes} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-5">
         {/* ── Inputs ── */}
