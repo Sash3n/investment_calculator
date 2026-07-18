@@ -10,7 +10,9 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import type { PropertyInputs } from '../types';
+import type {
+  PropertyInputs, ExpenseDoc, MaintenanceDoc, IncomeDoc, PropertyRecordDoc,
+} from '../types';
 
 // ── Saved Properties ──────────────────────────────────────────────────────────
 
@@ -149,4 +151,78 @@ export function useHistory(uid: string | null) {
   const byType = (type: CalcType) => entries.filter((e) => e.type === type);
 
   return { entries, loading, push, update, remove, rename, clear, byType, reload: load };
+}
+
+// ── Property Manager tracker collections ──────────────────────────────────────
+// Generic per-user subcollection hook. Docs carry a propertyId and are filtered
+// client-side (like byType above) so no composite Firestore index is needed.
+
+function useUserDocs<T extends { id: string; propertyId: string; savedAt: Date }>(
+  uid: string | null,
+  sub: 'expenses' | 'maintenance' | 'income' | 'records',
+) {
+  const [docs, setDocs]     = useState<T[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!uid) { setDocs([]); return; }
+    setLoading(true);
+    try {
+      const snap = await getDocs(
+        query(collection(db, 'users', uid, sub), orderBy('savedAt', 'desc'))
+      );
+      setDocs(snap.docs.map((d) => ({
+        ...(d.data() as Omit<T, 'id' | 'savedAt'>),
+        id: d.id,
+        savedAt: d.data().savedAt?.toDate() ?? new Date(),
+      } as T)));
+    } finally {
+      setLoading(false);
+    }
+  }, [uid, sub]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const add = async (data: Omit<T, 'id' | 'savedAt'>) => {
+    if (!uid) return;
+    await addDoc(collection(db, 'users', uid, sub), { ...data, savedAt: serverTimestamp() });
+    await load();
+  };
+
+  const update = async (id: string, data: Partial<Omit<T, 'id' | 'savedAt'>>) => {
+    if (!uid) return;
+    await updateDoc(doc(db, 'users', uid, sub, id), data as DocumentData);
+    setDocs((prev) => prev.map((d) => (d.id === id ? { ...d, ...data } : d)));
+  };
+
+  const remove = async (id: string) => {
+    if (!uid) return;
+    await deleteDoc(doc(db, 'users', uid, sub, id));
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  /** Docs for one property — filtered client-side */
+  const byProperty = (propertyId: string) => docs.filter((d) => d.propertyId === propertyId);
+
+  return { docs, loading, add, update, remove, byProperty, reload: load };
+}
+
+/** users/{uid}/expenses — property running costs */
+export function useExpenses(uid: string | null) {
+  return useUserDocs<ExpenseDoc>(uid, 'expenses');
+}
+
+/** users/{uid}/maintenance — jobs, contractors and their status */
+export function useMaintenance(uid: string | null) {
+  return useUserDocs<MaintenanceDoc>(uid, 'maintenance');
+}
+
+/** users/{uid}/income — rent and other money received */
+export function useIncome(uid: string | null) {
+  return useUserDocs<IncomeDoc>(uid, 'income');
+}
+
+/** users/{uid}/records — leases, inspections, policies, renewals */
+export function usePropertyRecords(uid: string | null) {
+  return useUserDocs<PropertyRecordDoc>(uid, 'records');
 }
