@@ -50,6 +50,7 @@ const TaxAssessment       = lazy(() => import('./pages/TaxAssessment').then((m) 
 const PropertyPortfolioTax = lazy(() => import('./pages/PropertyPortfolioTax').then((m) => ({ default: m.PropertyPortfolioTax })));
 const PortfolioHub        = lazy(() => import('./pages/PortfolioHub').then((m) => ({ default: m.PortfolioHub })));
 const PropertyManager     = lazy(() => import('./pages/PropertyManager').then((m) => ({ default: m.PropertyManager })));
+const SarsCodeLookup      = lazy(() => import('./pages/SarsCodeLookup').then((m) => ({ default: m.SarsCodeLookup })));
 const LearnArticle        = lazy(() => import('./pages/LearnArticle').then((m) => ({ default: m.LearnArticle })));
 
 function PageFallback() {
@@ -111,6 +112,7 @@ function App() {
                 <Route path="/vat"                 element={<VatCalculator />} />
                 <Route path="/municipal-rates"     element={<MunicipalRates />} />
                 <Route path="/tax-assessment"      element={<TaxAssessment />} />
+                <Route path="/sars-codes"          element={<SarsCodeLookup />} />
                 <Route path="/property-tax"        element={<PropertyPortfolioTax />} />
                 <Route path="/portfolio-hub"       element={<RequireAuth><PortfolioHub /></RequireAuth>} />
                 <Route path="/portfolio-hub/:propertyId" element={<RequireAuth><PropertyManager /></RequireAuth>} />
