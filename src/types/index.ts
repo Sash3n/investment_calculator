@@ -323,6 +323,63 @@ export interface Section13quatResult {
   year1TaxSaving: number;
 }
 
+// ── SARS Annual Assessment (ITR12-style estimator) ────────────────────────────
+
+export interface TaxAssessmentInputs {
+  ageGroup: AgeGroup;
+  // Income
+  annualSalary: number;            // gross employment remuneration (excl. travel allowance)
+  travelAllowance: number;         // annual travel allowance received
+  travelInclusionRate: number;     // 0.8 default; 0.2 when business use is proven high
+  otherIncome: number;             // freelance / trade / other fully taxable income
+  netRentalIncome: number;         // net rental profit (negative = assessed loss)
+  interestIncome: number;          // local interest before s10(1)(i) exemption
+  localDividends: number;          // informational: subject to 20% DWT, not income tax
+  capitalGain: number;             // aggregate gain after primary-residence exclusion
+  // Deductions & credits
+  raContributions: number;         // annual retirement fund contributions
+  donations: number;               // S18A donations with certificates
+  medAidDependants: number;        // -1 none, 0 main only, 1 main + 1, ...
+  medAidContributions: number;     // annual medical scheme contributions paid
+  medicalOutOfPocket: number;      // qualifying out-of-pocket medical expenses
+  hasDisability: boolean;          // taxpayer/dependant disability (s6B at 33.3%)
+  // Tax already paid
+  payeWithheld: number;            // PAYE per IRP5
+  provisionalPaid: number;         // provisional payments made
+}
+
+export interface TaxAssessmentResult {
+  // Income build-up
+  employmentIncome: number;        // salary + taxable portion of travel allowance
+  taxableTravelAllowance: number;
+  taxableInterest: number;         // after exemption
+  interestExemptionApplied: number;
+  taxableCapitalGain: number;      // after annual exclusion, at inclusion rate
+  cgAnnualExclusionApplied: number;
+  incomeBeforeDeductions: number;
+  // Deductions
+  raDeductionAllowed: number;
+  raDeductionCapped: boolean;
+  donationsAllowed: number;
+  donationsCapped: boolean;
+  taxableIncome: number;
+  // Tax build-up
+  grossTax: number;
+  rebate: number;
+  medCredit6A: number;             // s6A medical scheme fees credit (annual)
+  medCredit6B: number;             // s6B additional medical expenses credit (annual)
+  netTaxPayable: number;           // liability for the year
+  // Reconciliation
+  totalTaxPaid: number;            // PAYE + provisional
+  refundOrOwing: number;           // positive = refund due, negative = owing to SARS
+  // Rates
+  effectiveRate: number;           // netTaxPayable / total income (%)
+  marginalRate: number;            // %
+  bracketLabel: string;
+  // Info
+  dividendsTax: number;            // 20% DWT on local dividends (already withheld)
+}
+
 export interface CGTInputs {
   purchasePrice: number;
   acquisitionCosts: number;        // transfer duty, bond reg, legal fees
