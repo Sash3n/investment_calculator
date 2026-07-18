@@ -323,6 +323,60 @@ export interface Section13quatResult {
   year1TaxSaving: number;
 }
 
+// ── Property Portfolio Tax ────────────────────────────────────────────────────
+
+export interface PortfolioRentalProperty {
+  id: string;
+  name: string;
+  monthlyRent: number;
+  vacancyRate: number;             // percent 0-100
+  annualBondInterest: number;      // interest portion only
+  annualRates: number;
+  annualLevies: number;
+  annualInsurance: number;
+  annualRepairs: number;
+  managementFeePercent: number;    // % of effective annual rent
+  otherAnnualDeductions: number;
+  // Section 13sex qualification
+  purchasePrice: number;           // building cost excl. land
+  isNewUnused: boolean;            // acquired new and unused (13sex requirement)
+  isLowCostHousing: boolean;       // 10% over 10 years instead of 5% over 20
+}
+
+export interface PortfolioTaxInputs {
+  properties: PortfolioRentalProperty[];
+  otherAnnualIncome: number;
+  ageGroup: AgeGroup;
+  raMonthlyContrib: number;
+}
+
+export interface PortfolioPropertyResult {
+  id: string;
+  name: string;
+  annualRent: number;              // effective (after vacancy)
+  totalDeductions: number;
+  netProfit: number;               // can be negative
+}
+
+export interface PortfolioTaxResult {
+  perProperty: PortfolioPropertyResult[];
+  totalAnnualRent: number;
+  totalDeductions: number;
+  netRentalIncome: number;         // combined, can be negative
+  totalTaxableIncome: number;      // other income + net rental (floored at 0)
+  taxOnOtherIncomeOnly: number;
+  taxAttributableToRental: number; // standard treatment, no s13sex
+  effectiveTaxRateOnRental: number;
+  marginalRate: number;
+  afterTaxMonthlyCashFlow: number;
+  bracketLabel: string;
+  // Section 13sex
+  s13QualifyingUnits: number;      // count of new-and-unused units
+  s13Qualifies: boolean;           // >= 5 qualifying units
+  s13?: Section13sexResult;        // full schedule when qualifying
+  s13AnnualTaxSaving: number;      // year-1 saving vs standard treatment (0 if n/a)
+}
+
 // ── SARS Annual Assessment (ITR12-style estimator) ────────────────────────────
 
 export interface TaxAssessmentInputs {
