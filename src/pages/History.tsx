@@ -6,12 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import { useHistory, type CalcType } from '../hooks/useFirestore';
 
 const CALC_ROUTES: Record<CalcType, string> = {
-  mortgage:  '/mortgage',
-  property:  '/property-roi',
-  car:       '/car-finance',
-  investing: '/extra-vs-investing',
-  strategy:  '/investment-strategy',
-  tax:       '/tax-planner',
+  mortgage:   '/mortgage',
+  property:   '/property-roi',
+  car:        '/car-finance',
+  investing:  '/extra-vs-investing',
+  strategy:   '/investment-strategy',
+  tax:        '/tax-planner',
+  assessment: '/tax-assessment',
 };
 
 const TYPE_META: Record<CalcType, { label: string; icon: typeof Home; color: string }> = {
@@ -21,6 +22,7 @@ const TYPE_META: Record<CalcType, { label: string; icon: typeof Home; color: str
   investing:  { label: 'Extra vs Investing',  icon: TrendingUp, color: '#06B6D4' },
   strategy:   { label: 'Investment Strategy', icon: Wallet,     color: '#8B5CF6' },
   tax:        { label: 'Tax Planner',         icon: Receipt,    color: '#10B981' },
+  assessment: { label: 'SARS Assessment',     icon: Receipt,    color: '#6366F1' },
 };
 
 export function History() {

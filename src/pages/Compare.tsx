@@ -262,12 +262,13 @@ interface LocationState {
 }
 
 const TYPE_LABEL: Record<CalcType, string> = {
-  mortgage: 'Mortgage',
-  property: 'Property ROI',
-  car:      'Car Finance',
-  investing:'Extra vs Investing',
-  strategy: 'Investment Strategy',
-  tax:      'Tax Planner',
+  mortgage:   'Mortgage',
+  property:   'Property ROI',
+  car:        'Car Finance',
+  investing:  'Extra vs Investing',
+  strategy:   'Investment Strategy',
+  tax:        'Tax Planner',
+  assessment: 'SARS Assessment',
 };
 
 export function Compare() {

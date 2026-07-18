@@ -69,7 +69,7 @@ export function useSavedProperties(uid: string | null) {
 
 // ── Calculation History ───────────────────────────────────────────────────────
 
-export type CalcType = 'mortgage' | 'property' | 'car' | 'investing' | 'strategy' | 'tax';
+export type CalcType = 'mortgage' | 'property' | 'car' | 'investing' | 'strategy' | 'tax' | 'assessment';
 
 export interface HistoryEntry {
   id: string;

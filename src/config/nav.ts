@@ -77,6 +77,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
       { path: '/wealth-target', label: 'Wealth Target Planner', shortLabel: 'Wealth Goal', icon: Target, color: '#6366F1', keywords: 'savings goal target monthly lump sum etf tfsa' },
       { path: '/offshore-allowance', label: 'Offshore Allowance Planner', shortLabel: 'Offshore', icon: Globe, color: '#06B6D4', keywords: 'forex usd zar depreciation single discretionary allowance sda' },
       { path: '/investment-strategy', label: 'Investment Strategy', shortLabel: 'Strategy', icon: Wallet, color: '#8B5CF6', keywords: 'ra tfsa etf 2-pot allocation' },
+      { path: '/tax-assessment', label: 'SARS Assessment Estimator', shortLabel: 'Assessment', icon: Receipt, color: '#6366F1', keywords: 'refund owing itr12 return efiling annual income tax taxtim' },
       { path: '/tax-planner', label: 'Tax Planner', shortLabel: 'Tax', icon: Receipt, color: '#10B981', keywords: 'rental cgt section 13sex 13quat sars' },
       { path: '/tax-projections', label: 'Tax Projections', shortLabel: 'Tax Proj.', icon: TrendingUp, color: '#06B6D4', keywords: 'multi year forecast rental cgt' },
       { path: '/dividend-calculator', label: 'Dividend Income', shortLabel: 'Dividends', icon: Coins, color: '#10B981', keywords: 'drip yield on cost dividends tax 20%' },
