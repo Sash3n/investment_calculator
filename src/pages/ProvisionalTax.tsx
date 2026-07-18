@@ -5,8 +5,12 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
+import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { calcIncomeTax } from '../utils/tax';
+import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
+import type { AgeGroup } from '../types';
 
 const C = {
   indigo:  '#6366F1',
@@ -15,33 +19,20 @@ const C = {
   red:     '#EF4444',
 };
 
-// 2025/26 SARS tax tables
-const TAX_BRACKETS = [
-  { limit: 237_100,   rate: 0.18, base: 0       },
-  { limit: 370_500,   rate: 0.26, base: 42_678   },
-  { limit: 512_800,   rate: 0.31, base: 77_362   },
-  { limit: 673_000,   rate: 0.36, base: 121_475  },
-  { limit: 857_900,   rate: 0.39, base: 179_147  },
-  { limit: 1_817_000, rate: 0.41, base: 251_258  },
-  { limit: Infinity,  rate: 0.45, base: 644_489  },
-];
+function toAgeGroup(age: number): AgeGroup {
+  return age >= 75 ? '75plus' : age >= 65 ? '65to74' : 'under65';
+}
 
-const PRIMARY_REBATE   = 17_235;
-const SECONDARY_REBATE = 9_444;
-const TERTIARY_REBATE  = 3_145;
-const MEDICAL_CREDIT   = 364;
-
-function calcPAYE(taxable: number, age: number, medAidMembers: number): number {
-  const idx     = TAX_BRACKETS.findIndex((b) => taxable <= b.limit);
-  const bracket = idx >= 0 ? TAX_BRACKETS[idx] : TAX_BRACKETS[TAX_BRACKETS.length - 1];
-  const prevLimit = idx > 0 ? TAX_BRACKETS[idx - 1].limit : 0;
-  const grossTax  = bracket.base + (taxable - prevLimit) * bracket.rate;
-
-  let rebate = PRIMARY_REBATE;
-  if (age >= 65) rebate += SECONDARY_REBATE;
-  if (age >= 75) rebate += TERTIARY_REBATE;
-
-  return Math.max(0, grossTax - rebate - medAidMembers * MEDICAL_CREDIT * 12);
+/**
+ * Annual tax on taxable income, less age rebates (inside calcIncomeTax) and
+ * SARS-tiered medical scheme fees credits (main / first dependant / additional).
+ */
+function annualTaxDue(taxable: number, age: number, medAidMembers: number, taxYear: TaxYearId): number {
+  const { medCredits } = TAX_YEARS[taxYear];
+  const medMonthly = medAidMembers <= 0 ? 0
+    : medAidMembers === 1 ? medCredits.main
+    : medCredits.main + medCredits.firstDep + (medAidMembers - 2) * medCredits.extraDep;
+  return Math.max(0, calcIncomeTax(taxable, toAgeGroup(age), taxYear) - medMonthly * 12);
 }
 
 interface ShareState {
@@ -53,6 +44,7 @@ interface ShareState {
   age:              number;
   medAidMembers:    number;
   period:           string;
+  taxYear?:         TaxYearId;
 }
 
 export function ProvisionalTax() {
@@ -66,22 +58,24 @@ export function ProvisionalTax() {
   const [age,              setAge]              = useState(shared?.age              ?? 30);
   const [medAidMembers,    setMedAidMembers]    = useState(shared?.medAidMembers    ?? 1);
   const [period,           setPeriod]           = useState(shared?.period           ?? 'first');
+  const [taxYear,          setTaxYear]          = useState<TaxYearId>(shared?.taxYear ?? DEFAULT_TAX_YEAR);
 
-  // RA slider bounded to the actual allowable deduction (27.5% of income, capped R350k)
+  // RA slider bounded to the actual allowable deduction for the selected year
+  const { retirement } = TAX_YEARS[taxYear];
   const totalIncomePre = employmentIncome + freelanceIncome + otherIncome;
-  const raDeductCap    = Math.min(350_000, totalIncomePre * 0.275);
+  const raDeductCap    = Math.min(retirement.cap, totalIncomePre * retirement.rate);
 
   const result = useMemo(() => {
+    const { retirement: ra } = TAX_YEARS[taxYear];
     const totalIncome     = employmentIncome + freelanceIncome + otherIncome;
-    // RA deduction: 27.5% of income, capped at R350,000
-    const raAllowed       = Math.min(350_000, totalIncome * 0.275);
+    const raAllowed       = Math.min(ra.cap, totalIncome * ra.rate);
     const raDeducted      = Math.min(raContribution, raAllowed);
     const taxableIncome   = Math.max(0, totalIncome - deductions - raDeducted);
-    const annualTax       = calcPAYE(taxableIncome, age, medAidMembers);
+    const annualTax       = annualTaxDue(taxableIncome, age, medAidMembers, taxYear);
     // Split RA deduction pro-rata across income sources so payeOnEmploy isn't understated
     const employRatio  = totalIncome > 0 ? employmentIncome / totalIncome : 0;
     const raOnEmploy   = raDeducted * employRatio;
-    const payeOnEmploy = calcPAYE(Math.max(0, employmentIncome - deductions * employRatio - raOnEmploy), age, medAidMembers);
+    const payeOnEmploy = annualTaxDue(Math.max(0, employmentIncome - deductions * employRatio - raOnEmploy), age, medAidMembers, taxYear);
     const taxOnFreelance  = Math.max(0, annualTax - payeOnEmploy);
     const firstPayment    = taxOnFreelance / 2;
     const secondPayment   = taxOnFreelance - firstPayment;
@@ -89,7 +83,7 @@ export function ProvisionalTax() {
     const effectiveRate    = taxableIncome > 0 ? (annualTax / taxableIncome) * 100 : 0;
     const penaltyThreshold = taxOnFreelance * 0.9;
     // RA saving: tax without RA vs with RA
-    const taxWithoutRA     = calcPAYE(Math.max(0, totalIncome - deductions), age, medAidMembers);
+    const taxWithoutRA     = annualTaxDue(Math.max(0, totalIncome - deductions), age, medAidMembers, taxYear);
     const raTaxSaving      = Math.max(0, taxWithoutRA - annualTax);
     return {
       totalIncome, taxableIncome, annualTax, taxOnFreelance,
@@ -97,15 +91,16 @@ export function ProvisionalTax() {
       monthlySetAside, effectiveRate, penaltyThreshold,
       raDeducted, raAllowed, raTaxSaving,
     };
-  }, [employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers]);
+  }, [employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers, taxYear]);
 
   const displayPayment = period === 'first' ? result.firstPayment : result.secondPayment;
   const paymentLabel   = period === 'first' ? '1st payment (Aug)' : '2nd payment (Feb)';
   const paymentDue     = period === 'first' ? '31 August' : '28 February';
 
   const shareState: ShareState = {
-    employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers, period,
+    employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers, period, taxYear,
   };
+  const taxYearLabel = TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label ?? taxYear;
 
   return (
     <motion.div
@@ -122,7 +117,7 @@ export function ProvisionalTax() {
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Provisional Tax</h1>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Freelancers and side-hustlers: know exactly what to set aside and when. (2025/26)
+              Freelancers and side-hustlers: know exactly what to set aside and when. ({taxYearLabel})
             </p>
           </div>
         </div>
@@ -135,6 +130,7 @@ export function ProvisionalTax() {
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
             Income details
           </h2>
+          <TaxYearSelect id="pt-taxyear" value={taxYear} onChange={setTaxYear} />
           <InputField id="pt-employ"  label="Employment income (annual)"          value={employmentIncome} onChange={(v) => setEmploymentIncome(Number(v))} prefix="R" min={0} />
           <InputField id="pt-free"    label="Freelance / side income (annual)"    value={freelanceIncome}  onChange={(v) => setFreelanceIncome(Number(v))}  prefix="R" min={0} />
           <InputField id="pt-other"   label="Other income (interest, rental)"     value={otherIncome}      onChange={(v) => setOtherIncome(Number(v))}      prefix="R" min={0} />
@@ -146,7 +142,7 @@ export function ProvisionalTax() {
           </h2>
           <InputField id="pt-ra"      label="Annual RA contribution"              value={raContribution}   onChange={(v) => setRaContribution(Number(v))}   prefix="R" min={0} />
           <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            Max deductible: {formatRand(raDeductCap)} (27.5% of income, capped R350k)
+            Max deductible: {formatRand(raDeductCap)} (27.5% of income, capped {formatRand(retirement.cap)})
           </div>
           {/* Slider for RA — hidden when income is zero (max would be 0, slider breaks) */}
           {raDeductCap > 0 && (
@@ -223,7 +219,9 @@ export function ProvisionalTax() {
             style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
             <Info size={13} style={{ color: C.indigo }} />
             <span style={{ color: 'var(--color-text-muted)' }}>
-              Based on 2025/26 SARS tax tables. Medical aid credit: R364/member/month.
+              Based on {taxYearLabel} SARS tax tables. Medical aid credit:
+              R{TAX_YEARS[taxYear].medCredits.main}/month (main member and first dependant),
+              R{TAX_YEARS[taxYear].medCredits.extraDep}/month per additional dependant.
               Consult a tax practitioner for complex situations.
             </span>
           </div>
