@@ -143,26 +143,33 @@ describe('calcPropertyROI', () => {
   });
 
   it('total cash required is higher when transfer duty applies', () => {
-    const withDuty    = calcPropertyROI({ ...baseInputs, transferDutyExempt: false });
-    const withoutDuty = calcPropertyROI({ ...baseInputs, transferDutyExempt: true });
+    // Price must exceed the duty-free threshold (R1,210,000 from 1 Apr 2025)
+    const pricey = { ...baseInputs, purchasePrice: 2_000_000, deposit: 200_000 };
+    const withDuty    = calcPropertyROI({ ...pricey, transferDutyExempt: false });
+    const withoutDuty = calcPropertyROI({ ...pricey, transferDutyExempt: true });
     expect(withDuty.totalCashRequired).toBeGreaterThan(withoutDuty.totalCashRequired);
   });
 });
 
-describe('calcTransferDuty (SARS 2026)', () => {
-  it('returns 0 for properties up to R1 100 000', () => {
-    expect(calcTransferDuty(1_100_000)).toBe(0);
+describe('calcTransferDuty (table effective 1 Apr 2025, default tax year)', () => {
+  it('returns 0 for properties up to R1 210 000', () => {
+    expect(calcTransferDuty(1_210_000)).toBe(0);
     expect(calcTransferDuty(500_000)).toBe(0);
   });
 
-  it('applies 3% on value above R1.1M (second bracket)', () => {
-    // R1 200 000: 3% × (1 200 000 - 1 100 000) = R3 000
-    expect(calcTransferDuty(1_200_000)).toBe(3_000);
+  it('applies 3% on value above R1.21M (second bracket)', () => {
+    // R1 300 000: 3% × (1 300 000 - 1 210 001) ≈ R2 700
+    expect(calcTransferDuty(1_300_000)).toBe(Math.round(0.03 * (1_300_000 - 1_210_001)));
   });
 
   it('applies correct amount in third bracket', () => {
-    // R1 600 000: R12 375 + 6% × (1 600 000 - 1 512 500) = R12 375 + R5 250 = R17 625
-    expect(calcTransferDuty(1_600_000)).toBe(17_625);
+    // R2 000 000: R13 614 + 6% × (2 000 000 - 1 663 801)
+    expect(calcTransferDuty(2_000_000)).toBe(Math.round(13_614 + 0.06 * (2_000_000 - 1_663_801)));
+  });
+
+  it('older tax years use the pre-April-2025 table (R1.1M threshold)', () => {
+    expect(calcTransferDuty(1_200_000, '2025')).toBe(Math.round(0.03 * (1_200_000 - 1_100_001)));
+    expect(calcTransferDuty(1_100_000, '2025')).toBe(0);
   });
 
   it('returns 0 for zero price', () => {

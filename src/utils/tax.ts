@@ -1,16 +1,18 @@
 /**
  * FinCalc ZA — Tax Calculation Utilities
- * Based on SARS 2026 tax year (1 March 2025 – 28 February 2026)
+ *
+ * All year-specific SARS constants live in src/config/taxYears.ts, keyed by
+ * tax year. Every function takes an optional trailing `taxYear` parameter and
+ * defaults to DEFAULT_TAX_YEAR, so existing call sites remain valid.
  *
  * Sources:
- *  - SARS Budget 2026 Tax Guide (treasury.gov.za)
+ *  - SARS Rates of Tax for Individuals (sars.gov.za)
  *  - Section 13sex, 13quat of the Income Tax Act
  *  - SARS CGT rates and exclusions
  */
 
 import type {
   AgeGroup,
-  UDZBuildingType,
   RentalTaxInputs,
   RentalTaxResult,
   Section13sexInputs,
@@ -21,64 +23,43 @@ import type {
   CGTInputs,
   CGTResult,
 } from '../types';
+import { TAX_YEARS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 
-// ── SARS 2026 Tax Brackets (1 Mar 2025 – 28 Feb 2026) ────────────────────────
-const BRACKETS = [
-  { min: 0,          max: 237_100,    base: 0,         rate: 0.18 },
-  { min: 237_101,    max: 370_500,    base: 42_678,    rate: 0.26 },
-  { min: 370_501,    max: 512_800,    base: 77_362,    rate: 0.31 },
-  { min: 512_801,    max: 673_000,    base: 121_475,   rate: 0.36 },
-  { min: 673_001,    max: 857_900,    base: 179_147,   rate: 0.39 },
-  { min: 857_901,    max: 1_817_000,  base: 251_258,   rate: 0.41 },
-  { min: 1_817_001,  max: Infinity,   base: 644_489,   rate: 0.45 },
-];
+export type { TaxYearId } from '../config/taxYears';
 
-const REBATES: Record<AgeGroup, number> = {
-  under65: 17_235,
-  '65to74': 17_235 + 9_444,    // primary + secondary
-  '75plus': 17_235 + 9_444 + 3_145, // primary + secondary + tertiary
-};
-
-// CGT 2026 constants
-export const CGT_PRIMARY_RESIDENCE_EXCLUSION = 3_000_000; // increased from R2M in 2026 budget
-export const CGT_ANNUAL_EXCLUSION = 50_000;               // increased from R40K in 2026 budget
-export const CGT_INCLUSION_RATE = 0.40;
+// Re-export CGT constants for the DEFAULT tax year (backward compatibility).
+// Year-specific values live in config/taxYears.ts — prefer TAX_YEARS[year].cgt.
+export const CGT_PRIMARY_RESIDENCE_EXCLUSION = TAX_YEARS[DEFAULT_TAX_YEAR].cgt.primaryResidenceExclusion;
+export const CGT_ANNUAL_EXCLUSION = TAX_YEARS[DEFAULT_TAX_YEAR].cgt.annualExclusion;
+export const CGT_INCLUSION_RATE = TAX_YEARS[DEFAULT_TAX_YEAR].cgt.inclusionRate;
 
 // ── Core: compute SARS income tax ─────────────────────────────────────────────
-export function calcIncomeTax(taxableIncome: number, ageGroup: AgeGroup): number {
+export function calcIncomeTax(taxableIncome: number, ageGroup: AgeGroup, taxYear: TaxYearId = DEFAULT_TAX_YEAR): number {
   if (taxableIncome <= 0) return 0;
-  const bracket = BRACKETS.find((b) => taxableIncome <= b.max) ?? BRACKETS[BRACKETS.length - 1];
+  const { brackets, rebates } = TAX_YEARS[taxYear];
+  const bracket = brackets.find((b) => taxableIncome <= b.max) ?? brackets[brackets.length - 1];
   const grossTax = bracket.base + bracket.rate * (taxableIncome - bracket.min + 1);
-  const netTax = Math.max(0, grossTax - REBATES[ageGroup]);
+  const netTax = Math.max(0, grossTax - rebates[ageGroup]);
   return netTax;
 }
 
-export function getMarginalRate(taxableIncome: number): number {
+export function getMarginalRate(taxableIncome: number, taxYear: TaxYearId = DEFAULT_TAX_YEAR): number {
   if (taxableIncome <= 0) return 0;
-  const bracket = BRACKETS.find((b) => taxableIncome <= b.max) ?? BRACKETS[BRACKETS.length - 1];
+  const { brackets } = TAX_YEARS[taxYear];
+  const bracket = brackets.find((b) => taxableIncome <= b.max) ?? brackets[brackets.length - 1];
   return bracket.rate;
 }
 
-export function getBracketLabel(taxableIncome: number): string {
-  const rate = getMarginalRate(taxableIncome);
+export function getBracketLabel(taxableIncome: number, taxYear: TaxYearId = DEFAULT_TAX_YEAR): string {
+  const rate = getMarginalRate(taxableIncome, taxYear);
   return `${(rate * 100).toFixed(0)}% marginal bracket`;
 }
 
-// ── Transfer Duty (SARS 2026: 1 Mar 2025 – 28 Feb 2026) ──────────────────────
-// Source: SARS Budget 2026 — no change from 2025 table
-const TRANSFER_DUTY_BRACKETS = [
-  { min: 0,          max: 1_100_000,  base: 0,         rate: 0.00 },
-  { min: 1_100_001,  max: 1_512_500,  base: 0,         rate: 0.03 },
-  { min: 1_512_501,  max: 2_117_500,  base: 12_375,    rate: 0.06 },
-  { min: 2_117_501,  max: 2_722_500,  base: 48_675,    rate: 0.08 },
-  { min: 2_722_501,  max: 12_100_000, base: 97_075,    rate: 0.11 },
-  { min: 12_100_001, max: Infinity,   base: 1_128_600, rate: 0.13 },
-];
-
-export function calcTransferDuty(purchasePrice: number): number {
+// ── Transfer Duty ─────────────────────────────────────────────────────────────
+export function calcTransferDuty(purchasePrice: number, taxYear: TaxYearId = DEFAULT_TAX_YEAR): number {
   if (purchasePrice <= 0) return 0;
-  const bracket = TRANSFER_DUTY_BRACKETS.find((b) => purchasePrice <= b.max)
-    ?? TRANSFER_DUTY_BRACKETS[TRANSFER_DUTY_BRACKETS.length - 1];
+  const brackets = TAX_YEARS[taxYear].transferDutyBrackets;
+  const bracket = brackets.find((b) => purchasePrice <= b.max) ?? brackets[brackets.length - 1];
   return Math.round(bracket.base + bracket.rate * (purchasePrice - bracket.min));
 }
 
@@ -119,7 +100,7 @@ export function calcBondRegistrationCost(bondAmount: number): number {
 }
 
 // ── Rental Income Tax Calculator ──────────────────────────────────────────────
-export function calcRentalIncomeTax(inputs: RentalTaxInputs): RentalTaxResult {
+export function calcRentalIncomeTax(inputs: RentalTaxInputs, taxYear: TaxYearId = DEFAULT_TAX_YEAR): RentalTaxResult {
   const {
     monthlyGrossRent,
     annualBondInterest,
@@ -152,8 +133,8 @@ export function calcRentalIncomeTax(inputs: RentalTaxInputs): RentalTaxResult {
   const taxableRentalIncome = Math.max(0, annualGrossRent - totalDeductions);
   const totalTaxableIncome = otherAnnualIncome + taxableRentalIncome;
 
-  const taxOnTotalIncome = calcIncomeTax(totalTaxableIncome, ageGroup);
-  const taxOnOtherIncomeOnly = calcIncomeTax(otherAnnualIncome, ageGroup);
+  const taxOnTotalIncome = calcIncomeTax(totalTaxableIncome, ageGroup, taxYear);
+  const taxOnOtherIncomeOnly = calcIncomeTax(otherAnnualIncome, ageGroup, taxYear);
   const taxAttributableToRental = Math.max(0, taxOnTotalIncome - taxOnOtherIncomeOnly);
 
   const effectiveTaxRateOnRental =
@@ -172,18 +153,18 @@ export function calcRentalIncomeTax(inputs: RentalTaxInputs): RentalTaxResult {
     taxOnOtherIncomeOnly,
     taxAttributableToRental,
     effectiveTaxRateOnRental,
-    marginalRate: getMarginalRate(totalTaxableIncome) * 100,
+    marginalRate: getMarginalRate(totalTaxableIncome, taxYear) * 100,
     afterTaxMonthlyRentalCashFlow,
     deductionsBreakdown,
-    bracketLabel: getBracketLabel(totalTaxableIncome),
+    bracketLabel: getBracketLabel(totalTaxableIncome, taxYear),
   };
 }
 
 // ── Section 13sex ─────────────────────────────────────────────────────────────
-export function calc13sex(inputs: Section13sexInputs): Section13sexResult {
+export function calc13sex(inputs: Section13sexInputs, taxYear: TaxYearId = DEFAULT_TAX_YEAR): Section13sexResult {
   const { units, annualTaxableIncome, raMonthlyContrib, ageGroup } = inputs;
   const n = units.length;
-  const marginalRate = getMarginalRate(annualTaxableIncome) * 100;
+  const marginalRate = getMarginalRate(annualTaxableIncome, taxYear) * 100;
 
   const EMPTY: Section13sexResult = {
     qualifies: false,
@@ -251,12 +232,13 @@ export function calc13sex(inputs: Section13sexInputs): Section13sexResult {
   const maxPeriod = Math.max(...units.map(u => u.isLowCostHousing ? 10 : 20));
 
   // RA deduction: 27.5% of taxable income, max R350k p.a.
+  const { retirement } = TAX_YEARS[taxYear];
   const raAnnual = raMonthlyContrib * 12;
-  const raCap = Math.min(annualTaxableIncome * 0.275, 350_000);
+  const raCap = Math.min(annualTaxableIncome * retirement.rate, retirement.cap);
   const raAnnualDeduction = Math.min(raAnnual, raCap);
 
-  const taxBase = calcIncomeTax(annualTaxableIncome, ageGroup);
-  const raTaxSaving = Math.max(0, taxBase - calcIncomeTax(Math.max(0, annualTaxableIncome - raAnnualDeduction), ageGroup));
+  const taxBase = calcIncomeTax(annualTaxableIncome, ageGroup, taxYear);
+  const raTaxSaving = Math.max(0, taxBase - calcIncomeTax(Math.max(0, annualTaxableIncome - raAnnualDeduction), ageGroup, taxYear));
 
   // Year-by-year schedule
   const schedule: Section13sexResult['schedule'] = [];
@@ -273,8 +255,8 @@ export function calc13sex(inputs: Section13sexInputs): Section13sexResult {
     const incomeAfterS13 = Math.max(0, annualTaxableIncome - deductionThisYear);
     const incomeAfterBoth = Math.max(0, incomeAfterS13 - raAnnualDeduction);
 
-    const taxWithS13 = calcIncomeTax(incomeAfterS13, ageGroup);
-    const taxWithBoth = calcIncomeTax(incomeAfterBoth, ageGroup);
+    const taxWithS13 = calcIncomeTax(incomeAfterS13, ageGroup, taxYear);
+    const taxWithBoth = calcIncomeTax(incomeAfterBoth, ageGroup, taxYear);
 
     const taxSaving = Math.max(0, taxBase - taxWithS13);
     const raTaxSavingYear = Math.max(0, taxWithS13 - taxWithBoth);
@@ -323,23 +305,10 @@ export function calc13sex(inputs: Section13sexInputs): Section13sexResult {
 }
 
 // ── Section 13quat (UDZ) ──────────────────────────────────────────────────────
-const UDZ_SCHEDULES: Record<UDZBuildingType, { rate: number; years: number }[]> = {
-  new: [
-    { rate: 0.20, years: 1 },
-    { rate: 0.08, years: 10 },
-  ],
-  improvements: [
-    { rate: 0.20, years: 5 },
-  ],
-  lowcost: [
-    { rate: 0.25, years: 4 },
-  ],
-};
-
-export function calc13quat(inputs: Section13quatInputs): Section13quatResult {
+export function calc13quat(inputs: Section13quatInputs, taxYear: TaxYearId = DEFAULT_TAX_YEAR): Section13quatResult {
   const { buildingCost, buildingType, annualTaxableIncome, ageGroup } = inputs;
 
-  const rawSchedule = UDZ_SCHEDULES[buildingType];
+  const rawSchedule = TAX_YEARS[taxYear].udzSchedules[buildingType];
   const schedule: Section13quatResult['schedule'] = [];
   let cumulativeSaving = 0;
   let yearCounter = 1;
@@ -348,8 +317,8 @@ export function calc13quat(inputs: Section13quatInputs): Section13quatResult {
     for (let i = 0; i < years; i++) {
       const deduction = rate * buildingCost;
       const reducedIncome = Math.max(0, annualTaxableIncome - deduction);
-      const taxWith = calcIncomeTax(reducedIncome, ageGroup);
-      const taxWithout = calcIncomeTax(annualTaxableIncome, ageGroup);
+      const taxWith = calcIncomeTax(reducedIncome, ageGroup, taxYear);
+      const taxWithout = calcIncomeTax(annualTaxableIncome, ageGroup, taxYear);
       const taxSaving = Math.max(0, taxWithout - taxWith);
       cumulativeSaving += taxSaving;
       schedule.push({ year: yearCounter++, rate, deduction, taxSaving, cumulativeSaving });
@@ -368,14 +337,7 @@ export function calc13quat(inputs: Section13quatInputs): Section13quatResult {
 }
 
 // ── PAYE / Salary Calculator ──────────────────────────────────────────────────
-// Medical aid tax credits (2026 tax year)
-const MED_CREDIT_MAIN      = 364;  // per month, main member
-const MED_CREDIT_FIRST_DEP = 364;  // per month, first dependant
-const MED_CREDIT_EXTRA_DEP = 246;  // per month, each additional dependant
-
-// UIF: 1% of remuneration, capped at R17,712/month → max R177.12/mo
-const UIF_RATE        = 0.01;
-const UIF_CAP_MONTHLY = 177.12;
+// Medical aid credits and UIF constants live in config/taxYears.ts, per year.
 
 export interface PAYEInputs {
   grossMonthly:       number;
@@ -401,36 +363,37 @@ export interface PAYEResult {
   marginalRate:       number;   // marginal bracket rate (%)
 }
 
-export function calcPAYE(inputs: PAYEInputs): PAYEResult {
+export function calcPAYE(inputs: PAYEInputs, taxYear: TaxYearId = DEFAULT_TAX_YEAR): PAYEResult {
   const { grossMonthly, ageGroup, raMonthlyContrib, medAidDependants } = inputs;
+  const { brackets, rebates, medCredits, uif, retirement } = TAX_YEARS[taxYear];
 
   const grossAnnual = grossMonthly * 12;
 
   // RA deduction: 27.5% of greater of remuneration or taxable income, max R350,000 p.a.
   const raAnnual    = raMonthlyContrib * 12;
-  const raCap       = Math.min(grossAnnual * 0.275, 350_000);
+  const raCap       = Math.min(grossAnnual * retirement.rate, retirement.cap);
   const raDeduction = Math.min(raAnnual, raCap);
 
   const taxableIncome = Math.max(0, grossAnnual - raDeduction);
 
   // Gross tax from brackets
-  const bracket    = BRACKETS.find((b) => taxableIncome <= b.max) ?? BRACKETS[BRACKETS.length - 1];
+  const bracket    = brackets.find((b) => taxableIncome <= b.max) ?? brackets[brackets.length - 1];
   const grossTax   = taxableIncome > 0 ? bracket.base + bracket.rate * (taxableIncome - bracket.min + 1) : 0;
 
   // Rebate
-  const reb = REBATES[ageGroup];
+  const reb = rebates[ageGroup];
 
   // Medical aid tax credit — pass medAidDependants = -1 to indicate no medical aid
   const deps = medAidDependants;
   const medMonthly = deps < 0 ? 0
-    : deps === 0 ? MED_CREDIT_MAIN
-    : deps === 1 ? MED_CREDIT_MAIN + MED_CREDIT_FIRST_DEP
-    : MED_CREDIT_MAIN + MED_CREDIT_FIRST_DEP + (deps - 1) * MED_CREDIT_EXTRA_DEP;
+    : deps === 0 ? medCredits.main
+    : deps === 1 ? medCredits.main + medCredits.firstDep
+    : medCredits.main + medCredits.firstDep + (deps - 1) * medCredits.extraDep;
   const medAnnual = medMonthly * 12;
 
   const annualPAYE  = Math.max(0, grossTax - reb - medAnnual);
   const monthlyPAYE = annualPAYE / 12;
-  const monthlyUIF  = Math.min(grossMonthly * UIF_RATE, UIF_CAP_MONTHLY);
+  const monthlyUIF  = Math.min(grossMonthly * uif.rate, uif.capMonthly);
   const monthlyNet  = grossMonthly - monthlyPAYE - monthlyUIF - raMonthlyContrib;
 
   return {
@@ -452,7 +415,7 @@ export function calcPAYE(inputs: PAYEInputs): PAYEResult {
 }
 
 // ── Capital Gains Tax ─────────────────────────────────────────────────────────
-export function calcCGT(inputs: CGTInputs): CGTResult {
+export function calcCGT(inputs: CGTInputs, taxYear: TaxYearId = DEFAULT_TAX_YEAR): CGTResult {
   const {
     purchasePrice,
     acquisitionCosts,
@@ -463,6 +426,7 @@ export function calcCGT(inputs: CGTInputs): CGTResult {
     otherAnnualTaxableIncome,
     ageGroup,
   } = inputs;
+  const { cgt } = TAX_YEARS[taxYear];
 
   const saleCosts = (saleCostsPercent / 100) * salePrice;
   const baseCost = purchasePrice + acquisitionCosts;
@@ -471,23 +435,23 @@ export function calcCGT(inputs: CGTInputs): CGTResult {
   // Primary residence exclusion
   let primaryResidenceExclusion = 0;
   if (propertyType === 'primary') {
-    const fullExclusion = CGT_PRIMARY_RESIDENCE_EXCLUSION;
+    const fullExclusion = cgt.primaryResidenceExclusion;
     primaryResidenceExclusion = jointOwnership
-      ? Math.min(grossCapitalGain, fullExclusion / 2) // each spouse gets R1.5M
+      ? Math.min(grossCapitalGain, fullExclusion / 2) // each spouse gets half
       : Math.min(grossCapitalGain, fullExclusion);
   }
 
   const gainAfterPrimary = Math.max(0, grossCapitalGain - primaryResidenceExclusion);
 
-  // Annual exclusion (R50,000 for individuals, 2026)
-  const annualExclusion = Math.min(gainAfterPrimary, CGT_ANNUAL_EXCLUSION);
+  // Annual exclusion for individuals
+  const annualExclusion = Math.min(gainAfterPrimary, cgt.annualExclusion);
   const netGainAfterExclusions = Math.max(0, gainAfterPrimary - annualExclusion);
 
   // Inclusion amount: 40% of net gain added to taxable income
-  const inclusionAmount = netGainAfterExclusions * CGT_INCLUSION_RATE;
+  const inclusionAmount = netGainAfterExclusions * cgt.inclusionRate;
 
-  const taxWithCGT = calcIncomeTax(otherAnnualTaxableIncome + inclusionAmount, ageGroup);
-  const taxWithoutCGT = calcIncomeTax(otherAnnualTaxableIncome, ageGroup);
+  const taxWithCGT = calcIncomeTax(otherAnnualTaxableIncome + inclusionAmount, ageGroup, taxYear);
+  const taxWithoutCGT = calcIncomeTax(otherAnnualTaxableIncome, ageGroup, taxYear);
   const cgtPayable = Math.max(0, taxWithCGT - taxWithoutCGT);
 
   const effectiveCGTRate = grossCapitalGain > 0 ? (cgtPayable / grossCapitalGain) * 100 : 0;
@@ -506,7 +470,7 @@ export function calcCGT(inputs: CGTInputs): CGTResult {
     cgtPayable,
     effectiveCGTRate,
     netProceedsAfterCGT,
-    marginalRate: getMarginalRate(otherAnnualTaxableIncome + inclusionAmount) * 100,
-    bracketLabel: getBracketLabel(otherAnnualTaxableIncome + inclusionAmount),
+    marginalRate: getMarginalRate(otherAnnualTaxableIncome + inclusionAmount, taxYear) * 100,
+    bracketLabel: getBracketLabel(otherAnnualTaxableIncome + inclusionAmount, taxYear),
   };
 }

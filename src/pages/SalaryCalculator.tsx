@@ -6,8 +6,10 @@ import {
 } from 'recharts';
 import { Briefcase, TrendingDown, Info, Plus, Trash2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
+import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPAYE, type PAYEInputs } from '../utils/tax';
+import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
 
 type AgeGroupLocal = AgeGroup;
@@ -32,7 +34,7 @@ const TOOLTIP_STYLE = {
 const AGE_GROUPS: { value: AgeGroupLocal; label: string }[] = [
   { value: 'under65', label: 'Under 65' },
   { value: '65to74',  label: '65 – 74' },
-  { value: '75+',     label: '75+' } as unknown as { value: AgeGroupLocal; label: string },
+  { value: '75plus',  label: '75+' },
 ];
 
 // -1 = not on medical aid (no credit); 0 = main member only; 1+ = main + dependants
@@ -57,6 +59,7 @@ export function SalaryCalculator() {
   const [raContrib, setRaContrib]       = useState(2_000);
   const [medDependants, setMedDependants] = useState(0);
   const [showAnnual, setShowAnnual]     = useState(false);
+  const [taxYear, setTaxYear]           = useState<TaxYearId>(DEFAULT_TAX_YEAR);
 
   const grossMonthly = useMemo(() => incomes.reduce((s, i) => s + i.amount, 0), [incomes]);
 
@@ -66,8 +69,8 @@ export function SalaryCalculator() {
       ageGroup,
       raMonthlyContrib: raContrib,
       medAidDependants: medDependants,
-    } satisfies PAYEInputs),
-    [grossMonthly, ageGroup, raContrib, medDependants]
+    } satisfies PAYEInputs, taxYear),
+    [grossMonthly, ageGroup, raContrib, medDependants, taxYear]
   );
 
   const mult  = showAnnual ? 12 : 1;
@@ -102,7 +105,7 @@ export function SalaryCalculator() {
   const barData = useMemo(() => {
     const salaries = [15_000, 25_000, 35_000, 45_000, 60_000, 80_000, 100_000, 150_000];
     return salaries.map((g) => {
-      const r = calcPAYE({ grossMonthly: g, ageGroup, raMonthlyContrib: raContrib, medAidDependants: medDependants });
+      const r = calcPAYE({ grossMonthly: g, ageGroup, raMonthlyContrib: raContrib, medAidDependants: medDependants }, taxYear);
       return {
         salary: formatRandShort(g),
         gross:  g,
@@ -110,7 +113,7 @@ export function SalaryCalculator() {
         paye:   Math.round(r.monthlyPAYE),
       };
     });
-  }, [ageGroup, raContrib, medDependants]);
+  }, [ageGroup, raContrib, medDependants, taxYear]);
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
@@ -128,7 +131,7 @@ export function SalaryCalculator() {
               Salary / Take-Home Calculator
             </h1>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-              SA PAYE, UIF & medical aid tax credit — 2025/2026 tax year
+              SA PAYE, UIF & medical aid tax credit — {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year
             </p>
           </div>
           <button
@@ -196,6 +199,8 @@ export function SalaryCalculator() {
             )}
           </div>
 
+          <TaxYearSelect id="salary-taxyear" value={taxYear} onChange={setTaxYear} />
+
           {/* Age group */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider"
@@ -218,7 +223,9 @@ export function SalaryCalculator() {
 
           <InputField id="ra" label="Monthly RA Contribution" value={raContrib}
             onChange={(v) => setRaContrib(parseFloat(v) || 0)} prefix="R"
-            help="Tax-deductible up to 27.5% of income (max R350K/yr)" />
+            help={taxYear === '2027'
+              ? 'Tax-deductible up to 27.5% of income (max R430K/yr)'
+              : 'Tax-deductible up to 27.5% of income (max R350K/yr)'} />
 
           {/* Medical aid dependants */}
           <div className="flex flex-col gap-1.5">
@@ -388,7 +395,7 @@ export function SalaryCalculator() {
       </motion.div>
 
       <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
-        SARS 2025/2026 tax year. Does not include employer UIF, SDL, or pension fund contributions. Not tax advice.
+        SARS {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year. Does not include employer UIF, SDL, or pension fund contributions. Not tax advice.
       </p>
     </div>
   );

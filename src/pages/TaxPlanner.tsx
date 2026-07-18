@@ -13,6 +13,7 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand, formatPercent, formatRandShort } from '../utils/format';
 import {
   calcRentalIncomeTax,
@@ -20,6 +21,7 @@ import {
   calc13quat,
   calcCGT,
 } from '../utils/tax';
+import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import { calcPropertyROI } from '../utils/roi';
 import { useAuth } from '../context/AuthContext';
 import { useSavedProperties } from '../hooks/useFirestore';
@@ -78,6 +80,7 @@ export function TaxPlanner() {
   const [activeTab, setActiveTab] = useState<MainTab>('rental');
   const [s13Tab, setS13Tab] = useState<S13Tab>('13sex');
   const [showSchedule, setShowSchedule] = useState(false);
+  const [taxYear, setTaxYear] = useState<TaxYearId>(DEFAULT_TAX_YEAR);
 
   // ── Portfolio loading for Section 13sex ────────────────────────────────────
   const { user } = useAuth();
@@ -188,12 +191,12 @@ export function TaxPlanner() {
   });
 
   // ── Results ────────────────────────────────────────────────────────────────
-  const rentalResult = useMemo(() => calcRentalIncomeTax(rental), [rental]);
+  const rentalResult = useMemo(() => calcRentalIncomeTax(rental, taxYear), [rental, taxYear]);
   const s13sexResult = useMemo(() => calc13sex({
     units: s13Units, annualTaxableIncome: s13Income, raMonthlyContrib: s13RA, ageGroup: s13AgeGroup,
-  }), [s13Units, s13Income, s13RA, s13AgeGroup]);
-  const s13quatResult = useMemo(() => calc13quat(s13quat), [s13quat]);
-  const cgtResult = useMemo(() => calcCGT(cgt), [cgt]);
+  }, taxYear), [s13Units, s13Income, s13RA, s13AgeGroup, taxYear]);
+  const s13quatResult = useMemo(() => calc13quat(s13quat, taxYear), [s13quat, taxYear]);
+  const cgtResult = useMemo(() => calcCGT(cgt, taxYear), [cgt, taxYear]);
 
   // ── Input helpers ──────────────────────────────────────────────────────────
   const nr = (fn: (v: number) => Partial<RentalTaxInputs>) => (val: string) =>
@@ -246,15 +249,18 @@ export function TaxPlanner() {
               Property Tax Planner
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-              SARS 2026 tax year · 1 March 2025 – 28 February 2026
+              SARS {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year · {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.period}
             </p>
           </div>
-          <span
-            className="text-xs px-3 py-1.5 rounded-full font-semibold"
-            style={{ background: 'rgba(16,185,129,0.12)', color: C.emerald, border: `1px solid ${C.emerald}44` }}
-          >
-            2026 Rates · CGT exclusion R3M
-          </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span
+              className="text-xs px-3 py-1.5 rounded-full font-semibold"
+              style={{ background: 'rgba(16,185,129,0.12)', color: C.emerald, border: `1px solid ${C.emerald}44` }}
+            >
+              CGT exclusion {formatRandShort(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion)}
+            </span>
+            <TaxYearSelect id="tp-taxyear" value={taxYear} onChange={setTaxYear} className="min-w-[150px]" />
+          </div>
         </div>
 
         {/* Tab bar */}
@@ -434,7 +440,7 @@ export function TaxPlanner() {
                   <SectionHeader title="Section 13sex" icon={Building2} />
                   <InfoBadge text="Own 5+ new, unused residential units rented out. Deduct 5% of building cost (excl. land) for 20 years. Low-cost housing (≤R350K): 10% for 10 years." />
                   <InputField label="Annual Taxable Income (other income)" id="s-income" value={s13Income} onChange={v => setS13Income(parseFloat(v) || 0)} prefix="R" help="Your income before S13 deduction is applied (e.g. salary)" />
-                  <InputField label="Monthly RA Contribution" id="s-ra" value={s13RA} onChange={v => setS13RA(parseFloat(v) || 0)} prefix="R" help="Stacks with Section 13 allowance — further reduces taxable income (27.5% of income, max R350k p.a.)" />
+                  <InputField label="Monthly RA Contribution" id="s-ra" value={s13RA} onChange={v => setS13RA(parseFloat(v) || 0)} prefix="R" help={`Stacks with Section 13 allowance — further reduces taxable income (27.5% of income, max ${formatRandShort(TAX_YEARS[taxYear].retirement.cap)} p.a.)`} />
                   <SelectField label="Age Group" id="s-age" value={s13AgeGroup} onChange={v => setS13AgeGroup(v as AgeGroup)} options={AGE_OPTIONS} />
                 </div>
 
@@ -622,7 +628,7 @@ export function TaxPlanner() {
                           {[
                             { label: 'Annual Taxable Income (before deductions)', value: s13Income, bold: false, color: undefined },
                             { label: '− Section 13sex Annual Deduction', value: -s13sexResult.annualDeduction, bold: false, color: C.amber },
-                            ...(s13sexResult.raAnnualDeduction > 0 ? [{ label: '− RA Deduction (27.5%, max R350k)', value: -s13sexResult.raAnnualDeduction, bold: false, color: C.violet }] : []),
+                            ...(s13sexResult.raAnnualDeduction > 0 ? [{ label: `− RA Deduction (27.5%, max ${formatRandShort(TAX_YEARS[taxYear].retirement.cap)})`, value: -s13sexResult.raAnnualDeduction, bold: false, color: C.violet }] : []),
                             { label: 'Taxable Income After All Deductions', value: s13Income - s13sexResult.annualDeduction - s13sexResult.raAnnualDeduction, bold: true, color: undefined },
                             { label: 'Annual Tax Saving — Section 13sex', value: s13sexResult.annualTaxSaving, bold: false, color: C.emerald },
                             ...(s13sexResult.raTaxSaving > 0 ? [{ label: 'Annual Tax Saving — RA Contribution', value: s13sexResult.raTaxSaving, bold: false, color: C.violet }] : []),
@@ -808,7 +814,7 @@ export function TaxPlanner() {
                 {
                   title: 'Combining with an RA',
                   color: C.violet,
-                  body: 'An RA contribution is deductible at up to 27.5% of taxable income (max R350,000 p.a.). Stacked with Section 13sex, both deductions reduce your taxable income before tax is calculated. The combined effect can pull you into a lower bracket, amplifying the saving beyond what each deduction achieves alone.',
+                  body: `An RA contribution is deductible at up to 27.5% of taxable income (max ${formatRand(TAX_YEARS[taxYear].retirement.cap, 0)} p.a.). Stacked with Section 13sex, both deductions reduce your taxable income before tax is calculated. The combined effect can pull you into a lower bracket, amplifying the saving beyond what each deduction achieves alone.`,
                 },
                 {
                   title: 'Key Caveats',
@@ -926,13 +932,15 @@ export function TaxPlanner() {
           {/* Inputs */}
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Capital Gains Tax (CGT)" icon={TrendingUp} />
-            <InfoBadge text="2026 Budget: Primary residence exclusion raised to R3 million. Annual exclusion raised to R50,000. Inclusion rate remains 40%." />
+            <InfoBadge text={taxYear === '2027'
+              ? 'Budget 2026: Primary residence exclusion raised to R3 million and annual exclusion to R50,000 from the 2027 tax year. Inclusion rate remains 40%.'
+              : 'Pre-2027 tax years: R2 million primary residence exclusion and R40,000 annual exclusion. Inclusion rate 40%.'} />
 
             <div className="p-3 rounded-xl text-xs space-y-1.5" style={{ background: 'rgba(16,185,129,0.08)', border: `1px solid ${C.emerald}33` }}>
-              <p className="font-semibold" style={{ color: C.emerald }}>2026 CGT Rates</p>
+              <p className="font-semibold" style={{ color: C.emerald }}>{TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} CGT Rates</p>
               <div className="grid grid-cols-2 gap-1" style={{ color: 'var(--color-text-muted)' }}>
-                <span>Primary residence exclusion:</span><span className="font-semibold text-right" style={{ color: 'var(--color-text)' }}>R3,000,000</span>
-                <span>Annual exclusion:</span><span className="font-semibold text-right" style={{ color: 'var(--color-text)' }}>R50,000</span>
+                <span>Primary residence exclusion:</span><span className="font-semibold text-right" style={{ color: 'var(--color-text)' }}>{formatRand(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion, 0)}</span>
+                <span>Annual exclusion:</span><span className="font-semibold text-right" style={{ color: 'var(--color-text)' }}>{formatRand(TAX_YEARS[taxYear].cgt.annualExclusion, 0)}</span>
                 <span>Inclusion rate:</span><span className="font-semibold text-right" style={{ color: 'var(--color-text)' }}>40%</span>
                 <span>Max effective CGT rate:</span><span className="font-semibold text-right" style={{ color: C.red }}>18% (45% marginal)</span>
               </div>
@@ -958,7 +966,7 @@ export function TaxPlanner() {
                 value={cgt.propertyType}
                 onChange={(v) => setCgt((p) => ({ ...p, propertyType: v as PropertyType }))}
                 options={[
-                  { value: 'primary',    label: 'Primary Residence (R3M exclusion)' },
+                  { value: 'primary',    label: `Primary Residence (${formatRandShort(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion)} exclusion)` },
                   { value: 'investment', label: 'Investment / Rental Property' },
                 ]}
               />
@@ -972,7 +980,7 @@ export function TaxPlanner() {
                   disabled={cgt.propertyType !== 'primary'}
                 />
                 <label htmlFor="c-joint" className="text-sm cursor-pointer" style={{ color: cgt.propertyType !== 'primary' ? 'var(--color-text-subtle)' : 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
-                  Joint ownership (50/50 — splits R3M exclusion to R1.5M each)
+                  Joint ownership (50/50 — splits {formatRandShort(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion)} exclusion, half each)
                 </label>
               </div>
               <InputField label="Other Annual Taxable Income" id="c-income" value={cgt.otherAnnualTaxableIncome} onChange={nc((v) => ({ otherAnnualTaxableIncome: v }))} prefix="R" help="Salary etc. — CGT inclusion adds on top" />
@@ -1080,7 +1088,7 @@ export function TaxPlanner() {
                     { label: '− Base Cost (purchase + acquisition)', value: -cgtResult.baseCost, highlight: false },
                     { label: 'Gross Capital Gain', value: cgtResult.grossCapitalGain, highlight: true },
                     { label: '− Primary Residence Exclusion', value: -cgtResult.primaryResidenceExclusion, highlight: false },
-                    { label: '− Annual Exclusion (2026: R50,000)', value: -cgtResult.annualExclusion, highlight: false },
+                    { label: `− Annual Exclusion (${formatRand(TAX_YEARS[taxYear].cgt.annualExclusion, 0)})`, value: -cgtResult.annualExclusion, highlight: false },
                     { label: 'Net Gain After Exclusions', value: cgtResult.netGainAfterExclusions, highlight: true },
                     { label: '× 40% Inclusion Rate', value: cgtResult.inclusionAmount, highlight: false },
                     { label: 'Included in Taxable Income', value: cgtResult.inclusionAmount, highlight: false },
