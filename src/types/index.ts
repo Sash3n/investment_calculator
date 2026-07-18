@@ -323,6 +323,69 @@ export interface Section13quatResult {
   year1TaxSaving: number;
 }
 
+// ── Property Manager (logged-in tracker) ──────────────────────────────────────
+
+export type ExpenseCategory =
+  | 'rates' | 'levies' | 'insurance' | 'repairs' | 'garden' | 'security'
+  | 'management' | 'utilities' | 'advertising' | 'legal' | 'other';
+
+export type MaintenanceStatus = 'planned' | 'in-progress' | 'done';
+
+export type IncomeType = 'rent' | 'deposit' | 'other';
+
+export type PropertyRecordType =
+  | 'lease' | 'inspection' | 'rates' | 'insurance' | 'warranty' | 'compliance' | 'other';
+
+/** users/{uid}/expenses */
+export interface ExpenseDoc {
+  id: string;
+  propertyId: string;
+  category: ExpenseCategory;
+  amount: number;
+  date: string;           // ISO yyyy-mm-dd
+  note: string;
+  taxDeductible: boolean;
+  savedAt: Date;
+}
+
+/** users/{uid}/maintenance */
+export interface MaintenanceDoc {
+  id: string;
+  propertyId: string;
+  title: string;
+  status: MaintenanceStatus;
+  cost: number;
+  contractor: string;
+  dateLogged: string;     // ISO yyyy-mm-dd
+  dateCompleted: string;  // ISO yyyy-mm-dd, '' while open
+  note: string;
+  savedAt: Date;
+}
+
+/** users/{uid}/income */
+export interface IncomeDoc {
+  id: string;
+  propertyId: string;
+  type: IncomeType;
+  amount: number;
+  date: string;           // ISO yyyy-mm-dd
+  tenant: string;
+  note: string;
+  savedAt: Date;
+}
+
+/** users/{uid}/records */
+export interface PropertyRecordDoc {
+  id: string;
+  propertyId: string;
+  type: PropertyRecordType;
+  title: string;
+  value: number;          // optional monetary value (0 = n/a)
+  renewalDate: string;    // ISO yyyy-mm-dd, '' = none
+  note: string;
+  savedAt: Date;
+}
+
 // ── Property Portfolio Tax ────────────────────────────────────────────────────
 
 export interface PortfolioRentalProperty {

@@ -2,7 +2,7 @@ import {
   Home, Building2, MapPin, Car, TrendingUp, Receipt, Wallet, Landmark,
   Shield, Scale, PieChart, House, Briefcase, Snowflake, GraduationCap,
   TrendingDown, History, Activity, BedDouble, DoorOpen, Coins,
-  Target, Globe, Scissors, Sunset, BookOpen,
+  Target, Globe, Scissors, Sunset, BookOpen, LayoutDashboard,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -98,6 +98,13 @@ export const NAV_CATEGORIES: NavCategory[] = [
       { path: '/stress-test', label: 'Portfolio Stress Test', shortLabel: 'Stress Test', icon: Activity, color: '#EF4444', keywords: 'rate hike vacancy breaking point risk' },
       { path: '/inflation', label: 'Inflation Calculator', shortLabel: 'Inflation', icon: TrendingDown, color: '#EF4444', keywords: 'purchasing power cpi real return' },
       { path: '/education-savings', label: 'Education Savings', shortLabel: 'Education', icon: GraduationCap, color: '#8B5CF6', keywords: 'school university fees' },
+    ],
+  },
+  {
+    id: 'my-portfolio',
+    label: 'My Portfolio',
+    items: [
+      { path: '/portfolio-hub', label: 'Portfolio Manager', shortLabel: 'My Portfolio', icon: LayoutDashboard, color: '#6366F1', keywords: 'expenses maintenance rent records tracker logbook landlord signed in' },
     ],
   },
   {
