@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { AppShell } from './components/Layout/AppShell';
+import { RequireAuth } from './components/auth/RequireAuth';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { ErrorPage } from './pages/ErrorPage';
@@ -47,6 +48,8 @@ const MunicipalRates      = lazy(() => import('./pages/MunicipalRates').then((m)
 const LearnHub            = lazy(() => import('./pages/LearnHub').then((m) => ({ default: m.LearnHub })));
 const TaxAssessment       = lazy(() => import('./pages/TaxAssessment').then((m) => ({ default: m.TaxAssessment })));
 const PropertyPortfolioTax = lazy(() => import('./pages/PropertyPortfolioTax').then((m) => ({ default: m.PropertyPortfolioTax })));
+const PortfolioHub        = lazy(() => import('./pages/PortfolioHub').then((m) => ({ default: m.PortfolioHub })));
+const PropertyManager     = lazy(() => import('./pages/PropertyManager').then((m) => ({ default: m.PropertyManager })));
 const LearnArticle        = lazy(() => import('./pages/LearnArticle').then((m) => ({ default: m.LearnArticle })));
 
 function PageFallback() {
@@ -109,6 +112,8 @@ function App() {
                 <Route path="/municipal-rates"     element={<MunicipalRates />} />
                 <Route path="/tax-assessment"      element={<TaxAssessment />} />
                 <Route path="/property-tax"        element={<PropertyPortfolioTax />} />
+                <Route path="/portfolio-hub"       element={<RequireAuth><PortfolioHub /></RequireAuth>} />
+                <Route path="/portfolio-hub/:propertyId" element={<RequireAuth><PropertyManager /></RequireAuth>} />
                 <Route path="/learn"               element={<LearnHub />} />
                 <Route path="/learn/:slug"         element={<LearnArticle />} />
                 <Route path="*" element={<NotFound />} />
