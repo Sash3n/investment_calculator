@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env.local
+
+# Personal Claude Code settings
+.claude/settings.local.json

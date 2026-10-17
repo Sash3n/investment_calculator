@@ -1,0 +1,36 @@
+name: Attribution check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  attribution:
+    name: Attribution check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commits and pull request text
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          pattern='co-authored-by:.*(claude|anthropic)|generated with .*claude|claude-session:|claude\.ai|anthropic'
+          fail=0
+          if git log --format='%an <%ae> %cn <%ce>%n%B' "$BASE_SHA..$HEAD_SHA" | grep -n -i -E "$pattern"; then
+            echo "::error::Attribution found in commit authors or messages"
+            fail=1
+          fi
+          if printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" | grep -n -i -E "$pattern"; then
+            echo "::error::Attribution found in the pull request title or body"
+            fail=1
+          fi
+          exit $fail
