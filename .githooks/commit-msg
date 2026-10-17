@@ -1,0 +1,5 @@
+#!/bin/sh
+# Remove AI attribution trailers and footers from the commit message.
+msg="$1"
+grep -v -i -E '^co-authored-by:.*(claude|anthropic)|^claude-session:|generated with .*claude|claude\.ai/code' "$msg" > "$msg.tmp"
+mv "$msg.tmp" "$msg"
