@@ -10,13 +10,16 @@ interface MortgageSentenceProps {
   result: MortgageResult;
   /** Same setter the full form uses, so both views share one state */
   onChange: (key: keyof MortgageInputs, raw: string) => void;
+  /** Validation messages, keyed by input */
+  errors?: Partial<Record<keyof MortgageInputs, string>>;
 }
 
 /**
  * Simple view: the inputs read as one sentence and the answer is one large
  * monthly figure. Reads and writes the same inputs as the full form.
  */
-export function MortgageSentence({ inputs, result, onChange }: MortgageSentenceProps) {
+export function MortgageSentence({ inputs, result, onChange, errors = {} }: MortgageSentenceProps) {
+  const messages = Object.values(errors).filter(Boolean);
   const isBiweekly = inputs.frequency === 'biweekly';
   const customExtra = !EXTRA_CHIPS.includes(inputs.extraPayment);
   const hasExtra = inputs.extraPayment > 0 || inputs.lumpSumAmount > 0;
@@ -28,18 +31,23 @@ export function MortgageSentence({ inputs, result, onChange }: MortgageSentenceP
       <p className="text-xl sm:text-2xl leading-[2.2] text-ink" style={{ fontFamily: 'var(--font-display)' }}>
         I&rsquo;m buying a home for{' '}
         <InputField inline id="s-price" label="Purchase price in rand" prefix="R"
-          value={inputs.purchasePrice} onChange={(v) => onChange('purchasePrice', v)} />
+          value={inputs.purchasePrice} onChange={(v) => onChange('purchasePrice', v)} error={errors.purchasePrice} />
         {' '}with a deposit of{' '}
         <InputField inline id="s-deposit" label="Deposit in rand" prefix="R"
-          value={inputs.deposit} onChange={(v) => onChange('deposit', v)} />.
+          value={inputs.deposit} onChange={(v) => onChange('deposit', v)} error={errors.deposit} />.
         {' '}The bond is at{' '}
         <InputField inline id="s-rate" label="Interest rate, percent a year" suffix="%"
-          value={inputs.interestRate} onChange={(v) => onChange('interestRate', v)} />
+          value={inputs.interestRate} onChange={(v) => onChange('interestRate', v)} error={errors.interestRate} />
         {' '}a year over{' '}
         <InputField inline id="s-term" label="Loan term in years"
-          value={inputs.termYears} onChange={(v) => onChange('termYears', v)} />
+          value={inputs.termYears} onChange={(v) => onChange('termYears', v)} error={errors.termYears} />
         {' '}years.
       </p>
+      {messages.length > 0 && (
+        <ul className="mt-3 text-sm font-medium text-loss-ink space-y-1" aria-hidden>
+          {messages.map((m) => <li key={m}>{m}</li>)}
+        </ul>
+      )}
 
       <div className="mt-10" aria-live="polite" aria-atomic="true">
         <p className="text-sm text-ink-muted">Your {isBiweekly ? 'bi-weekly' : 'monthly'} repayment</p>

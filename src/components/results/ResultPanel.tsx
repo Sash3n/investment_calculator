@@ -17,6 +17,8 @@ interface ResultPanelProps {
   figures?: ResultFigure[];
   /** Colours the headline when it is a gain or a loss */
   tone?: 'default' | 'gain' | 'loss';
+  /** When an input needs fixing first: shown instead of the figure and summary */
+  blocked?: string;
   className?: string;
 }
 
@@ -26,8 +28,19 @@ const toneClass = { default: 'text-ink', gain: 'text-gain-ink', loss: 'text-loss
  * The main answer of a calculator: one large figure, a plain-language
  * summary, a few supporting figures and an "Estimate only" note.
  */
-export function ResultPanel({ label, value, summary, figures, tone = 'default', className = '' }: ResultPanelProps) {
+export function ResultPanel({ label, value, summary, figures, tone = 'default', blocked, className = '' }: ResultPanelProps) {
   const id = useId();
+  if (blocked) {
+    return (
+      <section className={`glass-card-static p-6 ${className}`} aria-labelledby={id}>
+        <h2 id={id} className="text-sm font-medium text-ink-muted">{label}</h2>
+        <p className="text-4xl sm:text-5xl font-semibold leading-none mt-2 text-ink-subtle" style={{ fontFamily: 'var(--font-display)' }} aria-hidden>
+          —
+        </p>
+        <p className="text-base text-loss-ink leading-relaxed mt-4 max-w-prose" aria-live="polite">{blocked}</p>
+      </section>
+    );
+  }
   return (
     <section className={`glass-card-static p-6 ${className}`} aria-labelledby={id}>
       <h2 id={id} className="text-sm font-medium text-ink-muted">{label}</h2>
