@@ -2,13 +2,15 @@
  * usePrimeRate — fetches the current SA prime lending rate from /api/prime-rate
  * (which proxies the SARB CurrentMarketRates endpoint).
  *
- * Falls back to FALLBACK_PRIME (10.25%) if the fetch fails or times out.
+ * Falls back to the last confirmed SARB rates (src/config/referenceRates.ts)
+ * if the fetch fails or times out.
  */
 
 import { useState, useEffect } from 'react';
+import { SARB_FALLBACK } from '../config/referenceRates';
 
-export const FALLBACK_PRIME = 10.25;
-export const FALLBACK_REPO  = 6.75;
+export const FALLBACK_PRIME = SARB_FALLBACK.primeRate;
+export const FALLBACK_REPO  = SARB_FALLBACK.repoRate;
 
 export interface PrimeRateState {
   primeRate:  number;
@@ -45,7 +47,7 @@ export function usePrimeRate(): PrimeRateState {
   const [state, setState] = useState<PrimeRateState>({
     primeRate: FALLBACK_PRIME,
     repoRate:  FALLBACK_REPO,
-    asOf:      null,
+    asOf:      SARB_FALLBACK.asOf,
     loading:   true,
     fallback:  true,
   });
