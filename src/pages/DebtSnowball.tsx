@@ -4,10 +4,13 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend, ReferenceLine,
 } from 'recharts';
-import { Snowflake, Plus, Trash2, Trophy, ArrowUpDown } from 'lucide-react';
+import { Snowflake, Plus, Trash2, Trophy } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { alpha, SERIES, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { debtErrors, nonNegativeError } from '../utils/validation';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -156,6 +159,32 @@ export function DebtSnowball() {
   const totalBalance  = debts.reduce((s, d) => s + d.balance, 0);
   const totalMinPay   = debts.reduce((s, d) => s + d.minPayment, 0);
 
+  const otherResult = strategy === 'snowball' ? avalancheResult : snowballResult;
+  const debtErrorList = debts.map(debtErrors);
+  const extraError = nonNegativeError(extraPayment);
+  const firstDebtProblem = debts
+    .map((d, i) => ({ name: d.name, message: debtErrorList[i].balance ?? debtErrorList[i].rate ?? (d.minPayment <= 0 ? debtErrorList[i].minPayment : undefined) }))
+    .find((p) => p.message);
+  const blocked = firstDebtProblem
+    ? `${firstDebtProblem.name}: ${firstDebtProblem.message}`
+    : extraError
+      ?? (totalBalance <= 0 ? 'Add a debt with a balance to see when it is paid off.' : undefined)
+      ?? (activeResult.months >= 600 ? 'At these payments the debt is not paid off within 50 years. Raise the payments to see a date.' : undefined);
+  const span = (months: number) => {
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    return [y > 0 ? `${y} year${y === 1 ? '' : 's'}` : '', m > 0 ? `${m} month${m === 1 ? '' : 's'}` : ''].filter(Boolean).join(' ') || '0 months';
+  };
+  const comparisonText = Math.abs(interestSavedVsAvalanche) <= 100
+    ? 'Both methods cost about the same here.'
+    : interestSavedVsAvalanche > 0
+      ? strategy === 'snowball'
+        ? `The avalanche method would save ${formatRand(interestSavedVsAvalanche, 0)} in interest${monthsSavedVsAvalanche > 0 ? ` and ${span(monthsSavedVsAvalanche)}` : ''}.`
+        : `That is ${formatRand(interestSavedVsAvalanche, 0)} less interest than the snowball method.`
+      : strategy === 'snowball'
+        ? `That is ${formatRand(-interestSavedVsAvalanche, 0)} less interest than the avalanche method.`
+        : `The snowball method would save ${formatRand(-interestSavedVsAvalanche, 0)} in interest.`;
+
   // Bar chart: compare strategies
   const comparisonData = [
     {
@@ -225,39 +254,21 @@ export function DebtSnowball() {
         ))}
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Total Debt',       value: formatRand(totalBalance, 0),             color: C.red    },
-          { label: 'Min Payments/mo',  value: formatRand(totalMinPay, 0),              color: C.orange  },
-          { label: 'Debt-Free In',     value: `${activeResult.months} months`,         color: C.teal,
-            sub: `${(activeResult.months / 12).toFixed(1)} years` },
-          { label: 'Total Interest',   value: formatRand(activeResult.totalInterest, 0), color: C.red  },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-            <p className="text-base font-bold leading-tight"
-              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
-            {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Avalanche advantage banner */}
-      {Math.abs(interestSavedVsAvalanche) > 100 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="flex items-center gap-3 p-4 rounded-xl"
-          style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-          <ArrowUpDown size={16} style={{ color: textTone(C.orange), flexShrink: 0 }} />
-          <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
-            {interestSavedVsAvalanche > 0
-              ? <>Avalanche saves <strong style={{ color: textTone(C.orange) }}>{formatRand(interestSavedVsAvalanche, 0)}</strong> in interest and <strong style={{ color: textTone(C.orange) }}>{Math.abs(monthsSavedVsAvalanche)} months</strong> vs Snowball</>
-              : <>Snowball saves <strong style={{ color: textTone(C.teal) }}>{formatRand(Math.abs(interestSavedVsAvalanche), 0)}</strong> in interest vs Avalanche (your debts have similar rates)</>}
-          </p>
-        </motion.div>
-      )}
+      <ResultPanel
+        label="Debt-free in"
+        value={span(activeResult.months)}
+        blocked={blocked}
+        summary={<>
+          Paying {formatRand(totalMinPay + extraPayment, 0)} a month with the {strategy} method clears {formatRand(totalBalance, 0)} of
+          debt and costs {formatRand(activeResult.totalInterest, 0)} in interest along the way. {comparisonText}
+        </>}
+        figures={[
+          { label: 'Total debt', value: formatRand(totalBalance, 0) },
+          { label: 'Paid each month', value: formatRand(totalMinPay + extraPayment, 0) },
+          { label: 'Total interest', value: formatRand(activeResult.totalInterest, 0) },
+          { label: `With ${strategy === 'snowball' ? 'avalanche' : 'snowball'}`, value: span(otherResult.months) },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -294,17 +305,17 @@ export function DebtSnowball() {
                 )}
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <InputField id={`bal-${debt.id}`} label="Balance" value={debt.balance}
+                <InputField id={`bal-${debt.id}`} label="Balance" value={debt.balance} error={debtErrorList[idx].balance}
                   onChange={(v) => updateDebt(debt.id, 'balance', v)} prefix="R" />
-                <InputField id={`rate-${debt.id}`} label="Rate" value={debt.rate}
+                <InputField id={`rate-${debt.id}`} label="Rate" value={debt.rate} error={debtErrorList[idx].rate}
                   onChange={(v) => updateDebt(debt.id, 'rate', v)} suffix="%" step={0.5} />
-                <InputField id={`min-${debt.id}`} label="Min Pay" value={debt.minPayment}
+                <InputField id={`min-${debt.id}`} label="Min Pay" value={debt.minPayment} error={debtErrorList[idx].minPayment}
                   onChange={(v) => updateDebt(debt.id, 'minPayment', v)} prefix="R" />
               </div>
             </div>
           ))}
 
-          <InputField id="extra" label="Extra Monthly Payment" value={extraPayment}
+          <InputField id="extra" label="Extra Monthly Payment" value={extraPayment} error={extraError}
             onChange={(v) => setExtraPayment(parseFloat(v) || 0)} prefix="R"
             help="Amount above minimum payments applied to target debt" />
         </motion.div>
@@ -390,9 +401,13 @@ export function DebtSnowball() {
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Simulation assumes constant interest rates and minimum payments. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Interest rates stay the same, and interest is added to each balance every month.</>,
+          <>Every debt gets its minimum payment each month. The extra {formatRand(extraPayment, 0)}, plus the minimum of each debt already paid off, goes to the {strategy === 'snowball' ? 'smallest balance' : 'highest rate'} first.</>,
+          <>No new spending goes onto the debts, and there are no fees or penalties.</>,
+        ]}
+      />
     </div>
   );
 }
