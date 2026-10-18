@@ -1,24 +1,37 @@
 /**
  * FinCalc ZA — SA Personal Investment Strategy Calculator
- * SARS 2025/26 tax year (1 March 2025 – 28 February 2026)
+ * SARS 2025/26 and 2026/27 tax years, using the central tax tables
  * 2-Pot Retirement System | RA | TFSA | Strategy Comparison
  */
 
 import * as XLSX from 'xlsx';
 import { calcIncomeTax, getMarginalRate } from './tax';
 import { formatRand } from './format';
+import { TAX_YEARS, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-export const RA_PCT_CAP        = 0.275;
-export const RA_MAX_DEDUCTION  = 350_000;
+export type TaxYear = '2025/26' | '2026/27';
+export const DEFAULT_STRATEGY_TAX_YEAR: TaxYear = '2026/27';
+
+/** This page's tax-year labels mapped onto the central tax tables. */
+const TAX_YEAR_ID: Record<TaxYear, TaxYearId> = { '2025/26': '2026', '2026/27': '2027' };
+
 export const TFSA_LIFETIME_CAP = 500_000;
 export const TFSA_ANNUAL_LIMITS: Record<TaxYear, number> = {
-  '2024/25': 36_000,
-  '2025/26': 46_000, // raised from R36K in 2026 Budget, effective 1 Mar 2026
+  '2025/26': 36_000,
+  '2026/27': 46_000, // raised from R36K in Budget 2026, effective 1 Mar 2026
 };
 
-export type TaxYear = '2024/25' | '2025/26';
+/** Saved scenarios can hold a tax year this page no longer offers. */
+export function normaliseTaxYear(taxYear: string): TaxYear {
+  return taxYear === '2025/26' || taxYear === '2026/27' ? taxYear : DEFAULT_STRATEGY_TAX_YEAR;
+}
+
+/** Retirement deduction limits (27.5% and the annual cap) for a tax year. */
+function retirementLimits(taxYear: TaxYear) {
+  return TAX_YEARS[TAX_YEAR_ID[taxYear]].retirement;
+}
 
 // ── Input / Output types ──────────────────────────────────────────────────────
 export interface InvestmentStrategyInputs {
@@ -63,7 +76,9 @@ export interface InvestmentStrategyResult {
   // Current user analysis
   annualRA: number;
   allowableRA: number;
-  raCapSource: 'none' | '27.5pct' | 'r350k';
+  raCapSource: 'none' | '27.5pct' | 'annualCap';
+  /** Annual rand cap on the retirement deduction for the selected tax year */
+  raAnnualCap: number;
   raUtilizationPct: number;
   taxableIncome: number;
   monthlyPAYE: number;
@@ -125,15 +140,16 @@ function futureValue(monthlyContrib: number, annualRatePct: number, years: numbe
   return monthlyContrib * ((Math.pow(1 + r, n) - 1) / r);
 }
 
-function calcAllowableRA(annualRA: number, totalAnnualGross: number): {
+function calcAllowableRA(annualRA: number, totalAnnualGross: number, taxYear: TaxYear): {
   allowable: number;
-  source: 'none' | '27.5pct' | 'r350k';
+  source: 'none' | '27.5pct' | 'annualCap';
 } {
-  const pctCap = RA_PCT_CAP * totalAnnualGross;
-  const fixedCap = RA_MAX_DEDUCTION;
+  const { rate, cap } = retirementLimits(taxYear);
+  const pctCap = rate * totalAnnualGross;
+  const fixedCap = cap;
   const allowable = Math.min(annualRA, pctCap, fixedCap);
-  let source: 'none' | '27.5pct' | 'r350k' = 'none';
-  if (annualRA >= fixedCap && fixedCap <= pctCap) source = 'r350k';
+  let source: 'none' | '27.5pct' | 'annualCap' = 'none';
+  if (annualRA >= fixedCap && fixedCap <= pctCap) source = 'annualCap';
   else if (annualRA >= pctCap) source = '27.5pct';
   return { allowable, source };
 }
@@ -143,6 +159,7 @@ function computeMetrics(
   totalMonthlyGross: number,
   totalAnnualGross: number,
   ageGroup: AgeGroup,
+  taxYear: TaxYear,
   raMonthly: number,
   tfsaMonthly: number,
   separateMonthly: number,
@@ -151,12 +168,13 @@ function computeMetrics(
   label: string,
   tag: StrategyMetrics['tag'],
 ): StrategyMetrics {
+  const yearId = TAX_YEAR_ID[taxYear];
   const annualRA = raMonthly * 12;
-  const { allowable: allowableRA } = calcAllowableRA(annualRA, totalAnnualGross);
+  const { allowable: allowableRA } = calcAllowableRA(annualRA, totalAnnualGross, taxYear);
   const taxableIncome = Math.max(0, totalAnnualGross - allowableRA);
 
-  const annualTaxWithRA    = calcIncomeTax(taxableIncome, ageGroup);
-  const annualTaxWithoutRA = calcIncomeTax(totalAnnualGross, ageGroup);
+  const annualTaxWithRA    = calcIncomeTax(taxableIncome, ageGroup, yearId);
+  const annualTaxWithoutRA = calcIncomeTax(totalAnnualGross, ageGroup, yearId);
 
   const monthlyPAYE          = annualTaxWithRA / 12;
   const monthlyTaxSaving     = (annualTaxWithoutRA - annualTaxWithRA) / 12;
@@ -213,10 +231,13 @@ function computeMetrics(
 // ── Main calculator ───────────────────────────────────────────────────────────
 export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): InvestmentStrategyResult {
   const {
-    monthlyPrimaryGross, monthlySecondaryGross, age, taxYear,
+    monthlyPrimaryGross, monthlySecondaryGross, age,
     monthlyRA, monthlyTFSA, monthlySeparate,
     annualGrowthRate, horizonYears, tfsaLifetimeContributed,
   } = inputs;
+  const taxYear = normaliseTaxYear(inputs.taxYear);
+  const yearId = TAX_YEAR_ID[taxYear];
+  const retirement = retirementLimits(taxYear);
 
   const ageGroup = ageToGroup(age);
   const totalMonthlyGross = monthlyPrimaryGross + monthlySecondaryGross;
@@ -224,13 +245,13 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
 
   // ── Current user inputs ───────────────────────────────────────────────────
   const annualRA = monthlyRA * 12;
-  const { allowable: allowableRA, source: raCapSource } = calcAllowableRA(annualRA, totalAnnualGross);
-  const raMonthlyLimit = Math.min(RA_PCT_CAP * totalAnnualGross / 12, RA_MAX_DEDUCTION / 12);
+  const { allowable: allowableRA, source: raCapSource } = calcAllowableRA(annualRA, totalAnnualGross, taxYear);
+  const raMonthlyLimit = Math.min(retirement.rate * totalAnnualGross / 12, retirement.cap / 12);
   const raUtilizationPct = raMonthlyLimit > 0 ? (monthlyRA / raMonthlyLimit) * 100 : 0;
 
   const taxableIncome      = Math.max(0, totalAnnualGross - allowableRA);
-  const annualTaxWithRA    = calcIncomeTax(taxableIncome, ageGroup);
-  const annualTaxWithoutRA = calcIncomeTax(totalAnnualGross, ageGroup);
+  const annualTaxWithRA    = calcIncomeTax(taxableIncome, ageGroup, yearId);
+  const annualTaxWithoutRA = calcIncomeTax(totalAnnualGross, ageGroup, yearId);
 
   const monthlyPAYE          = annualTaxWithRA / 12;
   const monthlyPAYEWithoutRA = annualTaxWithoutRA / 12;
@@ -240,7 +261,7 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
   const totalInvested        = monthlyRA + monthlyTFSA + monthlySeparate;
   const spendable            = takeHome - monthlyTFSA - monthlySeparate;
   const investPct            = totalMonthlyGross > 0 ? (totalInvested / totalMonthlyGross) * 100 : 0;
-  const marginalRate         = getMarginalRate(totalAnnualGross) * 100;
+  const marginalRate         = getMarginalRate(totalAnnualGross, yearId) * 100;
 
   // SARS subsidy
   const sarsSubsidyRand = monthlyTaxSaving;
@@ -253,7 +274,7 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
   const tfsaIsOver         = tfsaAnnualContrib > tfsaAnnualLimit;
   const tfsaOverBy         = Math.max(0, tfsaAnnualContrib - tfsaAnnualLimit);
   const tfsaLifetimeRemaining = Math.max(0, TFSA_LIFETIME_CAP - tfsaLifetimeContributed);
-  const showTFSANudge      = taxYear === '2025/26' && monthlyTFSA < tfsaMonthlyLimit - 10;
+  const showTFSANudge      = taxYear === '2026/27' && monthlyTFSA < tfsaMonthlyLimit - 10;
 
   // ── 2-Pot ──────────────────────────────────────────────────────────────────
   const savingsPotMonthly   = monthlyRA / 3;
@@ -264,7 +285,7 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
 
   // Conservative: RA=0, TFSA=max, Separate=0
   const conservative = computeMetrics(
-    totalMonthlyGross, totalAnnualGross, ageGroup,
+    totalMonthlyGross, totalAnnualGross, ageGroup, taxYear,
     0, tfsaForStrategy, 0,
     annualGrowthRate, horizonYears,
     'Conservative (TFSA Only)', 'conservative',
@@ -273,12 +294,12 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
   // Balanced: RA=12.5% gross, TFSA=max, Separate=min(5% take-home, 3000)
   const balRA = Math.min(totalMonthlyGross * 0.125, raMonthlyLimit);
   // take-home for balanced (approximate — compute quickly)
-  const balTax = calcIncomeTax(Math.max(0, totalAnnualGross - Math.min(balRA * 12, RA_PCT_CAP * totalAnnualGross, RA_MAX_DEDUCTION)), ageGroup);
+  const balTax = calcIncomeTax(Math.max(0, totalAnnualGross - Math.min(balRA * 12, retirement.rate * totalAnnualGross, retirement.cap)), ageGroup, yearId);
   const balTakeHome = totalMonthlyGross - balRA - balTax / 12;
   const balSeparate = Math.min(balTakeHome * 0.05, 3_000);
 
   const balanced = computeMetrics(
-    totalMonthlyGross, totalAnnualGross, ageGroup,
+    totalMonthlyGross, totalAnnualGross, ageGroup, taxYear,
     balRA, tfsaForStrategy, Math.max(0, balSeparate),
     annualGrowthRate, horizonYears,
     'Balanced (Recommended)', 'balanced',
@@ -287,7 +308,7 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
   // Max Tax: RA=27.5% (capped), TFSA=max, Separate=0
   const maxRA = raMonthlyLimit;
   const maxTax = computeMetrics(
-    totalMonthlyGross, totalAnnualGross, ageGroup,
+    totalMonthlyGross, totalAnnualGross, ageGroup, taxYear,
     maxRA, tfsaForStrategy, 0,
     annualGrowthRate, horizonYears,
     'Maximum Tax Benefit', 'maxTax',
@@ -347,7 +368,7 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
 
   return {
     totalMonthlyGross, totalAnnualGross, ageGroup,
-    annualRA, allowableRA, raCapSource, raUtilizationPct,
+    annualRA, allowableRA, raCapSource, raAnnualCap: retirement.cap, raUtilizationPct,
     taxableIncome, monthlyPAYE, monthlyPAYEWithoutRA,
     monthlyTaxSaving, effectiveRAMonthlyCost,
     takeHome, totalInvested, spendable, investPct, marginalRate,

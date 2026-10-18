@@ -36,7 +36,7 @@ const PRESETS = [
 ];
 
 const VEHICLES = [
-  { label: 'TFSA (tax-free, ~10-12% in ETFs)', rate: 11, limit: 36_000, cap: 500_000, taxFree: true },
+  { label: 'TFSA (tax-free, ~10-12% in ETFs)', rate: 11, limit: 46_000, cap: 500_000, taxFree: true },
   { label: 'Unit Trust / ETF (~12% p.a.)',      rate: 12, limit: Infinity, cap: Infinity, taxFree: false },
   { label: 'Endowment Policy (~8-9%)',          rate: 8.5, limit: Infinity, cap: Infinity, taxFree: false },
   { label: 'Money Market (~7%)',                rate: 7,  limit: Infinity, cap: Infinity, taxFree: false },

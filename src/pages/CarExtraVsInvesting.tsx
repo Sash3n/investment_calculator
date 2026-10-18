@@ -365,7 +365,7 @@ export function CarExtraVsInvesting() {
             <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
               style={{ background: 'color-mix(in srgb, var(--gain) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)', color: 'var(--ink-muted)' }}>
               <Info size={13} style={{ color: textTone(C.green), flexShrink: 0, marginTop: 1 }} />
-              TFSA contributions are after-tax and grow tax-free — no CGT or dividend tax. Subject to R36,000/yr and R500,000 lifetime limits.
+              TFSA contributions are after-tax and grow tax-free — no CGT or dividend tax. Subject to R46,000/yr and R500,000 lifetime limits.
             </div>
           )}
 
