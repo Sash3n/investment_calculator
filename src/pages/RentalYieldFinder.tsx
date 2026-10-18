@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ReferenceLine, Legend,
 } from 'recharts';
-import { Home, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { Statement } from '../components/statement/Statement';
@@ -12,6 +12,10 @@ import type { StatementData, StatementLine } from '../components/statement/state
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { alpha, textTone } from '../utils/color';
 import { useJourneyValues } from '../journeys/journeyContext';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { StatementRow } from '../components/statement/StatementRow';
+import { rentalYieldInputErrors } from '../utils/validation';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -116,6 +120,12 @@ export function RentalYieldFinder() {
   const monthlyCashFlow  = annualCashFlow / 12;
   const netYield         = purchasePrice > 0 ? (annualCashFlow / purchasePrice) * 100 : 0;
   const isCashFlowPositive = monthlyCashFlow >= 0;
+
+  const errors = rentalYieldInputErrors({
+    purchasePrice, deposit, monthlyRent, bondRate, bondTerm, vacancyMonths, initiationFee,
+    levy, rates, insurance, effluent, misc, maintenancePct, agentFeePct,
+  });
+  const blocked = errors.purchasePrice ?? errors.deposit ?? errors.monthlyRent ?? errors.bondRate ?? errors.bondTerm ?? errors.vacancyMonths ?? errors.agentFeePct;
 
   useJourneyValues({
     price: purchasePrice, deposit, rate: bondRate, term: bondTerm, rent: monthlyRent,
@@ -234,57 +244,24 @@ export function RentalYieldFinder() {
         </div>
       </motion.div>
 
-      {/* KPI strip */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-      >
-        {[
-          { label: 'Gross Yield',         value: `${grossYield.toFixed(2)}%`,     color: C.orange,   sub: 'annual rent / price' },
-          { label: 'Net Yield',           value: `${netYield.toFixed(2)}%`,       color: netYield >= 0 ? C.green : C.red, sub: 'after all costs' },
-          { label: 'Monthly Cash Flow',   value: formatRand(monthlyCashFlow, 0),  color: isCashFlowPositive ? C.green : C.red,
-            sub: isCashFlowPositive ? 'positive' : 'negative' },
-          { label: 'Breakeven Rent',      value: formatRand(breakEvenRentActual, 0), color: C.blue, sub: `${breakEvenYield.toFixed(2)}% yield` },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-            <p className="text-base font-bold leading-tight"
-              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>
-              {kpi.value}
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Cash flow status banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-        className="flex items-center gap-3 p-4 rounded-xl"
-        style={{
-          background: isCashFlowPositive ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--loss) 8%, transparent)',
-          border: `1px solid ${isCashFlowPositive ? 'color-mix(in srgb, var(--gain) 25%, transparent)' : 'color-mix(in srgb, var(--loss) 25%, transparent)'}`,
-        }}
-      >
-        {isCashFlowPositive
-          ? <CheckCircle2 size={18} style={{ color: textTone(C.green), flexShrink: 0 }} />
-          : <AlertCircle  size={18} style={{ color: textTone(C.red), flexShrink: 0 }} />}
-        <div>
-          <p className="text-sm font-semibold"
-            style={{ color: textTone(isCashFlowPositive ? C.green : C.red) }}>
-            {isCashFlowPositive
-              ? `Cash-flow positive: ${formatRand(monthlyCashFlow, 0)}/month surplus`
-              : `Cash-flow negative: ${formatRand(Math.abs(monthlyCashFlow), 0)}/month shortfall`}
-          </p>
-          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-            You need at least <strong style={{ color: 'var(--ink)' }}>{formatRand(breakEvenRentActual, 0)}/month</strong> to break even.
-            {monthlyRent < breakEvenRentActual
-              ? ` Increase rent by ${formatRand(breakEvenRentActual - monthlyRent, 0)} to break even.`
-              : ` You are ${formatRand(monthlyRent - breakEvenRentActual, 0)} above breakeven.`}
-          </p>
-        </div>
-      </motion.div>
+      <ResultPanel
+        label="Monthly cash flow"
+        value={formatRand(monthlyCashFlow, 0)}
+        tone={isCashFlowPositive ? 'gain' : 'loss'}
+        blocked={blocked}
+        summary={<>
+          {isCashFlowPositive
+            ? `At ${formatRand(monthlyRent, 0)} rent, the property brings in ${formatRand(monthlyCashFlow, 0)} a month more than it costs, bond included.`
+            : `At ${formatRand(monthlyRent, 0)} rent, you would pay in ${formatRand(Math.abs(monthlyCashFlow), 0)} a month on top of the rent to cover the costs and bond.`}
+          {' '}It breaks even at about {formatRand(breakEvenRentActual, 0)} rent a month.
+        </>}
+        figures={[
+          { label: 'Gross yield', value: formatPercent(grossYield, 2) },
+          { label: 'Net yield, after the bond', value: formatPercent(netYield, 2) },
+          { label: 'Break-even rent', value: formatRand(breakEvenRentActual, 0) },
+          { label: 'Break-even yield', value: formatPercent(breakEvenYield, 2) },
+        ]}
+      />
 
       {/* Inputs */}
       <motion.div
@@ -298,17 +275,17 @@ export function RentalYieldFinder() {
             Property Details
           </p>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="pp" label="Purchase Price" value={purchasePrice}
+            <InputField id="pp" label="Purchase Price" value={purchasePrice} error={errors.purchasePrice}
               onChange={(v) => setPurchasePrice(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="dep" label="Deposit" value={deposit}
+            <InputField id="dep" label="Deposit" value={deposit} error={errors.deposit}
               onChange={(v) => setDeposit(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="rent" label="Expected Monthly Rent" value={monthlyRent}
+            <InputField id="rent" label="Expected Monthly Rent" value={monthlyRent} error={errors.monthlyRent}
               onChange={(v) => setMonthlyRent(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="br" label="Bond Interest Rate" value={bondRate}
+            <InputField id="br" label="Bond Interest Rate" value={bondRate} error={errors.bondRate}
               onChange={(v) => setBondRate(parseFloat(v) || 0)} suffix="%" step={0.25} />
-            <InputField id="bt" label="Bond Term" value={bondTerm}
+            <InputField id="bt" label="Bond Term" value={bondTerm} error={errors.bondTerm}
               onChange={(v) => setBondTerm(parseFloat(v) || 0)} suffix="yrs" />
-            <InputField id="vac" label="Vacancy (months/yr)" value={vacancyMonths}
+            <InputField id="vac" label="Vacancy (months/yr)" value={vacancyMonths} error={errors.vacancyMonths}
               onChange={(v) => setVacancyMonths(parseFloat(v) || 0)} suffix="mo" step={0.5} />
           </div>
 
@@ -317,7 +294,7 @@ export function RentalYieldFinder() {
             <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: textTone(C.blue) }}>
               Upfront Costs
             </p>
-            <InputField id="init" label="Initiation Fee" value={initiationFee}
+            <InputField id="init" label="Initiation Fee" value={initiationFee} error={errors.initiationFee}
               onChange={(v) => setInitiationFee(parseFloat(v) || 0)} prefix="R" step={100}
               help="NCA cap R6,037 for bonds > R500K" />
             <label className="flex items-start gap-3 cursor-pointer group pt-1">
@@ -338,20 +315,15 @@ export function RentalYieldFinder() {
                 </p>
               </div>
             </label>
-            <div className="space-y-1.5 pt-1">
-              {[
-                { label: 'Transfer Duty',     value: transferDuty },
-                { label: 'Bond Registration', value: bondRegCost },
-                { label: 'Total Cash Needed', value: totalUpfront, bold: true },
-              ].map((r) => (
-                <div key={r.label} className={`flex justify-between ${r.bold ? 'pt-1.5 border-t border-note-blue/20' : ''}`}>
-                  <span className="text-xs" style={{ color: textTone(r.bold ? C.blue : 'var(--ink-muted)') }}>{r.label}</span>
-                  <span className={`text-xs font-semibold tabular-nums ${r.bold ? 'text-sm' : ''}`} style={{ color: textTone(r.bold ? C.blue : 'var(--ink)') }}>
-                    {formatRand(r.value)}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <dl className="pt-1 text-sm">
+              <StatementRow line={{ label: 'Deposit', value: deposit }} />
+              <StatementRow line={{ label: 'Transfer duty', value: transferDuty }} />
+              <StatementRow line={{ label: 'Bond registration', value: bondRegCost }} />
+              <StatementRow line={{ label: 'Initiation fee', value: capitaliseInitiationFee ? 0 : initiationFee }} />
+              <div className="border-t border-rule mt-1 pt-1">
+                <StatementRow line={{ label: 'Total cash needed', value: totalUpfront }} strong />
+              </div>
+            </dl>
           </div>
         </div>
 
@@ -362,13 +334,13 @@ export function RentalYieldFinder() {
             Monthly Costs
           </p>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="levy"    label="Levy"              value={levy}           onChange={(v) => setLevy(parseFloat(v) || 0)}           prefix="R" />
-            <InputField id="rates"   label="Rates & Taxes"     value={rates}          onChange={(v) => setRates(parseFloat(v) || 0)}          prefix="R" />
-            <InputField id="ins"     label="Insurance"         value={insurance}      onChange={(v) => setInsurance(parseFloat(v) || 0)}      prefix="R" />
-            <InputField id="eff"     label="Effluent"          value={effluent}       onChange={(v) => setEffluent(parseFloat(v) || 0)}       prefix="R"  />
-            <InputField id="misc"    label="Misc"              value={misc}           onChange={(v) => setMisc(parseFloat(v) || 0)}           prefix="R" />
-            <InputField id="maint"   label="Maintenance"       value={maintenancePct} onChange={(v) => setMaintenancePct(parseFloat(v) || 0)} suffix="% p.a." step={0.1} />
-            <InputField id="agent"   label="Agent Fee"         value={agentFeePct}    onChange={(v) => setAgentFeePct(parseFloat(v) || 0)}    suffix="%" step={0.5} />
+            <InputField id="levy"    label="Levy"              value={levy} error={errors.levy}           onChange={(v) => setLevy(parseFloat(v) || 0)}           prefix="R" />
+            <InputField id="rates"   label="Rates & Taxes"     value={rates} error={errors.rates}          onChange={(v) => setRates(parseFloat(v) || 0)}          prefix="R" />
+            <InputField id="ins"     label="Insurance"         value={insurance} error={errors.insurance}      onChange={(v) => setInsurance(parseFloat(v) || 0)}      prefix="R" />
+            <InputField id="eff"     label="Effluent"          value={effluent} error={errors.effluent}       onChange={(v) => setEffluent(parseFloat(v) || 0)}       prefix="R"  />
+            <InputField id="misc"    label="Misc"              value={misc} error={errors.misc}           onChange={(v) => setMisc(parseFloat(v) || 0)}           prefix="R" />
+            <InputField id="maint"   label="Maintenance"       value={maintenancePct} error={errors.maintenancePct} onChange={(v) => setMaintenancePct(parseFloat(v) || 0)} suffix="% p.a." step={0.1} />
+            <InputField id="agent"   label="Agent Fee"         value={agentFeePct} error={errors.agentFeePct}    onChange={(v) => setAgentFeePct(parseFloat(v) || 0)}    suffix="%" step={0.5} />
           </div>
         </div>
       </motion.div>
@@ -473,9 +445,16 @@ export function RentalYieldFinder() {
         </p>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Estimates only. Consult a qualified financial adviser before investing. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Rent, costs and the bond rate of {bondRate}% stay at today’s amounts. Vacancy is {vacancyMonths} month{vacancyMonths === 1 ? '' : 's'} a year with no rent.</>,
+          <>Net yield and cash flow are after every cost and the full bond repayment, capital and interest, so they show what lands in your account rather than the return on the property.</>,
+          <>Maintenance is {maintenancePct}% of the price a year. The letting agent charges {agentFeePct}% of the full monthly rent.</>,
+          <>Transfer duty uses the SARS table in force since 1 April 2025. Bond registration is an estimate of the Deeds Office and attorney fees, not a quote.</>,
+          <>The 10-year projection assumes the property grows in value by {appreciationRate}% a year, rent stays the same and the bond balance does not come down.</>,
+          <>Not included: income tax on rental profit and the bank’s monthly service fee.</>,
+        ]}
+      />
     </div>
   );
 }

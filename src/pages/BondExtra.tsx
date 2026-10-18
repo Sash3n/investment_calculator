@@ -4,13 +4,15 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts';
-import { Building2, TrendingDown, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { bondExtraInputErrors } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -115,8 +117,6 @@ export function BondExtra() {
 
   const interestSaved  = base.totalInterest - withExtra.totalInterest;
   const monthsSaved    = base.monthsPaid    - withExtra.monthsPaid;
-  const yearsSaved     = Math.floor(monthsSaved / 12);
-  const remMonthsSaved = monthsSaved % 12;
 
   const chartData = useMemo(() => {
     const maxYears = Math.ceil(base.monthsPaid / 12);
@@ -149,6 +149,18 @@ export function BondExtra() {
 
   const hasAnyExtra = extra > 0 || annualLumpSum > 0 || biweekly;
 
+  const errors  = bondExtraInputErrors({ loan, rate, term, extra, annualLumpSum });
+  const blocked = errors.loan ?? errors.rate ?? errors.term;
+  const extraText = [
+    totalExtra > 0 ? `${formatRand(totalExtra, 0)} extra a month` : '',
+    annualLumpSum > 0 ? `${formatRand(annualLumpSum, 0)} once a year` : '',
+  ].filter(Boolean).join(' and ');
+  const span = (months: number) => {
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    return [y > 0 ? `${y} year${y === 1 ? '' : 's'}` : '', m > 0 ? `${m} month${m === 1 ? '' : 's'}` : ''].filter(Boolean).join(' ') || '0 months';
+  };
+
   return (
     <motion.div
       className="space-y-6 pb-16"
@@ -177,17 +189,17 @@ export function BondExtra() {
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Bond details
           </h2>
-          <InputField id="be-loan"  label="Outstanding loan (R)"       value={loan}          onChange={(v) => setLoan(Number(v))}          prefix="R"   min={1} />
-          <InputField id="be-rate"  label="Interest rate"              value={rate}          onChange={(v) => setRate(Number(v))}          suffix="%"   min={0} max={30} />
-          <InputField id="be-term"  label="Remaining term"             value={term}          onChange={(v) => setTerm(Number(v))}          suffix="yrs" min={1} max={30} />
+          <InputField id="be-loan"  label="Outstanding loan (R)"       value={loan} error={errors.loan}          onChange={(v) => setLoan(Number(v))}          prefix="R"   min={1} />
+          <InputField id="be-rate"  label="Interest rate"              value={rate} error={errors.rate}          onChange={(v) => setRate(Number(v))}          suffix="%"   min={0} max={30} />
+          <InputField id="be-term"  label="Remaining term"             value={term} error={errors.term}          onChange={(v) => setTerm(Number(v))}          suffix="yrs" min={1} max={30} />
 
           <hr style={{ borderColor: 'var(--rule)' }} />
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Extra payments
           </h2>
 
-          <InputField id="be-extra"  label="Extra payment per month"  value={extra}         onChange={(v) => setExtra(Number(v))}         prefix="R"   min={0} />
-          <InputField id="be-lump"   label="Annual lump sum (e.g. bonus)" value={annualLumpSum} onChange={(v) => setAnnualLumpSum(Number(v))} prefix="R" min={0} />
+          <InputField id="be-extra"  label="Extra payment per month"  value={extra} error={errors.extra}         onChange={(v) => setExtra(Number(v))}         prefix="R"   min={0} />
+          <InputField id="be-lump"   label="Annual lump sum (e.g. bonus)" value={annualLumpSum} error={errors.annualLumpSum} onChange={(v) => setAnnualLumpSum(Number(v))} prefix="R" min={0} />
 
           {/* Bi-weekly toggle */}
           <button
@@ -210,40 +222,24 @@ export function BondExtra() {
             </p>
           )}
 
-          {!hasAnyExtra && (
-            <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
-              <AlertCircle size={13} style={{ color: textTone(C.orange) }} />
-              <span style={{ color: 'var(--ink-muted)' }}>Add an extra payment to see the impact.</span>
-            </div>
-          )}
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Interest saved"            value={formatRandShort(interestSaved)}        color="green" icon={TrendingDown} />
-            <StatCard label="Time saved"                value={`${yearsSaved}yr ${remMonthsSaved}mo`} color="blue"  icon={CheckCircle2} />
-            <StatCard label="Total interest (standard)" value={formatRandShort(base.totalInterest)}   color="red"     icon={TrendingDown} />
-            <StatCard label="Total interest (w/ extra)" value={formatRandShort(withExtra.totalInterest)} color="orange" icon={TrendingDown} />
-          </div>
-
-          {hasAnyExtra && interestSaved > 0 && (
-            <div className="p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
-              <span style={{ color: 'var(--ink-muted)' }}>
-                Your extra payments save{' '}
-                <span style={{ color: textTone(C.green), fontWeight: 600 }}>{formatRandShort(interestSaved)}</span>
-                {' '}in interest and cut{' '}
-                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
-                  {yearsSaved > 0 ? `${yearsSaved}yr ` : ''}{remMonthsSaved}mo
-                </span>
-                {' '}off your bond term.
-                {annualLumpSum > 0 && (
-                  <> The {formatRand(annualLumpSum)} annual lump sum alone saves a significant portion of that.</>
-                )}
-              </span>
-            </div>
-          )}
+          <ResultPanel
+            label="Interest saved"
+            value={formatRand(interestSaved, 0)}
+            tone={interestSaved > 0 ? 'gain' : 'default'}
+            blocked={blocked}
+            summary={hasAnyExtra
+              ? `Paying in ${extraText} pays the bond off ${span(monthsSaved)} sooner, after ${span(withExtra.monthsPaid)} instead of ${span(base.monthsPaid)}.`
+              : 'Add an extra monthly payment, a yearly lump sum or the bi-weekly schedule to see how much interest and time it saves.'}
+            figures={[
+              { label: 'Time saved', value: span(monthsSaved) },
+              { label: 'Paid off after', value: span(withExtra.monthsPaid) },
+              { label: 'Interest, normal repayment', value: formatRand(base.totalInterest, 0) },
+              { label: 'Interest with extra', value: formatRand(withExtra.totalInterest, 0) },
+            ]}
+          />
 
           <div className="p-5 rounded-2xl"
             style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
@@ -316,6 +312,15 @@ export function BondExtra() {
               </div>
             )}
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>The rate stays at {rate}% for the remaining {term} years, and your normal repayment stays the same.</>,
+              <>Extra monthly payments start now and come straight off what you owe. The lump sum is paid at the end of each year.</>,
+              <>The bi-weekly schedule is 26 half-payments a year, which adds up to one extra repayment a year. It is shown here as {formatRand(biweeklyExtra, 0)} a month.</>,
+              <>Not included: the bank’s monthly service fee and any fee for paying in extra. Check that your bank puts extra payments against the capital.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>

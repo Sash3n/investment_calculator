@@ -4,9 +4,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
 } from 'recharts';
 import {
-  AlertTriangle, Shield, TrendingDown, Activity, Building2, Info, BookOpen,
+  Building2, BookOpen,
 } from 'lucide-react';
-import { StatCard } from '../components/ui/StatCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcPortfolioStress, STRESS_SCENARIOS } from '../utils/stress';
@@ -15,6 +14,8 @@ import { useSavedProperties } from '../hooks/useFirestore';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -57,6 +58,8 @@ export function StressTest() {
   }));
 
   const empty = portfolio.length === 0;
+  const worstCashFlow = result.scenarioTotals.worst?.totalMonthlyCashFlow ?? 0;
+  const monthlyPosition = (v: number) => v >= 0 ? `${formatRand(v, 0)} a month ahead` : `${formatRand(-v, 0)} a month short`;
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -91,54 +94,24 @@ export function StressTest() {
         />
       ) : (
         <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="Properties Tested" value={String(result.count)} sub="In your portfolio" icon={Building2} color="blue" delay={0} />
-            <StatCard
-              label="Current Monthly Cash Flow"
-              value={formatRandShort(result.totalBaseMonthlyCashFlow)}
-              sub="All properties combined"
-              icon={Activity}
-              color={result.totalBaseMonthlyCashFlow >= 0 ? 'green' : 'red'}
-              delay={0.05}
-            />
-            <StatCard
-              label="Worst-Case Cash Flow"
-              value={formatRandShort(result.scenarioTotals.worst?.totalMonthlyCashFlow ?? 0)}
-              sub="+2% rate, 15% vacancy"
-              icon={TrendingDown}
-              color="red"
-              delay={0.1}
-            />
-            <StatCard
-              label="Go Negative at +2%"
-              value={`${result.scenarioTotals.rate2?.negativeCount ?? 0} / ${result.count}`}
-              sub="Properties cash-flow negative"
-              icon={AlertTriangle}
-              color="orange"
-              delay={0.15}
-            />
-          </div>
-
-          {/* Most fragile banner */}
-          {result.mostFragile && (
-            <div
-              className="flex items-start gap-3 p-4 rounded-xl"
-              style={{ background: 'color-mix(in srgb, var(--loss) 7%, transparent)', border: `1px solid ${alpha(C.red, 20)}` }}
-            >
-              <AlertTriangle size={18} color={C.red} className="mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: textTone(C.red), fontFamily: 'var(--font-display)' }}>
-                  Most fragile: {result.mostFragile.name}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                  {result.mostFragile.rateHeadroom === null
-                    ? 'Already cash-flow negative at the current interest rate.'
-                    : `Turns cash-flow negative at ${formatPercent(result.mostFragile.breakingPointRate ?? 0, 2)} — only ${formatPercent(result.mostFragile.rateHeadroom, 2)} of headroom above its current ${formatPercent(result.mostFragile.baseInterestRate, 2)} rate.`}
-                </p>
-              </div>
-            </div>
-          )}
+          <ResultPanel
+            label="Monthly cash flow in the worst case"
+            value={formatRand(worstCashFlow, 0)}
+            tone={worstCashFlow >= 0 ? 'gain' : 'loss'}
+            summary={<>
+              Today your {result.count === 1 ? 'property is' : `${result.count} properties are`} {monthlyPosition(result.totalBaseMonthlyCashFlow)} after
+              all costs. If rates rise 2% and 15% of the rent is lost to empty months, {result.count === 1 ? 'it' : 'they'} would be {monthlyPosition(worstCashFlow)}.
+              {result.mostFragile && (result.mostFragile.rateHeadroom === null
+                ? ` ${result.mostFragile.name} already costs more than it brings in.`
+                : ` ${result.mostFragile.name} is the most fragile: it turns negative at ${formatPercent(result.mostFragile.breakingPointRate ?? 0, 2)}, ${formatPercent(result.mostFragile.rateHeadroom, 2)} above its rate today.`)}
+            </>}
+            figures={[
+              { label: 'Properties tested', value: String(result.count) },
+              { label: 'Cash flow today', value: formatRand(result.totalBaseMonthlyCashFlow, 0) },
+              { label: 'Negative if rates rise 2%', value: `${result.scenarioTotals.rate2?.negativeCount ?? 0} of ${result.count}` },
+              { label: 'Rates rise 3%', value: formatRand(result.scenarioTotals.rate3?.totalMonthlyCashFlow ?? 0, 0) },
+            ]}
+          />
 
           {/* Scenario chart */}
           <div className="glass-card-static p-5">
@@ -149,7 +122,7 @@ export function StressTest() {
               <BarChart data={scenarioChart} margin={{ left: 8, right: 16, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--rule)" />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
-                <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(0)}K`} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
                 <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<RandTooltip />} />
                 <ReferenceLine y={0} stroke="var(--ink-subtle)" strokeWidth={1} />
                 <Bar dataKey="cashflow" name="Monthly Cash Flow" radius={[3, 3, 0, 0]}>
@@ -239,13 +212,14 @@ export function StressTest() {
             </div>
           </div>
 
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              <Shield size={11} className="inline mr-1" style={{ color: textTone(C.blue) }} />
-              Educational estimates only. Cash flow uses your saved inputs and Scenario 1 rent; equity figures approximate the loan balance at purchase. Consult a financial adviser before acting.
-            </span>
-          </div>
+          <AssumptionsDrawer
+            items={[
+              <>Cash flow is the rent received less the bond, levies, rates, insurance, management and other costs, using each property’s first rent scenario from Property ROI.</>,
+              <>Rate rises are added to each property’s own saved rate. The worst case adds 2% and loses 15% of the rent to empty months.</>,
+              <>A 10% drop in value changes your equity, not your monthly cash flow. Equity uses the loan at purchase, not what you owe today.</>,
+              <>The prime rate at the top is for reference. Each property keeps the rate you saved with it.</>,
+            ]}
+          />
         </>
       )}
     </div>

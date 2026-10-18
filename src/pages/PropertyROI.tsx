@@ -5,12 +5,11 @@ import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { MapPin, Plus, Trash2, Eye, Download, Building2, Cloud, CloudOff, Pencil, FileText, Zap } from 'lucide-react';
+import { MapPin, Plus, Trash2, Eye, Download, Cloud, CloudOff, Pencil, FileText, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
 import { exportPropertyPDF } from '../utils/pdf';
@@ -22,6 +21,9 @@ import type { PropertyInputs } from '../types';
 import { DEFAULT_PROPERTY_INPUTS } from '../config/calculatorDefaults';
 import { seriesColors, textTone } from '../utils/color';
 import { useJourneyValues } from '../journeys/journeyContext';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { propertyInputErrors } from '../utils/validation';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -114,6 +116,8 @@ export function PropertyROI() {
   }, []);
 
   const result = useMemo(() => calcPropertyROI(inputs), [inputs]);
+  const errors = propertyInputErrors(inputs);
+  const roiBlocked = !!(errors.purchasePrice || errors.deposit || errors.interestRate || errors.bondTerm || errors.discount);
   useJourneyValues({
     price: inputs.purchasePrice,
     bond: result.monthlyBondRepayment,
@@ -323,12 +327,12 @@ export function PropertyROI() {
                   style={{ fontFamily: 'var(--font-text)' }}
                 />
               </div>
-              <InputField label="Purchase Price" id="pp" value={inputs.purchasePrice}
+              <InputField label="Purchase Price" id="pp" value={inputs.purchasePrice} error={errors.purchasePrice}
                 onChange={(v) => set('purchasePrice', v)} prefix="R" step={10000} />
-              <InputField label="Discount" id="disc" value={inputs.discount}
+              <InputField label="Discount" id="disc" value={inputs.discount} error={errors.discount}
                 onChange={(v) => set('discount', v)} suffix="%" step={0.5} min={0} max={50}
                 help="Reduces effective purchase price (e.g. distressed sale)" />
-              <InputField label="Deposit" id="dep" value={inputs.deposit}
+              <InputField label="Deposit" id="dep" value={inputs.deposit} error={errors.deposit}
                 onChange={(v) => set('deposit', v)} prefix="R" step={5000} />
               <InputField label="Utility Connection Fee" id="ucf" value={inputs.utilityConnectionFee ?? 0}
                 onChange={(v) => set('utilityConnectionFee', v)} prefix="R" step={100}
@@ -409,7 +413,7 @@ export function PropertyROI() {
               </div>
 
               <div className="space-y-1.5">
-                <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
+                <InputField label="Interest Rate" id="ir" value={inputs.interestRate} error={errors.interestRate}
                   onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
                 <button
                   className="text-xs text-note-blue-ink hover:text-note-blue-ink transition-colors flex items-center gap-1"
@@ -420,7 +424,7 @@ export function PropertyROI() {
                   {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
                 </button>
               </div>
-              <InputField label="Bond Term" id="bt" value={inputs.bondTerm}
+              <InputField label="Bond Term" id="bt" value={inputs.bondTerm} error={errors.bondTerm}
                 onChange={(v) => set('bondTerm', v)} suffix="yrs" min={1} max={30} step={1} />
             </div>
 
@@ -444,10 +448,10 @@ export function PropertyROI() {
               <InputField label="Misc Fees" id="misc" value={inputs.miscFees}
                 onChange={(v) => set('miscFees', v)} prefix="R" step={100}
                 help="Any other recurring costs (garden, pool, etc.)" />
-              <InputField label="Management Fee" id="mf" value={inputs.managementFeePercent}
+              <InputField label="Management Fee" id="mf" value={inputs.managementFeePercent} error={errors.managementFeePercent}
                 onChange={(v) => set('managementFeePercent', v)} suffix="% of rent" step={0.5}
                 help="Agent fee deducted from rental income" />
-              <InputField label="Vacancy Rate" id="vac" value={inputs.vacancyRate}
+              <InputField label="Vacancy Rate" id="vac" value={inputs.vacancyRate} error={errors.vacancyRate}
                 onChange={(v) => set('vacancyRate', v)} suffix="%" step={1} min={0} max={50}
                 help="% of year the property is unoccupied" />
             </div>
@@ -457,11 +461,11 @@ export function PropertyROI() {
                  style={{ fontFamily: 'var(--font-text)' }}>
                 Rental Scenarios
               </p>
-              <InputField label="Scenario 1 Monthly Rent" id="r1" value={inputs.rentScenario1}
+              <InputField label="Scenario 1 Monthly Rent" id="r1" value={inputs.rentScenario1} error={errors.rentScenario1}
                 onChange={(v) => set('rentScenario1', v)} prefix="R" step={500} />
-              <InputField label="Scenario 2 Monthly Rent" id="r2" value={inputs.rentScenario2}
+              <InputField label="Scenario 2 Monthly Rent" id="r2" value={inputs.rentScenario2} error={errors.rentScenario2}
                 onChange={(v) => set('rentScenario2', v)} prefix="R" step={500} />
-              <InputField label="Annual Property Appreciation" id="app" value={inputs.annualAppreciation}
+              <InputField label="Annual Property Appreciation" id="app" value={inputs.annualAppreciation} error={errors.annualAppreciation}
                 onChange={(v) => set('annualAppreciation', v)} suffix="% p.a." step={0.5}
                 help="SA average: 7% p.a." />
             </div>
@@ -511,48 +515,59 @@ export function PropertyROI() {
               </button>
             </div>
 
-            {/* Key metrics */}
-            <div className="four-col-stats">
-              <StatCard label="Monthly Bond" value={formatRand(result.monthlyBondRepayment)}
-                icon={Building2} color="blue" delay={0} />
-              <StatCard label="S1 Cash Flow" value={formatRand(result.cashFlowS1)}
-                color={result.cashFlowS1 >= 0 ? 'green' : 'red'} delay={0.05}
-                sub={result.cashFlowS1 >= 0 ? 'Positive' : 'Negative'} />
-              <StatCard label="S2 Cash Flow" value={formatRand(result.cashFlowS2)}
-                color={result.cashFlowS2 >= 0 ? 'green' : 'red'} delay={0.1}
-                sub={result.cashFlowS2 >= 0 ? 'Positive' : 'Negative'} />
-              <StatCard label="Total Monthly Costs" value={formatRand(result.totalMonthlyCostsS1)}
-                color="orange" delay={0.15} />
-            </div>
+            <ResultPanel
+              label={`Monthly cash flow at ${formatRand(inputs.rentScenario1, 0)} rent`}
+              value={formatRand(result.cashFlowS1, 0)}
+              tone={result.cashFlowS1 >= 0 ? 'gain' : 'loss'}
+              blocked={roiBlocked ? 'Fix the highlighted inputs to see the returns.' : undefined}
+              summary={
+                <>
+                  At {formatRand(inputs.rentScenario1, 0)} rent the property {result.cashFlowS1 >= 0 ? 'brings in' : 'costs you'}{' '}
+                  {formatRand(Math.abs(result.cashFlowS1), 0)} a month after the bond and all costs. At {formatRand(inputs.rentScenario2, 0)} it
+                  would {result.cashFlowS2 >= 0 ? 'bring in' : 'cost you'} {formatRand(Math.abs(result.cashFlowS2), 0)}. Over ten years, with the
+                  value growing {inputs.annualAppreciation}% a year, the return on the {formatRand(result.totalCashRequired, 0)} you put in
+                  is {formatPercent(result.roi10YearS1, 0)}.
+                </>
+              }
+              figures={[
+                { label: 'Bond repayment', value: formatRand(result.monthlyBondRepayment, 0) },
+                { label: 'Monthly costs', value: formatRand(result.totalMonthlyCostsS1, 0) },
+                { label: 'Gross yield', value: formatPercent(result.grossYieldS1, 1) },
+                { label: '10-year return', value: formatPercent(result.roi10YearS1, 0) },
+              ]}
+            />
 
-            {/* Yield & ROI grid */}
-            <div className="glass-card-static p-5">
-              <p className="text-sm font-semibold text-ink mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-                Returns & Yield
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  { label: 'Gross Yield S1', value: formatPercent(result.grossYieldS1), color: 'var(--gain)' },
-                  { label: 'Net Yield S1', value: formatPercent(result.netYieldS1), color: result.netYieldS1 >= 0 ? 'var(--gain)' : 'var(--loss)' },
-                  { label: 'Gross Yield S2', value: formatPercent(result.grossYieldS2), color: 'var(--note-teal)' },
-                  { label: 'Net Yield S2', value: formatPercent(result.netYieldS2), color: result.netYieldS2 >= 0 ? 'var(--note-teal)' : 'var(--loss)' },
-                  { label: '5-Year ROI S1', value: formatPercent(result.roi5YearS1, 1), color: 'var(--note-blue)' },
-                  { label: '10-Year ROI S1', value: formatPercent(result.roi10YearS1, 1), color: 'var(--note-blue)' },
-                  { label: '5-Year ROI S2', value: formatPercent(result.roi5YearS2, 1), color: 'var(--note-orange)' },
-                  { label: '10-Year ROI S2', value: formatPercent(result.roi10YearS2, 1), color: 'var(--note-orange)' },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1"
-                       style={{ fontFamily: 'var(--font-text)' }}>
-                      {s.label}
-                    </p>
-                    <p className="text-base font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
-                      {s.value}
-                    </p>
-                  </div>
-                ))}
+            <section className="glass-card-static p-5" aria-labelledby="roi-scenarios">
+              <h3 id="roi-scenarios" className="text-sm font-semibold text-ink mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                Both rent scenarios
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-ink-subtle">
+                      <th scope="col" className="py-2 text-left font-medium"><span className="sr-only">Measure</span></th>
+                      <th scope="col" className="py-2 text-right font-medium">At {formatRand(inputs.rentScenario1, 0)}</th>
+                      <th scope="col" className="py-2 text-right font-medium">At {formatRand(inputs.rentScenario2, 0)}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['Monthly cash flow', formatRand(result.cashFlowS1, 0), formatRand(result.cashFlowS2, 0)],
+                      ['Gross yield', formatPercent(result.grossYieldS1, 2), formatPercent(result.grossYieldS2, 2)],
+                      ['Net yield (after the bond)', formatPercent(result.netYieldS1, 2), formatPercent(result.netYieldS2, 2)],
+                      ['5-year return', formatPercent(result.roi5YearS1, 1), formatPercent(result.roi5YearS2, 1)],
+                      ['10-year return', formatPercent(result.roi10YearS1, 1), formatPercent(result.roi10YearS2, 1)],
+                    ].map(([label, s1, s2]) => (
+                      <tr key={label} className="border-t border-rule">
+                        <th scope="row" className="py-2 text-left font-normal text-ink-muted">{label}</th>
+                        <td className="py-2 text-right text-ink">{s1}</td>
+                        <td className="py-2 text-right text-ink">{s2}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </section>
 
             {/* Monthly Income vs Expenses BarChart */}
             <div className="glass-card-static p-5">
@@ -632,6 +647,16 @@ export function PropertyROI() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
+
+            <AssumptionsDrawer
+              items={[
+                <>Rent, vacancy ({inputs.vacancyRate}% of the year) and every monthly cost stay the same each year; nothing rises with inflation.</>,
+                <>The bond rate stays at {inputs.interestRate}% for the whole term.</>,
+                <>The property grows {inputs.annualAppreciation}% a year. This is your assumption, not a forecast.</>,
+                <>Return means the growth in value plus all the monthly cash flow, divided by the cash you put in (deposit, transfer duty and bond registration).</>,
+                <>Not included: income tax on rent, CGT and agent fees when you sell, and repairs beyond the monthly costs.</>,
+              ]}
+            />
           </div>
         </div>
       )}

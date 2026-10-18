@@ -13,12 +13,15 @@ import clsx from 'clsx';
 
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
 import { MortgageSentence } from '../components/mortgage/MortgageSentence';
 import { DEFAULT_MORTGAGE_INPUTS } from '../config/calculatorDefaults';
+import { mortgageInputErrors } from '../utils/validation';
 import { Statement } from '../components/statement/Statement';
 import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcTransferDuty } from '../utils/tax';
@@ -116,6 +119,9 @@ export function MortgageCalculator() {
   const liveRate = usePrimeRate();
 
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
+  const isBiweekly = inputs.frequency === 'biweekly';
+  const hasExtras = inputs.extraPayment > 0 || inputs.lumpSumAmount > 0;
+  const errors = mortgageInputErrors(inputs);
   useJourneyValues({ price: inputs.purchasePrice });
 
   const upfrontCosts = useMemo(() => {
@@ -312,7 +318,7 @@ export function MortgageCalculator() {
       </div>
 
       {view === 'simple' ? (
-        <MortgageSentence inputs={inputs} result={result} onChange={set} />
+        <MortgageSentence inputs={inputs} result={result} onChange={set} errors={errors} />
       ) : view === 'statement' ? (
         <div className="max-w-3xl mx-auto"><Statement data={statement} /></div>
       ) : (<>
@@ -329,6 +335,7 @@ export function MortgageCalculator() {
             id="purchasePrice"
             value={inputs.purchasePrice}
             onChange={(v) => set('purchasePrice', v)}
+            error={errors.purchasePrice}
             prefix="R"
             min={0}
             step={10000}
@@ -338,6 +345,7 @@ export function MortgageCalculator() {
             id="deposit"
             value={inputs.deposit}
             onChange={(v) => set('deposit', v)}
+            error={errors.deposit}
             prefix="R"
             min={0}
             step={5000}
@@ -349,6 +357,7 @@ export function MortgageCalculator() {
               id="interestRate"
               value={inputs.interestRate}
               onChange={(v) => set('interestRate', v)}
+              error={errors.interestRate}
               suffix="%"
               min={0}
               max={30}
@@ -369,6 +378,7 @@ export function MortgageCalculator() {
             id="termYears"
             value={inputs.termYears}
             onChange={(v) => set('termYears', v)}
+            error={errors.termYears}
             suffix="yrs"
             min={1}
             max={30}
@@ -465,6 +475,7 @@ export function MortgageCalculator() {
               id="extraPayment"
               value={inputs.extraPayment}
               onChange={(v) => set('extraPayment', v)}
+              error={errors.extraPayment}
               prefix="R"
               min={0}
               step={500}
@@ -514,135 +525,52 @@ export function MortgageCalculator() {
             </button>
           </div>
 
-          {/* Upfront cash required */}
-          <div className="glass-card-static p-4 border-l-[3px] border-l-note-blue grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Deposit</p>
-              <p className="text-base font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(inputs.deposit)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Transfer Duty</p>
-              <p className={`text-base font-bold ${inputs.transferDutyExempt ? 'text-gain-ink' : 'text-loss-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
-                {inputs.transferDutyExempt ? 'Exempt' : formatRand(upfrontCosts.transferDuty)}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Bond Registration</p>
-              <p className={`text-base font-bold ${inputs.bondRegistrationIncluded ? 'text-gain-ink' : 'text-loss-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
-                {inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(upfrontCosts.bondRegCost)}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Initiation Fee</p>
-              <p className={`text-base font-bold ${inputs.initiationFeeCapitalised || inputs.initiationFee === 0 ? 'text-gain-ink' : 'text-loss-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
-                {inputs.initiationFeeCapitalised ? 'Capitalised' : inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Utility Connection</p>
-              <p className={`text-base font-bold ${(inputs.utilityConnectionFee ?? 0) > 0 ? 'text-loss-ink' : 'text-gain-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
-                {(inputs.utilityConnectionFee ?? 0) > 0 ? formatRand(inputs.utilityConnectionFee ?? 0) : 'None'}
-              </p>
-            </div>
-            <div className="col-span-2 sm:col-span-4 border-t border-ink/7 pt-3 flex items-center justify-between">
-              <p className="text-xs text-ink-muted" style={{ fontFamily: 'var(--font-text)' }}>Total Cash Required on Transfer Day</p>
-              <p className="text-lg font-bold text-note-blue-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(upfrontCosts.totalCashRequired)}</p>
-            </div>
-          </div>
+          <ResultPanel
+            label={isBiweekly ? 'Bi-weekly repayment' : 'Monthly repayment'}
+            value={formatRand(result.standardPayment, 0)}
+            blocked={errors.purchasePrice || errors.deposit || errors.interestRate || errors.termYears
+              ? 'Fix the highlighted inputs to see the repayment.' : undefined}
+            summary={
+              <>
+                Borrowing {formatRand(result.loanAmount, 0)} at {inputs.interestRate}% over {inputs.termYears} years costs{' '}
+                {formatRand(result.standardPayment, 0)} a {isBiweekly ? 'fortnight' : 'month'}, with {formatRand(result.totalInterestStandard, 0)} in
+                interest over the life of the loan.
+                {hasExtras && result.interestSaved > 0 && (
+                  <> Your extra payments save {formatRand(result.interestSaved, 0)} and finish the bond {formatYears(result.monthsSaved)} sooner.</>
+                )}
+              </>
+            }
+            figures={[
+              { label: 'Loan amount', value: formatRand(result.loanAmount, 0) },
+              { label: 'Total interest', value: formatRand(hasExtras ? result.totalInterestWithExtras : result.totalInterestStandard, 0) },
+              { label: 'Cash on transfer day', value: formatRand(upfrontCosts.totalCashRequired, 0) },
+              { label: 'Paid off', value: formatDate(hasExtras ? result.payoffDateWithExtras : result.payoffDate) },
+            ]}
+          />
 
-          {/* Stat cards */}
-          <div className="four-col-stats">
-            <StatCard
-              label="Loan Amount"
-              value={formatRand(result.loanAmount)}
-              sub={`${depositPct}% deposit`}
-              icon={Building2}
-              color="blue"
-              delay={0}
+          <div className="grid gap-5 xl:grid-cols-2">
+            <BreakdownList
+              title="Cash on transfer day"
+              lines={[
+                { label: 'Deposit', value: inputs.deposit },
+                inputs.transferDutyExempt ? { label: 'Transfer duty', display: 'Exempt' } : { label: 'Transfer duty', value: upfrontCosts.transferDuty },
+                inputs.bondRegistrationIncluded ? { label: 'Bond registration', display: 'Added to the loan' } : { label: 'Bond registration', value: upfrontCosts.bondRegCost },
+                inputs.initiationFeeCapitalised ? { label: 'Initiation fee', display: 'Added to the loan' } : { label: 'Initiation fee', value: inputs.initiationFee },
+                { label: 'Utility connection', value: inputs.utilityConnectionFee ?? 0 },
+              ]}
+              total={{ label: 'Total cash needed', value: upfrontCosts.totalCashRequired }}
             />
-            <StatCard
-              label={inputs.frequency === 'biweekly' ? 'Bi-Weekly Payment' : 'Monthly Payment'}
-              value={formatRand(result.standardPayment)}
-              icon={Building2}
-              color="orange"
-              delay={0.05}
-            />
-            <StatCard
-              label="Total Interest (Standard)"
-              value={formatRand(result.totalInterestStandard)}
-              sub={formatDate(result.payoffDate)}
-              icon={Building2}
-              color="red"
-              delay={0.1}
-            />
-            <StatCard
-              label="Interest Saved"
-              value={formatRand(result.interestSaved)}
-              sub={formatYears(result.monthsSaved) + ' saved'}
-              icon={Building2}
-              color="green"
-              delay={0.15}
+            <BreakdownList
+              title="Over the life of the loan"
+              lines={[
+                { label: 'Loan amount', value: result.loanAmount },
+                { label: 'Interest', value: result.totalInterestStandard },
+                ...(inputs.monthlyServiceFee > 0 ? [{ label: 'Service fees', value: result.totalServiceFees }] : []),
+                ...(hasExtras ? [{ label: 'Interest saved by paying extra', value: result.interestSaved, kind: 'less' as const }] : []),
+              ]}
+              total={{ label: 'Total paid', value: result.totalCostIncludingFees - (hasExtras ? result.interestSaved : 0) }}
             />
           </div>
-
-          {/* Service fee summary */}
-          {inputs.monthlyServiceFee > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Effective Monthly</p>
-                <p className="text-base font-bold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
-                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>payment + service fee</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Total Service Fees</p>
-                <p className="text-base font-bold text-loss-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
-                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>over loan life</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>True Total Cost</p>
-                <p className="text-base font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalCostIncludingFees)}</p>
-                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>incl. interest + fees</p>
-              </div>
-            </div>
-          )}
-
-          {/* Extra payments summary */}
-          {(inputs.extraPayment > 0 || inputs.lumpSumAmount > 0) && (
-            <div className="glass-card-static p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                {
-                  label: 'Interest w/ Extras',
-                  value: formatRand(result.totalInterestWithExtras),
-                  color: 'var(--loss)',
-                },
-                {
-                  label: 'Interest Saved',
-                  value: formatRand(result.interestSaved),
-                  color: 'var(--gain)',
-                },
-                {
-                  label: 'Time Saved',
-                  value: formatYears(result.monthsSaved),
-                  color: 'var(--note-blue)',
-                },
-                {
-                  label: 'New Payoff Date',
-                  value: formatDate(result.payoffDateWithExtras),
-                  color: 'var(--note-orange)',
-                },
-              ].map((s) => (
-                <div key={s.label}>
-                  <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1"
-                     style={{ fontFamily: 'var(--font-text)' }}>
-                    {s.label}
-                  </p>
-                  <p className="text-sm font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
-                    {s.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* ── Charts ──────────────────────────────────── */}
           <div className="glass-card-static p-5">
@@ -757,6 +685,14 @@ export function MortgageCalculator() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <AssumptionsDrawer
+            items={[
+              <>The interest rate stays at {inputs.interestRate}% for the whole term. In practice it moves with the prime rate.</>,
+              <>Repayments are {isBiweekly ? 'every two weeks' : 'monthly'}. The bank's service fee{inputs.monthlyServiceFee > 0 ? <> of {formatRand(inputs.monthlyServiceFee, 0)}</> : null} is paid each month and does not reduce the loan.</>,
+              <>Transfer duty uses the SARS table in force since 1 April 2025. Bond registration is an estimate of the Deeds Office and attorney fees, not a quote.</>,
+              <>Not included: life cover, homeowner's insurance, rates and levies, and future changes to fees.</>,
+            ]}
+          />
         </div>
       </div>
 
