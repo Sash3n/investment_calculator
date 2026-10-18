@@ -199,7 +199,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Accent text ───────────────────────────────────────────────── */
 .text-accent {
-  color: var(--note-blue);
+  color: var(--note-blue-ink);
 }
 
 /* ── Button styles ─────────────────────────────────────────────── */
@@ -332,13 +332,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .winner-badge.investing {
   background: color-mix(in srgb, var(--gain) 12%, transparent);
-  color: var(--gain);
+  color: var(--gain-ink);
   border: 1px solid color-mix(in srgb, var(--gain) 35%, transparent);
 }
 
 .winner-badge.bond {
   background: color-mix(in srgb, var(--note-blue) 12%, transparent);
-  color: var(--note-blue);
+  color: var(--note-blue-ink);
   border: 1px solid color-mix(in srgb, var(--note-blue) 35%, transparent);
 }
 

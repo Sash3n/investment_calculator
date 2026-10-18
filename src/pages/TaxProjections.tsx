@@ -547,7 +547,7 @@ export function TaxProjections() {
         <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           What your CGT bill would be if you sold at the end of each year. Based on SARS 2026 rates — 40% inclusion, R50k annual exclusion.
           <br />
-          <span className="opacity-75">Total Return = Net Sale Proceeds + Cumulative Net Rental − Purchase Price</span>
+          <span>Total Return = Net Sale Proceeds + Cumulative Net Rental − Purchase Price</span>
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[760px]">

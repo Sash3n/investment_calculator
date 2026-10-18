@@ -717,7 +717,7 @@ export function InvestmentStrategy() {
         >
           <Download size={16} />
           Export Full Analysis to Excel
-          <span className="text-[10px] opacity-70">SA_Investment_Strategy_R{Math.round(result.totalMonthlyGross / 1000)}K.xlsx</span>
+          <span className="text-[10px]">SA_Investment_Strategy_R{Math.round(result.totalMonthlyGross / 1000)}K.xlsx</span>
         </button>
       </div>
 

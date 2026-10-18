@@ -16,17 +16,6 @@ export function NotFound() {
       transition={{ duration: 0.5 }}
       className="min-h-[80vh] flex flex-col items-center justify-center px-6 text-center"
     >
-      {/* Glow orb */}
-      <div
-        className="absolute w-[400px] h-[400px] rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, color-mix(in srgb, var(--note-blue) 12%, transparent) 0%, transparent 70%)',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-
       {/* Status code */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
