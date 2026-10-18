@@ -4,13 +4,15 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts';
-import { Globe, Info, TrendingUp, DollarSign } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort, formatNumber } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { positiveError, rangeError } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -81,6 +83,17 @@ export function OffshoreAllowance() {
   }, [zarAmount, spotRate, offshoreReturn, localReturn, zarDepreciation, years]);
 
   const advantage = result.finalOffshore - result.finalLocal;
+  const futureRate = spotRate * Math.pow(1 + zarDepreciation / 100, years);
+
+  const errors = {
+    zarAmount: positiveError(zarAmount, 'Enter the amount to invest.'),
+    spotRate: positiveError(spotRate, 'Enter the exchange rate.'),
+    offshoreReturn: rangeError(offshoreReturn, -20, 40, 'a return', '%'),
+    localReturn: rangeError(localReturn, -20, 40, 'a return', '%'),
+    zarDepreciation: rangeError(zarDepreciation, -20, 20, 'a yearly change', '%'),
+    years: rangeError(years, 1, 40, 'a number of years', ''),
+  };
+  const blocked = errors.zarAmount ?? errors.spotRate ?? errors.offshoreReturn ?? errors.localReturn ?? errors.zarDepreciation ?? errors.years;
 
   const shareState: ShareState = {
     zarAmount, spotRate, offshoreReturn, localReturn, zarDepreciation, years, currency,
@@ -108,23 +121,13 @@ export function OffshoreAllowance() {
         <ShareButton state={shareState} />
       </div>
 
-      <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-        style={{ background: alpha(C.teal, 7), border: `1px solid ${alpha(C.teal, 20)}` }}>
-        <Info size={16} style={{ color: textTone(C.teal) }} />
-        <div style={{ color: 'var(--ink-muted)' }}>
-          <span style={{ color: 'var(--ink)', fontWeight: 600 }}>SA allowances: </span>
-          R1,000,000/year Single Discretionary Allowance (no SARB approval) +
-          R10,000,000/year Foreign Investment Allowance (SARB approval + Tax Compliance Status pin required).
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
           style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Scenario inputs
           </h2>
-          <InputField id="oa-zar"   label="ZAR amount to invest"          value={zarAmount}       onChange={(v) => setZarAmount(Number(v))}       prefix="R"      min={1} />
+          <InputField id="oa-zar"   label="ZAR amount to invest"          value={zarAmount} error={errors.zarAmount}       onChange={(v) => setZarAmount(Number(v))}       prefix="R"      min={1} />
 
           {/* Currency selector */}
           <div>
@@ -148,37 +151,32 @@ export function OffshoreAllowance() {
             </div>
           </div>
 
-          <InputField id="oa-spot"  label={`ZAR/${currency} spot rate`}       value={spotRate}        onChange={(v) => setSpotRate(Number(v))}        suffix={`R/${currency}`} min={1} />
-          <InputField id="oa-off"   label={`Offshore return (${currency} p.a.)`} value={offshoreReturn} onChange={(v) => setOffshoreReturn(Number(v))}  suffix="%"      min={0} max={40} />
-          <InputField id="oa-local" label="Local JSE return (ZAR p.a.)"   value={localReturn}     onChange={(v) => setLocalReturn(Number(v))}     suffix="%"      min={0} max={40} />
-          <InputField id="oa-dep"   label="ZAR depreciation p.a."         value={zarDepreciation} onChange={(v) => setZarDepreciation(Number(v))} suffix="%"      min={0} max={20} />
-          <InputField id="oa-yrs"   label="Investment horizon"            value={years}           onChange={(v) => setYears(Number(v))}           suffix="yrs"    min={1} max={40} />
+          <InputField id="oa-spot"  label={`ZAR/${currency} spot rate`}       value={spotRate} error={errors.spotRate}        onChange={(v) => setSpotRate(Number(v))}        suffix={`R/${currency}`} min={1} />
+          <InputField id="oa-off"   label={`Offshore return (${currency} p.a.)`} value={offshoreReturn} error={errors.offshoreReturn} onChange={(v) => setOffshoreReturn(Number(v))}  suffix="%"      min={0} max={40} />
+          <InputField id="oa-local" label="Local JSE return (ZAR p.a.)"   value={localReturn} error={errors.localReturn}     onChange={(v) => setLocalReturn(Number(v))}     suffix="%"      min={0} max={40} />
+          <InputField id="oa-dep"   label="ZAR depreciation p.a."         value={zarDepreciation} error={errors.zarDepreciation} onChange={(v) => setZarDepreciation(Number(v))} suffix="%"      min={0} max={20} />
+          <InputField id="oa-yrs"   label="Investment horizon"            value={years} error={errors.years}           onChange={(v) => setYears(Number(v))}           suffix="yrs"    min={1} max={40} />
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Offshore final value (ZAR)" value={formatRandShort(result.finalOffshore)} color="blue"  icon={Globe} />
-            <StatCard label="Local final value (ZAR)"    value={formatRandShort(result.finalLocal)}    color="green" icon={TrendingUp} />
-            <StatCard
-              label={advantage >= 0 ? 'Offshore advantage' : 'Local advantage'}
-              value={formatRandShort(Math.abs(advantage))}
-              color={advantage >= 0 ? 'green' : 'orange'}
-              icon={DollarSign}
-            />
-            <StatCard label={`${currency} value in ${years}yr`} value={`${currencyInfo.symbol}${formatNumber(Math.round(result.usdFinal))}`} color="blue" icon={DollarSign} />
-          </div>
-
-          <div className="p-4 rounded-xl text-sm"
-            style={{
-              background: advantage >= 0 ? alpha(C.green, 7) : 'color-mix(in srgb, var(--note-orange) 7%, transparent)',
-              border:     `1px solid ${alpha(advantage >= 0 ? C.green : C.orange, 20)}`,
-            }}>
-            <span style={{ color: 'var(--ink-muted)' }}>
+          <ResultPanel
+            label={`${advantage >= 0 ? 'Offshore' : 'Local'} comes out ahead by`}
+            value={formatRand(Math.abs(advantage), 0)}
+            blocked={blocked}
+            summary={<>
+              After {years} years, {formatRand(zarAmount, 0)} invested in {currency} grows to about {formatRand(result.finalOffshore, 0)} in rand,
+              against {formatRand(result.finalLocal, 0)} on the JSE.{' '}
               {advantage >= 0
-                ? `Offshore investing outperforms by ${formatRandShort(advantage)} over ${years} years, driven by ZAR depreciation boosting USD returns when converted back.`
-                : `Local investing outperforms by ${formatRandShort(Math.abs(advantage))} — higher local returns more than offset ZAR depreciation at these rates.`}
-            </span>
-          </div>
+                ? 'A weaker rand adds to the offshore return when the money is converted back.'
+                : 'The higher local return more than makes up for the weaker rand at these rates.'}
+            </>}
+            figures={[
+              { label: 'Offshore, in rand', value: formatRand(result.finalOffshore, 0) },
+              { label: 'JSE, in rand', value: formatRand(result.finalLocal, 0) },
+              { label: `Offshore, in ${currency}`, value: `${currencyInfo.symbol}${formatNumber(Math.round(result.usdFinal))}` },
+              { label: `Rand per ${currency} in year ${years}`, value: formatRand(futureRate, 2) },
+            ]}
+          />
 
           <div className="p-5 rounded-2xl"
             style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
@@ -202,6 +200,15 @@ export function OffshoreAllowance() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>You can take up to R1 million a year offshore under the single discretionary allowance without SARB approval, and up to R10 million more under the foreign investment allowance with a tax compliance status PIN.</>,
+              <>Both investments grow at a steady yearly rate: {offshoreReturn}% in {currency} offshore and {localReturn}% on the JSE. Neither is guaranteed.</>,
+              <>The rand weakens by {zarDepreciation}% a year against the {currency}, from {formatRand(spotRate, 2)} today to {formatRand(futureRate, 2)} in year {years}.</>,
+              <>Not included: tax, fees and the cost of converting currency.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>
