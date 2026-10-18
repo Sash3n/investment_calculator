@@ -20,6 +20,8 @@ import {
   calcInvestmentStrategy,
   exportStrategyToExcel,
   ageToGroup,
+  normaliseTaxYear,
+  DEFAULT_STRATEGY_TAX_YEAR,
   type InvestmentStrategyInputs,
   type StrategyMetrics,
   type TaxYear,
@@ -29,8 +31,8 @@ import {
 const C = { blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)', red: 'var(--loss)', teal: 'var(--note-teal)', brown: 'var(--note-brown)' };
 
 const TAX_YEAR_OPTIONS = [
+  { value: '2026/27', label: '2026/27 (1 Mar 2026 – 28 Feb 2027)' },
   { value: '2025/26', label: '2025/26 (1 Mar 2025 – 28 Feb 2026)' },
-  { value: '2024/25', label: '2024/25 (1 Mar 2024 – 28 Feb 2025)' },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -219,7 +221,7 @@ export function InvestmentStrategy() {
     monthlyPrimaryGross: 35_000,
     monthlySecondaryGross: 0,
     age: 35,
-    taxYear: '2025/26',
+    taxYear: DEFAULT_STRATEGY_TAX_YEAR,
     monthlyRA: 2_000,
     monthlyTFSA: 3_833,
     monthlySeparate: 0,
@@ -314,7 +316,7 @@ export function InvestmentStrategy() {
                 value={inputs.monthlyRA}
                 onChange={upd('monthlyRA')}
                 prefix="R"
-                help={`27.5% limit: ${formatRand(result.raMonthlyLimit, 0)}/month · Annual cap: R350,000`}
+                help={`27.5% limit: ${formatRand(result.raMonthlyLimit, 0)}/month · Annual cap: ${formatRand(result.raAnnualCap, 0)}`}
               />
               {/* Slider */}
               <div>
@@ -333,7 +335,7 @@ export function InvestmentStrategy() {
                   <div className="flex justify-between text-[10px] mb-1" style={{ color: 'var(--ink-subtle)' }}>
                     <span>
                       {result.raUtilizationPct.toFixed(0)}% of 27.5% limit used
-                      {result.raCapSource === 'r350k' && ' · Annual R350K cap hit'}
+                      {result.raCapSource === 'annualCap' && ` · Annual ${formatRand(result.raAnnualCap, 0)} cap hit`}
                     </span>
                     <span style={{ color: textTone(result.raUtilizationPct > 100 ? C.red : result.raUtilizationPct > 85 ? C.orange : C.green) }}>
                       {formatRand(inputs.monthlyRA)}/mo
@@ -422,7 +424,7 @@ export function InvestmentStrategy() {
             title={`Strategy — ${formatRand(result.totalMonthlyGross, 0)}/month gross`}
             summary={`Tax saving: ${formatRand(result.monthlyTaxSaving)}/month | Recommended: ${result.recommendedTag}`}
             inputs={inputs}
-            onLoad={(saved) => setInputs(saved)}
+            onLoad={(saved) => setInputs({ ...saved, taxYear: normaliseTaxYear(saved.taxYear) })}
             initialEditingId={locationState?.entryId}
           />
         </div>
