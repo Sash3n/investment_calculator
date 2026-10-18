@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Receipt, AlertTriangle, CheckCircle2, Info, TrendingDown } from 'lucide-react';
+import { Receipt } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand } from '../utils/format';
@@ -12,6 +11,10 @@ import { calcIncomeTax } from '../utils/tax';
 import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, rangeError } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -95,13 +98,24 @@ export function ProvisionalTax() {
   }, [employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers, taxYear]);
 
   const displayPayment = period === 'first' ? result.firstPayment : result.secondPayment;
-  const paymentLabel   = period === 'first' ? '1st payment (Aug)' : '2nd payment (Feb)';
   const paymentDue     = period === 'first' ? '31 August' : '28 February';
 
   const shareState: ShareState = {
     employmentIncome, freelanceIncome, otherIncome, deductions, raContribution, age, medAidMembers, period, taxYear,
   };
   const taxYearLabel = TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label ?? taxYear;
+
+  const errors = {
+    employmentIncome: nonNegativeError(employmentIncome),
+    freelanceIncome: nonNegativeError(freelanceIncome),
+    otherIncome: nonNegativeError(otherIncome),
+    deductions: nonNegativeError(deductions),
+    raContribution: nonNegativeError(raContribution),
+    age: rangeError(age, 18, 100, 'an age', ''),
+    medAidMembers: rangeError(medAidMembers, 0, 10, 'a number of members', ''),
+  };
+  const blocked = errors.employmentIncome ?? errors.freelanceIncome ?? errors.otherIncome ?? errors.deductions ?? errors.age
+    ?? (result.totalIncome <= 0 ? 'Enter your income for the year.' : undefined);
 
   return (
     <motion.div
@@ -132,16 +146,16 @@ export function ProvisionalTax() {
             Income details
           </h2>
           <TaxYearSelect id="pt-taxyear" value={taxYear} onChange={setTaxYear} />
-          <InputField id="pt-employ"  label="Employment income (annual)"          value={employmentIncome} onChange={(v) => setEmploymentIncome(Number(v))} prefix="R" min={0} />
-          <InputField id="pt-free"    label="Freelance / side income (annual)"    value={freelanceIncome}  onChange={(v) => setFreelanceIncome(Number(v))}  prefix="R" min={0} />
-          <InputField id="pt-other"   label="Other income (interest, rental)"     value={otherIncome}      onChange={(v) => setOtherIncome(Number(v))}      prefix="R" min={0} />
-          <InputField id="pt-deduct"  label="Other deductions"                    value={deductions}       onChange={(v) => setDeductions(Number(v))}       prefix="R" min={0} />
+          <InputField id="pt-employ"  label="Employment income (annual)"          value={employmentIncome} error={errors.employmentIncome} onChange={(v) => setEmploymentIncome(Number(v))} prefix="R" min={0} />
+          <InputField id="pt-free"    label="Freelance / side income (annual)"    value={freelanceIncome} error={errors.freelanceIncome}  onChange={(v) => setFreelanceIncome(Number(v))}  prefix="R" min={0} />
+          <InputField id="pt-other"   label="Other income (interest, rental)"     value={otherIncome} error={errors.otherIncome}      onChange={(v) => setOtherIncome(Number(v))}      prefix="R" min={0} />
+          <InputField id="pt-deduct"  label="Other deductions"                    value={deductions} error={errors.deductions}       onChange={(v) => setDeductions(Number(v))}       prefix="R" min={0} />
 
           <hr style={{ borderColor: 'var(--rule)' }} />
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             RA contribution
           </h2>
-          <InputField id="pt-ra"      label="Annual RA contribution"              value={raContribution}   onChange={(v) => setRaContribution(Number(v))}   prefix="R" min={0} />
+          <InputField id="pt-ra"      label="Annual RA contribution"              value={raContribution} error={errors.raContribution}   onChange={(v) => setRaContribution(Number(v))}   prefix="R" min={0} />
           <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>
             Max deductible: {formatRand(raDeductCap)} (27.5% of income, capped {formatRand(retirement.cap)})
           </div>
@@ -158,8 +172,8 @@ export function ProvisionalTax() {
               style={{ accentColor: 'var(--note-blue)' }}
             />
           )}
-          <InputField id="pt-age"     label="Your age"                            value={age}              onChange={(v) => setAge(Number(v))}              suffix="yrs" min={18} max={100} />
-          <InputField id="pt-med"     label="Medical aid members (incl. yourself)" value={medAidMembers}   onChange={(v) => setMedAidMembers(Number(v))}    min={0} max={10} />
+          <InputField id="pt-age"     label="Your age"                            value={age} error={errors.age}              onChange={(v) => setAge(Number(v))}              suffix="yrs" min={18} max={100} />
+          <InputField id="pt-med"     label="Medical aid members (incl. yourself)" value={medAidMembers} error={errors.medAidMembers}   onChange={(v) => setMedAidMembers(Number(v))}    min={0} max={10} />
           <SelectField
             id="pt-period"
             label="Which provisional payment?"
@@ -173,59 +187,46 @@ export function ProvisionalTax() {
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label={paymentLabel}                   value={formatRand(displayPayment)}          color="orange"   icon={Receipt} />
-            <StatCard label="Monthly set aside"              value={formatRand(result.monthlySetAside)}  color="blue"  icon={CheckCircle2} />
-            <StatCard label="Tax on freelance income"        value={formatRand(result.taxOnFreelance)}   color="red"     icon={Receipt} />
-            <StatCard label="Effective tax rate"             value={`${result.effectiveRate.toFixed(1)}%`} color="orange" icon={Info} />
-            {raContribution > 0 && (
-              <div className="col-span-2">
-                <StatCard label="RA tax saving this year"  value={formatRand(result.raTaxSaving)}      color="green" icon={TrendingDown} />
-              </div>
-            )}
-          </div>
+          <ResultPanel
+            label={`${period === 'first' ? 'First' : 'Second'} payment, due ${paymentDue}`}
+            value={formatRand(displayPayment, 0)}
+            blocked={blocked}
+            summary={<>
+              Tax on your income outside a salary comes to about {formatRand(result.taxOnFreelance, 0)} for the year, paid in two halves.
+              Setting aside {formatRand(result.monthlySetAside, 0)} a month covers it. Pay at least 90% of the final amount
+              ({formatRand(result.penaltyThreshold, 0)}) to avoid a 20% penalty on the shortfall.
+              {raContribution > 0 && result.raTaxSaving > 0 && ` Your retirement annuity saves ${formatRand(result.raTaxSaving, 0)} in tax this year.`}
+            </>}
+            figures={[
+              { label: 'Set aside each month', value: formatRand(result.monthlySetAside, 0) },
+              { label: 'Tax outside your salary', value: formatRand(result.taxOnFreelance, 0) },
+              { label: 'Effective tax rate', value: `${result.effectiveRate.toFixed(1)}%` },
+              { label: 'Saved by your annuity', value: raContribution > 0 ? formatRand(result.raTaxSaving, 0) : 'No annuity' },
+            ]}
+          />
 
-          <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-            style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
-            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
-            <div style={{ color: 'var(--ink-muted)' }}>
-              <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{paymentLabel} due {paymentDue}.</span>
-              {' '}Pay at least 90% of your final liability ({formatRand(result.penaltyThreshold)}) to avoid a 20% penalty on the shortfall.
-            </div>
-          </div>
+          <BreakdownList
+            title="How the tax is worked out"
+            lines={[
+              { label: 'Total income', value: result.totalIncome },
+              { label: 'Other deductions', value: deductions, kind: 'less' },
+              { label: 'Retirement annuity', value: result.raDeducted, kind: 'less', note: `Up to ${formatRand(result.raAllowed, 0)} can be deducted` },
+              { label: 'Taxable income', display: formatRand(result.taxableIncome, 0) },
+              { label: 'Tax for the year', display: formatRand(result.annualTax, 0), note: 'After rebates and medical aid credits' },
+              { label: 'Tax already paid through PAYE', value: result.payeOnEmploy, kind: 'less' },
+            ]}
+            total={{ label: 'Tax outside your salary', value: result.taxOnFreelance }}
+          />
 
-          <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)' }}>Tax breakdown</h2>
-            <div className="space-y-0 text-sm">
-              {[
-                ['Total income',                   formatRand(result.totalIncome)],
-                ['Less deductions',                `- ${formatRand(deductions)}`],
-                ['Less RA contribution',           `- ${formatRand(result.raDeducted)}`],
-                ['Taxable income',                 formatRand(result.taxableIncome)],
-                ['Annual tax (SARS table)',         formatRand(result.annualTax)],
-                ['PAYE already deducted',          `- ${formatRand(result.payeOnEmploy)}`],
-                ['Tax on non-employment income',   formatRand(result.taxOnFreelance)],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between items-center py-2"
-                  style={{ borderBottom: '1px solid var(--rule)' }}>
-                  <span style={{ color: 'var(--ink-muted)' }}>{label}</span>
-                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              Based on {taxYearLabel} SARS tax tables. Medical aid credit:
-              R{TAX_YEARS[taxYear].medCredits.main}/month (main member and first dependant),
-              R{TAX_YEARS[taxYear].medCredits.extraDep}/month per additional dependant.
-              Consult a tax practitioner for complex situations.
-            </span>
-          </div>
+          <AssumptionsDrawer
+            items={[
+              <>Tax uses the SARS tables for {taxYearLabel}, with the rebate for your age and medical aid credits of {formatRand(TAX_YEARS[taxYear].medCredits.main, 0)} a month for you and your first dependant and {formatRand(TAX_YEARS[taxYear].medCredits.extraDep, 0)} for each extra dependant.</>,
+              <>PAYE on your salary is worked out separately, and only the extra tax is due as provisional tax.</>,
+              <>The provisional tax is split into two equal payments, due 31 August and 28 February.</>,
+              <>Retirement annuity contributions are deducted up to 27.5% of income, capped at {formatRand(retirement.cap, 0)} a year.</>,
+              <>Not included: capital gains, interest exemptions, business expenses beyond the deductions you enter, and the third top-up payment.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>
