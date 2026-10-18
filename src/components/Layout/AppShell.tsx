@@ -10,6 +10,8 @@ import clsx from 'clsx';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, PAGE_TITLES, type NavItem } from '../../config/nav';
 import { CommandPalette } from '../CommandPalette';
 import { DisclaimerFooter, DisclaimerLink } from '../Disclaimer';
+import { JourneyProvider } from '../../journeys/JourneyProvider';
+import { JourneyBar } from '../../journeys/JourneyBar';
 import { useNavPrefs } from '../../hooks/useNavPrefs';
 import { alpha, textTone } from '../../utils/color';
 
@@ -352,7 +354,10 @@ export function AppShell() {
 
         {/* Page content */}
         <main className="flex-1 overflow-auto pb-20 lg:pb-6">
-          <Outlet />
+          <JourneyProvider>
+            <JourneyBar />
+            <Outlet />
+          </JourneyProvider>
           <DisclaimerFooter />
         </main>
       </div>

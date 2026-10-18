@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import { NAV_CATEGORIES, NAV_BY_PATH } from '../config/nav';
 import { PRESETS, openPresetTarget } from '../config/presets';
 import { CPI_REFERENCE, SARB_SOURCE } from '../config/referenceRates';
+import { JOURNEYS, journeyHref } from '../config/journeys';
 import { useNavPrefs } from '../hooks/useNavPrefs';
 import { alpha, textTone } from '../utils/color';
+import { openCommandPalette } from '../utils/commandPalette';
+import { HeroBondCalculator } from '../components/home/HeroBondCalculator';
 import {
   Building2,
   MapPin,
@@ -28,19 +30,6 @@ import {
   BedDouble,
   DoorOpen, Receipt,
 } from 'lucide-react';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45 } },
-};
 
 const featureCards = [
   {
@@ -207,6 +196,8 @@ function formatAsOf(iso: string | null): string | null {
 const CAT_BY_PATH: Record<string, { id: string; label: string }> = {};
 NAV_CATEGORIES.forEach((c) => c.items.forEach((i) => { CAT_BY_PATH[i.path] = { id: c.id, label: c.label }; }));
 
+const eyebrow = 'text-xs font-semibold uppercase tracking-widest text-ink-subtle';
+
 export function Home() {
   const navigate = useNavigate();
   const liveRate = usePrimeRate();
@@ -246,128 +237,81 @@ export function Home() {
   );
 
   const sarbAsOf = liveRate.loading ? null : formatAsOf(liveRate.asOf);
-  const referenceRates = [
-    {
-      label: 'Prime lending rate',
-      value: liveRate.loading ? '…' : `${liveRate.primeRate}%`,
-      source: 'SARB',
-      sourceUrl: SARB_SOURCE.url,
-      asAt: sarbAsOf,
-    },
-    {
-      label: 'Repo rate',
-      value: liveRate.loading ? '…' : `${liveRate.repoRate}%`,
-      source: 'SARB',
-      sourceUrl: SARB_SOURCE.url,
-      asAt: sarbAsOf,
-    },
-    {
-      label: 'CPI inflation (year on year)',
-      value: `${CPI_REFERENCE.value}%`,
-      source: CPI_REFERENCE.source.publisher,
-      sourceUrl: CPI_REFERENCE.source.url,
-      asAt: CPI_REFERENCE.period,
-    },
-  ];
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="max-w-5xl mx-auto px-5 pt-10 pb-16"
-    >
-      {/* ── Hero section ───────────────────────────────── */}
-      <motion.div variants={cardVariants} className="text-center mb-14">
-        <h1
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold text-ink leading-[1.1] mb-5"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
-          Money calculators for South Africans
-        </h1>
-
-        <p
-          className="text-base sm:text-lg text-ink-muted max-w-2xl mx-auto leading-relaxed mb-8"
-          style={{ fontFamily: 'var(--font-text)' }}
-        >
-          Work out bond repayments, take-home pay, rental returns and tax with South African rates,
-          SARS tables and rand amounts.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/mortgage">
-            <button className="btn-primary flex items-center gap-2 text-sm">
-              <Building2 size={15} />
-              Mortgage Calculator
-              <ArrowRight size={14} />
+    <div className="max-w-6xl mx-auto px-5 pt-10 pb-16">
+      {/* ── Hero: plain headline and a live bond calculator ── */}
+      <section className="grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center mb-10">
+        <div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-ink leading-[1.1]" style={{ fontFamily: 'var(--font-display)' }}>
+            Money calculators for South Africans
+          </h1>
+          <p className="text-base sm:text-lg text-ink-muted leading-relaxed mt-5 max-w-xl" style={{ fontFamily: 'var(--font-text)' }}>
+            Work out bond repayments, take-home pay, rental returns and tax with South African rates,
+            SARS tables and rand amounts.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 mt-7">
+            <a href="#journeys" className="btn-primary text-sm">Start with a question</a>
+            <button type="button" onClick={openCommandPalette} className="btn-ghost text-sm flex items-center gap-2">
+              Search all calculators
+              <kbd className="text-[10px] px-1.5 py-0.5 rounded border border-rule bg-paper-sunk text-ink-subtle">Ctrl K</kbd>
             </button>
-          </Link>
-          <Link to="/extra-vs-investing">
-            <button className="btn-ghost flex items-center gap-2 text-sm">
-              <TrendingUp size={15} />
-              Pay off the bond or invest?
-            </button>
-          </Link>
+          </div>
         </div>
-      </motion.div>
+        <HeroBondCalculator />
+      </section>
 
-      {/* ── Reference rates ─────────────────────────────── */}
-      <motion.section variants={cardVariants} className="mb-14" aria-labelledby="reference-rates">
-        <h2
-          id="reference-rates"
-          className="text-xs font-semibold uppercase tracking-widest text-ink-subtle mb-4 text-center"
-          style={{ fontFamily: 'var(--font-text)' }}
-        >
-          Reference rates
+      {/* ── Reference rates, with sources ── */}
+      <p className="text-sm text-ink-muted mb-14" style={{ fontFamily: 'var(--font-text)' }}>
+        <span className="font-semibold text-ink">Reference rates:</span>{' '}
+        prime {liveRate.loading ? '…' : `${liveRate.primeRate}%`} and repo {liveRate.loading ? '…' : `${liveRate.repoRate}%`}{' '}
+        (<a href={SARB_SOURCE.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">SARB</a>
+        {sarbAsOf && <>, as at {sarbAsOf}</>}
+        {liveRate.fallback && !liveRate.loading && <>, last confirmed rate</>}).{' '}
+        CPI {CPI_REFERENCE.value}% year on year (<a href={CPI_REFERENCE.source.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">{CPI_REFERENCE.source.publisher}</a>, {CPI_REFERENCE.period}).
+      </p>
+
+      {/* ── Journeys ── */}
+      <section id="journeys" className="mb-14 scroll-mt-24" aria-labelledby="journeys-title">
+        <h2 id="journeys-title" className="text-2xl font-semibold text-ink mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+          Start with a question
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {referenceRates.map((rate) => (
-            <div key={rate.label} className="glass-card-static p-4 text-center">
-              <p className="text-2xl font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
-                {rate.value}
-              </p>
-              <p className="text-sm text-ink-muted mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>
-                {rate.label}
-              </p>
-              <p className="text-xs text-ink-subtle mt-2" style={{ fontFamily: 'var(--font-text)' }}>
-                <a href={rate.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">
-                  {rate.source}
-                </a>
-                {rate.asAt && <>, as at {rate.asAt}</>}
-              </p>
-            </div>
+        <p className="text-sm text-ink-muted mb-6">Each one takes you through the calculators in order, carrying your figures from one to the next where it can.</p>
+        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {JOURNEYS.map((j) => (
+            <li key={j.id} className="glass-card p-5 flex flex-col">
+              <div className="flex items-center gap-2.5">
+                <span aria-hidden className="w-1 h-5 rounded-full" style={{ background: j.color }} />
+                <h3 className="text-base font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{j.question}</h3>
+              </div>
+              <ol className="mt-3 space-y-1.5 text-sm text-ink-muted flex-1">
+                {j.steps.map((s, i) => (
+                  <li key={s.path} className="flex gap-2">
+                    <span className="text-ink-subtle tabular-nums">{i + 1}.</span>
+                    <span><span className="text-ink">{s.title}</span>: {s.why.charAt(0).toLowerCase() + s.why.slice(1)}</span>
+                  </li>
+                ))}
+              </ol>
+              <Link to={journeyHref(j.id, j.steps[0].path)} className="mt-4 text-sm font-semibold text-note-blue-ink flex items-center gap-1.5 group">
+                Start with {j.steps[0].title}
+                <ArrowRight size={13} aria-hidden className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </li>
           ))}
-        </div>
-        {liveRate.fallback && !liveRate.loading && (
-          <p className="text-xs text-ink-subtle text-center mt-3">
-            Live rates could not be loaded, so these are the last confirmed SARB rates.
-          </p>
-        )}
-      </motion.section>
+        </ul>
+      </section>
 
-      {/* ── Recently used ───────────────────────────────── */}
+      {/* ── Recently used ── */}
       {recentItems.length > 0 && (
-        <motion.div variants={cardVariants} className="mb-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-ink-subtle mb-3" style={{ fontFamily: 'var(--font-text)' }}>
-            Recently used
-          </p>
+        <div className="mb-10">
+          <p className={`${eyebrow} mb-3`}>Recently used</p>
           <div className="flex flex-wrap gap-2">
             {recentItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.path} to={item.path}>
-                  <div
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:border-rule-strong"
-                    style={{
-                      background: 'var(--paper-raised)',
-                      border: '1px solid var(--rule)',
-                      color: 'var(--ink)',
-                    }}
-                  >
-                    <span
-                      className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: alpha(item.color, 13) }}
-                    >
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-paper-raised border border-rule text-ink hover:border-rule-strong">
+                    <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: alpha(item.color, 13) }}>
                       <Icon size={13} style={{ color: textTone(item.color) }} />
                     </span>
                     {item.shortLabel}
@@ -376,34 +320,25 @@ export function Home() {
               );
             })}
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {/* ── Scenario presets ────────────────────────────── */}
+      {/* ── Scenario presets ── */}
       {PRESETS.length > 0 && (
-        <motion.div variants={cardVariants} className="mb-12">
-          <p className="text-xs font-semibold uppercase tracking-widest text-ink-subtle mb-3" style={{ fontFamily: 'var(--font-text)' }}>
-            Scenario presets
-          </p>
+        <div className="mb-12">
+          <p className={`${eyebrow} mb-3`}>Scenario presets</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {PRESETS.map((preset) => {
               const Icon = preset.icon;
               return (
                 <div key={preset.id} className="glass-card-static p-5">
                   <div className="flex items-start gap-3 mb-2">
-                    <span
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: alpha(preset.color, 13) }}
-                    >
+                    <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: alpha(preset.color, 13) }}>
                       <Icon size={16} style={{ color: textTone(preset.color) }} />
                     </span>
                     <div>
-                      <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-                        {preset.title}
-                      </p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
-                        {preset.description}
-                      </p>
+                      <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{preset.title}</p>
+                      <p className="text-xs mt-0.5 text-ink-muted">{preset.description}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
@@ -411,12 +346,7 @@ export function Home() {
                       <button
                         key={target.path}
                         onClick={() => openPresetTarget(navigate, target)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:border-rule-strong"
-                        style={{
-                          background: 'var(--paper-raised)',
-                          border: '1px solid var(--rule)',
-                          color: 'var(--ink)',
-                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-paper-raised border border-rule text-ink hover:border-rule-strong"
                       >
                         {target.label}
                       </button>
@@ -426,30 +356,26 @@ export function Home() {
               );
             })}
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {/* ── Calculators, grouped by category ────────────── */}
-      <div className="mb-12">
-        <motion.div variants={cardVariants} className="mb-8">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-subtle mb-3" style={{ fontFamily: 'var(--font-text)' }}>
-            All calculators
-          </h2>
+      {/* ── All calculators, grouped by category ── */}
+      <section id="all-calculators" className="mb-12" aria-labelledby="all-calculators-title">
+        <div className="mb-8">
+          <h2 id="all-calculators-title" className={`${eyebrow} mb-3`}>All calculators</h2>
 
-          {/* Search */}
           <div className="relative mb-3">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--ink-subtle)' }} />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" aria-hidden />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search calculators…"
               aria-label="Search calculators"
               className="input-dark w-full"
-              style={{ fontFamily: 'var(--font-text)', paddingLeft: '34px' }}
+              style={{ paddingLeft: '34px' }}
             />
           </div>
 
-          {/* Category filter */}
           <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
             {[{ id: 'all', label: 'All', color: 'var(--ink-subtle)' }, ...presentCats].map((c) => {
               const active = activeCat === c.id;
@@ -458,13 +384,7 @@ export function Home() {
                   key={c.id}
                   onClick={() => setActiveCat(c.id)}
                   aria-pressed={active}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-                  style={{
-                    background: active ? 'var(--paper-sunk)' : 'var(--paper-raised)',
-                    color: active ? 'var(--ink)' : 'var(--ink-muted)',
-                    border: `1px solid ${active ? 'var(--rule-strong)' : 'var(--rule)'}`,
-                    fontFamily: 'var(--font-text)',
-                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${active ? 'bg-paper-sunk text-ink border-rule-strong' : 'bg-paper-raised text-ink-muted border-rule'}`}
                 >
                   {c.id !== 'all' && <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: c.color }} />}
                   {c.label}
@@ -472,12 +392,12 @@ export function Home() {
               );
             })}
           </div>
-        </motion.div>
+        </div>
 
         {groups.length === 0 ? (
           <div className="glass-card-static p-10 text-center">
-            <Search size={24} className="mx-auto mb-3" style={{ color: 'var(--ink-subtle)' }} />
-            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>No calculators match “{query}”.</p>
+            <Search size={24} className="mx-auto mb-3 text-ink-subtle" aria-hidden />
+            <p className="text-sm text-ink-muted">No calculators match “{query}”.</p>
           </div>
         ) : (
           groups.map(({ cat, cards }) => (
@@ -492,43 +412,30 @@ export function Home() {
                 {cards.map((card) => {
                   const Icon = card.icon;
                   return (
-                    <motion.div key={card.path} variants={cardVariants}>
-                      <Link to={card.path} className="block group h-full">
-                        <div className="glass-card p-5 h-full flex flex-col">
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-paper-sunk">
-                              <Icon size={17} style={{ color: 'var(--ink-muted)' }} />
-                            </span>
-                            <h4
-                              className="text-base font-semibold text-ink group-hover:text-note-blue-ink transition-colors"
-                              style={{ fontFamily: 'var(--font-display)' }}
-                            >
-                              {card.title}
-                            </h4>
-                          </div>
-                          <p
-                            className="text-sm text-ink-muted leading-relaxed mb-4 flex-1"
-                            style={{ fontFamily: 'var(--font-text)' }}
-                          >
-                            {card.description}
-                          </p>
-                          <span
-                            className="flex items-center gap-1.5 text-xs font-semibold text-note-blue-ink"
-                            style={{ fontFamily: 'var(--font-text)' }}
-                          >
-                            Open {card.title}
-                            <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                    <Link key={card.path} to={card.path} className="block group h-full">
+                      <div className="glass-card p-5 h-full flex flex-col">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-paper-sunk">
+                            <Icon size={17} className="text-ink-muted" aria-hidden />
                           </span>
+                          <h4 className="text-base font-semibold text-ink group-hover:text-note-blue-ink transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
+                            {card.title}
+                          </h4>
                         </div>
-                      </Link>
-                    </motion.div>
+                        <p className="text-sm text-ink-muted leading-relaxed mb-4 flex-1">{card.description}</p>
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-note-blue-ink">
+                          Open {card.title}
+                          <ArrowRight size={13} aria-hidden className="transition-transform group-hover:translate-x-1" />
+                        </span>
+                      </div>
+                    </Link>
                   );
                 })}
               </div>
             </section>
           ))
         )}
-      </div>
-    </motion.div>
+      </section>
+    </div>
   );
 }

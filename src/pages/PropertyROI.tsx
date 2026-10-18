@@ -19,7 +19,9 @@ import { useAuth } from '../context/AuthContext';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
+import { DEFAULT_PROPERTY_INPUTS } from '../config/calculatorDefaults';
 import { seriesColors, textTone } from '../utils/color';
+import { useJourneyValues } from '../journeys/journeyContext';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -32,30 +34,7 @@ const CHART_COLORS = {
 const INCOME_EXPENSE_COLORS = seriesColors(9);
 const COST_COLORS = seriesColors(8);
 
-const DEFAULT_INPUTS: PropertyInputs = {
-  propertyName: 'My Investment Property',
-  purchasePrice: 1200000,
-  discount: 0,
-  deposit: 120000,
-  interestRate: FALLBACK_PRIME,
-  bondTerm: 20,
-  monthlyLevies: 1500,
-  monthlyRates: 800,
-  insurance: 600,
-  effluentFees: 350,
-  miscFees: 0,
-  monthlyServiceFee: 69,
-  managementFeePercent: 8,
-  vacancyRate: 5,
-  rentScenario1: 9500,
-  rentScenario2: 11000,
-  annualAppreciation: 7,
-  transferDutyExempt: false,
-  bondRegistrationIncluded: false,
-  utilityConnectionFee: 1500,
-  initiationFee: 6037,
-  initiationFeeCapitalised: false,
-};
+const DEFAULT_INPUTS = DEFAULT_PROPERTY_INPUTS;
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -135,6 +114,12 @@ export function PropertyROI() {
   }, []);
 
   const result = useMemo(() => calcPropertyROI(inputs), [inputs]);
+  useJourneyValues({
+    price: inputs.purchasePrice,
+    bond: result.monthlyBondRepayment,
+    rent: inputs.rentScenario1,
+    expenses: inputs.monthlyLevies + inputs.monthlyRates + inputs.insurance + inputs.effluentFees + inputs.miscFees,
+  });
 
   // ── Chart data ─────────────────────────────────────────────
   const incomeExpenseData = useMemo(() => [
