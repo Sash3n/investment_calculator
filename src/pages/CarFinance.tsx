@@ -5,17 +5,20 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { Car, Download, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileText, Zap } from 'lucide-react';
+import { Car, Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FileText, Zap } from 'lucide-react';
 import clsx from 'clsx';
 import * as XLSX from 'xlsx';
 
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcCarFinance } from '../utils/car';
 import { exportCarPDF } from '../utils/pdf';
-import { formatRand } from '../utils/format';
+import { formatRand, formatMonths } from '../utils/format';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { carInputErrors } from '../utils/validation';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { CarInputs } from '../types';
 import { textTone } from '../utils/color';
@@ -187,6 +190,10 @@ export function CarFinance() {
   };
 
   const termYears = inputs.termMonths / 12;
+  const allInMonthly = result.effectiveMonthlyPayment + inputs.extraMonthlyPayment
+    + inputs.monthlyInsurance + inputs.monthlyFuel + inputs.monthlyMaintenance;
+  const errors = carInputErrors(inputs);
+  const blocked = errors.vehiclePrice ?? errors.deposit ?? errors.interestRate ?? errors.termMonths ?? errors.balloonPercent;
 
   return (
     <motion.div
@@ -214,15 +221,15 @@ export function CarFinance() {
              style={{ fontFamily: 'var(--font-text)' }}>
             Finance Details
           </p>
-          <InputField label="Vehicle Price" id="vp" value={inputs.vehiclePrice}
+          <InputField label="Vehicle Price" id="vp" value={inputs.vehiclePrice} error={errors.vehiclePrice}
             onChange={(v) => set('vehiclePrice', v)} prefix="R" step={10000} />
-          <InputField label="Deposit" id="dep" value={inputs.deposit}
+          <InputField label="Deposit" id="dep" value={inputs.deposit} error={errors.deposit}
             onChange={(v) => set('deposit', v)} prefix="R" step={5000} />
-          <InputField label="Balloon Payment" id="bal" value={inputs.balloonPercent}
+          <InputField label="Balloon Payment" id="bal" value={inputs.balloonPercent} error={errors.balloonPercent}
             onChange={(v) => set('balloonPercent', v)} suffix="% of price" step={5} min={0} max={30}
             help={`= ${formatRand(result.balloonAmount)} lump sum at end of term`} />
           <div className="space-y-1.5">
-            <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
+            <InputField label="Interest Rate" id="ir" value={inputs.interestRate} error={errors.interestRate}
               onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
             <button
               className="text-xs text-note-blue-ink hover:text-note-blue-ink transition-colors flex items-center gap-1"
@@ -233,20 +240,20 @@ export function CarFinance() {
               {liveRate.loading ? 'Fetching rate…' : `Use Live Prime Rate (${liveRate.primeRate}%${liveRate.fallback ? ' est.' : ''})`}
             </button>
           </div>
-          <InputField label="Term" id="term" value={inputs.termMonths}
+          <InputField label="Term" id="term" value={inputs.termMonths} error={errors.termMonths}
             onChange={(v) => set('termMonths', v)} suffix="months" min={12} max={84} step={12}
             help="Common SA term: 72 months (6 years)" />
-          <InputField label="Bank Minimum Instalment" id="min" value={inputs.minimumInstalment}
+          <InputField label="Bank Minimum Instalment" id="min" value={inputs.minimumInstalment} error={errors.minimumInstalment}
             onChange={(v) => set('minimumInstalment', v)} prefix="R" step={100} min={0}
             help={
               result.instalmentOverride
                 ? `Bank minimum is R ${(inputs.minimumInstalment - result.calculatedInstalment).toFixed(0)} above our calc — surplus reduces principal`
                 : `Our calc: ${formatRand(result.calculatedInstalment)} — leave 0 to use this`
             } />
-          <InputField label="Monthly Service Fee" id="svcfee" value={inputs.monthlyServiceFee}
+          <InputField label="Monthly Service Fee" id="svcfee" value={inputs.monthlyServiceFee} error={errors.monthlyServiceFee}
             onChange={(v) => set('monthlyServiceFee', v)} prefix="R" step={1} min={0}
             help="Bank admin fee (e.g. R69/month). Added to total cost, doesn't reduce loan." />
-          <InputField label="Extra Monthly Payment" id="extra" value={inputs.extraMonthlyPayment}
+          <InputField label="Extra Monthly Payment" id="extra" value={inputs.extraMonthlyPayment} error={errors.extraMonthlyPayment}
             onChange={(v) => set('extraMonthlyPayment', v)} prefix="R" step={500} min={0}
             help={inputs.extraMonthlyPayment > 0 ? `Saves ${result.monthsSaved} month${result.monthsSaved !== 1 ? 's' : ''} · pays off in ${result.actualTermMonths} months` : 'Optional: pay off faster & save interest'} />
 
@@ -256,11 +263,11 @@ export function CarFinance() {
               Monthly Running Costs
             </p>
             <div className="space-y-4">
-              <InputField label="Insurance" id="ins" value={inputs.monthlyInsurance}
+              <InputField label="Insurance" id="ins" value={inputs.monthlyInsurance} error={errors.monthlyInsurance}
                 onChange={(v) => set('monthlyInsurance', v)} prefix="R" step={100} />
-              <InputField label="Fuel" id="fuel" value={inputs.monthlyFuel}
+              <InputField label="Fuel" id="fuel" value={inputs.monthlyFuel} error={errors.monthlyFuel}
                 onChange={(v) => set('monthlyFuel', v)} prefix="R" step={100} />
-              <InputField label="Maintenance" id="maint" value={inputs.monthlyMaintenance}
+              <InputField label="Maintenance" id="maint" value={inputs.monthlyMaintenance} error={errors.monthlyMaintenance}
                 onChange={(v) => set('monthlyMaintenance', v)} prefix="R" step={100} />
             </div>
           </div>
@@ -287,108 +294,51 @@ export function CarFinance() {
             </button>
           </div>
 
-          {/* Stat cards */}
-          <div className="four-col-stats">
-            <StatCard label="Monthly Instalment" value={formatRand(result.monthlyInstalment)}
-              color="blue" delay={0} />
-            <StatCard label="Total Repayments" value={formatRand(result.totalRepayments)}
-              color="orange" delay={0.05} />
-            <StatCard label="Total Interest" value={formatRand(result.totalInterest)}
-              color="red" delay={0.1} />
-            <StatCard label="Total Cost of Ownership" value={formatRand(result.totalCostOfOwnership)}
-              sub={`${termYears.toFixed(0)} yr period`} color="green" delay={0.15} />
+          <ResultPanel
+            label="Monthly instalment"
+            value={formatRand(result.monthlyInstalment, 0)}
+            blocked={blocked}
+            summary={<>
+              Over {formatMonths(inputs.termMonths)} you repay {formatRand(result.totalRepayments, 0)}, of which {formatRand(result.totalInterest, 0)} is interest
+              {result.balloonAmount > 0 ? `, including a ${formatRand(result.balloonAmount, 0)} balloon at the end` : ''}.
+              {' '}With the service fee and running costs, the car costs {formatRand(allInMonthly, 0)} a month.
+              {result.instalmentOverride && ` Your bank’s minimum of ${formatRand(inputs.minimumInstalment, 0)} is above the worked-out instalment, so the extra goes off the loan.`}
+              {inputs.extraMonthlyPayment > 0 && result.interestSaved > 0 && ` Paying ${formatRand(inputs.extraMonthlyPayment, 0)} extra saves ${formatRand(result.interestSaved, 0)} and finishes ${formatMonths(result.monthsSaved)} sooner.`}
+              {result.underwaterMonths > 0 && ` For ${formatMonths(result.underwaterMonths)} you would owe more than the car is worth.`}
+            </>}
+            figures={[
+              { label: 'Total interest', value: formatRand(result.totalInterest, 0) },
+              { label: 'Balloon at the end', value: formatRand(result.balloonAmount, 0) },
+              { label: 'Owing more than it’s worth', value: result.underwaterMonths > 0 ? formatMonths(result.underwaterMonths) : 'Never' },
+              { label: 'Each year, all in', value: formatRand(result.effectiveAnnualCost, 0) },
+            ]}
+          />
+
+          <div className="grid gap-5 xl:grid-cols-2">
+            <BreakdownList
+              title="Each month"
+              lines={[
+                { label: 'Instalment', value: result.monthlyInstalment },
+                { label: 'Bank service fee', value: inputs.monthlyServiceFee },
+                ...(inputs.extraMonthlyPayment > 0 ? [{ label: 'Extra payment', value: inputs.extraMonthlyPayment }] : []),
+                { label: 'Insurance', value: inputs.monthlyInsurance },
+                { label: 'Fuel', value: inputs.monthlyFuel },
+                { label: 'Maintenance', value: inputs.monthlyMaintenance },
+              ]}
+              total={{ label: 'All in, each month', value: allInMonthly }}
+            />
+            <BreakdownList
+              title={`Over ${formatMonths(inputs.termMonths)}`}
+              lines={[
+                { label: 'Deposit', value: inputs.deposit },
+                { label: 'Instalments', value: result.totalRepayments - result.balloonAmount },
+                ...(result.balloonAmount > 0 ? [{ label: 'Balloon', value: result.balloonAmount }] : []),
+                { label: 'Service fees', value: result.totalServiceFees },
+                { label: 'Insurance, fuel and maintenance', value: (inputs.monthlyInsurance + inputs.monthlyFuel + inputs.monthlyMaintenance) * inputs.termMonths },
+              ]}
+              total={{ label: 'Total cost of owning it', value: result.totalCostOfOwnership }}
+            />
           </div>
-
-          {/* Minimum instalment override notice */}
-          {result.instalmentOverride && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange flex items-start gap-3">
-              <AlertTriangle size={16} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>
-                  Bank Minimum Overrides Calculated Payment
-                </p>
-                <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
-                  Your bank quotes <strong>{formatRand(inputs.minimumInstalment)}/month</strong> vs our calculated <strong>{formatRand(result.calculatedInstalment)}/month</strong>.
-                  The surplus <strong>{formatRand(inputs.minimumInstalment - result.calculatedInstalment)}</strong> goes to principal — you'll pay off faster than the standard term.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Service fee summary */}
-          {inputs.monthlyServiceFee > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Effective Monthly</p>
-                <p className="text-base font-bold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
-                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>instalment + service fee</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Total Service Fees</p>
-                <p className="text-base font-bold text-loss-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
-                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>over {inputs.termMonths} months</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>True Monthly Cost</p>
-                <p className="text-base font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
-                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>all-in per month</p>
-              </div>
-            </div>
-          )}
-
-          {/* Extra payment savings */}
-          {inputs.extraMonthlyPayment > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-gain grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Interest Saved</p>
-                <p className="text-base font-bold text-gain-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.interestSaved)}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Months Saved</p>
-                <p className="text-base font-bold text-gain-ink" style={{ fontFamily: 'var(--font-display)' }}>{result.monthsSaved} months</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Payoff In</p>
-                <p className="text-base font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{result.actualTermMonths} months</p>
-              </div>
-            </div>
-          )}
-
-          {/* Additional metrics */}
-          <div className="glass-card-static p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Balloon Amount', value: formatRand(result.balloonAmount), color: inputs.balloonPercent > 0 ? 'var(--note-orange)' : 'var(--ink-subtle)' },
-              { label: 'Effective Annual Cost', value: formatRand(result.effectiveAnnualCost), color: 'var(--loss)' },
-              { label: 'Underwater Months', value: `${result.underwaterMonths} months`, color: result.underwaterMonths > 0 ? 'var(--loss)' : 'var(--gain)' },
-            ].map((s) => (
-              <div key={s.label}>
-                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1"
-                   style={{ fontFamily: 'var(--font-text)' }}>
-                  {s.label}
-                </p>
-                <p className="text-base font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
-                  {s.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Underwater warning */}
-          {result.underwaterMonths > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-loss flex items-start gap-3">
-              <AlertTriangle size={16} className="text-loss-ink mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-loss-ink" style={{ fontFamily: 'var(--font-display)' }}>
-                  Negative Equity Warning
-                </p>
-                <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
-                  Your loan balance exceeds the car's depreciated value for{' '}
-                  <strong>{result.underwaterMonths} months</strong>. If you sell or write off the vehicle during
-                  this period, you would owe more than the car is worth.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Balance vs Value AreaChart */}
           <div className="glass-card-static p-5">
@@ -534,6 +484,16 @@ export function CarFinance() {
               Finance preserves liquidity for higher-yield investments.
             </p>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>The rate stays at {inputs.interestRate}% for the whole {inputs.termMonths} months, and interest is worked out monthly.</>,
+              <>A balloon is a lump sum of {inputs.balloonPercent}% of the price, paid at the end. Here the monthly instalment is worked out on the loan less the balloon.</>,
+              <>The car loses 15% of its value in the first year, 12% in the second and 10% a year after that. Real values depend on the make, model and mileage.</>,
+              <>The cash comparison assumes money not spent on the car would earn 10% a year if invested. Returns are not guaranteed.</>,
+              <>Not included: the bank’s initiation fee, licence and registration, tracking, tyres and credit life cover.</>,
+            ]}
+          />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
  * Input checks for the calculators. They only produce messages for the
  * inputs; they never change what the calculations do.
  */
-import type { MortgageInputs, PropertyInputs } from '../types';
+import type { CarInputs, MortgageInputs, PropertyInputs } from '../types';
 import type { AffordabilityInputs } from './affordability';
 import type { STRvsLTRInputs } from './shortTermRental';
 import { formatRand } from './format';
@@ -208,6 +208,24 @@ export function debtErrors(d: { balance: number; rate: number; minPayment: numbe
         : d.balance > 0 && d.minPayment <= monthlyInterest
           ? `This doesn’t cover the interest of about ${formatRand(Math.ceil(monthlyInterest), 0)} a month.`
           : undefined,
+  };
+}
+
+export function carInputErrors(i: CarInputs): FieldErrors<keyof CarInputs> {
+  return {
+    vehiclePrice: positiveError(i.vehiclePrice, 'Enter the price of the car.'),
+    deposit: i.deposit < 0
+      ? 'The deposit can’t be negative.'
+      : i.vehiclePrice > 0 && i.deposit >= i.vehiclePrice ? 'The deposit covers the whole price, so there is nothing to finance.' : undefined,
+    balloonPercent: rangeError(i.balloonPercent, 0, 40, 'a balloon', '%'),
+    interestRate: rangeError(i.interestRate, 0, 30, 'a rate', '%'),
+    termMonths: rangeError(i.termMonths, 12, 96, 'a term', ' months'),
+    minimumInstalment: nonNegativeError(i.minimumInstalment),
+    extraMonthlyPayment: nonNegativeError(i.extraMonthlyPayment),
+    monthlyServiceFee: nonNegativeError(i.monthlyServiceFee),
+    monthlyInsurance: nonNegativeError(i.monthlyInsurance),
+    monthlyFuel: nonNegativeError(i.monthlyFuel),
+    monthlyMaintenance: nonNegativeError(i.monthlyMaintenance),
   };
 }
 
