@@ -27,6 +27,7 @@ import { formatRand, formatYears, formatDate, formatPercent } from '../utils/for
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 import { textTone } from '../utils/color';
+import { useJourneyValues } from '../journeys/JourneyContext';
 
 const ROWS_PER_PAGE = 24;
 const VIEW_KEY = 'fincalc-mortgage-view';
@@ -115,6 +116,7 @@ export function MortgageCalculator() {
   const liveRate = usePrimeRate();
 
   const result = useMemo(() => calcMortgageSummary(inputs), [inputs]);
+  useJourneyValues({ price: inputs.purchasePrice });
 
   const upfrontCosts = useMemo(() => {
     const transferDuty = inputs.transferDutyExempt ? 0 : calcTransferDuty(inputs.purchasePrice);

@@ -21,6 +21,7 @@ import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
 import { DEFAULT_PROPERTY_INPUTS } from '../config/calculatorDefaults';
 import { seriesColors, textTone } from '../utils/color';
+import { useJourneyValues } from '../journeys/JourneyContext';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -113,6 +114,12 @@ export function PropertyROI() {
   }, []);
 
   const result = useMemo(() => calcPropertyROI(inputs), [inputs]);
+  useJourneyValues({
+    price: inputs.purchasePrice,
+    bond: result.monthlyBondRepayment,
+    rent: inputs.rentScenario1,
+    expenses: inputs.monthlyLevies + inputs.monthlyRates + inputs.insurance + inputs.effluentFees + inputs.miscFees,
+  });
 
   // ── Chart data ─────────────────────────────────────────────
   const incomeExpenseData = useMemo(() => [

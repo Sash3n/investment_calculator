@@ -11,6 +11,7 @@ import { Statement } from '../components/statement/Statement';
 import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { alpha, textTone } from '../utils/color';
+import { useJourneyValues } from '../journeys/JourneyContext';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,11 @@ export function RentalYieldFinder() {
   const monthlyCashFlow  = annualCashFlow / 12;
   const netYield         = purchasePrice > 0 ? (annualCashFlow / purchasePrice) * 100 : 0;
   const isCashFlowPositive = monthlyCashFlow >= 0;
+
+  useJourneyValues({
+    price: purchasePrice, deposit, rate: bondRate, term: bondTerm, rent: monthlyRent,
+    levy, rates, insurance, effluent, misc,
+  });
 
   // True breakeven: rent = (bond + levy + rates + insurance + maintenance + effluent + misc) / (1 - agentFee%)
   const fixedCosts  = costs.bond + costs.levy + costs.rates + costs.insurance + costs.maintenance + costs.effluent + costs.misc;

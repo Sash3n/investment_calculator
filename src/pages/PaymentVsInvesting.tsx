@@ -19,6 +19,7 @@ import { VersusView } from '../components/versus/VersusView';
 import { formatRand, formatPercent, formatYears, formatDate } from '../utils/format';
 import type { InvestingInputs } from '../types';
 import { textTone } from '../utils/color';
+import { useJourneyValues } from '../journeys/JourneyContext';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -91,6 +92,7 @@ export function PaymentVsInvesting() {
   }, [locationState]);
 
   const result = useMemo(() => calcExtraPaymentVsInvesting(inputs), [inputs]);
+  useJourneyValues({ loan: inputs.loanBalance, rate: inputs.interestRate, term: inputs.remainingTermYears, extra: inputs.extraMonthlyAmount });
 
   // Break-even does not depend on the assumed return, so it is not recomputed while the slider moves
   const { loanBalance, interestRate, remainingTermYears, extraMonthlyAmount, cgtRate, investmentVehicle, inflationRate } = inputs;

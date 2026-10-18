@@ -16,6 +16,7 @@ import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcAffordability, type AffordabilityInputs } from '../utils/affordability';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import { alpha, seriesColors, textTone } from '../utils/color';
+import { useJourneyValues } from '../journeys/JourneyContext';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -68,6 +69,14 @@ export function Affordability() {
   }, [locationState]);
 
   const result = useMemo(() => calcAffordability(inputs), [inputs]);
+
+  // Hand the price (the one you want, or the most you qualify for) to the next journey step
+  useJourneyValues({
+    price: inputs.desiredPropertyPrice > 0 ? inputs.desiredPropertyPrice : result.maxPropertyPrice,
+    deposit: inputs.depositAvailable,
+    rate: inputs.interestRate,
+    term: inputs.termYears,
+  });
 
   const set = (fn: (v: number) => Partial<AffordabilityInputs>) => (val: string) =>
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
