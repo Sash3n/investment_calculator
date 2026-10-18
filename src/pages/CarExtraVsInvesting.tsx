@@ -4,10 +4,14 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
 } from 'recharts';
-import { Car, Trophy, Info } from 'lucide-react';
+import { Car, Info } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatMonths } from '../utils/format';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { StatementRow } from '../components/statement/StatementRow';
+import { positiveError, rangeError } from '../utils/validation';
 import { calcCarScenario, buildCarComparison } from '../utils/carExtraVsInvesting';
 import { textTone } from '../utils/color';
 
@@ -87,6 +91,21 @@ export function CarExtraVsInvesting() {
   const finalInvestValue   = finalRow?.investValue ?? 0;
   const finalBondRouteValue = finalRow?.bondRouteValue ?? 0;
 
+  const years = Math.round(termMonths / 12);
+  const errors = {
+    vehiclePrice: positiveError(vehiclePrice, 'Enter the price of the car.'),
+    deposit: deposit < 0
+      ? 'The deposit can\u2019t be negative.'
+      : vehiclePrice > 0 && deposit >= vehiclePrice ? 'The deposit covers the whole price, so there is no loan.' : undefined,
+    interestRate: rangeError(interestRate, 0, 30, 'a rate', '%'),
+    balloonPercent: rangeError(balloonPercent, 0, 50, 'a balloon', '%'),
+    extraPayment: positiveError(extraPayment, 'Enter the amount you could pay extra or invest each month.'),
+    customReturn: rangeError(customReturn, -20, 30, 'a return', '%'),
+    cgtRate: rangeError(cgtRate, 0, 45, 'a tax rate', '%'),
+  };
+  const blocked = errors.vehiclePrice ?? errors.deposit ?? errors.interestRate ?? errors.balloonPercent ?? errors.extraPayment
+    ?? (vehicle === 'Custom' ? errors.customReturn : undefined) ?? (isTFSA ? undefined : errors.cgtRate);
+
   const barData = [
     { label: 'Pay extra, then invest', value: finalBondRouteValue, color: C.blue },
     { label: 'Invest instead', value: finalInvestValue, color: C.green },
@@ -114,35 +133,20 @@ export function CarExtraVsInvesting() {
         </div>
       </motion.div>
 
-      {/* Winner banner */}
-      {finalRow && (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
-          className="flex items-center gap-4 p-5 rounded-2xl"
-          style={{
-            background: winner === 'invest' ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--note-blue) 8%, transparent)',
-            border: `1px solid ${winner === 'invest' ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--note-blue) 30%, transparent)'}`,
-          }}
-        >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: winner === 'invest' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            <Trophy size={18} style={{ color: textTone(winner === 'invest' ? C.green : C.blue) }} />
-          </div>
-          <div className="flex-1">
-            <p className="text-base font-bold"
-              style={{ color: textTone(winner === 'invest' ? C.green : C.blue), fontFamily: 'var(--font-display)' }}>
-              {winner === 'invest'
-                ? `Investing wins by ${formatRand(winnerAmount, 0)} over ${Math.round(termMonths / 12)} years`
-                : `Paying extra wins by ${formatRand(winnerAmount, 0)} over ${Math.round(termMonths / 12)} years`}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-              {winner === 'invest'
-                ? `Investing ${formatRand(extraPayment, 0)}/mo at ${expectedReturn}% a year grows to ${formatRand(finalInvestValue, 0)}, more than the ${formatRand(finalBondRouteValue, 0)} you would build by paying the car off early and then investing the instalment.`
-                : `Paying ${formatRand(extraPayment, 0)}/mo extra saves ${formatRand(scenario.interestSaved, 0)} in interest. Investing the instalment once the car is paid off builds ${formatRand(finalBondRouteValue, 0)}, more than the ${formatRand(finalInvestValue, 0)} from investing the extra now.`}
-            </p>
-          </div>
-        </motion.div>
-      )}
+      <ResultPanel
+        label={`${winner === 'invest' ? 'Investing' : 'Paying extra'} comes out ahead by`}
+        value={formatRand(winnerAmount, 0)}
+        blocked={blocked}
+        summary={winner === 'invest'
+          ? `Investing ${formatRand(extraPayment, 0)} a month at ${expectedReturn}% grows to ${formatRand(finalInvestValue, 0)} after ${years} years, more than the ${formatRand(finalBondRouteValue, 0)} you would build by paying the car off early and then investing the instalment.`
+          : `Paying ${formatRand(extraPayment, 0)} a month extra saves ${formatRand(scenario.interestSaved, 0)} in interest. Investing the whole instalment once the car is paid off builds ${formatRand(finalBondRouteValue, 0)} after ${years} years, more than the ${formatRand(finalInvestValue, 0)} from investing the extra now.`}
+        figures={[
+          { label: 'Pay extra, then invest', value: formatRand(finalBondRouteValue, 0) },
+          { label: 'Invest instead', value: formatRand(finalInvestValue, 0) },
+          { label: 'Interest saved', value: formatRand(scenario.interestSaved, 0) },
+          { label: 'Car paid off after', value: formatMonths(scenario.monthsWithExtra) },
+        ]}
+      />
 
       {/* Inputs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -154,52 +158,34 @@ export function CarExtraVsInvesting() {
             Car Loan Details
           </p>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="price" label="Vehicle Price" value={vehiclePrice}
+            <InputField id="price" label="Vehicle Price" value={vehiclePrice} error={errors.vehiclePrice}
               onChange={(v) => setVehiclePrice(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="dep" label="Deposit" value={deposit}
+            <InputField id="dep" label="Deposit" value={deposit} error={errors.deposit}
               onChange={(v) => setDeposit(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="rate" label="Interest Rate" value={interestRate}
+            <InputField id="rate" label="Interest Rate" value={interestRate} error={errors.interestRate}
               onChange={(v) => setInterestRate(parseFloat(v) || 0)} suffix="%" step={0.25} />
-            <InputField id="balloon" label="Balloon" value={balloonPercent}
+            <InputField id="balloon" label="Balloon" value={balloonPercent} error={errors.balloonPercent}
               onChange={(v) => setBalloonPercent(parseFloat(v) || 0)} suffix="%" step={5} min={0} max={50} />
           </div>
           <SelectField id="term" label="Loan Term" value={String(termMonths)}
             onChange={(v) => setTermMonths(parseInt(v))} options={VEHICLE_OPTIONS} />
 
-          {/* Loan summary */}
-          <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            {[
-              { label: 'Loan Amount',       value: formatRand(scenario.loanAmount, 0) },
-              { label: 'Financed Amount',   value: formatRand(scenario.financedAmount, 0), note: balloonPercent > 0 ? `balloon: ${formatRand(scenario.balloonAmount, 0)}` : undefined },
-              { label: 'Standard Payment',  value: `${formatRand(scenario.standardPayment, 0)}/mo` },
-              { label: 'Total Interest',    value: formatRand(scenario.interestStandard, 0), color: C.red },
-            ].map((r) => (
-              <div key={r.label} className="flex justify-between items-center">
-                <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-                  {r.label}{r.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--ink-subtle)' }}>({r.note})</span>}
-                </span>
-                <span className="text-xs font-semibold" style={{ color: textTone(r.color ?? 'var(--ink)') }}>{r.value}</span>
-              </div>
-            ))}
-          </div>
+          <dl className="text-sm">
+            <StatementRow line={{ label: 'Loan', value: scenario.loanAmount }} />
+            {balloonPercent > 0 && <StatementRow line={{ label: 'Balloon at the end', value: scenario.balloonAmount }} />}
+            <StatementRow line={{ label: 'Monthly instalment', value: scenario.standardPayment }} />
+            <StatementRow line={{ label: 'Interest over the term', value: scenario.interestStandard }} />
+          </dl>
 
-          <InputField id="extra" label="Extra Monthly Payment" value={extraPayment}
+          <InputField id="extra" label="Extra Monthly Payment" value={extraPayment} error={errors.extraPayment}
             onChange={(v) => setExtraPayment(parseFloat(v) || 0)} prefix="R" step={500}
             help="Amount you could either pay extra on the car or invest each month" />
 
           {extraPayment > 0 && (
-            <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'color-mix(in srgb, var(--note-blue) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 10%, transparent)' }}>
-              {[
-                { label: 'Interest Saved',  value: formatRand(scenario.interestSaved, 0),  color: C.green },
-                { label: 'Months Saved',    value: `${scenario.monthsSaved} months`,        color: C.blue },
-                { label: 'Paid off in',     value: `${scenario.monthsWithExtra} months`,    color: 'var(--ink)' },
-              ].map((r) => (
-                <div key={r.label} className="flex justify-between items-center">
-                  <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>{r.label}</span>
-                  <span className="text-xs font-bold" style={{ color: textTone(r.color) }}>{r.value}</span>
-                </div>
-              ))}
-            </div>
+            <dl className="text-sm">
+              <StatementRow line={{ label: 'Interest saved by paying extra', value: scenario.interestSaved }} />
+              <StatementRow line={{ label: 'Paid off', display: `${formatMonths(scenario.monthsSaved)} sooner` }} />
+            </dl>
           )}
         </motion.div>
 
@@ -212,11 +198,11 @@ export function CarExtraVsInvesting() {
           <SelectField id="vehicle" label="Investment Vehicle" value={vehicle}
             onChange={setVehicle} options={INVESTMENT_OPTIONS} />
           {vehicle === 'Custom' && (
-            <InputField id="return" label="Expected Annual Return" value={customReturn}
+            <InputField id="return" label="Expected Annual Return" value={customReturn} error={errors.customReturn}
               onChange={(v) => setCustomReturn(parseFloat(v) || 0)} suffix="% p.a." step={0.5} />
           )}
           {!isTFSA && (
-            <InputField id="cgt" label="Effective CGT Rate" value={cgtRate}
+            <InputField id="cgt" label="Effective CGT Rate" value={cgtRate} error={errors.cgtRate}
               onChange={(v) => setCgtRate(parseFloat(v) || 0)} suffix="%" step={1}
               help="SA: 40% inclusion × your marginal rate. ~18% for 45% bracket." />
           )}
@@ -228,24 +214,10 @@ export function CarExtraVsInvesting() {
             </div>
           )}
 
-          {/* KPIs */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            {[
-              { label: 'Rate on Car Loan',    value: `${interestRate}%`,              color: C.red,     sub: 'guaranteed "return" from paying extra' },
-              { label: 'Expected Investment', value: `${expectedReturn}%`,             color: C.green, sub: isTFSA ? 'tax-free' : `after ~${cgtRate}% CGT` },
-              { label: 'Interest Saved',      value: formatRand(scenario.interestSaved, 0), color: C.blue, sub: 'if paying extra' },
-              { label: 'Portfolio at Term',   value: formatRand(finalInvestValue, 0), color: C.orange,   sub: 'if investing instead' },
-              { label: 'Pay Extra, Then Invest', value: formatRand(finalBondRouteValue, 0), color: C.blue, sub: 'invested after payoff' },
-              { label: 'Difference', value: formatRand(winnerAmount, 0), color: winner === 'invest' ? C.green : C.blue, sub: winner === 'invest' ? 'in favour of investing' : 'in favour of paying extra' },
-            ].map((kpi) => (
-              <div key={kpi.label} className="glass-card-static p-3 rounded-xl">
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                  style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-                <p className="text-sm font-bold" style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
-              </div>
-            ))}
-          </div>
+          <dl className="text-sm pt-2">
+            <StatementRow line={{ label: 'Car loan rate, a sure saving', display: `${interestRate}%` }} />
+            <StatementRow line={{ label: `Expected return, ${isTFSA ? 'tax-free' : `before ${cgtRate}% tax on gains`}`, display: `${expectedReturn}%` }} />
+          </dl>
         </motion.div>
       </div>
 
@@ -352,9 +324,16 @@ export function CarExtraVsInvesting() {
         </div>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Investment returns are not guaranteed. Car interest savings are deterministic. Past performance does not predict future returns. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Both routes spend the same each month: the instalment plus {formatRand(extraPayment, 0)}. Once the car is paid off early, that whole amount is invested for the rest of the {years} years.</>,
+          <>The car loan rate stays at {interestRate}%. Paying extra saves that interest for certain; the {expectedReturn}% investment return is not guaranteed.</>,
+          isTFSA
+            ? <>Growth in a tax-free savings account is not taxed, within the R46,000 yearly and R500,000 lifetime limits.</>
+            : <>Tax of {cgtRate}% is taken off the investment growth at the end, as an effective capital gains tax rate.</>,
+          <>Fees, inflation and dividend tax are not included.</>,
+        ]}
+      />
     </div>
   );
 }
