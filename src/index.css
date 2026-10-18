@@ -216,10 +216,13 @@ body {
 }
 
 /* ── Typography ────────────────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  color: var(--ink);
-  line-height: 1.2;
+/* In the base layer so utility classes on a heading (text colour, font) win */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    line-height: 1.2;
+  }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────── */
