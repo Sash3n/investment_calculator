@@ -122,6 +122,14 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--note-blue) 20%, transparent);
 }
 
+.input-dark.input-error {
+  border-color: var(--loss);
+}
+
+.input-dark.input-error:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--loss) 20%, transparent);
+}
+
 .input-dark::placeholder {
   color: var(--ink-subtle);
 }
@@ -158,6 +166,23 @@ body {
   outline: none;
   border-bottom-color: var(--note-blue);
   background: color-mix(in srgb, var(--note-blue) 8%, transparent);
+}
+
+.sentence-input.sentence-input-error {
+  border-bottom-color: var(--loss);
+}
+
+/* ── Assumptions drawer ────────────────────────────────────────── */
+.assumptions > summary {
+  list-style: none;
+}
+
+.assumptions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.assumptions > summary:focus-visible {
+  border-radius: var(--radius-card);
 }
 
 /* ── Select styling ────────────────────────────────────────────── */
@@ -527,6 +552,11 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: 380px 1fr;
   gap: 24px;
   align-items: start;
+}
+
+/* Let columns shrink below their content's width, so wide figures cannot push past the edge */
+.two-col-layout > * {
+  min-width: 0;
 }
 
 @media (max-width: 1024px) {
