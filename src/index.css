@@ -136,6 +136,30 @@ body {
   -moz-appearance: textfield;
 }
 
+/* ── Inputs inside a sentence ──────────────────────────────────── */
+.sentence-input {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--rule-strong);
+  border-radius: 0;
+  padding: 0 2px;
+  text-align: center;
+  min-width: 3ch;
+  transition: border-color 0.2s ease;
+}
+
+.sentence-input:hover {
+  border-bottom-color: var(--ink-muted);
+}
+
+.sentence-input:focus {
+  outline: none;
+  border-bottom-color: var(--note-blue);
+  background: color-mix(in srgb, var(--note-blue) 8%, transparent);
+}
+
 /* ── Select styling ────────────────────────────────────────────── */
 .select-dark {
   background-color: var(--paper-raised);

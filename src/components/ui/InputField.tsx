@@ -18,6 +18,11 @@ interface InputFieldProps {
   disabled?: boolean;
   /** Show thousands separators while typing. Defaults to true for Rand (prefix "R") fields. */
   group?: boolean;
+  /**
+   * Render only the input, sized to its content, for use inside a sentence.
+   * The label stays available to screen readers but is not shown.
+   */
+  inline?: boolean;
 }
 
 /** Insert spaces as thousands separators into a sanitized numeric string. */
@@ -71,6 +76,7 @@ export function InputField({
   className,
   disabled = false,
   group,
+  inline = false,
 }: InputFieldProps) {
   const isNumeric = type === 'number';
   const shouldGroup = isNumeric && (group ?? prefix === 'R');
@@ -180,6 +186,34 @@ export function InputField({
   };
 
   const displayValue = isNumeric ? display : String(value);
+
+  if (inline) {
+    return (
+      <span className={clsx('inline-flex items-baseline whitespace-nowrap', className)}>
+        <label htmlFor={id} className="sr-only">{label}</label>
+        {prefix && <span aria-hidden className="mr-1">{prefix}</span>}
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          inputMode={isNumeric ? 'decimal' : 'text'}
+          value={displayValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={(e) => e.target.select()}
+          onWheel={handleWheel}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          aria-describedby={help ? `${id}-help` : undefined}
+          className="sentence-input"
+          style={{ width: `${Math.max(displayValue.length, 2) + 0.5}ch` }}
+        />
+        {suffix && <span aria-hidden className="ml-0.5">{suffix}</span>}
+        {help && <span id={`${id}-help`} className="sr-only">{help}</span>}
+      </span>
+    );
+  }
 
   return (
     <div className={clsx('flex flex-col gap-1.5', className)}>
