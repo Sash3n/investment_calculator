@@ -491,7 +491,7 @@ export function TaxPlanner() {
                       >
                         <span className="font-medium">{p.propertyName || 'Unnamed Property'}</span>
                         <span className="ml-2" style={{ color: 'var(--ink-muted)' }}>
-                          R{(p.purchasePrice / 1_000_000).toFixed(2)}M · R{p.rentScenario1.toLocaleString()}/mo
+                          {formatRandShort(p.purchasePrice)} · {formatRand(p.rentScenario1, 0)}/mo
                         </span>
                       </button>
                     ))}
@@ -534,7 +534,7 @@ export function TaxPlanner() {
                         )}
                         <span className="text-xs font-semibold flex-shrink-0" style={{ color: C.orange }}>{grossYield}%</span>
                         <span className="text-xs font-mono flex-shrink-0" style={{ color: 'var(--ink-muted)' }}>
-                          R{(unit.purchasePrice / 1_000_000).toFixed(2)}M
+                          {formatRandShort(unit.purchasePrice)}
                         </span>
                         {s13Units.length > 5 && (
                           <button className="p-1 rounded flex-shrink-0" onClick={e => { e.stopPropagation(); removeUnit(unit.id); }}>

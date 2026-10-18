@@ -256,8 +256,8 @@ export function PaymentVsInvesting() {
             </div>
             <p className="text-xs text-ink-muted max-w-sm mx-auto" style={{ fontFamily: 'var(--font-text)' }}>
               {result.winner === 'investing'
-                ? `Investing your R ${inputs.extraMonthlyAmount.toLocaleString()}/month in ${ETF_OPTIONS.find(e => e.value === inputs.investmentVehicle)?.label?.split('(')[0].trim() ?? 'an ETF'} at ${inputs.expectedReturn}% p.a. yields more (after CGT) than the interest you would save by paying off the bond faster.`
-                : `Paying an extra R ${inputs.extraMonthlyAmount.toLocaleString()}/month off your bond at ${inputs.interestRate}% is a guaranteed ${inputs.interestRate}% tax-free return — better than the after-tax investment outcome in this scenario.`}
+                ? `Investing your ${formatRand(inputs.extraMonthlyAmount, 0)}/month in ${ETF_OPTIONS.find(e => e.value === inputs.investmentVehicle)?.label?.split('(')[0].trim() ?? 'an ETF'} at ${inputs.expectedReturn}% p.a. yields more (after CGT) than the interest you would save by paying off the bond faster.`
+                : `Paying an extra ${formatRand(inputs.extraMonthlyAmount, 0)}/month off your bond at ${inputs.interestRate}% is a guaranteed ${inputs.interestRate}% tax-free return — better than the after-tax investment outcome in this scenario.`}
             </p>
           </motion.div>
 

@@ -8,7 +8,7 @@ import { Globe, Info, TrendingUp, DollarSign } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatNumber } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha } from '../utils/color';
 
@@ -165,7 +165,7 @@ export function OffshoreAllowance() {
               color={advantage >= 0 ? 'green' : 'orange'}
               icon={DollarSign}
             />
-            <StatCard label={`${currency} value in ${years}yr`} value={`${currencyInfo.symbol}${Math.round(result.usdFinal).toLocaleString()}`} color="blue" icon={DollarSign} />
+            <StatCard label={`${currency} value in ${years}yr`} value={`${currencyInfo.symbol}${formatNumber(Math.round(result.usdFinal))}`} color="blue" icon={DollarSign} />
           </div>
 
           <div className="p-4 rounded-xl text-sm"

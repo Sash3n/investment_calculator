@@ -1,15 +1,26 @@
+const NBSP = ' ';
+
 /**
- * Format a number as South African Rand: R 1,234,567.89
+ * Group with non-breaking spaces and use a decimal comma: 1 234 567,89.
+ * Formats in en-US first (identical in every browser) and then swaps the
+ * separators, so the output does not depend on each browser's locale data.
+ */
+function groupZA(abs: number, decimals: number): string {
+  return abs
+    .toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    .replace(/[,.]/g, (c) => (c === ',' ? NBSP : ','));
+}
+
+/**
+ * Format a number as South African Rand: R 1 234 567,89
+ * (non-breaking spaces, so an amount never wraps across lines).
  */
 export function formatRand(n: number, decimals = 2): string {
-  if (!isFinite(n)) return 'R 0.00';
-  const abs = Math.abs(n);
-  const formatted = abs.toLocaleString('en-ZA', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-  const sign = n < 0 ? '-' : '';
-  return `${sign}R ${formatted}`;
+  if (!isFinite(n)) n = 0;
+  const formatted = groupZA(Math.abs(n), decimals);
+  // No minus sign on an amount that rounds to zero
+  const sign = n < 0 && /[1-9]/.test(formatted) ? '-' : '';
+  return `${sign}R${NBSP}${formatted}`;
 }
 
 /**
@@ -33,14 +44,12 @@ export function formatYears(totalMonths: number): string {
 }
 
 /**
- * Format a number with commas: 1,234,567
+ * Format a plain number the same way as rand amounts: 1 234 567
  */
 export function formatNumber(n: number, decimals = 0): string {
-  if (!isFinite(n)) return '0';
-  return n.toLocaleString('en-ZA', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+  if (!isFinite(n)) n = 0;
+  const formatted = groupZA(Math.abs(n), decimals);
+  return n < 0 && /[1-9]/.test(formatted) ? `-${formatted}` : formatted;
 }
 
 /**
@@ -52,15 +61,15 @@ export function formatDate(d: Date): string {
 }
 
 /**
- * Short rand: "R 1.2M" or "R 450K"
+ * Short rand: "R 1,2M" or "R 450K"
  */
 export function formatRandShort(n: number): string {
-  if (!isFinite(n)) return 'R 0';
+  if (!isFinite(n)) n = 0;
   const abs = Math.abs(n);
-  const sign = n < 0 ? '-' : '';
-  if (abs >= 1_000_000) return `${sign}R ${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign}R ${(abs / 1_000).toFixed(0)}K`;
-  return `${sign}R ${abs.toFixed(0)}`;
+  const sign = n < 0 && Math.round(abs) > 0 ? '-' : '';
+  if (abs >= 1_000_000) return `${sign}R${NBSP}${groupZA(abs / 1_000_000, 1)}M`;
+  if (abs >= 1_000) return `${sign}R${NBSP}${groupZA(abs / 1_000, 0)}K`;
+  return `${sign}R${NBSP}${groupZA(abs, 0)}`;
 }
 
 /**
