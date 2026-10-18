@@ -1,0 +1,136 @@
+/*
+ * FinCalc ZA design tokens.
+ *
+ * Light "paper" is the default theme. Dark is opt-in through
+ * <html data-theme="dark"> and is its own set of values, not an inversion.
+ *
+ * Banknote colours follow the South African notes: R10 green, R20 brown,
+ * R50 red, R100 blue, R200 orange. Teal is an extra chart hue.
+ * Chart series order: blue, orange, green, brown, teal, red. This order was
+ * checked for colour-blind separation and contrast in both themes, so keep it.
+ * Every banknote colour also clears 4.5:1 as text on paper and on cards.
+ */
+
+/* ── Typefaces (self-hosted, latin + latin-ext only) ───────────────── */
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('/fonts/source-sans-3-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('/fonts/source-sans-3-latin-wght-italic.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('/fonts/source-sans-3-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('/fonts/source-serif-4-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('/fonts/source-serif-4-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Metric-matched local fallbacks so text does not shift when the web fonts load */
+@font-face {
+  font-family: 'Source Sans 3 Fallback';
+  src: local('Arial'), local('ArialMT');
+  ascent-override: 109.2105%;
+  descent-override: 42.6604%;
+  line-gap-override: 0%;
+  size-adjust: 93.7639%;
+}
+@font-face {
+  font-family: 'Source Serif 4 Fallback';
+  src: local('Georgia');
+  ascent-override: 96.4195%;
+  descent-override: 31.1781%;
+  line-gap-override: 0%;
+  size-adjust: 107.4471%;
+}
+
+/* ── Light theme (default) ─────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+
+  /* Surfaces and text */
+  --paper: #F8F6F1;          /* page */
+  --paper-raised: #FFFEFB;   /* cards, panels, chart surface */
+  --paper-sunk: #F1EDE4;     /* table heads, tracks, wells */
+  --ink: #1C1A16;            /* primary text */
+  --ink-muted: #4F4A41;      /* secondary text */
+  --ink-subtle: #6B655A;     /* captions, axis labels */
+  --rule: #E3DDD1;           /* hairlines and card borders */
+  --rule-strong: #8F8676;    /* form control borders (3:1) */
+
+  /* Banknote colours */
+  --note-blue: #2F5BB7;      /* R100 */
+  --note-orange: #B35303;    /* R200 */
+  --note-green: #307F51;     /* R10 */
+  --note-brown: #894A00;     /* R20 */
+  --note-teal: #00759A;
+  --note-red: #B3261E;       /* R50 */
+
+  /* Meaning */
+  --gain: var(--note-green);
+  --loss: var(--note-red);
+  --warn: #876500;
+  --accent: var(--note-blue);
+  --on-accent: #FFFFFF;      /* text on a filled banknote colour */
+
+  --shadow-card: 0 1px 2px rgba(28, 26, 22, 0.06);
+  --shadow-pop: 0 8px 24px rgba(28, 26, 22, 0.12);
+
+  /* Typography */
+  --font-display: 'Source Serif 4', 'Source Serif 4 Fallback', Georgia, serif;
+  --font-text: 'Source Sans 3', 'Source Sans 3 Fallback', system-ui, sans-serif;
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #141310;
+  --paper-raised: #1E1C18;
+  --paper-sunk: #191814;
+  --ink: #EEE9DE;
+  --ink-muted: #BDB6A8;
+  --ink-subtle: #999285;
+  --rule: #35322B;
+  --rule-strong: #757064;
+
+  --note-blue: #688AD6;
+  --note-orange: #D87214;
+  --note-green: #55A171;
+  --note-brown: #C67A00;
+  --note-teal: #1CA4AA;
+  --note-red: #E5534B;
+
+  --warn: #B58A28;
+  --on-accent: #141310;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
