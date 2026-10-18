@@ -4,6 +4,7 @@
  */
 import type { MortgageInputs, PropertyInputs } from '../types';
 import type { AffordabilityInputs } from './affordability';
+import type { STRvsLTRInputs } from './shortTermRental';
 
 export type FieldErrors<K extends string> = Partial<Record<K, string>>;
 
@@ -135,6 +136,24 @@ export function rentalYieldInputErrors(i: RentalYieldChecked): FieldErrors<keyof
     misc: nonNegativeError(i.misc),
     maintenancePct: rangeError(i.maintenancePct, 0, 10, 'maintenance', '%'),
     agentFeePct: rangeError(i.agentFeePct, 0, 50, 'a fee', '%'),
+  };
+}
+
+export function airbnbInputErrors(i: STRvsLTRInputs): FieldErrors<keyof STRvsLTRInputs> {
+  return {
+    propertyValue: positiveError(i.propertyValue, 'Enter the value of the property.'),
+    monthlyBondCost: nonNegativeError(i.monthlyBondCost),
+    nightlyRate: positiveError(i.nightlyRate, 'Enter the nightly rate.'),
+    occupancyPercent: rangeError(i.occupancyPercent, 0, 100, 'occupancy', '%'),
+    avgNightsPerStay: rangeError(i.avgNightsPerStay, 1, 365, 'a stay', ' nights'),
+    platformFeePercent: rangeError(i.platformFeePercent, 0, 50, 'a fee', '%'),
+    cleaningCostPerStay: nonNegativeError(i.cleaningCostPerStay),
+    strManagementPercent: rangeError(i.strManagementPercent, 0, 50, 'a fee', '%'),
+    monthlyStrExtraCosts: nonNegativeError(i.monthlyStrExtraCosts),
+    monthlyRent: positiveError(i.monthlyRent, 'Enter the monthly rent.'),
+    ltrVacancyPercent: rangeError(i.ltrVacancyPercent, 0, 100, 'a vacancy', '%'),
+    ltrManagementPercent: rangeError(i.ltrManagementPercent, 0, 50, 'a fee', '%'),
+    monthlyLtrExpenses: nonNegativeError(i.monthlyLtrExpenses),
   };
 }
 

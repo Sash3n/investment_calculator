@@ -4,17 +4,19 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts';
 import {
-  House, BedDouble, Info, BookOpen, Trophy, CalendarDays, Percent, RotateCcw,
+  House, BedDouble, BookOpen, RotateCcw,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { readShareParam } from '../utils/share';
-import { formatRand, formatRandShort, formatPercent } from '../utils/format';
+import { formatRand, formatPercent } from '../utils/format';
 import { calcSTRvsLTR, type STRvsLTRInputs } from '../utils/shortTermRental';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { airbnbInputErrors } from '../utils/validation';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -75,8 +77,13 @@ export function AirbnbVsRental() {
     { name: 'Net Income', value: Math.round(result.str.netOperatingIncome) },
   ];
 
-  const winnerLabel = result.winner === 'str' ? 'Short-term (Airbnb)' : result.winner === 'ltr' ? 'Long-term Lease' : 'Tie';
-  const winnerColor = result.winner === 'str' ? C.blue : result.winner === 'ltr' ? C.green : C.orange;
+  const errors = airbnbInputErrors(inputs);
+  const blocked = errors.propertyValue ?? errors.nightlyRate ?? errors.occupancyPercent ?? errors.avgNightsPerStay ?? errors.monthlyRent;
+  const occupancyText = result.breakEvenOccupancy !== null
+    ? `Airbnb earns more above ${formatPercent(result.breakEvenOccupancy, 1)} occupancy; you entered ${formatPercent(inputs.occupancyPercent, 0)}.`
+    : result.winner === 'str'
+      ? 'Airbnb earns more at any occupancy with these costs.'
+      : 'With these costs, even a fully booked Airbnb would not match the lease.';
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -108,69 +115,47 @@ export function AirbnbVsRental() {
         <div className="space-y-4">
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Property" icon={House} />
-            <InputField label="Property Value" id="p-value" value={inputs.propertyValue} onChange={set((v) => ({ propertyValue: v }))} prefix="R" help="Used for net yield comparison" />
-            <InputField label="Monthly Bond Repayment" id="p-bond" value={inputs.monthlyBondCost} onChange={set((v) => ({ monthlyBondCost: v }))} prefix="R" help="Applied to both strategies (0 if owned outright)" />
+            <InputField label="Property Value" id="p-value" value={inputs.propertyValue} error={errors.propertyValue} onChange={set((v) => ({ propertyValue: v }))} prefix="R" help="Used for net yield comparison" />
+            <InputField label="Monthly Bond Repayment" id="p-bond" value={inputs.monthlyBondCost} error={errors.monthlyBondCost} onChange={set((v) => ({ monthlyBondCost: v }))} prefix="R" help="Applied to both strategies (0 if owned outright)" />
           </div>
 
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Short-term (Airbnb)" icon={BedDouble} />
-            <InputField label="Average Nightly Rate" id="s-rate" value={inputs.nightlyRate} onChange={set((v) => ({ nightlyRate: v }))} prefix="R" />
-            <InputField label="Occupancy" id="s-occ" value={inputs.occupancyPercent} onChange={set((v) => ({ occupancyPercent: v }))} suffix="%" help="SA urban Airbnbs average 50–70%" />
-            <InputField label="Avg Nights per Stay" id="s-nights" value={inputs.avgNightsPerStay} onChange={set((v) => ({ avgNightsPerStay: v }))} help="Drives cleaning frequency" />
-            <InputField label="Platform Fee" id="s-plat" value={inputs.platformFeePercent} onChange={set((v) => ({ platformFeePercent: v }))} suffix="%" help="Airbnb host fee ≈ 14–16%" />
-            <InputField label="Cleaning Cost per Stay" id="s-clean" value={inputs.cleaningCostPerStay} onChange={set((v) => ({ cleaningCostPerStay: v }))} prefix="R" />
-            <InputField label="Co-host / Management" id="s-mgmt" value={inputs.strManagementPercent} onChange={set((v) => ({ strManagementPercent: v }))} suffix="%" help="STR managers charge 15–25% (0 if self-managed)" />
-            <InputField label="Monthly Utilities & Extras" id="s-extra" value={inputs.monthlyStrExtraCosts} onChange={set((v) => ({ monthlyStrExtraCosts: v }))} prefix="R" help="Wi-Fi, electricity, consumables, furniture wear" />
+            <InputField label="Average Nightly Rate" id="s-rate" value={inputs.nightlyRate} error={errors.nightlyRate} onChange={set((v) => ({ nightlyRate: v }))} prefix="R" />
+            <InputField label="Occupancy" id="s-occ" value={inputs.occupancyPercent} error={errors.occupancyPercent} onChange={set((v) => ({ occupancyPercent: v }))} suffix="%" help="SA urban Airbnbs average 50–70%" />
+            <InputField label="Avg Nights per Stay" id="s-nights" value={inputs.avgNightsPerStay} error={errors.avgNightsPerStay} onChange={set((v) => ({ avgNightsPerStay: v }))} help="Drives cleaning frequency" />
+            <InputField label="Platform Fee" id="s-plat" value={inputs.platformFeePercent} error={errors.platformFeePercent} onChange={set((v) => ({ platformFeePercent: v }))} suffix="%" help="Airbnb host fee ≈ 14–16%" />
+            <InputField label="Cleaning Cost per Stay" id="s-clean" value={inputs.cleaningCostPerStay} error={errors.cleaningCostPerStay} onChange={set((v) => ({ cleaningCostPerStay: v }))} prefix="R" />
+            <InputField label="Co-host / Management" id="s-mgmt" value={inputs.strManagementPercent} error={errors.strManagementPercent} onChange={set((v) => ({ strManagementPercent: v }))} suffix="%" help="STR managers charge 15–25% (0 if self-managed)" />
+            <InputField label="Monthly Utilities & Extras" id="s-extra" value={inputs.monthlyStrExtraCosts} error={errors.monthlyStrExtraCosts} onChange={set((v) => ({ monthlyStrExtraCosts: v }))} prefix="R" help="Wi-Fi, electricity, consumables, furniture wear" />
           </div>
 
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Long-term Lease" icon={House} />
-            <InputField label="Monthly Rent" id="l-rent" value={inputs.monthlyRent} onChange={set((v) => ({ monthlyRent: v }))} prefix="R" />
-            <InputField label="Vacancy" id="l-vac" value={inputs.ltrVacancyPercent} onChange={set((v) => ({ ltrVacancyPercent: v }))} suffix="%" />
-            <InputField label="Letting Agent Fee" id="l-mgmt" value={inputs.ltrManagementPercent} onChange={set((v) => ({ ltrManagementPercent: v }))} suffix="%" help="Typically 7–10% of rent" />
-            <InputField label="Monthly Expenses" id="l-exp" value={inputs.monthlyLtrExpenses} onChange={set((v) => ({ monthlyLtrExpenses: v }))} prefix="R" help="Levies, rates, insurance, maintenance" />
+            <InputField label="Monthly Rent" id="l-rent" value={inputs.monthlyRent} error={errors.monthlyRent} onChange={set((v) => ({ monthlyRent: v }))} prefix="R" />
+            <InputField label="Vacancy" id="l-vac" value={inputs.ltrVacancyPercent} error={errors.ltrVacancyPercent} onChange={set((v) => ({ ltrVacancyPercent: v }))} suffix="%" />
+            <InputField label="Letting Agent Fee" id="l-mgmt" value={inputs.ltrManagementPercent} error={errors.ltrManagementPercent} onChange={set((v) => ({ ltrManagementPercent: v }))} suffix="%" help="Typically 7–10% of rent" />
+            <InputField label="Monthly Expenses" id="l-exp" value={inputs.monthlyLtrExpenses} error={errors.monthlyLtrExpenses} onChange={set((v) => ({ monthlyLtrExpenses: v }))} prefix="R" help="Levies, rates, insurance, maintenance" />
           </div>
         </div>
 
         {/* Results */}
         <div className="space-y-5">
-          {/* Winner banner */}
-          <div className="p-4 rounded-xl flex items-center gap-4" style={{ background: alpha(winnerColor, 7), border: `1px solid ${alpha(winnerColor, 27)}` }}>
-            <Trophy size={24} color={winnerColor} className="flex-shrink-0" />
-            <div>
-              <p className="font-semibold" style={{ color: textTone(winnerColor), fontFamily: 'var(--font-display)' }}>
-                {result.winner === 'tie' ? 'Both strategies earn about the same' : `${winnerLabel} wins`}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                {result.winner === 'tie'
-                  ? 'Net operating income is nearly identical — let effort and risk decide.'
-                  : `Earns ${formatRand(Math.abs(result.annualDifference), 0)} more net income per year (before bond finance).`}
-              </p>
-            </div>
-          </div>
-
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="Airbnb Net Income" value={formatRandShort(result.str.netOperatingIncome)} sub={`${formatPercent(result.str.netYield, 1)} net yield`} icon={BedDouble} color="orange" delay={0} />
-            <StatCard label="Long-term Net Income" value={formatRandShort(result.ltr.netOperatingIncome)} sub={`${formatPercent(result.ltr.netYield, 1)} net yield`} icon={House} color="green" delay={0.05} />
-            <StatCard label="Airbnb Monthly Cash Flow" value={formatRandShort(result.str.monthlyCashFlow)} sub="After bond" icon={CalendarDays} color={result.str.monthlyCashFlow >= 0 ? 'green' : 'red'} delay={0.1} />
-            <StatCard label="Long-term Monthly Cash Flow" value={formatRandShort(result.ltr.monthlyCashFlow)} sub="After bond" icon={CalendarDays} color={result.ltr.monthlyCashFlow >= 0 ? 'green' : 'red'} delay={0.15} />
-          </div>
-
-          {/* Break-even occupancy */}
-          {result.breakEvenOccupancy !== null && (
-            <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-teal) 7%, transparent)', border: `1px solid ${alpha(C.teal, 20)}` }}>
-              <Percent size={18} color={C.teal} className="mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: textTone(C.teal), fontFamily: 'var(--font-display)' }}>
-                  Break-even occupancy: {formatPercent(result.breakEvenOccupancy, 1)}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                  Above this occupancy, the Airbnb strategy out-earns the long-term lease. You're currently modelling {formatPercent(inputs.occupancyPercent, 0)}.
-                </p>
-              </div>
-            </div>
-          )}
+          <ResultPanel
+            label={result.winner === 'tie' ? 'Both earn about the same each year' : `${result.winner === 'str' ? 'Airbnb' : 'A long-term lease'} earns more each year by`}
+            value={formatRand(Math.abs(result.annualDifference), 0)}
+            blocked={blocked}
+            summary={<>
+              Before the bond, a short-term let earns {formatRand(result.str.netOperatingIncome, 0)} a year after its costs and a
+              long-term lease {formatRand(result.ltr.netOperatingIncome, 0)}. {occupancyText}
+            </>}
+            figures={[
+              { label: 'Airbnb net yield', value: formatPercent(result.str.netYield, 1) },
+              { label: 'Lease net yield', value: formatPercent(result.ltr.netYield, 1) },
+              { label: 'Airbnb after bond', value: `${formatRand(result.str.monthlyCashFlow, 0)}/mo` },
+              { label: 'Lease after bond', value: `${formatRand(result.ltr.monthlyCashFlow, 0)}/mo` },
+            ]}
+          />
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -268,10 +253,15 @@ export function AirbnbVsRental() {
             </div>
           </div>
 
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>Net operating income is shown before bond finance so the strategies are comparable; monthly cash flow then applies the same bond cost to both. Educational estimates only.</span>
-          </div>
+          <AssumptionsDrawer
+            items={[
+              <>Net income is shown before the bond so the two are comparable. Cash flow then takes the same bond repayment of {formatRand(inputs.monthlyBondCost, 0)} a month off both.</>,
+              <>The Airbnb is booked for {formatPercent(inputs.occupancyPercent, 0)} of the year at {formatRand(inputs.nightlyRate, 0)} a night, with a cleaning bill every {inputs.avgNightsPerStay} nights. Platform and co-host fees are a share of the booking income.</>,
+              <>The lease runs all year, less {formatPercent(inputs.ltrVacancyPercent, 0)} vacancy, and the letting agent takes {formatPercent(inputs.ltrManagementPercent, 0)} of the rent collected.</>,
+              <>Levies, rates, insurance and maintenance are only counted in the lease’s monthly expenses. If you would pay them with an Airbnb too, add them to its utilities and extras.</>,
+              <>Rates and costs stay the same all year. Seasonality, income tax and VAT are not included.</>,
+            ]}
+          />
         </div>
       </div>
     </div>
