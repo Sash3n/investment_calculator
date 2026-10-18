@@ -62,6 +62,43 @@ export function propertyInputErrors(i: PropertyInputs): FieldErrors<keyof Proper
   };
 }
 
+/** The Buy vs Rent inputs that can be wrong. */
+export interface BuyVsRentChecked {
+  purchasePrice: number;
+  depositPercent: number;
+  interestRatePercent: number;
+  loanTermYears: number;
+  monthlyRates: number;
+  monthlyLevies: number;
+  monthlyInsurance: number;
+  maintenancePercent: number;
+  propertyGrowthPercent: number;
+  otherAnnualIncome: number;
+  initiationFee: number;
+  monthlyRent: number;
+  annualRentEscalation: number;
+  investmentReturnPercent: number;
+}
+
+export function buyVsRentInputErrors(i: BuyVsRentChecked): FieldErrors<keyof BuyVsRentChecked> {
+  return {
+    purchasePrice: positiveError(i.purchasePrice, 'Enter the price of the home.'),
+    depositPercent: rangeError(i.depositPercent, 0, 100, 'a deposit', '%'),
+    interestRatePercent: rangeError(i.interestRatePercent, 0, 30, 'a rate', '%'),
+    loanTermYears: rangeError(i.loanTermYears, 1, 30, 'a term', ' years'),
+    monthlyRates: nonNegativeError(i.monthlyRates),
+    monthlyLevies: nonNegativeError(i.monthlyLevies),
+    monthlyInsurance: nonNegativeError(i.monthlyInsurance),
+    maintenancePercent: rangeError(i.maintenancePercent, 0, 10, 'maintenance', '%'),
+    propertyGrowthPercent: rangeError(i.propertyGrowthPercent, -20, 30, 'yearly growth', '%'),
+    otherAnnualIncome: nonNegativeError(i.otherAnnualIncome),
+    initiationFee: nonNegativeError(i.initiationFee),
+    monthlyRent: positiveError(i.monthlyRent, 'Enter the monthly rent.'),
+    annualRentEscalation: rangeError(i.annualRentEscalation, -20, 30, 'a yearly increase', '%'),
+    investmentReturnPercent: rangeError(i.investmentReturnPercent, -20, 30, 'a return', '%'),
+  };
+}
+
 export function affordabilityInputErrors(i: AffordabilityInputs): FieldErrors<keyof AffordabilityInputs> {
   return {
     grossMonthlyIncome: positiveError(i.grossMonthlyIncome, 'Enter your income before tax.'),
