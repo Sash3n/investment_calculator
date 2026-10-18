@@ -11,6 +11,10 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { StatementRow } from '../components/statement/StatementRow';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const C = {
@@ -176,6 +180,20 @@ export function DividendCalculator() {
   const goalRow         = rows.find((r) => r.afterTaxDividend >= targetAnnual);
   const goalYear        = goalRow?.year ?? null;
 
+  const errors = {
+    investmentAmount: nonNegativeError(inp.investmentAmount),
+    monthlyContribution: nonNegativeError(inp.monthlyContribution),
+    dividendYield: rangeError(inp.dividendYield, 0, 20, 'a yield', '%'),
+    dividendGrowthRate: rangeError(inp.dividendGrowthRate, -20, 30, 'dividend growth', '%'),
+    annualReturnRate: rangeError(inp.annualReturnRate, -20, 30, 'price growth', '%'),
+    years: rangeError(inp.years, 1, 60, 'a number of years', ''),
+    foreignWithholdingTax: rangeError(inp.foreignWithholdingTax, 0, 50, 'a tax rate', '%'),
+    exchangeRate: positiveError(inp.exchangeRate, 'Enter the exchange rate.'),
+    targetMonthlyIncome: nonNegativeError(inp.targetMonthlyIncome),
+  };
+  const blocked = errors.investmentAmount ?? errors.monthlyContribution ?? errors.dividendYield ?? errors.years
+    ?? (inp.investmentAmount <= 0 && inp.monthlyContribution <= 0 ? 'Enter an amount to invest or a monthly contribution.' : undefined);
+
   // Chart data: annual income (DRIP vs no-DRIP comparison)
   const noDripRows = useMemo(() => project({ ...inp, drip: false }), [inp]);
 
@@ -212,12 +230,6 @@ export function DividendCalculator() {
               SA &amp; International · DRIP projections · Dividends Tax applied
             </p>
           </div>
-          <span
-            className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
-          >
-            {formatRand(firstRow?.afterTaxDividend ?? 0, 0)}/yr net yr 1
-          </span>
           <ShareButton state={inp} />
           <button
             onClick={() => setInp(DEFAULT_INPUTS)}
@@ -230,23 +242,23 @@ export function DividendCalculator() {
         </div>
       </motion.div>
 
-      {/* Summary cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-      >
-        {[
-          { label: 'Total Contributed', value: formatRandShort(totalContributed), color: C.green },
-          { label: `Year ${inp.years} Net Income`, value: formatRand(lastRow?.afterTaxDividend ?? 0, 0), color: C.teal },
-          { label: 'Total Net Income', value: formatRandShort(totalIncome), color: C.blue },
-          { label: `Final Portfolio`, value: formatRandShort(finalValue), color: C.orange },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="glass-card-static rounded-xl p-4" style={{ borderLeft: `3px solid ${color}` }}>
-            <p className="text-[11px] mb-1" style={{ color: 'var(--ink-muted)' }}>{label}</p>
-            <p className="text-lg font-bold" style={{ color: textTone(color), fontFamily: 'var(--font-display)' }}>{value}</p>
-          </div>
-        ))}
-      </motion.div>
+      <ResultPanel
+        label={`Dividend income in year ${inp.years}, after tax`}
+        value={`${formatRand(lastRow?.afterTaxDividend ?? 0, 0)} a year`}
+        blocked={blocked}
+        summary={<>
+          That is about {formatRand((lastRow?.afterTaxDividend ?? 0) / 12, 0)} a month. Over {inp.years} years you would put
+          in {formatRand(totalContributed, 0)}, collect {formatRand(totalIncome, 0)} in dividends after tax and end with a portfolio
+          of {formatRand(finalValue, 0)}.
+          {inp.tfsa && tfsaSaving > 0 && ` Holding it in a tax-free savings account saves ${formatRand(tfsaSaving, 0)} in dividends tax.`}
+        </>}
+        figures={[
+          { label: 'Year one, after tax', value: formatRand(firstRow?.afterTaxDividend ?? 0, 0) },
+          { label: 'Total put in', value: formatRand(totalContributed, 0) },
+          { label: 'All dividends, after tax', value: formatRand(totalIncome, 0) },
+          { label: 'Final portfolio', value: formatRand(finalValue, 0) },
+        ]}
+      />
 
       {/* Inputs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -264,22 +276,22 @@ export function DividendCalculator() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="investment" label="Investment Amount" value={inp.investmentAmount}
+            <InputField id="investment" label="Investment Amount" value={inp.investmentAmount} error={errors.investmentAmount}
               onChange={n((v) => ({ investmentAmount: v }))} prefix="R"
               help="Starting capital deployed" />
-            <InputField id="monthlyContribution" label="Monthly Contribution" value={inp.monthlyContribution}
+            <InputField id="monthlyContribution" label="Monthly Contribution" value={inp.monthlyContribution} error={errors.monthlyContribution}
               onChange={n((v) => ({ monthlyContribution: v }))} prefix="R"
               help="Recurring amount added every month (added yearly)" />
-            <InputField id="yield" label="Dividend Yield" value={inp.dividendYield}
+            <InputField id="yield" label="Dividend Yield" value={inp.dividendYield} error={errors.dividendYield}
               onChange={n((v) => ({ dividendYield: v }))} suffix="% p.a." step={0.5}
               help="e.g. Satrix Divi Plus ~4–5%, MSCI World ~1.5–2%" />
-            <InputField id="divGrowth" label="Dividend Growth Rate" value={inp.dividendGrowthRate}
+            <InputField id="divGrowth" label="Dividend Growth Rate" value={inp.dividendGrowthRate} error={errors.dividendGrowthRate}
               onChange={n((v) => ({ dividendGrowthRate: v }))} suffix="% p.a." step={0.5}
               help="How much the dividend per share grows annually" />
-            <InputField id="capReturn" label="Capital Appreciation" value={inp.annualReturnRate}
+            <InputField id="capReturn" label="Capital Appreciation" value={inp.annualReturnRate} error={errors.annualReturnRate}
               onChange={n((v) => ({ annualReturnRate: v }))} suffix="% p.a." step={0.5}
               help="Expected share price growth per year" />
-            <InputField id="years" label="Investment Horizon" value={inp.years}
+            <InputField id="years" label="Investment Horizon" value={inp.years} error={errors.years}
               onChange={n((v) => ({ years: Math.max(1, Math.min(50, Math.round(v))) }))} suffix="yrs" />
 
             {/* DRIP toggle */}
@@ -404,10 +416,10 @@ export function DividendCalculator() {
           {inp.market === 'International' && (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <InputField id="withholdingTax" label="Foreign Withholding Tax" value={inp.foreignWithholdingTax}
+                <InputField id="withholdingTax" label="Foreign Withholding Tax" value={inp.foreignWithholdingTax} error={errors.foreignWithholdingTax}
                   onChange={n((v) => ({ foreignWithholdingTax: v }))} suffix="%" step={1}
                   help="US: 15%, Germany: 25%, UK: 0%" />
-                <InputField id="fx" label="ZAR / Foreign Currency" value={inp.exchangeRate}
+                <InputField id="fx" label="ZAR / Foreign Currency" value={inp.exchangeRate} error={errors.exchangeRate}
                   onChange={n((v) => ({ exchangeRate: v }))} prefix="R"
                   help="e.g. R18.50 per USD" />
               </div>
@@ -427,19 +439,11 @@ export function DividendCalculator() {
             </div>
           )}
 
-          {/* Effective net yield summary */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <div className="rounded-lg p-3" style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
-              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Gross Yield</p>
-              <p className="text-base font-bold" style={{ color: textTone(C.orange) }}>{formatPercent(inp.dividendYield, 2)}</p>
-            </div>
-            <div className="rounded-lg p-3" style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
-              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Net Yield (after tax)</p>
-              <p className="text-base font-bold" style={{ color: textTone(C.green) }}>
-                {formatPercent(inp.dividendYield * (1 - taxRate), 2)}
-              </p>
-            </div>
-          </div>
+          <dl className="text-sm pt-1">
+            <StatementRow line={{ label: 'Dividend yield', display: formatPercent(inp.dividendYield, 2) }} />
+            <StatementRow line={{ label: 'Tax on dividends', display: formatPercent(taxRate * 100, 0) }} />
+            <StatementRow line={{ label: 'Yield after tax', display: formatPercent(inp.dividendYield * (1 - taxRate), 2) }} strong />
+          </dl>
         </div>
       </div>
 
@@ -460,31 +464,22 @@ export function DividendCalculator() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-          <InputField id="targetIncome" label="Target Monthly Income" value={inp.targetMonthlyIncome}
+          <InputField id="targetIncome" label="Target Monthly Income" value={inp.targetMonthlyIncome} error={errors.targetMonthlyIncome}
             onChange={n((v) => ({ targetMonthlyIncome: v }))} prefix="R"
             help="Net (after-tax) passive income you want" />
 
-          <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)' }}>Capital needed today</p>
-            <p className="text-lg font-bold" style={{ color: textTone(C.blue), fontFamily: 'var(--font-display)' }}>
-              {netYieldFrac > 0 ? formatRandShort(capitalForGoal) : '—'}
-            </p>
-            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
-              at a {formatPercent(netYieldFrac * 100, 2)} net yield
-            </p>
-          </div>
-
-          <div className="rounded-xl p-3" style={{ background: goalYear ? 'color-mix(in srgb, var(--gain) 7%, transparent)' : 'color-mix(in srgb, var(--loss) 7%, transparent)', border: `1px solid ${goalYear ? 'color-mix(in srgb, var(--gain) 18%, transparent)' : 'color-mix(in srgb, var(--loss) 18%, transparent)'}` }}>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)' }}>Your plan reaches it</p>
-            <p className="text-lg font-bold" style={{ color: textTone(goalYear ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
-              {goalYear ? `Year ${goalYear}` : `Not within ${inp.years} yrs`}
-            </p>
-            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
-              {goalYear
-                ? `${formatRand(inp.targetMonthlyIncome, 0)}/mo net dividends`
-                : 'Raise contributions, yield, or horizon'}
-            </p>
-          </div>
+          <dl className="text-sm sm:col-span-2">
+            <StatementRow line={{
+              label: 'Capital needed today',
+              display: netYieldFrac > 0 ? formatRand(capitalForGoal, 0) : '—',
+              note: `At a ${formatPercent(netYieldFrac * 100, 2)} yield after tax`,
+            }} />
+            <StatementRow line={{
+              label: 'Your plan reaches it',
+              display: goalYear ? `Year ${goalYear}` : `Not within ${inp.years} years`,
+              note: goalYear ? undefined : 'Raise the contributions, the yield or the number of years',
+            }} />
+          </dl>
         </div>
       </motion.div>
 
@@ -679,16 +674,21 @@ export function DividendCalculator() {
           </div>
         </div>
 
-        <div
-          className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'color-mix(in srgb, var(--loss) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
-        >
-          <Info size={13} className="text-loss-ink mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--ink-muted)' }}>
-            Projections are illustrative only. Returns, dividend growth, and exchange rates are not guaranteed.
-            Tax treatment depends on your personal circumstances. This is not financial or tax advice — consult a CFP or tax practitioner.
-          </span>
-        </div>
+        <AssumptionsDrawer
+          items={[
+            <>Dividends grow by {formatPercent(inp.dividendGrowthRate, 1)} a year and the share price by {formatPercent(inp.annualReturnRate, 1)} a year. Neither is guaranteed.</>,
+            inp.tfsa
+              ? <>Inside a tax-free savings account there is no SA dividends tax{inp.market === 'International' ? `, but the ${formatPercent(inp.foreignWithholdingTax, 0)} foreign withholding tax still applies` : ''}.</>
+              : inp.market === 'SA'
+                ? <>SA dividends tax of 20% is taken before you are paid.</>
+                : <>Foreign withholding tax is {formatPercent(inp.foreignWithholdingTax, 0)}. The higher of that and SA’s 20% dividends tax is used, as a cautious estimate.</>,
+            inp.drip
+              ? <>Dividends are reinvested once a year, with no costs.</>
+              : <>Dividends are paid out, not reinvested.</>,
+            <>Contributions of {formatRand(inp.monthlyContribution * 12, 0)} a year are added at the end of each year.</>,
+            <>Not included: fees, capital gains tax when you sell, and inflation.</>,
+          ]}
+        />
       </div>
 
     </div>
