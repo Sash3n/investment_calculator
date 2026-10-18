@@ -8,23 +8,24 @@ import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
+import { alpha, SERIES, textTone } from '../utils/color';
 
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
-const LOAN_COLORS = [C.indigo, C.emerald, C.amber];
+const LOAN_COLORS = SERIES.slice(0, 3);
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 interface Loan {
@@ -175,22 +176,22 @@ export function LoanComparison() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
-            <Scale size={20} className="text-[#F59E0B]" />
+            style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
+            <Scale size={20} className="text-note-orange-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Loan Comparison Tool
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Compare up to 3 loan offers — true total cost including all fees
             </p>
           </div>
           {loans.length < 3 && (
             <button onClick={addLoan}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid rgba(99,102,241,0.3)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
               <Plus size={13} /> Add Loan
             </button>
           )}
@@ -212,19 +213,19 @@ export function LoanComparison() {
                   value={loan.label}
                   onChange={(e) => updateLoan(loan.id, 'label', e.target.value)}
                   className="text-sm font-bold bg-transparent border-0 outline-none"
-                  style={{ color: LOAN_COLORS[idx % LOAN_COLORS.length], fontFamily: 'var(--font-heading)', width: 100 }}
+                  style={{ color: textTone(LOAN_COLORS[idx % LOAN_COLORS.length]), fontFamily: 'var(--font-display)', width: 100 }}
                 />
               </div>
               {loans.length > 2 && (
                 <button onClick={() => removeLoan(loan.id)}
                   className="text-xs p-1 rounded-lg transition-all"
-                  style={{ color: C.red, background: 'rgba(239,68,68,0.08)' }}>
+                  style={{ color: textTone(C.red), background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
                   <Trash2 size={13} />
                 </button>
               )}
             </div>
 
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Loan Details</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--ink-subtle)' }}>Loan Details</p>
             <div className="grid grid-cols-2 gap-3">
               <InputField id={`amount-${loan.id}`} label="Loan Amount" value={loan.amount}
                 onChange={(v) => updateLoan(loan.id, 'amount', v)} prefix="R" />
@@ -246,15 +247,15 @@ export function LoanComparison() {
                   checked={loan.capitaliseInitiationFee}
                   onChange={() => toggleCapitaliseInitiationFee(loan.id)}
                 />
-                <div className={`w-8 h-4.5 rounded-full transition-colors ${loan.capitaliseInitiationFee ? 'bg-[#6366F1]' : 'bg-[#334155]'}`} />
+                <div className={`w-8 h-4.5 rounded-full transition-colors ${loan.capitaliseInitiationFee ? 'bg-note-blue' : 'bg-rule-strong'}`} />
                 <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white transition-transform ${loan.capitaliseInitiationFee ? 'translate-x-3.5' : 'translate-x-0'}`} />
               </div>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              <p className="text-[10px]" style={{ color: 'var(--ink-muted)' }}>
                 Add initiation fee to loan (finance it instead of paying upfront)
               </p>
             </label>
 
-            <p className="text-[10px] font-semibold uppercase tracking-widest pt-1" style={{ color: 'var(--color-text-subtle)' }}>Property Costs (auto-calculated)</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest pt-1" style={{ color: 'var(--ink-subtle)' }}>Property Costs (auto-calculated)</p>
             <div className="grid grid-cols-2 gap-3">
               <InputField id={`transfer-${loan.id}`} label="Transfer Duty" value={results[idx].transferDuty}
                 onChange={(v) => setOverride(loan.id, 'transferDutyOverride', v)}
@@ -265,9 +266,9 @@ export function LoanComparison() {
             </div>
 
             <div className="flex items-center justify-between pt-2 px-1 rounded-lg"
-              style={{ background: `${LOAN_COLORS[idx % LOAN_COLORS.length]}0A`, border: `1px solid ${LOAN_COLORS[idx % LOAN_COLORS.length]}20`, padding: '8px 12px' }}>
-              <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Total Upfront</span>
-              <span className="text-sm font-bold" style={{ color: LOAN_COLORS[idx % LOAN_COLORS.length] }}>
+              style={{ background: alpha(LOAN_COLORS[idx % LOAN_COLORS.length], 4), border: `1px solid ${alpha(LOAN_COLORS[idx % LOAN_COLORS.length], 13)}`, padding: '8px 12px' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>Total Upfront</span>
+              <span className="text-sm font-bold" style={{ color: textTone(LOAN_COLORS[idx % LOAN_COLORS.length]) }}>
                 {formatRand(results[idx].totalUpfront, 0)}
               </span>
             </div>
@@ -282,15 +283,15 @@ export function LoanComparison() {
           { label: 'Lowest Grand Total (all costs)', winner: bestTotal, value: formatRand(bestTotal.grandTotal, 0) },
         ].map((item) => (
           <div key={item.label} className="rounded-xl p-4 flex items-center gap-3"
-            style={{ background: `${item.winner.color}0D`, border: `1px solid ${item.winner.color}30` }}>
+            style={{ background: alpha(item.winner.color, 5), border: `1px solid ${alpha(item.winner.color, 19)}` }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: `${item.winner.color}20` }}>
-              <Trophy size={14} style={{ color: item.winner.color }} />
+              style={{ background: alpha(item.winner.color, 13) }}>
+              <Trophy size={14} style={{ color: textTone(item.winner.color) }} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--color-text-subtle)' }}>{item.label}</p>
-              <p className="text-sm font-bold" style={{ color: item.winner.color }}>
+                style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
+              <p className="text-sm font-bold" style={{ color: textTone(item.winner.color) }}>
                 {item.winner.label} — {item.value}
               </p>
             </div>
@@ -301,18 +302,18 @@ export function LoanComparison() {
       {/* Comparison table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Side-by-Side Comparison
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 <th className="py-2 px-3 text-left font-semibold"
-                  style={{ color: 'var(--color-text-muted)' }}>Metric</th>
+                  style={{ color: 'var(--ink-muted)' }}>Metric</th>
                 {results.map((r) => (
                   <th key={r.id} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: r.color }}>{r.label}</th>
+                    style={{ color: textTone(r.color) }}>{r.label}</th>
                 ))}
               </tr>
             </thead>
@@ -338,16 +339,16 @@ export function LoanComparison() {
                 })},
               ].map((row, i) => (
                 <tr key={row.label} style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.04)',
-                  background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                  borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
+                  background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                 }}>
                   <td className="py-2 px-3 font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{row.label}</td>
+                    style={{ color: 'var(--ink-muted)' }}>{row.label}</td>
                   {row.vals.map((val, vi) => (
                     <td key={vi} className="py-2 px-3"
-                      style={{ color: row.bestIdx === vi ? C.emerald : 'var(--color-text)', fontWeight: row.bestIdx === vi ? 700 : 400 }}>
+                      style={{ color: textTone(row.bestIdx === vi ? C.green : 'var(--ink)'), fontWeight: row.bestIdx === vi ? 700 : 400 }}>
                       {val}
-                      {row.bestIdx === vi && <span className="ml-1 text-[9px]" style={{ color: C.emerald }}>★</span>}
+                      {row.bestIdx === vi && <span className="ml-1 text-[9px]" style={{ color: textTone(C.green) }}>★</span>}
                     </td>
                   ))}
                 </tr>
@@ -360,23 +361,23 @@ export function LoanComparison() {
       {/* Balance over time chart */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Outstanding Balance Over Time
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           How quickly each loan is paid off
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={balanceChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748B' }}
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }}
               interval={Math.floor(balanceChart.length / 6)} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
               formatter={(v, name) => [formatRand(Number(v), 0), name]}
               contentStyle={TOOLTIP_STYLE}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
             {loans.map((loan, i) => (
               <Line key={loan.id} type="monotone" dataKey={loan.label}
                 stroke={LOAN_COLORS[i % LOAN_COLORS.length]}
@@ -386,7 +387,7 @@ export function LoanComparison() {
         </ResponsiveContainer>
       </div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Transfer duty and bond registration are auto-calculated from loan amount but can be overridden. Not financial advice.
       </p>
     </div>

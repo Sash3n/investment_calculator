@@ -9,14 +9,15 @@ import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { formatRand, formatPercent, formatYears } from '../utils/format';
 import type { MortgageInputs, PropertyInputs, CarInputs } from '../types';
 import type { CalcType } from '../hooks/useFirestore';
+import { alpha, textTone } from '../utils/color';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-const CA = '#6366F1'; // indigo — Scenario A
-const CB = '#F59E0B'; // amber  — Scenario B
-const GOOD = '#10B981';
-const BAD  = '#EF4444';
-const NEUTRAL = '#94A3B8';
+const CA = 'var(--note-blue)'; // Scenario A
+const CB = 'var(--note-orange)'; // Scenario B
+const GOOD = 'var(--gain)';
+const BAD  = 'var(--loss)';
+const NEUTRAL = 'var(--ink-muted)';
 
 type Direction = 'lower-better' | 'higher-better' | 'neutral';
 
@@ -44,11 +45,11 @@ function delta(a: number, b: number, direction: Direction) {
 
 function ScenarioHeader({ label, title, color }: { label: string; title: string; color: string }) {
   return (
-    <div className="p-4 rounded-xl mb-1" style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
+    <div className="p-4 rounded-xl mb-1" style={{ background: alpha(color, 7), border: `1px solid ${alpha(color, 15)}` }}>
       <p className="text-[10px] uppercase tracking-widest font-semibold mb-1"
-        style={{ color, fontFamily: 'var(--font-body)' }}>{label}</p>
+        style={{ color: textTone(color), fontFamily: 'var(--font-text)' }}>{label}</p>
       <p className="text-sm font-bold leading-snug"
-        style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>{title}</p>
+        style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>{title}</p>
     </div>
   );
 }
@@ -57,11 +58,11 @@ function CompareTable({ rows }: { rows: CompareRow[] }) {
   return (
     <div className="glass-card-static overflow-hidden">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_auto_auto_auto] px-4 py-2 border-b border-[rgba(255,255,255,0.06)]">
-        <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>Metric</p>
-        <p className="text-[10px] uppercase tracking-wider w-32 text-right" style={{ color: CA }}>Scenario A</p>
-        <p className="text-[10px] uppercase tracking-wider w-32 text-right px-3" style={{ color: CB }}>Scenario B</p>
-        <p className="text-[10px] uppercase tracking-wider w-24 text-center" style={{ color: 'var(--color-text-subtle)' }}>Diff</p>
+      <div className="grid grid-cols-[1fr_auto_auto_auto] px-4 py-2 border-b border-ink/6">
+        <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Metric</p>
+        <p className="text-[10px] uppercase tracking-wider w-32 text-right" style={{ color: textTone(CA) }}>Scenario A</p>
+        <p className="text-[10px] uppercase tracking-wider w-32 text-right px-3" style={{ color: textTone(CB) }}>Scenario B</p>
+        <p className="text-[10px] uppercase tracking-wider w-24 text-center" style={{ color: 'var(--ink-subtle)' }}>Diff</p>
       </div>
 
       {rows.map((row, i) => {
@@ -73,21 +74,21 @@ function CompareTable({ rows }: { rows: CompareRow[] }) {
           <div
             key={row.label}
             className="grid grid-cols-[1fr_auto_auto_auto] px-4 py-3 items-center"
-            style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+            style={{ background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)' }}
           >
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               {row.label}
             </p>
 
             {/* A value */}
             <p className="text-xs font-semibold w-32 text-right"
-              style={{ color: aWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: textTone(aWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--ink)'), fontFamily: 'var(--font-display)' }}>
               {row.a}
             </p>
 
             {/* B value */}
             <p className="text-xs font-semibold w-32 text-right px-3"
-              style={{ color: bWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: textTone(bWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--ink)'), fontFamily: 'var(--font-display)' }}>
               {row.b}
             </p>
 
@@ -99,8 +100,8 @@ function CompareTable({ rows }: { rows: CompareRow[] }) {
                 <span
                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
                   style={{
-                    background: `${GOOD}14`,
-                    color: GOOD,
+                    background: alpha(GOOD, 8),
+                    color: textTone(GOOD),
                   }}
                 >
                   {d.winner === 'A'
@@ -125,8 +126,8 @@ function SectionTitle({ children }: { children: string }) {
   return (
     <div className="mt-6 mb-2 flex items-center gap-2">
       <p className="text-[10px] font-semibold uppercase tracking-widest"
-        style={{ color: CA, fontFamily: 'var(--font-body)' }}>{children}</p>
-      <div className="flex-1 h-px" style={{ background: 'rgba(99,102,241,0.2)' }} />
+        style={{ color: textTone(CA), fontFamily: 'var(--font-text)' }}>{children}</p>
+      <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--note-blue) 20%, transparent)' }} />
     </div>
   );
 }
@@ -279,8 +280,8 @@ export function Compare() {
   if (!state?.entryA || !state?.entryB) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-6">
-        <GitCompare size={36} className="opacity-30" style={{ color: 'var(--color-text-muted)' }} />
-        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+        <GitCompare size={36} className="opacity-30" style={{ color: 'var(--ink-muted)' }} />
+        <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
           No scenarios selected. Go to History and select two snapshots to compare.
         </p>
         <button className="btn-primary text-sm" onClick={() => navigate('/history')}>
@@ -309,14 +310,14 @@ export function Compare() {
           <ArrowLeft size={16} />
         </button>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
-          <GitCompare size={18} className="text-[#6366F1]" />
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
+          <GitCompare size={18} className="text-note-blue-ink" />
         </div>
         <div>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <h1 className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Scenario Comparison
           </h1>
-          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
             {TYPE_LABEL[type]} · green = better value
           </p>
         </div>
@@ -349,13 +350,13 @@ export function Compare() {
       )}
       {type !== 'mortgage' && type !== 'property' && type !== 'car' && (
         <div className="glass-card-static p-8 text-center mt-4">
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
             Detailed comparison is available for Mortgage, Property ROI, and Car Finance snapshots.
           </p>
         </div>
       )}
 
-      <p className="text-[10px] text-center mt-8" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center mt-8" style={{ color: 'var(--ink-subtle)' }}>
         All figures are estimates. Green highlights indicate the better value for each metric.
       </p>
     </motion.div>

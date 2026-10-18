@@ -7,17 +7,17 @@ import jsPDF from 'jspdf';
 import type { MortgageInputs, MortgageResult, PropertyInputs, PropertyResult, CarInputs, CarResult } from '../types';
 import { formatRand, formatPercent, formatYears, formatDate } from './format';
 
-// ── Theme ─────────────────────────────────────────────────────────────────────
+// ── Theme: the light paper tokens as RGB (jsPDF cannot read CSS variables) ────
 const C = {
-  bg:       [15, 20, 40]   as [number, number, number],
-  surface:  [22, 30, 55]   as [number, number, number],
-  border:   [51, 65, 85]   as [number, number, number],
-  text:     [241, 245, 249] as [number, number, number],
-  muted:    [100, 116, 139] as [number, number, number],
-  indigo:   [99, 102, 241] as [number, number, number],
-  emerald:  [16, 185, 129] as [number, number, number],
-  amber:    [245, 158, 11] as [number, number, number],
-  red:      [239, 68, 68]  as [number, number, number],
+  bg:       [255, 255, 255] as [number, number, number],
+  surface:  [250, 248, 243] as [number, number, number],
+  border:   [227, 221, 209] as [number, number, number],
+  text:     [28, 26, 22]    as [number, number, number],
+  muted:    [107, 101, 90]  as [number, number, number],
+  blue:     [47, 91, 183]   as [number, number, number],
+  green:    [48, 127, 81]   as [number, number, number],
+  orange:   [179, 83, 3]    as [number, number, number],
+  red:      [179, 38, 30]   as [number, number, number],
 };
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -28,12 +28,12 @@ const COL_W = (PAGE_W - MARGIN * 2);
 
 // ── Builder helpers ───────────────────────────────────────────────────────────
 function header(doc: jsPDF, title: string, subtitle: string) {
-  // Dark header bar
+  // Header bar
   doc.setFillColor(...C.surface);
   doc.rect(0, 0, PAGE_W, 28, 'F');
 
   // Accent line
-  doc.setFillColor(...C.indigo);
+  doc.setFillColor(...C.blue);
   doc.rect(0, 26, PAGE_W, 2, 'F');
 
   // Title
@@ -58,7 +58,7 @@ function header(doc: jsPDF, title: string, subtitle: string) {
 function sectionTitle(doc: jsPDF, y: number, text: string): number {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor(...C.indigo);
+  doc.setTextColor(...C.blue);
   doc.text(text.toUpperCase(), MARGIN, y);
 
   doc.setDrawColor(...C.border);
@@ -178,7 +178,7 @@ function tableRow(
   color?: [number, number, number],
 ): number {
   if (shade) {
-    doc.setFillColor(22, 30, 55);
+    doc.setFillColor(...C.surface);
     doc.rect(MARGIN, y, COL_W, 5.5, 'F');
   }
   doc.setFont('helvetica', 'normal');
@@ -241,23 +241,23 @@ export function exportMortgagePDF(
 
   // ── Key stat boxes ──
   const bw = (COL_W - 9) / 4;
-  statBox(doc, MARGIN,           y, bw, 'Loan Amount',    formatRand(result.loanAmount, 0),       C.indigo);
-  statBox(doc, MARGIN + bw + 3,  y, bw, 'Monthly Payment', formatRand(result.standardPayment, 0), C.amber);
+  statBox(doc, MARGIN,           y, bw, 'Loan Amount',    formatRand(result.loanAmount, 0),       C.blue);
+  statBox(doc, MARGIN + bw + 3,  y, bw, 'Monthly Payment', formatRand(result.standardPayment, 0), C.orange);
   statBox(doc, MARGIN + (bw+3)*2,y, bw, 'Total Interest',  formatRand(result.totalInterestStandard, 0), C.red);
-  statBox(doc, MARGIN + (bw+3)*3,y, bw, 'Interest Saved',  formatRand(result.interestSaved, 0),   C.emerald);
+  statBox(doc, MARGIN + (bw+3)*3,y, bw, 'Interest Saved',  formatRand(result.interestSaved, 0),   C.green);
   y += 22;
 
   // ── Loan details ──
   y = sectionTitle(doc, y, 'Loan Details');
   y = kvRow(doc, y, 'Purchase Price',   formatRand(inputs.purchasePrice));
   y = kvRow(doc, y, 'Deposit',          `${formatRand(inputs.deposit)} (${((inputs.deposit / inputs.purchasePrice) * 100).toFixed(1)}%)`);
-  y = kvRow(doc, y, 'Loan Amount',      formatRand(result.loanAmount), C.indigo, true);
+  y = kvRow(doc, y, 'Loan Amount',      formatRand(result.loanAmount), C.blue, true);
   y = kvRow(doc, y, 'Interest Rate',    formatPercent(inputs.interestRate));
   y = kvRow(doc, y, 'Term',             `${inputs.termYears} years`);
   y = kvRow(doc, y, 'Payment Frequency', inputs.frequency === 'biweekly' ? 'Bi-Weekly (26×/year)' : 'Monthly (12×/year)');
   if (inputs.monthlyServiceFee > 0) {
     y = kvRow(doc, y, 'Monthly Service Fee', formatRand(inputs.monthlyServiceFee));
-    y = kvRow(doc, y, 'Effective Monthly Payment', formatRand(result.effectiveMonthlyPayment), C.amber);
+    y = kvRow(doc, y, 'Effective Monthly Payment', formatRand(result.effectiveMonthlyPayment), C.orange);
     y = kvRow(doc, y, 'Total Service Fees (loan life)', formatRand(result.totalServiceFees), C.red);
   }
   y += 2;
@@ -274,9 +274,9 @@ export function exportMortgagePDF(
     if (inputs.lumpSumYear > 0) y = kvRow(doc, y, `Lump Sum (Year ${inputs.lumpSumYear})`, formatRand(inputs.lumpSumAmount));
     y = kvRow(doc, y, 'Total Paid (With Extras)',    formatRand(result.totalPaidWithExtras));
     y = kvRow(doc, y, 'Total Interest (With Extras)', formatRand(result.totalInterestWithExtras), C.red);
-    y = kvRow(doc, y, 'Interest Saved',               formatRand(result.interestSaved), C.emerald, true);
-    y = kvRow(doc, y, 'Time Saved',                   formatYears(result.monthsSaved), C.emerald);
-    y = kvRow(doc, y, 'New Payoff Date',               formatDate(result.payoffDateWithExtras), C.emerald);
+    y = kvRow(doc, y, 'Interest Saved',               formatRand(result.interestSaved), C.green, true);
+    y = kvRow(doc, y, 'Time Saved',                   formatYears(result.monthsSaved), C.green);
+    y = kvRow(doc, y, 'New Payoff Date',               formatDate(result.payoffDateWithExtras), C.green);
   }
   y += 2;
 
@@ -284,10 +284,10 @@ export function exportMortgagePDF(
   y = checkPage(doc, y, 35);
   y = sectionTitle(doc, y, 'Upfront Cash Required');
   y = kvRow(doc, y, 'Deposit',           formatRand(inputs.deposit));
-  y = kvRow(doc, y, 'Transfer Duty',     inputs.transferDutyExempt ? 'Exempt' : formatRand(upfront.transferDuty), inputs.transferDutyExempt ? C.emerald : C.red);
-  y = kvRow(doc, y, 'Bond Registration', inputs.bondRegistrationIncluded ? 'Capitalised into loan' : formatRand(upfront.bondRegCost), inputs.bondRegistrationIncluded ? C.emerald : C.red);
+  y = kvRow(doc, y, 'Transfer Duty',     inputs.transferDutyExempt ? 'Exempt' : formatRand(upfront.transferDuty), inputs.transferDutyExempt ? C.green : C.red);
+  y = kvRow(doc, y, 'Bond Registration', inputs.bondRegistrationIncluded ? 'Capitalised into loan' : formatRand(upfront.bondRegCost), inputs.bondRegistrationIncluded ? C.green : C.red);
   y = divider(doc, y);
-  y = kvRow(doc, y, 'Total Cash Required on Transfer Day', formatRand(upfront.totalCashRequired), C.indigo, true);
+  y = kvRow(doc, y, 'Total Cash Required on Transfer Day', formatRand(upfront.totalCashRequired), C.blue, true);
   y += 4;
 
   // ── Amortization schedule (annual summary) ──
@@ -354,10 +354,10 @@ export function exportPropertyPDF(inputs: PropertyInputs, result: PropertyResult
 
   // ── Key stat boxes ──
   const bw = (COL_W - 9) / 4;
-  statBox(doc, MARGIN,            y, bw, 'Loan Amount',     formatRand(result.loanAmount, 0),          C.indigo);
-  statBox(doc, MARGIN + bw + 3,   y, bw, 'Bond Repayment',  formatRand(result.monthlyBondRepayment, 0), C.amber);
-  statBox(doc, MARGIN + (bw+3)*2, y, bw, 'Cash Flow S1',    formatRand(result.cashFlowS1, 0),           result.cashFlowS1 >= 0 ? C.emerald : C.red);
-  statBox(doc, MARGIN + (bw+3)*3, y, bw, 'Gross Yield S1',  formatPercent(result.grossYieldS1),         C.indigo);
+  statBox(doc, MARGIN,            y, bw, 'Loan Amount',     formatRand(result.loanAmount, 0),          C.blue);
+  statBox(doc, MARGIN + bw + 3,   y, bw, 'Bond Repayment',  formatRand(result.monthlyBondRepayment, 0), C.orange);
+  statBox(doc, MARGIN + (bw+3)*2, y, bw, 'Cash Flow S1',    formatRand(result.cashFlowS1, 0),           result.cashFlowS1 >= 0 ? C.green : C.red);
+  statBox(doc, MARGIN + (bw+3)*3, y, bw, 'Gross Yield S1',  formatPercent(result.grossYieldS1),         C.blue);
   y += 22;
 
   // ── Property details ──
@@ -366,15 +366,15 @@ export function exportPropertyPDF(inputs: PropertyInputs, result: PropertyResult
   if (inputs.discount > 0) {
     y = kvRow(doc, y, 'Listed Price',        formatRand(inputs.purchasePrice));
     y = kvRow(doc, y, 'Discount',            formatPercent(inputs.discount));
-    y = kvRow(doc, y, 'Effective Price',     formatRand(result.effectivePurchasePrice), C.emerald);
+    y = kvRow(doc, y, 'Effective Price',     formatRand(result.effectivePurchasePrice), C.green);
   } else {
     y = kvRow(doc, y, 'Purchase Price',      formatRand(result.effectivePurchasePrice));
   }
   y = kvRow(doc, y, 'Deposit',               formatRand(inputs.deposit));
-  y = kvRow(doc, y, 'Loan Amount',           formatRand(result.loanAmount), C.indigo, true);
+  y = kvRow(doc, y, 'Loan Amount',           formatRand(result.loanAmount), C.blue, true);
   y = kvRow(doc, y, 'Interest Rate',         formatPercent(inputs.interestRate));
   y = kvRow(doc, y, 'Bond Term',             `${inputs.bondTerm} years`);
-  y = kvRow(doc, y, 'Monthly Bond Repayment', formatRand(result.monthlyBondRepayment), C.amber, true);
+  y = kvRow(doc, y, 'Monthly Bond Repayment', formatRand(result.monthlyBondRepayment), C.orange, true);
   y += 2;
 
   // ── Monthly costs & cash flow ──
@@ -398,22 +398,22 @@ export function exportPropertyPDF(inputs: PropertyInputs, result: PropertyResult
   y = kvRow(doc, y, 'Effective Rent S1 (after vacancy)', formatRand(result.monthlyEffectiveRentS1));
   y = kvRow(doc, y, 'Management Fee S1',             formatRand(result.managementFeeS1));
   y = kvRow(doc, y, 'Total Monthly Costs S1',        formatRand(result.totalMonthlyCostsS1), C.red);
-  y = kvRow(doc, y, 'Net Cash Flow — Scenario 1',    formatRand(result.cashFlowS1), result.cashFlowS1 >= 0 ? C.emerald : C.red, true);
-  y = kvRow(doc, y, 'Net Cash Flow — Scenario 2',    formatRand(result.cashFlowS2), result.cashFlowS2 >= 0 ? C.emerald : C.red, true);
+  y = kvRow(doc, y, 'Net Cash Flow — Scenario 1',    formatRand(result.cashFlowS1), result.cashFlowS1 >= 0 ? C.green : C.red, true);
+  y = kvRow(doc, y, 'Net Cash Flow — Scenario 2',    formatRand(result.cashFlowS2), result.cashFlowS2 >= 0 ? C.green : C.red, true);
   y += 2;
 
   // ── Yields & ROI ──
   y = checkPage(doc, y, 45);
   y = sectionTitle(doc, y, 'Yields & ROI');
   y = twoColKV(doc, y, [
-    { label: 'Gross Yield S1',   value: formatPercent(result.grossYieldS1),  color: C.indigo },
-    { label: 'Gross Yield S2',   value: formatPercent(result.grossYieldS2),  color: C.indigo },
-    { label: 'Net Yield S1',     value: formatPercent(result.netYieldS1),    color: result.netYieldS1 >= 0 ? C.emerald : C.red },
-    { label: 'Net Yield S2',     value: formatPercent(result.netYieldS2),    color: result.netYieldS2 >= 0 ? C.emerald : C.red },
-    { label: '5-Year ROI S1',    value: formatPercent(result.roi5YearS1, 1), color: result.roi5YearS1 >= 0 ? C.emerald : C.red },
-    { label: '5-Year ROI S2',    value: formatPercent(result.roi5YearS2, 1), color: result.roi5YearS2 >= 0 ? C.emerald : C.red },
-    { label: '10-Year ROI S1',   value: formatPercent(result.roi10YearS1, 1),color: result.roi10YearS1 >= 0 ? C.emerald : C.red },
-    { label: '10-Year ROI S2',   value: formatPercent(result.roi10YearS2, 1),color: result.roi10YearS2 >= 0 ? C.emerald : C.red },
+    { label: 'Gross Yield S1',   value: formatPercent(result.grossYieldS1),  color: C.blue },
+    { label: 'Gross Yield S2',   value: formatPercent(result.grossYieldS2),  color: C.blue },
+    { label: 'Net Yield S1',     value: formatPercent(result.netYieldS1),    color: result.netYieldS1 >= 0 ? C.green : C.red },
+    { label: 'Net Yield S2',     value: formatPercent(result.netYieldS2),    color: result.netYieldS2 >= 0 ? C.green : C.red },
+    { label: '5-Year ROI S1',    value: formatPercent(result.roi5YearS1, 1), color: result.roi5YearS1 >= 0 ? C.green : C.red },
+    { label: '5-Year ROI S2',    value: formatPercent(result.roi5YearS2, 1), color: result.roi5YearS2 >= 0 ? C.green : C.red },
+    { label: '10-Year ROI S1',   value: formatPercent(result.roi10YearS1, 1),color: result.roi10YearS1 >= 0 ? C.green : C.red },
+    { label: '10-Year ROI S2',   value: formatPercent(result.roi10YearS2, 1),color: result.roi10YearS2 >= 0 ? C.green : C.red },
   ]);
   y += 2;
 
@@ -421,10 +421,10 @@ export function exportPropertyPDF(inputs: PropertyInputs, result: PropertyResult
   y = checkPage(doc, y, 35);
   y = sectionTitle(doc, y, 'Upfront / Acquisition Costs');
   y = kvRow(doc, y, 'Deposit',           formatRand(inputs.deposit));
-  y = kvRow(doc, y, 'Transfer Duty',     inputs.transferDutyExempt ? 'Exempt' : formatRand(result.transferDuty), inputs.transferDutyExempt ? C.emerald : C.red);
-  y = kvRow(doc, y, 'Bond Registration', inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(result.bondRegistrationCost), inputs.bondRegistrationIncluded ? C.emerald : C.red);
+  y = kvRow(doc, y, 'Transfer Duty',     inputs.transferDutyExempt ? 'Exempt' : formatRand(result.transferDuty), inputs.transferDutyExempt ? C.green : C.red);
+  y = kvRow(doc, y, 'Bond Registration', inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(result.bondRegistrationCost), inputs.bondRegistrationIncluded ? C.green : C.red);
   y = divider(doc, y);
-  y = kvRow(doc, y, 'Total Cash Required', formatRand(result.totalCashRequired), C.indigo, true);
+  y = kvRow(doc, y, 'Total Cash Required', formatRand(result.totalCashRequired), C.blue, true);
   y += 4;
 
   // ── 10-year property value projection ──
@@ -470,10 +470,10 @@ export function exportCarPDF(inputs: CarInputs, result: CarResult) {
 
   // ── Key stat boxes ──
   const bw = (COL_W - 9) / 4;
-  statBox(doc, MARGIN,            y, bw, 'Financed Amount',   formatRand(result.financedAmount, 0),      C.indigo);
-  statBox(doc, MARGIN + bw + 3,   y, bw, 'Monthly Instalment',formatRand(result.monthlyInstalment, 0),   C.amber);
+  statBox(doc, MARGIN,            y, bw, 'Financed Amount',   formatRand(result.financedAmount, 0),      C.blue);
+  statBox(doc, MARGIN + bw + 3,   y, bw, 'Monthly Instalment',formatRand(result.monthlyInstalment, 0),   C.orange);
   statBox(doc, MARGIN + (bw+3)*2, y, bw, 'Total Interest',    formatRand(result.totalInterest, 0),       C.red);
-  statBox(doc, MARGIN + (bw+3)*3, y, bw, 'Interest Saved',    formatRand(result.interestSaved, 0),       C.emerald);
+  statBox(doc, MARGIN + (bw+3)*3, y, bw, 'Interest Saved',    formatRand(result.interestSaved, 0),       C.green);
   y += 22;
 
   // ── Finance details ──
@@ -481,16 +481,16 @@ export function exportCarPDF(inputs: CarInputs, result: CarResult) {
   y = kvRow(doc, y, 'Vehicle Price',        formatRand(inputs.vehiclePrice));
   y = kvRow(doc, y, 'Deposit',              formatRand(inputs.deposit));
   y = kvRow(doc, y, 'Balloon Payment',      inputs.balloonPercent > 0 ? `${formatPercent(inputs.balloonPercent)} (${formatRand(result.balloonAmount, 0)})` : 'None');
-  y = kvRow(doc, y, 'Financed Amount',      formatRand(result.financedAmount), C.indigo, true);
+  y = kvRow(doc, y, 'Financed Amount',      formatRand(result.financedAmount), C.blue, true);
   y = kvRow(doc, y, 'Interest Rate',        formatPercent(inputs.interestRate));
   y = kvRow(doc, y, 'Term',                 `${inputs.termMonths} months`);
-  y = kvRow(doc, y, 'Monthly Instalment',   formatRand(result.monthlyInstalment), C.amber, true);
+  y = kvRow(doc, y, 'Monthly Instalment',   formatRand(result.monthlyInstalment), C.orange, true);
   if (result.instalmentOverride) {
     y = kvRow(doc, y, '  (Bank minimum applied)', '', C.muted);
   }
   if (inputs.monthlyServiceFee > 0) {
     y = kvRow(doc, y, 'Service Fee',              formatRand(inputs.monthlyServiceFee));
-    y = kvRow(doc, y, 'Effective Monthly Payment', formatRand(result.effectiveMonthlyPayment), C.amber);
+    y = kvRow(doc, y, 'Effective Monthly Payment', formatRand(result.effectiveMonthlyPayment), C.orange);
   }
   y += 2;
 
@@ -509,8 +509,8 @@ export function exportCarPDF(inputs: CarInputs, result: CarResult) {
     y = sectionTitle(doc, y, 'Extra Payment Impact');
     y = kvRow(doc, y, 'Extra Monthly Payment',  formatRand(inputs.extraMonthlyPayment));
     y = kvRow(doc, y, 'Interest With Extras',   formatRand(result.totalInterestWithExtra), C.red);
-    y = kvRow(doc, y, 'Interest Saved',         formatRand(result.interestSaved), C.emerald, true);
-    y = kvRow(doc, y, 'Time Saved',             formatYears(result.monthsSaved), C.emerald);
+    y = kvRow(doc, y, 'Interest Saved',         formatRand(result.interestSaved), C.green, true);
+    y = kvRow(doc, y, 'Time Saved',             formatYears(result.monthsSaved), C.green);
     y = kvRow(doc, y, 'Actual Term',            `${result.actualTermMonths} months`);
     y += 2;
   }

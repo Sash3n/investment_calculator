@@ -7,6 +7,7 @@ import {
 import { Snowflake, Plus, Trash2, Trophy, ArrowUpDown } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
+import { alpha, SERIES, textTone } from '../utils/color';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,22 +22,22 @@ interface Debt {
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
-const DEBT_COLORS = [C.indigo, C.amber, C.emerald, C.cyan, C.violet, C.red];
+const DEBT_COLORS = [...SERIES];
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 // ─── Payoff simulation ────────────────────────────────────────────────────────
@@ -185,15 +186,15 @@ export function DebtSnowball() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.25)' }}>
-            <Snowflake size={20} className="text-[#06B6D4]" />
+            style={{ background: 'color-mix(in srgb, var(--note-teal) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-teal) 25%, transparent)' }}>
+            <Snowflake size={20} className="text-note-teal-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Debt Snowball / Avalanche
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Find the fastest path to debt freedom — compare both strategies
             </p>
           </div>
@@ -204,22 +205,22 @@ export function DebtSnowball() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
         className="flex flex-col sm:flex-row gap-3">
         {([
-          { key: 'snowball'  as const, label: 'Snowball', sub: 'Pay smallest balance first — quick wins build momentum', color: C.cyan },
-          { key: 'avalanche' as const, label: 'Avalanche', sub: 'Pay highest interest first — mathematically optimal', color: C.amber },
+          { key: 'snowball'  as const, label: 'Snowball', sub: 'Pay smallest balance first — quick wins build momentum', color: C.teal },
+          { key: 'avalanche' as const, label: 'Avalanche', sub: 'Pay highest interest first — mathematically optimal', color: C.orange },
         ]).map((s) => (
           <button key={s.key} onClick={() => setStrategy(s.key)}
             className="flex-1 p-4 rounded-xl text-left transition-all"
             style={{
-              background: strategy === s.key ? `${s.color}12` : 'rgba(255,255,255,0.03)',
-              border: `2px solid ${strategy === s.key ? s.color + '40' : 'rgba(255,255,255,0.08)'}`,
+              background: strategy === s.key ? alpha(s.color, 7) : 'color-mix(in srgb, var(--ink) 3%, transparent)',
+              border: `2px solid ${strategy === s.key ? alpha(s.color, 25) : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
             }}>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
-              <p className="text-sm font-bold" style={{ color: strategy === s.key ? s.color : 'var(--color-text)' }}>
+              <p className="text-sm font-bold" style={{ color: textTone(strategy === s.key ? s.color : 'var(--ink)') }}>
                 {s.label}
               </p>
             </div>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{s.sub}</p>
+            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>{s.sub}</p>
           </button>
         ))}
       </motion.div>
@@ -229,17 +230,17 @@ export function DebtSnowball() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total Debt',       value: formatRand(totalBalance, 0),             color: C.red    },
-          { label: 'Min Payments/mo',  value: formatRand(totalMinPay, 0),              color: C.amber  },
-          { label: 'Debt-Free In',     value: `${activeResult.months} months`,         color: C.cyan,
+          { label: 'Min Payments/mo',  value: formatRand(totalMinPay, 0),              color: C.orange  },
+          { label: 'Debt-Free In',     value: `${activeResult.months} months`,         color: C.teal,
             sub: `${(activeResult.months / 12).toFixed(1)} years` },
           { label: 'Total Interest',   value: formatRand(activeResult.totalInterest, 0), color: C.red  },
         ].map((kpi) => (
           <div key={kpi.label} className="glass-card-static p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>{kpi.label}</p>
+              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-base font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-heading)' }}>{kpi.value}</p>
-            {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{kpi.sub}</p>}
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+            {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
           </div>
         ))}
       </motion.div>
@@ -248,12 +249,12 @@ export function DebtSnowball() {
       {Math.abs(interestSavedVsAvalanche) > 100 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex items-center gap-3 p-4 rounded-xl"
-          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <ArrowUpDown size={16} style={{ color: C.amber, flexShrink: 0 }} />
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
+          <ArrowUpDown size={16} style={{ color: textTone(C.orange), flexShrink: 0 }} />
+          <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
             {interestSavedVsAvalanche > 0
-              ? <>Avalanche saves <strong style={{ color: C.amber }}>{formatRand(interestSavedVsAvalanche, 0)}</strong> in interest and <strong style={{ color: C.amber }}>{Math.abs(monthsSavedVsAvalanche)} months</strong> vs Snowball</>
-              : <>Snowball saves <strong style={{ color: C.cyan }}>{formatRand(Math.abs(interestSavedVsAvalanche), 0)}</strong> in interest vs Avalanche (your debts have similar rates)</>}
+              ? <>Avalanche saves <strong style={{ color: textTone(C.orange) }}>{formatRand(interestSavedVsAvalanche, 0)}</strong> in interest and <strong style={{ color: textTone(C.orange) }}>{Math.abs(monthsSavedVsAvalanche)} months</strong> vs Snowball</>
+              : <>Snowball saves <strong style={{ color: textTone(C.teal) }}>{formatRand(Math.abs(interestSavedVsAvalanche), 0)}</strong> in interest vs Avalanche (your debts have similar rates)</>}
           </p>
         </motion.div>
       )}
@@ -265,17 +266,17 @@ export function DebtSnowball() {
           className="glass-card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Your Debts</p>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Your Debts</p>
             <button onClick={addDebt}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid rgba(99,102,241,0.25)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)` }}>
               <Plus size={12} /> Add Debt
             </button>
           </div>
 
           {debts.map((debt, idx) => (
             <div key={debt.id} className="p-4 rounded-xl space-y-3"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ background: DEBT_COLORS[idx % DEBT_COLORS.length] }} />
@@ -283,11 +284,11 @@ export function DebtSnowball() {
                   value={debt.name}
                   onChange={(e) => updateDebt(debt.id, 'name', e.target.value)}
                   className="flex-1 text-sm font-semibold bg-transparent border-0 outline-none"
-                  style={{ color: DEBT_COLORS[idx % DEBT_COLORS.length] }}
+                  style={{ color: textTone(DEBT_COLORS[idx % DEBT_COLORS.length]) }}
                 />
                 {debts.length > 1 && (
                   <button onClick={() => removeDebt(debt.id)}
-                    className="p-1 rounded-lg" style={{ color: C.red, background: 'rgba(239,68,68,0.08)' }}>
+                    className="p-1 rounded-lg" style={{ color: textTone(C.red), background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
                     <Trash2 size={12} />
                   </button>
                 )}
@@ -315,7 +316,7 @@ export function DebtSnowball() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
             className="glass-card-static p-5">
             <p className="text-sm font-semibold mb-3"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Payoff Order ({strategy === 'snowball' ? 'Snowball' : 'Avalanche'})
             </p>
             <div className="space-y-2">
@@ -324,18 +325,18 @@ export function DebtSnowball() {
                 const color = DEBT_COLORS[debts.indexOf(debt!) % DEBT_COLORS.length];
                 return (
                   <div key={o.id} className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: `${color}0D`, border: `1px solid ${color}20` }}>
+                    style={{ background: alpha(color, 5), border: `1px solid ${alpha(color, 13)}` }}>
                     <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: `${color}25`, color }}>
+                      style={{ background: alpha(color, 15), color: textTone(color) }}>
                       {i + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color }}>{o.name}</p>
-                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      <p className="text-sm font-semibold" style={{ color: textTone(color) }}>{o.name}</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                         Month {o.paidOffMonth} ({(o.paidOffMonth / 12).toFixed(1)} yrs)
                       </p>
                     </div>
-                    {i === 0 && <Trophy size={14} style={{ color: C.amber }} />}
+                    {i === 0 && <Trophy size={14} style={{ color: textTone(C.orange) }} />}
                   </div>
                 );
               })}
@@ -346,15 +347,15 @@ export function DebtSnowball() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
             className="glass-card-static p-5">
             <p className="text-sm font-semibold mb-3"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Strategy Comparison
             </p>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={comparisonData} layout="vertical" margin={{ top: 0, right: 10, left: 60, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis type="number" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-                <YAxis type="category" dataKey="strategy" tick={{ fontSize: 11, fill: '#94A3B8' }} />
-                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+                <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                <XAxis type="number" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+                <YAxis type="category" dataKey="strategy" tick={{ fontSize: 11, fill: 'var(--ink-muted)' }} />
+                <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
                 <Bar dataKey="interest" name="Total Interest" fill={C.red} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -366,30 +367,30 @@ export function DebtSnowball() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}
         className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Total Debt Balance Over Time
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           ({strategy === 'snowball' ? 'Snowball' : 'Avalanche'} strategy with {formatRand(extraPayment, 0)}/mo extra)
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `Mo ${v}`} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `Mo ${v}`} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
               formatter={(v, name) => [formatRand(Number(v), 0), name]}
               labelFormatter={(l) => `Month ${l}`}
               contentStyle={TOOLTIP_STYLE}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+            <ReferenceLine y={0} stroke="color-mix(in srgb, var(--ink) 15%, transparent)" strokeDasharray="4 4" />
             <Line type="monotone" dataKey="totalBalance" name="Remaining Debt" stroke={C.red} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Simulation assumes constant interest rates and minimum payments. Not financial advice.
       </p>
     </div>

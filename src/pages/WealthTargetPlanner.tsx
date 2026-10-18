@@ -14,22 +14,23 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const VEHICLES = [
@@ -173,9 +174,9 @@ export function WealthTargetPlanner() {
 
   // Scenario comparison — memoised to avoid re-running 3×binary-search on every keystroke
   const scenarios = useMemo(() => [
-    { label: 'Conservative', r: Math.max(1, rate - 2), color: '#F59E0B' },
-    { label: 'Current',      r: rate,                  color: '#6366F1' },
-    { label: 'Aggressive',   r: rate + 2,             color: '#10B981' },
+    { label: 'Conservative', r: Math.max(1, rate - 2), color: 'var(--note-orange)' },
+    { label: 'Current',      r: rate,                  color: 'var(--note-blue)' },
+    { label: 'Aggressive',   r: rate + 2,             color: 'var(--gain)' },
   ].map(({ label, r, color }) => {
     const pmt = mode === 'target'
       ? findMonthly(target, years, r, lump, escalation)
@@ -200,12 +201,12 @@ export function WealthTargetPlanner() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${C.indigo}22` }}>
-            <Target size={22} style={{ color: C.indigo }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.blue, 13) }}>
+            <Target size={22} style={{ color: textTone(C.blue) }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Wealth Target Planner</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Wealth Target Planner</h1>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               How much do you need to save to reach your goal?
             </p>
           </div>
@@ -214,15 +215,15 @@ export function WealthTargetPlanner() {
       </div>
 
       {/* Mode toggle */}
-      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--rule)' }}>
         {(['target', 'monthly'] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
             className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors"
             style={{
-              background: mode === m ? C.indigo : 'transparent',
-              color:      mode === m ? '#fff'   : 'var(--color-text-muted)',
+              background: mode === m ? C.blue : 'transparent',
+              color:      mode === m ? 'var(--on-accent)'   : 'var(--ink-muted)',
             }}
           >
             <ArrowLeftRight size={14} />
@@ -235,9 +236,9 @@ export function WealthTargetPlanner() {
         {/* Inputs */}
         <div
           className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+          style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
         >
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Inputs
           </h2>
 
@@ -273,7 +274,7 @@ export function WealthTargetPlanner() {
             />
             <button
               className="mt-1 text-xs"
-              style={{ color: C.indigo }}
+              style={{ color: textTone(C.blue) }}
               onClick={() => setRateOverride(null)}
             >
               Reset to preset
@@ -291,9 +292,9 @@ export function WealthTargetPlanner() {
         <div className="lg:col-span-2 space-y-4">
           {tfsaMonthlyBreached && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}44` }}>
-              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.amber }} />
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
+              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
+              <span style={{ color: 'var(--ink-muted)' }}>
                 Required monthly of {formatRand(displayPMT)} exceeds the TFSA annual limit of R46,000
                 (R3,833/month). Consider splitting between TFSA and a unit trust.
               </span>
@@ -301,9 +302,9 @@ export function WealthTargetPlanner() {
           )}
           {tfsaLifetimeBreached && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${C.red}11`, border: `1px solid ${C.red}44` }}>
-              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 27)}` }}>
+              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
+              <span style={{ color: 'var(--ink-muted)' }}>
                 Total contributions of {formatRandShort(result.totalContrib)} exceed the TFSA lifetime cap of R500,000.
               </span>
             </div>
@@ -311,22 +312,22 @@ export function WealthTargetPlanner() {
 
           <div className="grid grid-cols-2 gap-3">
             {mode === 'target' ? (
-              <StatCard label="Monthly needed"        value={formatRand(displayPMT)}            color="indigo"  icon={TrendingUp} />
+              <StatCard label="Monthly needed"        value={formatRand(displayPMT)}            color="blue"  icon={TrendingUp} />
             ) : (
-              <StatCard label="Final value"           value={formatRandShort(result.finalBalance)} color="indigo"  icon={TrendingUp} />
+              <StatCard label="Final value"           value={formatRandShort(result.finalBalance)} color="blue"  icon={TrendingUp} />
             )}
-            <StatCard label="Real value (today's R)"  value={formatRandShort(result.realValue)}  color="emerald" icon={Info} />
-            <StatCard label="Your contributions"      value={formatRandShort(result.totalContrib)} color="indigo"  icon={TrendingUp} />
-            <StatCard label="Returns (compounding)"   value={formatRandShort(result.totalReturns)} color="emerald" icon={TrendingUp} />
+            <StatCard label="Real value (today's R)"  value={formatRandShort(result.realValue)}  color="green" icon={Info} />
+            <StatCard label="Your contributions"      value={formatRandShort(result.totalContrib)} color="blue"  icon={TrendingUp} />
+            <StatCard label="Returns (compounding)"   value={formatRandShort(result.totalReturns)} color="green" icon={TrendingUp} />
           </div>
 
           {startLaterPenalty != null && startLaterPenalty > 0 && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${C.red}11`, border: `1px solid ${C.red}33` }}>
-              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
+              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
+              <span style={{ color: 'var(--ink-muted)' }}>
                 If you wait 2 years to start, you would need{' '}
-                <span style={{ color: C.red, fontWeight: 600 }}>{formatRand(startLaterPenalty)} more per month</span>
+                <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterPenalty)} more per month</span>
                 {' '}to reach the same target.
               </span>
             </div>
@@ -334,76 +335,76 @@ export function WealthTargetPlanner() {
 
           {/* Chart */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)' }}>
               Growth over {years} years
             </h2>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={result.chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="wtp-contrib" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.violet} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={C.violet} stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor={C.brown} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={C.brown} stopOpacity={0.05} />
                   </linearGradient>
                   <linearGradient id="wtp-returns" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.5} />
-                    <stop offset="95%" stopColor={C.indigo} stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor={C.blue} stopOpacity={0.5} />
+                    <stop offset="95%" stopColor={C.blue} stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={(v) => `Yr ${v}`} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={formatRandShort} width={64} />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${C.indigo}55`, strokeWidth: 1 }}
+                  cursor={{ stroke: alpha(C.blue, 33), strokeWidth: 1 }}
                 />
                 {mode === 'target' && (
-                  <ReferenceLine y={target} stroke={C.emerald} strokeDasharray="5 3"
-                    label={{ value: 'Target', fill: C.emerald, fontSize: 11, position: 'insideTopRight' }} />
+                  <ReferenceLine y={target} stroke={C.green} strokeDasharray="5 3"
+                    label={{ value: 'Target', fill: C.green, fontSize: 11, position: 'insideTopRight' }} />
                 )}
                 <Area type="monotone" dataKey="contributed" name="Contributions" stackId="1"
-                  stroke={C.violet} fill="url(#wtp-contrib)" strokeWidth={2} />
+                  stroke={C.brown} fill="url(#wtp-contrib)" strokeWidth={2} />
                 <Area type="monotone" dataKey="returns" name="Returns" stackId="1"
-                  stroke={C.indigo} fill="url(#wtp-returns)" strokeWidth={2} />
+                  stroke={C.blue} fill="url(#wtp-returns)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* Scenario comparison — data memoised above to avoid keystroke jank */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>
               Scenario comparison
             </h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
               Conservative (-2%), Current, Aggressive (+2%) return rates
             </p>
             <div className="grid grid-cols-3 gap-3">
               {scenarios.map(({ label, r, color, pmt, finalBalance, realVal }) => (
                 <div key={label} className="p-3 rounded-xl text-xs"
-                  style={{ background: `${color}11`, border: `1px solid ${color}33` }}>
-                  <div className="font-semibold mb-2" style={{ color }}>{label} ({r}%)</div>
+                  style={{ background: alpha(color, 7), border: `1px solid ${alpha(color, 20)}` }}>
+                  <div className="font-semibold mb-2" style={{ color: textTone(color) }}>{label} ({r}%)</div>
                   {mode === 'target' ? (
                     <>
-                      <div style={{ color: 'var(--color-text-muted)' }}>Monthly needed</div>
-                      <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
+                      <div style={{ color: 'var(--ink-muted)' }}>Monthly needed</div>
+                      <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
                         {formatRand(pmt)}
                       </div>
                     </>
                   ) : (
                     <>
-                      <div style={{ color: 'var(--color-text-muted)' }}>Final value</div>
-                      <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
+                      <div style={{ color: 'var(--ink-muted)' }}>Final value</div>
+                      <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
                         {formatRandShort(finalBalance)}
                       </div>
                     </>
                   )}
-                  <div className="mt-1" style={{ color: 'var(--color-text-muted)' }}>Real value</div>
-                  <div className="font-medium mt-0.5" style={{ color: 'var(--color-text)' }}>
+                  <div className="mt-1" style={{ color: 'var(--ink-muted)' }}>Real value</div>
+                  <div className="font-medium mt-0.5" style={{ color: 'var(--ink)' }}>
                     {formatRandShort(realVal)}
                   </div>
                 </div>
@@ -414,20 +415,20 @@ export function WealthTargetPlanner() {
           {/* Milestones */}
           {result.milestones.length > 0 && (
             <div className="p-5 rounded-2xl"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-              <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+              style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+              <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>
                 Milestones reached
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {result.milestones.map((m) => (
                   <div key={m.amount} className="flex items-center gap-2 p-3 rounded-xl text-sm"
-                    style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}>
-                    <CheckCircle2 size={14} style={{ color: C.emerald }} />
+                    style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
+                    <CheckCircle2 size={14} style={{ color: textTone(C.green) }} />
                     <div>
-                      <div className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                      <div className="font-semibold" style={{ color: 'var(--ink)' }}>
                         {formatRandShort(m.amount)}
                       </div>
-                      <div style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>Year {m.year}</div>
+                      <div style={{ color: 'var(--ink-muted)', fontSize: 11 }}>Year {m.year}</div>
                     </div>
                   </div>
                 ))}

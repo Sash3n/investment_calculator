@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, BookOpen, ArrowRight, Info } from 'lucide-react';
+import { alpha, textTone } from '../utils/color';
 import {
   SARS_CODES, CATEGORY_LABELS, searchSarsCodes,
   type SarsCode, type SarsCodeCategory,
 } from '../data/sarsCodes';
 
-const C = { indigo: '#6366F1', amber: '#F59E0B', emerald: '#10B981', red: '#EF4444' };
+const C = { blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)', red: 'var(--loss)' };
 
 const FIELD_LABELS: Record<string, string> = {
   annualSalary:        'Employment income',
@@ -29,21 +30,21 @@ function CodeCard({ c }: { c: SarsCode }) {
     <div className="glass-card p-4 space-y-1.5">
       <div className="flex items-center gap-3">
         <span className="text-sm font-bold px-2.5 py-1 rounded-lg font-mono"
-          style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}33` }}>
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 20)}` }}>
           {c.code}
         </span>
-        <p className="flex-1 text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{c.label}</p>
-        <span className="text-[10px] uppercase tracking-wider hidden sm:block" style={{ color: 'var(--color-text-subtle)' }}>
+        <p className="flex-1 text-sm font-semibold" style={{ color: 'var(--ink)' }}>{c.label}</p>
+        <span className="text-[10px] uppercase tracking-wider hidden sm:block" style={{ color: 'var(--ink-subtle)' }}>
           {CATEGORY_LABELS[c.category]}
         </span>
       </div>
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{c.description}</p>
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>{c.description}</p>
       {c.mapsTo ? (
-        <p className="text-[11px] flex items-center gap-1.5" style={{ color: C.emerald }}>
+        <p className="text-[11px] flex items-center gap-1.5" style={{ color: textTone(C.green) }}>
           <ArrowRight size={11} /> Counts toward “{FIELD_LABELS[c.mapsTo] ?? c.mapsTo}” in the SARS Assessment Estimator
         </p>
       ) : (
-        <p className="text-[11px] flex items-center gap-1.5" style={{ color: 'var(--color-text-subtle)' }}>
+        <p className="text-[11px] flex items-center gap-1.5" style={{ color: 'var(--ink-subtle)' }}>
           <Info size={11} /> Informational — not added to the estimate
         </p>
       )}
@@ -63,18 +64,18 @@ export function SarsCodeLookup() {
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           SARS Source Code Lookup
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
           Every code on your IRP5 / IT3 explained, and how the{' '}
-          <Link to="/tax-assessment" className="underline" style={{ color: C.indigo }}>Assessment Estimator</Link> uses it
+          <Link to="/tax-assessment" className="underline" style={{ color: textTone(C.blue) }}>Assessment Estimator</Link> uses it
         </p>
       </motion.div>
 
       {/* Search */}
       <div className="relative">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-subtle)' }} />
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--ink-subtle)' }} />
         <input
           type="text"
           value={query}
@@ -82,10 +83,10 @@ export function SarsCodeLookup() {
           placeholder="Search by code (e.g. 3601) or name (e.g. bonus, travel, PAYE)…"
           className="w-full pl-11 pr-4 py-3 rounded-2xl text-sm outline-none"
           style={{
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            color: 'var(--color-text)',
-            fontFamily: 'var(--font-body)',
+            background: 'var(--paper-raised)',
+            border: '1px solid var(--rule)',
+            color: 'var(--ink)',
+            fontFamily: 'var(--font-text)',
           }}
           aria-label="Search SARS codes"
         />
@@ -96,9 +97,9 @@ export function SarsCodeLookup() {
         <button onClick={() => setCategory('all')}
           className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
           style={{
-            background: category === 'all' ? 'rgba(99,102,241,0.18)' : 'transparent',
-            color: category === 'all' ? C.indigo : 'var(--color-text-muted)',
-            border: `1px solid ${category === 'all' ? `${C.indigo}55` : 'var(--color-border)'}`,
+            background: category === 'all' ? 'color-mix(in srgb, var(--note-blue) 18%, transparent)' : 'transparent',
+            color: textTone(category === 'all' ? C.blue : 'var(--ink-muted)'),
+            border: `1px solid ${category === 'all' ? alpha(C.blue, 33) : 'var(--rule)'}`,
           }}>
           All ({SARS_CODES.length})
         </button>
@@ -106,9 +107,9 @@ export function SarsCodeLookup() {
           <button key={cat} onClick={() => setCategory(category === cat ? 'all' : cat)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={{
-              background: category === cat ? 'rgba(99,102,241,0.18)' : 'transparent',
-              color: category === cat ? C.indigo : 'var(--color-text-muted)',
-              border: `1px solid ${category === cat ? `${C.indigo}55` : 'var(--color-border)'}`,
+              background: category === cat ? 'color-mix(in srgb, var(--note-blue) 18%, transparent)' : 'transparent',
+              color: textTone(category === cat ? C.blue : 'var(--ink-muted)'),
+              border: `1px solid ${category === cat ? alpha(C.blue, 33) : 'var(--rule)'}`,
             }}>
             {CATEGORY_LABELS[cat]}
           </button>
@@ -118,8 +119,8 @@ export function SarsCodeLookup() {
       {/* Results */}
       {results.length === 0 ? (
         <div className="text-center py-16">
-          <BookOpen size={28} className="mx-auto mb-3" style={{ color: 'var(--color-text-subtle)' }} />
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <BookOpen size={28} className="mx-auto mb-3" style={{ color: 'var(--ink-subtle)' }} />
+          <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
             No codes match “{query}”. Try the code number or a keyword like “bonus” or “medical”.
           </p>
         </div>
@@ -129,9 +130,9 @@ export function SarsCodeLookup() {
         </div>
       )}
 
-      <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
-        <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: C.amber }} />
-        <span style={{ color: 'var(--color-text-muted)' }}>
+      <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
+        <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
+        <span style={{ color: 'var(--ink-muted)' }}>
           Codes per the SARS Guide for Codes Applicable to Employees Tax Certificates (PAYE-AE-06-G06).
           Common codes only — the full guide contains additional codes for special cases. Not tax advice.
         </span>

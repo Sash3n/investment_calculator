@@ -6,6 +6,7 @@
 
 import * as XLSX from 'xlsx';
 import { calcIncomeTax, getMarginalRate } from './tax';
+import { formatRand } from './format';
 import type { AgeGroup } from '../types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -113,7 +114,7 @@ export function ageToGroup(age: number): AgeGroup {
 }
 
 function fmtR(n: number): string {
-  return `R ${Math.round(n).toLocaleString('en-ZA')}`;
+  return formatRand(n, 0);
 }
 
 function futureValue(monthlyContrib: number, annualRatePct: number, years: number): number {
@@ -341,7 +342,7 @@ export function calcInvestmentStrategy(inputs: InvestmentStrategyInputs): Invest
     if (recommendedTag === 'balanced') {
       return `At your income of ${income}/month, a balanced approach works best. Your marginal tax rate is ${marginalRate.toFixed(0)}%, so the government effectively funds ${govPays}/month (${sarsSubPct}%) of your RA contribution through tax relief. Combined with tax-free TFSA returns, this is the most efficient structure for your situation.`;
     }
-    return `At ${income}/month with a ${marginalRate.toFixed(0)}% marginal rate, maximising your RA delivers the largest government subsidy. SARS is effectively paying ${govPays}/month (${sarsSubPct}%) of your R${Math.round(maxRA).toLocaleString('en-ZA')} RA contribution — that's free money from the government. Your TFSA provides tax-free liquidity while your retirement pot grows compounding tax-deferred.`;
+    return `At ${income}/month with a ${marginalRate.toFixed(0)}% marginal rate, maximising your RA delivers the largest government subsidy. SARS is effectively paying ${govPays}/month (${sarsSubPct}%) of your ${formatRand(maxRA, 0)} RA contribution — that's free money from the government. Your TFSA provides tax-free liquidity while your retirement pot grows compounding tax-deferred.`;
   })();
 
   return {
@@ -369,7 +370,7 @@ export function exportStrategyToExcel(
   result: InvestmentStrategyResult,
 ): void {
   const wb = XLSX.utils.book_new();
-  const r = (n: number) => `R ${Math.round(n).toLocaleString('en-ZA')}`;
+  const r = (n: number) => formatRand(n, 0);
 
   // Sheet 1 — Inputs
   const ws1 = XLSX.utils.aoa_to_sheet([

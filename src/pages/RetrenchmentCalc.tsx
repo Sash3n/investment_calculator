@@ -6,13 +6,14 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  brown:  'var(--note-brown)',
 };
 
 // Retirement lump sum tax table 2025/26
@@ -135,12 +136,12 @@ export function RetrenchmentCalc() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: '#8B5CF622' }}>
-            <Briefcase size={22} style={{ color: '#8B5CF6' }} />
+          <div className="p-2.5 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-brown) 13%, transparent)' }}>
+            <Briefcase size={22} style={{ color: 'var(--note-brown-ink)' }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Retrenchment Calculator</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Retrenchment Calculator</h1>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Severance, notice pay, leave payout, UIF — your full financial picture.
             </p>
           </div>
@@ -151,8 +152,8 @@ export function RetrenchmentCalc() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Inputs */}
         <div className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Your details
           </h2>
           <InputField id="ret-years"   label="Years of service"                             value={yearsService}    onChange={(v) => setYearsService(Number(v))}    suffix="yrs" min={0} max={60} />
@@ -163,9 +164,9 @@ export function RetrenchmentCalc() {
           <InputField id="ret-prior"   label="Prior retirement lump sums received"          value={priorLumpsums}   onChange={(v) => setPriorLumpsums(Number(v))}   prefix="R" min={0} />
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
-            <Info size={13} style={{ color: C.indigo }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               BCEA: 1 week pay per completed year of service (severance) + notice pay + accrued leave.
               UIF capped at R17,712/month income.
             </span>
@@ -177,36 +178,36 @@ export function RetrenchmentCalc() {
 
           {/* Primary stat cards */}
           <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Total net payout"   value={formatRand(result.totalNet)}        color="emerald" icon={Briefcase} />
-            <StatCard label="Total runway"        value={totalRunwayYr > 0 ? `${totalRunwayYr}yr ${totalRunwayRm}mo` : `${totalRunwayMo}mo`} color="indigo" icon={TrendingDown} />
-            <StatCard label="UIF monthly benefit" value={formatRand(result.uif.monthlyBenefit)} color="amber" icon={Shield} />
-            <StatCard label="UIF entitlement"     value={`${result.uif.weeksEntitled} weeks`} color="amber" icon={Shield} />
+            <StatCard label="Total net payout"   value={formatRand(result.totalNet)}        color="green" icon={Briefcase} />
+            <StatCard label="Total runway"        value={totalRunwayYr > 0 ? `${totalRunwayYr}yr ${totalRunwayRm}mo` : `${totalRunwayMo}mo`} color="blue" icon={TrendingDown} />
+            <StatCard label="UIF monthly benefit" value={formatRand(result.uif.monthlyBenefit)} color="orange" icon={Shield} />
+            <StatCard label="UIF entitlement"     value={`${result.uif.weeksEntitled} weeks`} color="orange" icon={Shield} />
           </div>
 
           {/* Runway callout */}
           {result.totalNet > 0 && monthlyExpenses > 0 && (
           <div className="p-4 rounded-xl text-sm"
             style={{
-              background: result.monthsRunway < 3 ? `${C.red}11` : `${C.emerald}11`,
-              border: `1px solid ${result.monthsRunway < 3 ? C.red : C.emerald}33`,
+              background: result.monthsRunway < 3 ? alpha(C.red, 7) : alpha(C.green, 7),
+              border: `1px solid ${alpha(result.monthsRunway < 3 ? C.red : C.green, 20)}`,
             }}>
             {result.monthsRunway < 3 ? (
               <div className="flex items-start gap-2">
-                <AlertTriangle size={15} style={{ color: C.red }} />
-                <span style={{ color: 'var(--color-text-muted)' }}>
+                <AlertTriangle size={15} style={{ color: textTone(C.red) }} />
+                <span style={{ color: 'var(--ink-muted)' }}>
                   Your lump sum runway is under 3 months. Combined with UIF you have{' '}
-                  <span style={{ color: C.amber, fontWeight: 600 }}>{totalRunwayMo} months</span> total.
+                  <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{totalRunwayMo} months</span> total.
                   Review expenses immediately.
                 </span>
               </div>
             ) : (
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              <span style={{ color: 'var(--ink-muted)' }}>
                 Your lump sums cover{' '}
-                <span style={{ color: C.emerald, fontWeight: 600 }}>
+                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
                   {runwayYears > 0 ? `${runwayYears}yr ` : ''}{runwayRem}mo
                 </span>
                 {' '}of expenses. Adding UIF extends this to{' '}
-                <span style={{ color: C.emerald, fontWeight: 600 }}>
+                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
                   {totalRunwayYr > 0 ? `${totalRunwayYr}yr ` : ''}{totalRunwayRm}mo
                 </span>.
               </span>
@@ -216,8 +217,8 @@ export function RetrenchmentCalc() {
 
           {/* Full breakdown table */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Full payout breakdown</h2>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>Full payout breakdown</h2>
             <div className="space-y-0 text-sm">
               {[
                 { label: 'Severance pay (gross)',          val: formatRand(result.severancePay),   note: `${Math.floor(yearsService)} wks @ ${formatRand(weeklySalary > 0 ? weeklySalary : result.dailyRate * 5)}/wk` },
@@ -230,14 +231,14 @@ export function RetrenchmentCalc() {
                 { label: 'Total net lump sum',             val: formatRand(result.totalNet),       note: '', bold: true },
               ].map(({ label, val, note, bold }) => (
                 <div key={label} className="flex justify-between items-center py-2"
-                  style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  style={{ borderBottom: '1px solid var(--rule)' }}>
                   <div>
-                    <span style={{ color: bold ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: bold ? 600 : 400 }}>
+                    <span style={{ color: bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: bold ? 600 : 400 }}>
                       {label}
                     </span>
-                    {note && <span className="ml-2 text-xs" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>{note}</span>}
+                    {note && <span className="ml-2 text-xs" style={{ color: 'var(--ink-subtle)' }}>{note}</span>}
                   </div>
-                  <span style={{ color: bold ? C.emerald : 'var(--color-text)', fontWeight: bold ? 600 : 500 }}>{val}</span>
+                  <span style={{ color: textTone(bold ? C.green : 'var(--ink)'), fontWeight: bold ? 600 : 500 }}>{val}</span>
                 </div>
               ))}
             </div>
@@ -245,10 +246,10 @@ export function RetrenchmentCalc() {
 
           {/* UIF section */}
           <div className="p-5 rounded-2xl"
-            style={{ background: `${C.amber}08`, border: `1px solid ${C.amber}33` }}>
+            style={{ background: alpha(C.orange, 3), border: `1px solid ${alpha(C.orange, 20)}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <Shield size={15} style={{ color: C.amber }} />
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>UIF benefit estimate</h2>
+              <Shield size={15} style={{ color: textTone(C.orange) }} />
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>UIF benefit estimate</h2>
             </div>
             <div className="grid grid-cols-3 gap-4 text-sm">
               {[
@@ -257,12 +258,12 @@ export function RetrenchmentCalc() {
                 ['Total UIF value',    formatRand(result.uif.monthlyBenefit * result.uifMonths)],
               ].map(([lbl, val]) => (
                 <div key={lbl}>
-                  <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>{lbl}</p>
-                  <p className="font-semibold" style={{ color: 'var(--color-text)' }}>{val}</p>
+                  <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>{lbl}</p>
+                  <p className="font-semibold" style={{ color: 'var(--ink)' }}>{val}</p>
                 </div>
               ))}
             </div>
-            <p className="text-xs mt-3" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mt-3" style={{ color: 'var(--ink-muted)' }}>
               UIF income replacement rate varies 38%–58% on a sliding scale. Capped at R17,712/month
               income ceiling. Register at uFiling.co.za within 6 months of retrenchment.
             </p>
@@ -270,8 +271,8 @@ export function RetrenchmentCalc() {
 
           {/* Lump sum tax table */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>
               Retirement lump sum tax table (2025/26)
             </h2>
             <div className="space-y-0 text-xs">
@@ -282,13 +283,13 @@ export function RetrenchmentCalc() {
                 ['R1,155,001+',           '36%'],
               ].map(([range, rate]) => (
                 <div key={range} className="flex justify-between py-1.5"
-                  style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                  style={{ borderBottom: '1px solid var(--rule)', color: 'var(--ink-muted)' }}>
                   <span>{range}</span>
-                  <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>{rate}</span>
+                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{rate}</span>
                 </div>
               ))}
             </div>
-            <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
               Cumulative — prior lump sums received affect which bracket applies.
             </p>
           </div>

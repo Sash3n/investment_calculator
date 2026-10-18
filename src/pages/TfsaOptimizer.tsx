@@ -11,6 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
+import { alpha, textTone } from '../utils/color';
 
 // ── TFSA 2026 Rules ───────────────────────────────────────────────────────────
 const ANNUAL_LIMIT    = 46_000; // SARS 2026/27 budget — increased from R36,000
@@ -46,20 +47,20 @@ const INCOME_YIELD_SPLIT: Record<string, number> = {
 };
 
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -238,22 +239,22 @@ export function TfsaOptimizer() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
           >
-            <Landmark size={20} className="text-[#6366F1]" />
+            <Landmark size={20} className="text-note-blue-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               TFSA Optimizer
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Tax-Free Savings Account · R46,000/year · R500,000 lifetime · SARS 2026/27
             </p>
           </div>
           <span
             className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'rgba(16,185,129,0.12)', color: C.emerald, border: `1px solid ${C.emerald}44` }}
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
           >
             Zero tax on growth
           </span>
@@ -268,20 +269,20 @@ export function TfsaOptimizer() {
         className="glass-card-static p-5"
       >
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Lifetime Allowance Tracker
           </p>
-          <span className="text-xs font-semibold" style={{ color: C.amber }}>
+          <span className="text-xs font-semibold" style={{ color: textTone(C.orange) }}>
             {formatRand(inp.existingLifetimeUsed, 0)} used of {formatRand(LIFETIME_LIMIT, 0)}
           </span>
         </div>
 
         {/* Progress bar */}
         <div className="relative h-3 rounded-full overflow-hidden mb-3"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          style={{ background: 'color-mix(in srgb, var(--ink) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
           <motion.div
             className="absolute inset-y-0 left-0 rounded-full"
-            style={{ background: `linear-gradient(90deg, ${C.indigo} 0%, ${C.cyan} 100%)` }}
+            style={{ background: `linear-gradient(90deg, ${C.blue} 0%, ${C.teal} 100%)` }}
             initial={{ width: 0 }}
             animate={{ width: `${lifetimePct}%` }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -290,26 +291,26 @@ export function TfsaOptimizer() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div>
-            <p style={{ color: 'var(--color-text-subtle)' }}>Remaining allowance</p>
-            <p className="font-bold mt-0.5" style={{ color: C.emerald }}>
+            <p style={{ color: 'var(--ink-subtle)' }}>Remaining allowance</p>
+            <p className="font-bold mt-0.5" style={{ color: textTone(C.green) }}>
               {formatRand(remainingLifetime, 0)}
             </p>
           </div>
           <div>
-            <p style={{ color: 'var(--color-text-subtle)' }}>Annual limit</p>
-            <p className="font-bold mt-0.5" style={{ color: C.indigo }}>
+            <p style={{ color: 'var(--ink-subtle)' }}>Annual limit</p>
+            <p className="font-bold mt-0.5" style={{ color: textTone(C.blue) }}>
               R 46,000 / year
             </p>
           </div>
           <div>
-            <p style={{ color: 'var(--color-text-subtle)' }}>Years to lifetime limit</p>
-            <p className="font-bold mt-0.5" style={{ color: C.amber }}>
+            <p style={{ color: 'var(--ink-subtle)' }}>Years to lifetime limit</p>
+            <p className="font-bold mt-0.5" style={{ color: textTone(C.orange) }}>
               {remainingLifetime <= 0 ? 'Maxed out' : `~${yearsToLimit} year${yearsToLimit !== 1 ? 's' : ''}`}
             </p>
           </div>
           <div>
-            <p style={{ color: 'var(--color-text-subtle)' }}>% of lifetime used</p>
-            <p className="font-bold mt-0.5" style={{ color: 'var(--color-text)' }}>
+            <p style={{ color: 'var(--ink-subtle)' }}>% of lifetime used</p>
+            <p className="font-bold mt-0.5" style={{ color: 'var(--ink)' }}>
               {lifetimePct.toFixed(1)}%
             </p>
           </div>
@@ -320,10 +321,10 @@ export function TfsaOptimizer() {
       {overContrib && (
         <div
           className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
         >
-          <AlertTriangle size={14} className="text-[#EF4444] mt-0.5 flex-shrink-0" />
-          <span style={{ color: '#FCA5A5' }}>
+          <AlertTriangle size={14} className="text-loss-ink mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--loss-ink)' }}>
             Your annual contribution exceeds the R46,000 SARS limit. Excess contributions are penalised at
             <strong> 40%</strong>. The calculator caps contributions at R46,000/year. Do not over-contribute.
           </span>
@@ -333,11 +334,11 @@ export function TfsaOptimizer() {
       {/* Info banner */}
       <div
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}
+        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}
       >
-        <Info size={14} className="text-[#6366F1] mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--color-text-muted)' }}>
-          <strong style={{ color: 'var(--color-text)' }}>How the comparison works:</strong> Both TFSA and Taxable
+        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
+        <span style={{ color: 'var(--ink-muted)' }}>
+          <strong style={{ color: 'var(--ink)' }}>How the comparison works:</strong> Both TFSA and Taxable
           start with the same balance and receive the same annual contributions. TFSA grows completely tax-free.
           Taxable applies 20% dividend withholding tax (or income tax on interest for cash) annually, plus CGT
           on disposal at the end of the period.
@@ -351,11 +352,11 @@ export function TfsaOptimizer() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <Shield size={15} className="text-[#6366F1]" />
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              <Shield size={15} className="text-note-blue-ink" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               TFSA Details
             </p>
           </div>
@@ -377,11 +378,11 @@ export function TfsaOptimizer() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-              <TrendingUp size={15} className="text-[#10B981]" />
+              style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
+              <TrendingUp size={15} className="text-gain-ink" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Investment &amp; Income
             </p>
           </div>
@@ -412,28 +413,28 @@ export function TfsaOptimizer() {
           label="TFSA Final Balance"
           value={formatRand(tfsaFinal, 0)}
           sub={`After ${inp.projectionYears} years`}
-          color="emerald"
+          color="green"
           delay={0}
         />
         <StatCard
           label="Taxable Equivalent"
           value={formatRand(taxableFinal, 0)}
           sub="Same contributions, after tax"
-          color="indigo"
+          color="blue"
           delay={0.05}
         />
         <StatCard
           label="Extra Wealth (TFSA)"
           value={formatRand(extraWealth, 0)}
           sub="Tax-free advantage"
-          color={extraWealth >= 0 ? 'emerald' : 'red'}
+          color={extraWealth >= 0 ? 'green' : 'red'}
           delay={0.1}
         />
         <StatCard
           label="Tax Drag Avoided"
           value={formatRand(totalTaxSaved, 0)}
           sub="Annual taxes not paid"
-          color="amber"
+          color="orange"
           delay={0.15}
         />
       </div>
@@ -444,36 +445,36 @@ export function TfsaOptimizer() {
         {/* TFSA vs Taxable growth */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             TFSA vs Taxable Growth
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Both start with same balance and same contributions — difference is tax
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={growthChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradTfsa" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={C.emerald} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.green} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradTax" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.2} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name === 'tfsa' ? 'TFSA' : 'Taxable (after CGT)']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               <Area type="monotone" dataKey="tfsa"    name="TFSA"
-                stroke={C.emerald} fill="url(#gradTfsa)" strokeWidth={2} />
+                stroke={C.green} fill="url(#gradTfsa)" strokeWidth={2} />
               <Area type="monotone" dataKey="taxable" name="Taxable"
-                stroke={C.indigo}  fill="url(#gradTax)"  strokeWidth={2} />
+                stroke={C.blue}  fill="url(#gradTax)"  strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -481,22 +482,22 @@ export function TfsaOptimizer() {
         {/* Annual tax drag */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Annual Tax Drag (Avoided in TFSA)
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Tax that would be paid on the same investment outside a TFSA each year
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={taxDragChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v) => [formatRand(Number(v), 0), 'Tax Avoided']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Bar dataKey="taxDrag" name="Tax Avoided" fill={C.amber} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="taxDrag" name="Tax Avoided" fill={C.orange} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -505,19 +506,19 @@ export function TfsaOptimizer() {
       {/* Year-by-year table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Projection
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[700px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {[
                   'Year', 'Age', 'Contribution', 'Lifetime Used',
                   'TFSA Balance', 'Taxable Balance', 'Annual Tax Avoided', 'Cumulative Tax Saved',
                 ].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -526,32 +527,32 @@ export function TfsaOptimizer() {
                 const limitReached = r.lifetimeRemaining <= 0;
                 return (
                   <tr key={r.year} style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
                     background: limitReached
-                      ? 'rgba(245,158,11,0.04)'
-                      : i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                      ? 'color-mix(in srgb, var(--note-orange) 4%, transparent)'
+                      : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: '#818CF8' }}>Y{r.year}</td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>{r.age}</td>
-                    <td className="py-2 px-3" style={{ color: C.indigo }}>
+                    <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue-ink)' }}>Y{r.year}</td>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>{r.age}</td>
+                    <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>
                       {r.contribution > 0 ? formatRand(r.contribution, 0) : '—'}
                     </td>
                     <td className="py-2 px-3">
-                      <span style={{ color: r.lifetimeRemaining <= 0 ? C.amber : 'var(--color-text-muted)' }}>
+                      <span style={{ color: textTone(r.lifetimeRemaining <= 0 ? C.orange : 'var(--ink-muted)') }}>
                         {formatRand(r.lifetimeUsed, 0)}
                         {limitReached && <span className="ml-1 text-[10px]">★ maxed</span>}
                       </span>
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: C.emerald }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: textTone(C.green) }}>
                       {formatRand(r.tfsaBalance, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text)' }}>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.taxableBalance, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.amber }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>
                       {formatRand(r.taxableAnnualTax, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: C.emerald }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: textTone(C.green) }}>
                       {formatRand(r.cumulativeTaxSaved, 0)}
                     </td>
                   </tr>
@@ -559,19 +560,19 @@ export function TfsaOptimizer() {
               })}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <tr style={{ borderTop: '1px solid color-mix(in srgb, var(--ink) 10%, transparent)' }}>
                 <td colSpan={4} className="py-2 px-3 text-xs font-semibold"
-                  style={{ color: 'var(--color-text-muted)' }}>Totals</td>
-                <td className="py-2 px-3 font-bold" style={{ color: C.emerald }}>
+                  style={{ color: 'var(--ink-muted)' }}>Totals</td>
+                <td className="py-2 px-3 font-bold" style={{ color: textTone(C.green) }}>
                   {formatRand(tfsaFinal, 0)}
                 </td>
-                <td className="py-2 px-3 font-semibold" style={{ color: 'var(--color-text)' }}>
+                <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink)' }}>
                   {formatRand(taxableFinal, 0)}
                 </td>
-                <td className="py-2 px-3 font-bold" style={{ color: C.amber }}>
+                <td className="py-2 px-3 font-bold" style={{ color: textTone(C.orange) }}>
                   {formatRand(totalTaxSaved, 0)}
                 </td>
-                <td className="py-2 px-3 font-bold" style={{ color: C.emerald }}>
+                <td className="py-2 px-3 font-bold" style={{ color: textTone(C.green) }}>
                   +{formatRand(extraWealth, 0)}
                 </td>
               </tr>
@@ -586,24 +587,24 @@ export function TfsaOptimizer() {
           {
             title: 'Annual Limit',
             body: 'R46,000 per tax year (1 March – 28 February). Excess is penalised at 40% by SARS. Does not roll over. Increased from R36,000 in the 2026/27 budget.',
-            color: C.indigo,
+            color: C.blue,
           },
           {
             title: 'Lifetime Limit',
             body: 'R500,000 total contributions. Withdrawals do NOT restore your lifetime allowance — withdrawn funds cannot be re-contributed.',
-            color: C.amber,
+            color: C.orange,
           },
           {
             title: 'Zero Tax',
             body: 'No tax on interest, dividends, or capital gains inside a TFSA. No need to declare on your tax return.',
-            color: C.emerald,
+            color: C.green,
           },
         ].map((card) => (
           <div key={card.title}
             className="rounded-xl p-4"
-            style={{ background: `${card.color}10`, border: `1px solid ${card.color}30` }}>
-            <p className="text-xs font-bold mb-1" style={{ color: card.color }}>{card.title}</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: alpha(card.color, 6), border: `1px solid ${alpha(card.color, 19)}` }}>
+            <p className="text-xs font-bold mb-1" style={{ color: textTone(card.color) }}>{card.title}</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               {card.body}
             </p>
           </div>
@@ -611,7 +612,7 @@ export function TfsaOptimizer() {
       </div>
 
       {/* Disclaimer */}
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Projections are illustrative only. TFSA rules per SARS 2026. Not financial advice — consult a CFP or tax practitioner.
       </p>
     </div>

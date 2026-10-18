@@ -24,11 +24,11 @@ export type ArticleCategory =
   | 'fire';
 
 export const CATEGORY_META: Record<ArticleCategory, { label: string; color: string; emoji: string }> = {
-  investing: { label: 'Investing',        color: '#6366F1', emoji: '📈' },
-  tax:       { label: 'SA Tax',           color: '#F59E0B', emoji: '🧾' },
-  property:  { label: 'Property',         color: '#10B981', emoji: '🏠' },
-  debt:      { label: 'Debt & Budgeting', color: '#EC4899', emoji: '💳' },
-  fire:      { label: 'FIRE & Macro',     color: '#EF4444', emoji: '🔥' },
+  investing: { label: 'Investing',        color: 'var(--note-blue)', emoji: '📈' },
+  tax:       { label: 'SA Tax',           color: 'var(--note-orange)', emoji: '🧾' },
+  property:  { label: 'Property',         color: 'var(--gain)', emoji: '🏠' },
+  debt:      { label: 'Debt & Budgeting', color: 'var(--note-red)', emoji: '💳' },
+  fire:      { label: 'FIRE & Macro',     color: 'var(--loss)', emoji: '🔥' },
 };
 
 export const ARTICLES: Article[] = [

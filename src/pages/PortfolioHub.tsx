@@ -19,12 +19,13 @@ import {
   useSavedProperties, useExpenses, useMaintenance, useIncome, usePropertyRecords,
 } from '../hooks/useFirestore';
 import type { PropertyInputs } from '../types';
+import { alpha, seriesColors, textTone } from '../utils/color';
 
 const C = {
-  indigo: '#6366F1', amber: '#F59E0B', emerald: '#10B981',
-  red: '#EF4444', cyan: '#06B6D4', violet: '#8B5CF6', pink: '#EC4899',
+  blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
+  red: 'var(--loss)', teal: 'var(--note-teal)', brown: 'var(--note-brown)', rose: 'var(--note-red)',
 };
-const PIE_COLORS = [C.indigo, C.emerald, C.amber, C.cyan, C.violet, C.pink, C.red, '#94A3B8'];
+const PIE_COLORS = seriesColors(8);
 
 /** Minimal PropertyInputs for owners who add a property without a full ROI run. */
 function minimalProperty(name: string, purchasePrice: number, monthlyRent: number): PropertyInputs {
@@ -61,9 +62,9 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 150 }}>
-      <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>{label}</p>
+      <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? 'var(--color-text-muted)' }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? 'var(--ink-muted)') }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -186,16 +187,16 @@ export function PortfolioHub() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               My Portfolio
             </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Income, expenses, maintenance and records across your properties · {year} year to date
             </p>
           </div>
           <button onClick={() => setShowAdd((v) => !v)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
             {showAdd ? <X size={15} /> : <Plus size={15} />}
             {showAdd ? 'Cancel' : 'Add property'}
           </button>
@@ -217,10 +218,10 @@ export function PortfolioHub() {
           <div className="flex items-center gap-3">
             <button onClick={handleAdd} disabled={adding || !newName.trim()}
               className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-              style={{ background: 'rgba(16,185,129,0.15)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+              style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
               {adding ? 'Saving…' : 'Save property'}
             </button>
-            <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>
+            <p className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
               For a full deal analysis, use the Property ROI calculator — properties saved there appear here too.
             </p>
           </div>
@@ -229,17 +230,17 @@ export function PortfolioHub() {
 
       {/* Totals */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="YTD Income"   value={formatRand(totals.income, 0)}   color="emerald" icon={Wallet} />
-        <StatCard label="YTD Expenses" value={formatRand(totals.expenses, 0)} color="amber"   icon={Wrench} />
-        <StatCard label="YTD Net"      value={formatRand(totals.net, 0)}      color={totals.net >= 0 ? 'indigo' : 'red'} icon={TrendingUp} />
-        <StatCard label="Open Jobs"    value={`${totals.openJobs}`}           color={totals.openJobs > 0 ? 'amber' : 'emerald'} icon={Wrench} />
+        <StatCard label="YTD Income"   value={formatRand(totals.income, 0)}   color="green" icon={Wallet} />
+        <StatCard label="YTD Expenses" value={formatRand(totals.expenses, 0)} color="orange"   icon={Wrench} />
+        <StatCard label="YTD Net"      value={formatRand(totals.net, 0)}      color={totals.net >= 0 ? 'blue' : 'red'} icon={TrendingUp} />
+        <StatCard label="Open Jobs"    value={`${totals.openJobs}`}           color={totals.openJobs > 0 ? 'orange' : 'green'} icon={Wrench} />
       </div>
 
       {/* Properties */}
       <div className="glass-card p-5 space-y-3">
         <SectionHeader title={`Properties (${properties.length})`} icon={LayoutDashboard} />
         {propsLoading && properties.length === 0 && (
-          <p className="text-sm py-6 text-center" style={{ color: 'var(--color-text-subtle)' }}>Loading your portfolio…</p>
+          <p className="text-sm py-6 text-center" style={{ color: 'var(--ink-subtle)' }}>Loading your portfolio…</p>
         )}
         {!propsLoading && properties.length === 0 && (
           <EmptyState icon={Building2} title="No properties yet"
@@ -248,33 +249,33 @@ export function PortfolioHub() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {perProperty.map((p) => (
             <Link key={p.id} to={`/portfolio-hub/${p.id}`}
-              className="p-4 rounded-xl transition-all hover:bg-[rgba(99,102,241,0.06)] group"
-              style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
+              className="p-4 rounded-xl transition-all hover:bg-note-blue/6 group"
+              style={{ border: '1px solid var(--rule)', background: 'var(--paper-raised)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(99,102,241,0.12)' }}>
-                  <Building2 size={16} style={{ color: C.indigo }} />
+                  style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)' }}>
+                  <Building2 size={16} style={{ color: textTone(C.blue) }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>{p.name}</p>
-                  <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{p.name}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
                     {formatRandShort(p.purchasePrice)}{p.openJobs > 0 ? ` · ${p.openJobs} open job${p.openJobs === 1 ? '' : 's'}` : ''}
                   </p>
                 </div>
-                <ChevronRight size={15} className="opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: C.indigo }} />
+                <ChevronRight size={15} className="opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: textTone(C.blue) }} />
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3 text-center">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>Income</p>
-                  <p className="text-xs font-bold" style={{ color: C.emerald }}>{formatRandShort(p.ytdIncome)}</p>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Income</p>
+                  <p className="text-xs font-bold" style={{ color: textTone(C.green) }}>{formatRandShort(p.ytdIncome)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>Expenses</p>
-                  <p className="text-xs font-bold" style={{ color: C.amber }}>{formatRandShort(p.ytdExpenses)}</p>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Expenses</p>
+                  <p className="text-xs font-bold" style={{ color: textTone(C.orange) }}>{formatRandShort(p.ytdExpenses)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>Net</p>
-                  <p className="text-xs font-bold" style={{ color: p.net >= 0 ? C.emerald : C.red }}>{formatRandShort(p.net)}</p>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Net</p>
+                  <p className="text-xs font-bold" style={{ color: textTone(p.net >= 0 ? C.green : C.red) }}>{formatRandShort(p.net)}</p>
                 </div>
               </div>
             </Link>
@@ -290,12 +291,12 @@ export function PortfolioHub() {
             <div style={{ height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthly} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(Number(v))} />
-                  <Tooltip content={<RandTooltip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
-                  <Legend formatter={(v) => <span style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>{v}</span>} />
-                  <Bar dataKey="income"   name="Income"   fill={C.emerald} radius={[3, 3, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--rule)" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => formatRandShort(Number(v))} />
+                  <Tooltip content={<RandTooltip />} cursor={{ fill: 'color-mix(in srgb, var(--note-blue) 6%, transparent)' }} />
+                  <Legend formatter={(v) => <span style={{ color: 'var(--ink-muted)', fontSize: 12 }}>{v}</span>} />
+                  <Bar dataKey="income"   name="Income"   fill={C.green} radius={[3, 3, 0, 0]} />
                   <Bar dataKey="expenses" name="Expenses" fill={C.red}     radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -313,7 +314,7 @@ export function PortfolioHub() {
                       {expensesByCategory.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     </Pie>
                     <Tooltip content={<RandTooltip />} />
-                    <Legend formatter={(v) => <span style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>{v}</span>} />
+                    <Legend formatter={(v) => <span style={{ color: 'var(--ink-muted)', fontSize: 12 }}>{v}</span>} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -328,16 +329,16 @@ export function PortfolioHub() {
           <SectionHeader title="Upcoming Renewals (90 days)" icon={CalendarClock} />
           {upcomingRenewals.map((r) => (
             <Link key={r.id} to={`/portfolio-hub/${r.propertyId}`}
-              className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[rgba(245,158,11,0.06)]"
-              style={{ border: '1px solid rgba(245,158,11,0.2)' }}>
-              <CalendarClock size={15} style={{ color: C.amber }} />
+              className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-note-orange/6"
+              style={{ border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
+              <CalendarClock size={15} style={{ color: textTone(C.orange) }} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{r.title}</p>
-                <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{r.title}</p>
+                <p className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
                   {propertyName(r.propertyId)} · {r.type}
                 </p>
               </div>
-              <span className="text-xs font-semibold" style={{ color: C.amber }}>
+              <span className="text-xs font-semibold" style={{ color: textTone(C.orange) }}>
                 {r.due.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}
               </span>
             </Link>

@@ -11,24 +11,25 @@ import { formatRand, formatRandShort } from '../utils/format';
 import { calcPAYE, type PAYEInputs } from '../utils/tax';
 import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
+import { textTone } from '../utils/color';
 
 type AgeGroupLocal = AgeGroup;
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const AGE_GROUPS: { value: AgeGroupLocal; label: string }[] = [
@@ -95,10 +96,10 @@ export function SalaryCalculator() {
 
   // Pie chart: deductions breakdown
   const pieData = [
-    { name: 'Net Pay',    value: result.monthlyNet   * mult, color: C.emerald },
+    { name: 'Net Pay',    value: result.monthlyNet   * mult, color: C.green },
     { name: 'PAYE',       value: result.monthlyPAYE  * mult, color: C.red     },
-    { name: 'UIF',        value: result.monthlyUIF   * mult, color: C.amber   },
-    { name: 'RA Contrib', value: result.monthlyRA    * mult, color: C.indigo  },
+    { name: 'UIF',        value: result.monthlyUIF   * mult, color: C.orange   },
+    { name: 'RA Contrib', value: result.monthlyRA    * mult, color: C.blue  },
   ].filter((d) => d.value > 0);
 
   // Bar chart: gross vs net at different salary levels
@@ -122,22 +123,22 @@ export function SalaryCalculator() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-            <Briefcase size={20} className="text-[#6366F1]" />
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+            <Briefcase size={20} className="text-note-blue-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Salary / Take-Home Calculator
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               SA PAYE, UIF & medical aid tax credit — {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year
             </p>
           </div>
           <button
             onClick={() => setShowAnnual((v) => !v)}
             className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid rgba(99,102,241,0.25)` }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)` }}>
             {showAnnual ? 'Show Monthly' : 'Show Annual'}
           </button>
         </div>
@@ -148,7 +149,7 @@ export function SalaryCalculator() {
         {/* Inputs */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="glass-card p-5 space-y-4">
-          <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Your Details
           </p>
 
@@ -156,13 +157,13 @@ export function SalaryCalculator() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                 Income Sources
               </p>
               {incomes.length < 3 && (
                 <button onClick={addIncome}
                   className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg font-semibold"
-                  style={{ background: 'rgba(99,102,241,0.1)', color: C.indigo, border: '1px solid rgba(99,102,241,0.25)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: textTone(C.blue), border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
                   <Plus size={11} /> Add Income
                 </button>
               )}
@@ -170,17 +171,17 @@ export function SalaryCalculator() {
 
             {incomes.map((inc, idx) => (
               <div key={inc.id} className="rounded-xl p-3 space-y-2"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
                 <div className="flex items-center justify-between">
                   <input
                     value={inc.label}
                     onChange={(e) => updateIncome(inc.id, 'label', e.target.value)}
                     className="text-xs font-semibold bg-transparent border-0 outline-none"
-                    style={{ color: [C.indigo, C.emerald, C.amber][idx % 3] }}
+                    style={{ color: textTone([C.blue, C.green, C.orange][idx % 3]) }}
                   />
                   {incomes.length > 1 && (
                     <button onClick={() => removeIncome(inc.id)}
-                      className="p-0.5 rounded" style={{ color: C.red }}>
+                      className="p-0.5 rounded" style={{ color: textTone(C.red) }}>
                       <Trash2 size={12} />
                     </button>
                   )}
@@ -192,9 +193,9 @@ export function SalaryCalculator() {
 
             {incomes.length > 1 && (
               <div className="flex items-center justify-between px-3 py-2 rounded-lg"
-                style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Total Gross Monthly</span>
-                <span className="text-sm font-bold" style={{ color: C.indigo }}>{formatRand(grossMonthly, 0)}</span>
+                style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>Total Gross Monthly</span>
+                <span className="text-sm font-bold" style={{ color: textTone(C.blue) }}>{formatRand(grossMonthly, 0)}</span>
               </div>
             )}
           </div>
@@ -204,16 +205,16 @@ export function SalaryCalculator() {
           {/* Age group */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider"
-              style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>Age Group</label>
+              style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>Age Group</label>
             <div className="flex gap-2">
               {AGE_GROUPS.map((ag) => (
                 <button key={ag.value}
                   onClick={() => setAgeGroup(ag.value)}
                   className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
-                    background: ageGroup === ag.value ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
-                    color: ageGroup === ag.value ? C.indigo : 'var(--color-text-muted)',
-                    border: `1px solid ${ageGroup === ag.value ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                    background: ageGroup === ag.value ? 'color-mix(in srgb, var(--note-blue) 18%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                    color: textTone(ageGroup === ag.value ? C.blue : 'var(--ink-muted)'),
+                    border: `1px solid ${ageGroup === ag.value ? 'color-mix(in srgb, var(--note-blue) 35%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {ag.label}
                 </button>
@@ -230,7 +231,7 @@ export function SalaryCalculator() {
           {/* Medical aid dependants */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider"
-              style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+              style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Medical Aid
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -239,15 +240,15 @@ export function SalaryCalculator() {
                   onClick={() => setMedDependants(opt.value)}
                   className="flex-1 min-w-[48px] py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
-                    background: medDependants === opt.value ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                    color: medDependants === opt.value ? C.emerald : 'var(--color-text-muted)',
-                    border: `1px solid ${medDependants === opt.value ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    background: medDependants === opt.value ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                    color: textTone(medDependants === opt.value ? C.green : 'var(--ink-muted)'),
+                    border: `1px solid ${medDependants === opt.value ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {opt.label}
                 </button>
               ))}
             </div>
-            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
               {medDependants < 0
                 ? 'No medical aid — no tax credit applied.'
                 : `Medical credit: R364/mo main + R364/mo 1st dep + R246/mo each extra`}
@@ -261,36 +262,36 @@ export function SalaryCalculator() {
           {/* Main hero */}
           <div className="glass-card p-5 text-center">
             <p className="text-[11px] font-semibold uppercase tracking-wider mb-2"
-              style={{ color: 'var(--color-text-muted)' }}>
+              style={{ color: 'var(--ink-muted)' }}>
               {label} Take-Home Pay
             </p>
             <p className="text-4xl font-extrabold mb-1"
-              style={{ color: C.emerald, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
               {formatRand(result.monthlyNet * mult, 0)}
             </p>
-            <p className="text-xs" style={{ color: 'var(--color-text-subtle)' }}>
-              Effective tax rate: <span style={{ color: C.amber }}>{result.effectiveRate.toFixed(1)}%</span>
-              &ensp;|&ensp;Marginal rate: <span style={{ color: C.red }}>{result.marginalRate.toFixed(0)}%</span>
+            <p className="text-xs" style={{ color: 'var(--ink-subtle)' }}>
+              Effective tax rate: <span style={{ color: textTone(C.orange) }}>{result.effectiveRate.toFixed(1)}%</span>
+              &ensp;|&ensp;Marginal rate: <span style={{ color: textTone(C.red) }}>{result.marginalRate.toFixed(0)}%</span>
             </p>
           </div>
 
           {/* Deductions grid */}
           {[
-            { label: 'Gross Salary',       value: grossMonthly * mult,        color: 'var(--color-text)' },
+            { label: 'Gross Salary',       value: grossMonthly * mult,        color: 'var(--ink)' },
             { label: 'PAYE Income Tax',    value: result.monthlyPAYE  * mult, color: C.red },
-            { label: 'UIF (employee 1%)', value: result.monthlyUIF   * mult, color: C.amber },
-            { label: 'RA Contribution',   value: result.monthlyRA    * mult, color: C.indigo },
-            ...(medDependants >= 0 ? [{ label: 'Medical Aid Credit', value: -(result.medCreditMonthly * mult), color: C.cyan, note: 'tax credit' }] : []),
-            { label: 'Net Take-Home',      value: result.monthlyNet   * mult, color: C.emerald, bold: true },
+            { label: 'UIF (employee 1%)', value: result.monthlyUIF   * mult, color: C.orange },
+            { label: 'RA Contribution',   value: result.monthlyRA    * mult, color: C.blue },
+            ...(medDependants >= 0 ? [{ label: 'Medical Aid Credit', value: -(result.medCreditMonthly * mult), color: C.teal, note: 'tax credit' }] : []),
+            { label: 'Net Take-Home',      value: result.monthlyNet   * mult, color: C.green, bold: true },
           ].map((row) => (
             <div key={row.label}
               className="flex items-center justify-between px-4 py-2.5 rounded-xl"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span className="text-xs" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+              style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
+              <span className="text-xs" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                 {row.label}
-                {'note' in row && row.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>({row.note})</span>}
+                {'note' in row && row.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--ink-subtle)' }}>({row.note})</span>}
               </span>
-              <span className="text-sm font-bold" style={{ color: row.color }}>
+              <span className="text-sm font-bold" style={{ color: textTone(row.color) }}>
                 {row.value < 0 ? '-' : ''}{formatRand(Math.abs(row.value), 0)}
               </span>
             </div>
@@ -302,7 +303,7 @@ export function SalaryCalculator() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
         className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Where Your {label} Salary Goes
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -314,18 +315,18 @@ export function SalaryCalculator() {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex-1 space-y-2 w-full">
             {pieData.map((d) => (
               <div key={d.name} className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: d.color }} />
-                <span className="flex-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>{d.name}</span>
-                <span className="text-sm font-semibold" style={{ color: d.color }}>
+                <span className="flex-1 text-sm" style={{ color: 'var(--ink-muted)' }}>{d.name}</span>
+                <span className="text-sm font-semibold" style={{ color: textTone(d.color) }}>
                   {formatRand(d.value, 0)}
                 </span>
-                <span className="text-xs w-10 text-right" style={{ color: 'var(--color-text-subtle)' }}>
+                <span className="text-xs w-10 text-right" style={{ color: 'var(--ink-subtle)' }}>
                   {grossMonthly * mult > 0 ? ((d.value / (grossMonthly * mult)) * 100).toFixed(1) : 0}%
                 </span>
               </div>
@@ -338,35 +339,35 @@ export function SalaryCalculator() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
         className="glass-card-static p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Info size={14} style={{ color: C.amber }} />
+          <Info size={14} style={{ color: textTone(C.orange) }} />
           <p className="text-sm font-semibold"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Tax Calculation Detail
           </p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           {[
-            { label: 'Taxable Income',   value: formatRand(result.taxableIncome / 12 * mult, 0), color: 'var(--color-text)' },
+            { label: 'Taxable Income',   value: formatRand(result.taxableIncome / 12 * mult, 0), color: 'var(--ink)' },
             { label: 'Gross Tax',        value: formatRand(result.grossTaxBefore / 12 * mult, 0), color: C.red },
-            { label: 'Rebates',          value: `-${formatRand(result.rebateAmount / 12 * mult, 0)}`, color: C.emerald },
-            { label: 'Med Aid Credit',   value: medDependants >= 0 ? `-${formatRand(result.medCreditAnnual / 12 * mult, 0)}` : 'None', color: medDependants >= 0 ? C.cyan : 'var(--color-text-subtle)' },
+            { label: 'Rebates',          value: `-${formatRand(result.rebateAmount / 12 * mult, 0)}`, color: C.green },
+            { label: 'Med Aid Credit',   value: medDependants >= 0 ? `-${formatRand(result.medCreditAnnual / 12 * mult, 0)}` : 'None', color: medDependants >= 0 ? C.teal : 'var(--ink-subtle)' },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
               <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                style={{ color: 'var(--color-text-subtle)' }}>{item.label}</p>
-              <p className="text-sm font-bold" style={{ color: item.color }}>{item.value}</p>
+                style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
+              <p className="text-sm font-bold" style={{ color: textTone(item.color) }}>{item.value}</p>
             </div>
           ))}
         </div>
         {raContrib > 0 && (
           <div className="mt-3 flex items-start gap-2 p-3 rounded-xl"
-            style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-            <TrendingDown size={14} style={{ color: C.indigo, flexShrink: 0, marginTop: 1 }} />
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Your RA contribution of <strong style={{ color: C.indigo }}>{formatRand(raContrib, 0)}/mo</strong> reduces
-              taxable income by <strong style={{ color: C.indigo }}>{formatRand(result.raDeduction, 0)}/yr</strong>,
-              saving roughly <strong style={{ color: C.emerald }}>{formatRand((result.grossTaxBefore - (result.grossTaxBefore - result.raDeduction * result.marginalRate / 100)) / 12, 0)}/mo</strong> in PAYE.
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
+            <TrendingDown size={14} style={{ color: textTone(C.blue), flexShrink: 0, marginTop: 1 }} />
+            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+              Your RA contribution of <strong style={{ color: textTone(C.blue) }}>{formatRand(raContrib, 0)}/mo</strong> reduces
+              taxable income by <strong style={{ color: textTone(C.blue) }}>{formatRand(result.raDeduction, 0)}/yr</strong>,
+              saving roughly <strong style={{ color: textTone(C.green) }}>{formatRand((result.grossTaxBefore - (result.grossTaxBefore - result.raDeduction * result.marginalRate / 100)) / 12, 0)}/mo</strong> in PAYE.
             </p>
           </div>
         )}
@@ -376,25 +377,25 @@ export function SalaryCalculator() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
         className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Gross vs Net Across Salary Levels
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           How much PAYE takes at different gross salaries (using your current RA & medical settings)
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={barData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="salary" tick={{ fontSize: 10, fill: '#64748B' }} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
-            <Bar dataKey="net"  name="Net Pay"  stackId="a" fill={C.emerald} radius={[0, 0, 0, 0]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="salary" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Bar dataKey="net"  name="Net Pay"  stackId="a" fill={C.green} radius={[0, 0, 0, 0]} />
             <Bar dataKey="paye" name="PAYE"     stackId="a" fill={C.red}     radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         SARS {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year. Does not include employer UIF, SDL, or pension fund contributions. Not tax advice.
       </p>
     </div>

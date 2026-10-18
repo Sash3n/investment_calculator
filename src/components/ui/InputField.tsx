@@ -186,7 +186,7 @@ export function InputField({
       <label
         htmlFor={id}
         className="text-xs font-semibold uppercase tracking-wider"
-        style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
+        style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}
       >
         {label}
       </label>
@@ -194,7 +194,7 @@ export function InputField({
         {prefix && (
           <span
             className="absolute left-3 text-sm font-semibold select-none pointer-events-none z-10"
-            style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
+            style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}
           >
             {prefix}
           </span>
@@ -217,7 +217,7 @@ export function InputField({
             disabled && 'opacity-50 cursor-not-allowed'
           )}
           style={{
-            fontFamily: 'var(--font-body)',
+            fontFamily: 'var(--font-text)',
             paddingLeft: prefix ? '28px' : '14px',
             paddingRight: suffix ? '36px' : '14px',
           }}
@@ -225,7 +225,7 @@ export function InputField({
         {suffix && (
           <span
             className="absolute right-3 text-sm font-medium select-none pointer-events-none"
-            style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
+            style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}
           >
             {suffix}
           </span>
@@ -234,7 +234,7 @@ export function InputField({
       {help && (
         <p
           className="text-xs leading-relaxed"
-          style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
+          style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}
         >
           {help}
         </p>
