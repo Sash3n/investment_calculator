@@ -142,7 +142,7 @@ export function AirbnbVsRental() {
         {/* Results */}
         <div className="space-y-5">
           <ResultPanel
-            label={result.winner === 'tie' ? 'Both earn about the same each year' : `${result.winner === 'str' ? 'Airbnb' : 'A long-term lease'} earns more each year by`}
+            label={blocked ? 'Airbnb or a long-term lease' : result.winner === 'tie' ? 'Both earn about the same each year' : `${result.winner === 'str' ? 'Airbnb' : 'A long-term lease'} earns more each year by`}
             value={formatRand(Math.abs(result.annualDifference), 0)}
             blocked={blocked}
             summary={<>

@@ -284,7 +284,7 @@ export function BuyVsRent() {
       </motion.div>
 
       <ResultPanel
-        label={`After ${inp.yearsToCompare} years, ${buyWins ? 'buying' : 'renting'} comes out ahead by`}
+        label={blocked ? 'Buying or renting' : `After ${inp.yearsToCompare} years, ${buyWins ? 'buying' : 'renting'} comes out ahead by`}
         value={formatRand(margin, 0)}
         blocked={blocked}
         summary={<>

@@ -288,7 +288,7 @@ export function LoanComparison() {
       </div>
 
       <ResultPanel
-        label={`${bestTotal.label} costs the least over the full term`}
+        label={blocked ? 'Cheapest offer over the full term' : `${bestTotal.label} costs the least over the full term`}
         value={formatRand(bestTotal.grandTotal, 0)}
         blocked={blocked}
         summary={<>
