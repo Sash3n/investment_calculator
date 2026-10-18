@@ -185,6 +185,16 @@ export function bondExtraInputErrors(i: { loan: number; rate: number; term: numb
   };
 }
 
+export function municipalInputErrors(i: { propValue: number; waterKl: number; electricityBasic: number; escalation: number; rateInRand: number }) {
+  return {
+    propValue: positiveError(i.propValue, 'Enter the municipal value of the property.'),
+    waterKl: rangeError(i.waterKl, 0, 100, 'water use', ' kL'),
+    electricityBasic: nonNegativeError(i.electricityBasic),
+    escalation: rangeError(i.escalation, 0, 25, 'an increase', '%'),
+    rateInRand: nonNegativeError(i.rateInRand),
+  };
+}
+
 export function affordabilityInputErrors(i: AffordabilityInputs): FieldErrors<keyof AffordabilityInputs> {
   return {
     grossMonthlyIncome: positiveError(i.grossMonthlyIncome, 'Enter your income before tax.'),
