@@ -14,7 +14,8 @@ import { SelectField } from '../components/ui/SelectField';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
-import { calcExtraPaymentVsInvesting, calcStandardPayment } from '../utils/investing';
+import { calcExtraPaymentVsInvesting, calcStandardPayment, findBreakEvenReturn, buildVersusModel } from '../utils/investing';
+import { VersusView } from '../components/versus/VersusView';
 import { formatRand, formatPercent, formatYears, formatDate } from '../utils/format';
 import type { InvestingInputs } from '../types';
 import { textTone } from '../utils/color';
@@ -66,6 +67,7 @@ function CustomTooltip({ active, payload, label }: any) {
 export function PaymentVsInvesting() {
   const [inputs, setInputs] = useState<InvestingInputs>(DEFAULT_INPUTS);
   const [isCustomReturn, setIsCustomReturn] = useState(false);
+  const [view, setView] = useState<'versus' | 'details'>('versus');
 
   const set = useCallback(<K extends keyof InvestingInputs>(key: K, raw: string) => {
     setInputs((prev) => ({ ...prev, [key]: parseFloat(raw) || 0 }));
@@ -89,6 +91,20 @@ export function PaymentVsInvesting() {
   }, [locationState]);
 
   const result = useMemo(() => calcExtraPaymentVsInvesting(inputs), [inputs]);
+
+  // Break-even does not depend on the assumed return, so it is not recomputed while the slider moves
+  const { loanBalance, interestRate, remainingTermYears, extraMonthlyAmount, cgtRate, investmentVehicle, inflationRate } = inputs;
+  const breakEven = useMemo(
+    () => findBreakEvenReturn({ loanBalance, interestRate, remainingTermYears, extraMonthlyAmount, cgtRate, investmentVehicle, inflationRate, expectedReturn: 0 }),
+    [loanBalance, interestRate, remainingTermYears, extraMonthlyAmount, cgtRate, investmentVehicle, inflationRate],
+  );
+  const versusModel = useMemo(() => buildVersusModel(inputs, result, breakEven), [inputs, result, breakEven]);
+
+  // The slider writes the same state as the inputs panel, as a custom return
+  const handleReturnChange = (expectedReturn: number) => {
+    setIsCustomReturn(true);
+    setInputs((prev) => ({ ...prev, investmentVehicle: 'custom', expectedReturn }));
+  };
   const standardPayment = useMemo(
     () => calcStandardPayment(inputs.loanBalance, inputs.interestRate, inputs.remainingTermYears),
     [inputs.loanBalance, inputs.interestRate, inputs.remainingTermYears]
@@ -236,6 +252,23 @@ export function PaymentVsInvesting() {
 
         {/* Results panel */}
         <div className="space-y-5">
+          <div className="tab-bar" role="tablist" aria-label="Results view">
+            {([['versus', 'Versus'], ['details', 'Details']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={view === id}
+                className={clsx('tab-btn', view === id && 'active')}
+                onClick={() => setView(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {view === 'versus' ? (
+            <VersusView model={versusModel} cgtRate={inputs.cgtRate} onReturnChange={handleReturnChange} />
+          ) : (<>
           {/* Winner badge */}
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -381,10 +414,12 @@ export function PaymentVsInvesting() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+          </>)}
         </div>
       </div>
 
       {/* Year-by-year comparison table */}
+      {view === 'details' && (
       <div className="glass-card-static mt-6 p-5">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
@@ -459,6 +494,7 @@ export function PaymentVsInvesting() {
           </div>
         </div>
       </div>
+      )}
     </motion.div>
   );
 }
