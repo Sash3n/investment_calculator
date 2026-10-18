@@ -99,6 +99,45 @@ export function buyVsRentInputErrors(i: BuyVsRentChecked): FieldErrors<keyof Buy
   };
 }
 
+export interface RentalYieldChecked {
+  purchasePrice: number;
+  deposit: number;
+  monthlyRent: number;
+  bondRate: number;
+  bondTerm: number;
+  vacancyMonths: number;
+  initiationFee: number;
+  levy: number;
+  rates: number;
+  insurance: number;
+  effluent: number;
+  misc: number;
+  maintenancePct: number;
+  agentFeePct: number;
+}
+
+export function rentalYieldInputErrors(i: RentalYieldChecked): FieldErrors<keyof RentalYieldChecked> {
+  return {
+    purchasePrice: positiveError(i.purchasePrice, 'Enter the price of the property.'),
+    // A cash purchase is fine here, so only a deposit above the price is flagged
+    deposit: i.deposit < 0
+      ? 'The deposit can’t be negative.'
+      : i.purchasePrice > 0 && i.deposit > i.purchasePrice ? 'The deposit can’t be more than the price.' : undefined,
+    monthlyRent: positiveError(i.monthlyRent, 'Enter the rent you expect.'),
+    bondRate: rangeError(i.bondRate, 0, 30, 'a rate', '%'),
+    bondTerm: rangeError(i.bondTerm, 1, 30, 'a term', ' years'),
+    vacancyMonths: rangeError(i.vacancyMonths, 0, 12, 'a vacancy', ' months'),
+    initiationFee: nonNegativeError(i.initiationFee),
+    levy: nonNegativeError(i.levy),
+    rates: nonNegativeError(i.rates),
+    insurance: nonNegativeError(i.insurance),
+    effluent: nonNegativeError(i.effluent),
+    misc: nonNegativeError(i.misc),
+    maintenancePct: rangeError(i.maintenancePct, 0, 10, 'maintenance', '%'),
+    agentFeePct: rangeError(i.agentFeePct, 0, 50, 'a fee', '%'),
+  };
+}
+
 export function affordabilityInputErrors(i: AffordabilityInputs): FieldErrors<keyof AffordabilityInputs> {
   return {
     grossMonthlyIncome: positiveError(i.grossMonthlyIncome, 'Enter your income before tax.'),
