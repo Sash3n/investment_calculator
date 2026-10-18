@@ -7,7 +7,9 @@ import {
 import { Briefcase, TrendingDown, Info, Plus, Trash2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatPercent } from '../utils/format';
+import { Statement } from '../components/statement/Statement';
+import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcPAYE, type PAYEInputs } from '../utils/tax';
 import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, TAX_YEARS, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
@@ -76,6 +78,43 @@ export function SalaryCalculator() {
 
   const mult  = showAnnual ? 12 : 1;
   const label = showAnnual ? 'Annual' : 'Monthly';
+
+  // Payslip of the same figures, monthly or annual to match the toggle
+  const payslip: StatementData = {
+    title: `${label} payslip`,
+    subtitle: `${TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year, ${AGE_GROUPS.find((a) => a.value === ageGroup)?.label.toLowerCase()}`,
+    sections: [
+      {
+        heading: 'Earnings',
+        lines: incomes.map((i) => ({ label: i.label || 'Income', value: i.amount * mult })),
+        subtotal: { label: 'Gross pay', value: grossMonthly * mult },
+      },
+      {
+        heading: 'Deductions',
+        lines: ([
+          { label: 'PAYE', value: result.monthlyPAYE * mult, kind: 'less', note: 'After the age rebate and medical aid credit' },
+          { label: 'UIF', value: result.monthlyUIF * mult, kind: 'less' },
+          raContrib > 0 ? { label: 'Retirement annuity', value: raContrib * mult, kind: 'less' } : null,
+        ] as (StatementLine | null)[]).filter((l): l is StatementLine => l !== null),
+        subtotal: { label: 'Total deductions', value: (result.monthlyPAYE + result.monthlyUIF + raContrib) * mult, kind: 'less' },
+      },
+    ],
+    total: { label: 'Net pay', value: result.monthlyNet * mult },
+    after: [
+      {
+        heading: 'How the tax is worked out (per year)',
+        lines: ([
+          { label: 'Taxable income', value: result.taxableIncome, note: result.raDeduction > 0 ? `After ${formatRand(result.raDeduction, 0)} retirement deduction` : undefined },
+          { label: 'Tax before rebates', value: result.grossTaxBefore },
+          { label: 'Age rebate', value: result.rebateAmount, kind: 'less' },
+          result.medCreditAnnual > 0 ? { label: 'Medical aid credit', value: result.medCreditAnnual, kind: 'less' } : null,
+          { label: 'Marginal rate', display: formatPercent(result.marginalRate, 0) },
+          { label: 'Effective rate', display: formatPercent(result.effectiveRate, 1) },
+        ] as (StatementLine | null)[]).filter((l): l is StatementLine => l !== null),
+      },
+    ],
+    footnote: "Estimate only. Your employer's payroll may differ slightly because of rounding and other deductions.",
+  };
 
   const addIncome = () => {
     if (incomes.length >= 3) return;
@@ -298,6 +337,9 @@ export function SalaryCalculator() {
           ))}
         </motion.div>
       </div>
+
+      {/* Payslip */}
+      <Statement data={payslip} />
 
       {/* Pie chart */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
