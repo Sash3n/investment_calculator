@@ -72,6 +72,38 @@ describe('calcExtraPaymentVsInvesting', () => {
     expect(result.winner).toBe('investing');
   });
 
+  it('at a 0% return the bond route wins, by about the interest saved', () => {
+    const result = calcExtraPaymentVsInvesting({ ...baseInputs, expectedReturn: 0, cgtRate: 0 });
+    expect(result.winner).toBe('bond');
+    // With no growth, the only difference between the routes is the interest the bond route avoided
+    expect(result.winnerAmount).toBeGreaterThan(result.interestSaved * 0.97);
+    expect(result.winnerAmount).toBeLessThan(result.interestSaved * 1.03);
+  });
+
+  it('investing at the bond rate with no CGT ends about level', () => {
+    const result = calcExtraPaymentVsInvesting({ ...baseInputs, expectedReturn: baseInputs.interestRate, cgtRate: 0 });
+    expect(result.winnerAmount).toBeLessThan(result.afterTaxPortfolioValue * 0.02);
+  });
+
+  it('investing at the bond rate loses once CGT is paid', () => {
+    const result = calcExtraPaymentVsInvesting({ ...baseInputs, expectedReturn: baseInputs.interestRate });
+    expect(result.winner).toBe('bond');
+  });
+
+  it('the bond route only starts investing after the bond is paid off', () => {
+    const result = calcExtraPaymentVsInvesting(baseInputs);
+    const payoffYear = Math.ceil((baseInputs.remainingTermYears * 12 - result.monthsSaved) / 12);
+    expect(result.yearByYear[0].bondRouteInvestmentValue).toBe(0);
+    expect(result.yearByYear[payoffYear].bondRouteInvestmentValue).toBeGreaterThan(0);
+    expect(result.bondRouteValue).toBeGreaterThan(0);
+  });
+
+  it('the final year matches the headline comparison', () => {
+    const result = calcExtraPaymentVsInvesting(baseInputs);
+    const last = result.yearByYear[result.yearByYear.length - 1];
+    expect(Math.abs(last.netDifference - result.netBenefitB)).toBeLessThanOrEqual(1);
+  });
+
   it('zero extra amount produces no interest saved', () => {
     const result = calcExtraPaymentVsInvesting({ ...baseInputs, extraMonthlyAmount: 0 });
     expect(result.interestSaved).toBe(0);
