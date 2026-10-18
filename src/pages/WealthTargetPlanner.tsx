@@ -4,17 +4,16 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import {
-  Target, TrendingUp, AlertTriangle, Info, ArrowLeftRight,
-  CheckCircle2, Clock,
-} from 'lucide-react';
+import { Target, ArrowLeftRight, CheckCircle2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -186,6 +185,17 @@ export function WealthTargetPlanner() {
     return { label, r, color, pmt, finalBalance, realVal };
   }), [mode, target, monthly, years, rate, lump, escalation, inflation]);
 
+  const errors = {
+    target: positiveError(target, 'Enter the amount you want to reach.'),
+    monthly: positiveError(monthly, 'Enter the amount you can save each month.'),
+    years: rangeError(years, 1, 50, 'a number of years', ''),
+    lump: nonNegativeError(lump),
+    rate: rangeError(rate, 0, 50, 'a return', '%'),
+    escalation: rangeError(escalation, 0, 30, 'a yearly increase', '%'),
+    inflation: rangeError(inflation, 0, 20, 'inflation', '%'),
+  };
+  const blocked = (mode === 'target' ? errors.target : errors.monthly) ?? errors.years ?? errors.lump ?? errors.rate ?? errors.escalation;
+
   const shareState: ShareState = {
     mode, target, monthly, years, lump,
     vehicleIdx, rate, escalation, inflation,
@@ -243,17 +253,17 @@ export function WealthTargetPlanner() {
           </h2>
 
           {mode === 'target' ? (
-            <InputField id="wtp-target" label="Target amount (R)" value={target}
+            <InputField id="wtp-target" label="Target amount (R)" value={target} error={errors.target}
               onChange={(v) => setTarget(Number(v))} prefix="R" min={1} />
           ) : (
-            <InputField id="wtp-monthly" label="Monthly contribution (R)" value={monthly}
+            <InputField id="wtp-monthly" label="Monthly contribution (R)" value={monthly} error={errors.monthly}
               onChange={(v) => setMonthly(Number(v))} prefix="R" min={1} />
           )}
 
-          <InputField id="wtp-years" label="Years to goal" value={years}
+          <InputField id="wtp-years" label="Years to goal" value={years} error={errors.years}
             onChange={(v) => setYears(Number(v))} suffix="yrs" min={1} max={50} />
 
-          <InputField id="wtp-lump" label="Existing savings / lump sum (R)" value={lump}
+          <InputField id="wtp-lump" label="Existing savings / lump sum (R)" value={lump} error={errors.lump}
             onChange={(v) => setLump(Number(v))} prefix="R" min={0} />
 
           <SelectField
@@ -269,6 +279,7 @@ export function WealthTargetPlanner() {
               id="wtp-rate"
               label={`Annual return rate (${vehicle.rate}% default)`}
               value={rateOverride ?? vehicle.rate}
+              error={errors.rate}
               onChange={(v) => setRateOverride(Number(v))}
               suffix="%" min={0} max={50}
             />
@@ -281,57 +292,37 @@ export function WealthTargetPlanner() {
             </button>
           </div>
 
-          <InputField id="wtp-esc" label="Annual contribution escalation" value={escalation}
+          <InputField id="wtp-esc" label="Annual contribution escalation" value={escalation} error={errors.escalation}
             onChange={(v) => setEscalation(Number(v))} suffix="%" min={0} max={30} />
 
-          <InputField id="wtp-infl" label="Inflation rate (for real value)" value={inflation}
+          <InputField id="wtp-infl" label="Inflation rate (for real value)" value={inflation} error={errors.inflation}
             onChange={(v) => setInflation(Number(v))} suffix="%" min={0} max={20} />
         </div>
 
         {/* Results */}
         <div className="lg:col-span-2 space-y-4">
-          {tfsaMonthlyBreached && (
-            <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
-              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
-              <span style={{ color: 'var(--ink-muted)' }}>
-                Required monthly of {formatRand(displayPMT)} exceeds the TFSA annual limit of R46,000
-                (R3,833/month). Consider splitting between TFSA and a unit trust.
-              </span>
-            </div>
-          )}
-          {tfsaLifetimeBreached && (
-            <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 27)}` }}>
-              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
-              <span style={{ color: 'var(--ink-muted)' }}>
-                Total contributions of {formatRandShort(result.totalContrib)} exceed the TFSA lifetime cap of R500,000.
-              </span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            {mode === 'target' ? (
-              <StatCard label="Monthly needed"        value={formatRand(displayPMT)}            color="blue"  icon={TrendingUp} />
-            ) : (
-              <StatCard label="Final value"           value={formatRandShort(result.finalBalance)} color="blue"  icon={TrendingUp} />
-            )}
-            <StatCard label="Real value (today's R)"  value={formatRandShort(result.realValue)}  color="green" icon={Info} />
-            <StatCard label="Your contributions"      value={formatRandShort(result.totalContrib)} color="blue"  icon={TrendingUp} />
-            <StatCard label="Returns (compounding)"   value={formatRandShort(result.totalReturns)} color="green" icon={TrendingUp} />
-          </div>
-
-          {startLaterPenalty != null && startLaterPenalty > 0 && (
-            <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
-              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
-              <span style={{ color: 'var(--ink-muted)' }}>
-                If you wait 2 years to start, you would need{' '}
-                <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterPenalty)} more per month</span>
-                {' '}to reach the same target.
-              </span>
-            </div>
-          )}
+          <ResultPanel
+            label={mode === 'target' ? 'Save each month' : `Value after ${years} years`}
+            value={formatRand(mode === 'target' ? displayPMT : result.finalBalance, 0)}
+            blocked={blocked}
+            summary={<>
+              {mode === 'target'
+                ? `Saving ${formatRand(displayPMT, 0)} a month${escalation > 0 ? `, rising ${escalation}% a year,` : ''} for ${years} years at ${rate}% a year reaches ${formatRand(target, 0)}.`
+                : `Saving ${formatRand(monthly, 0)} a month${escalation > 0 ? `, rising ${escalation}% a year,` : ''} for ${years} years at ${rate}% a year grows to ${formatRand(result.finalBalance, 0)}.`}
+              {` That is worth about ${formatRand(result.realValue, 0)} in today’s money.`}
+              {startLaterPenalty != null && startLaterPenalty > 0 && ` Starting 2 years later would mean saving ${formatRand(startLaterPenalty, 0)} more a month.`}
+              {tfsaMonthlyBreached && ` That is more than the TFSA limit of ${formatRand(TFSA_ANNUAL_LIMIT, 0)} a year, so part would need another account.`}
+              {tfsaLifetimeBreached && ` Your contributions of ${formatRand(result.totalContrib, 0)} pass the TFSA lifetime limit of ${formatRand(TFSA_LIFETIME_CAP, 0)}.`}
+            </>}
+            figures={[
+              { label: 'You put in', value: formatRand(result.totalContrib, 0) },
+              { label: 'Growth', value: formatRand(result.totalReturns, 0) },
+              { label: 'In today’s money', value: formatRand(result.realValue, 0) },
+              mode === 'target'
+                ? { label: 'Wait 2 years and save', value: startLaterPenalty != null && startLaterPenalty > 0 ? `${formatRand(startLaterPenalty, 0)} more` : 'The same' }
+                : { label: 'Return used', value: `${rate}% a year` },
+            ]}
+          />
 
           {/* Chart */}
           <div className="p-5 rounded-2xl"
@@ -435,6 +426,18 @@ export function WealthTargetPlanner() {
               </div>
             </div>
           )}
+
+          <AssumptionsDrawer
+            items={[
+              <>The return of {rate}% a year is added monthly and stays the same. It is not guaranteed.</>,
+              <>Contributions go in at the end of each month{escalation > 0 ? ` and rise by ${escalation}% at the start of each year` : ''}.</>,
+              <>“Today’s money” takes off inflation of {inflation}% a year.</>,
+              vehicle.tfsa
+                ? <>A tax-free savings account has limits of {formatRand(TFSA_ANNUAL_LIMIT, 0)} a year and {formatRand(TFSA_LIFETIME_CAP, 0)} in a lifetime. Going over them costs 40% tax on the excess.</>
+                : <>Tax on interest, dividends and capital gains is not included.</>,
+              <>Fees are not included.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>

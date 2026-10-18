@@ -4,11 +4,14 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, ReferenceLine,
 } from 'recharts';
-import { GraduationCap, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { GraduationCap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -109,6 +112,14 @@ export function EducationSavings() {
     });
   }, [currentSaved, monthlySave, monthsToStudy]);
 
+  const errors = {
+    costToday: positiveError(costToday, 'Enter the yearly cost today.'),
+    inflRate: rangeError(inflRate, 0, 30, 'a yearly increase', '%'),
+    currentSaved: nonNegativeError(currentSaved),
+    monthlySave: nonNegativeError(monthlySave),
+  };
+  const blocked = errors.costToday ?? errors.inflRate ?? errors.currentSaved ?? errors.monthlySave;
+
   const applyPreset = (i: number) => {
     setPresetIdx(i);
     setCostToday(PRESETS[i].costToday);
@@ -137,51 +148,25 @@ export function EducationSavings() {
         </div>
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: '1st Year Cost (future)',  value: formatRand(firstYearCost, 0),   color: C.red,
-            sub: `At ${inflRate}% education inflation` },
-          { label: `Total (${duration} yrs)`, value: formatRand(totalFutureCost, 0), color: C.orange },
-          { label: 'Projected Fund',          value: formatRand(futureValue, 0),     color: isFunded ? C.green : C.blue },
-          { label: isFunded ? 'Surplus' : 'Funding Gap', value: isFunded ? formatRand(futureValue - totalFutureCost, 0) : formatRand(gap, 0),
-            color: isFunded ? C.green : C.red },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-            <p className="text-base font-bold leading-tight"
-              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
-            {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Status banner */}
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}
-        className="p-4 rounded-xl flex items-start gap-3"
-        style={{
-          background: isFunded ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--note-blue) 8%, transparent)',
-          border: `1px solid ${isFunded ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)'}`,
-        }}>
-        {isFunded
-          ? <CheckCircle2 size={16} style={{ color: textTone(C.green), flexShrink: 0, marginTop: 1 }} />
-          : <AlertCircle  size={16} style={{ color: textTone(C.blue), flexShrink: 0, marginTop: 1 }} />}
-        <div>
-          <p className="text-sm font-semibold"
-            style={{ color: textTone(isFunded ? C.green : C.blue) }}>
-            {isFunded
-              ? `On track! Projected fund exceeds cost by ${formatRand(futureValue - totalFutureCost, 0)}`
-              : `Increase monthly savings to ${formatRand(Math.max(0, requiredMonthly), 0)}/mo to fully fund education`}
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-            {yearsToStudy > 0
-              ? `${yearsToStudy} years to save · ${fundedPercent.toFixed(0)}% funded`
-              : 'Study starts now — consider a lump sum or loan'}
-          </p>
-        </div>
-      </motion.div>
+      <ResultPanel
+        label="Save each month to cover it all"
+        value={formatRand(Math.max(0, requiredMonthly), 0)}
+        blocked={blocked}
+        summary={<>
+          {duration} years of {PRESETS[presetIdx].label.toLowerCase()} starting in {yearsToStudy} years will cost about {formatRand(totalFutureCost, 0)}, with the first year at {formatRand(firstYearCost, 0)}.{' '}
+          {yearsToStudy === 0
+            ? 'Study starts now, so there is no time left to save; a lump sum or a study loan would be needed.'
+            : isFunded
+              ? `Saving ${formatRand(monthlySave, 0)} a month at ${vehicle.rate}% builds ${formatRand(futureValue, 0)}, which is ${formatRand(futureValue - totalFutureCost, 0)} more than you need.`
+              : `Saving ${formatRand(monthlySave, 0)} a month at ${vehicle.rate}% builds ${formatRand(futureValue, 0)}, about ${fundedPercent.toFixed(0)}% of the cost.`}
+        </>}
+        figures={[
+          { label: 'Total cost', value: formatRand(totalFutureCost, 0) },
+          { label: 'Your fund when study starts', value: formatRand(futureValue, 0) },
+          { label: isFunded ? 'More than needed' : 'Still short', value: formatRand(isFunded ? futureValue - totalFutureCost : gap, 0) },
+          { label: 'You save now', value: `${formatRand(monthlySave, 0)}/mo` },
+        ]}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
@@ -219,13 +204,13 @@ export function EducationSavings() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="cost" label="Annual Cost Today" value={costToday}
+            <InputField id="cost" label="Annual Cost Today" value={costToday} error={errors.costToday}
               onChange={(v) => setCostToday(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="einfl" label="Education Inflation" value={inflRate}
+            <InputField id="einfl" label="Education Inflation" value={inflRate} error={errors.inflRate}
               onChange={(v) => setInflRate(parseFloat(v) || 0)} suffix="%" step={0.5} />
-            <InputField id="cur"  label="Currently Saved" value={currentSaved}
+            <InputField id="cur"  label="Currently Saved" value={currentSaved} error={errors.currentSaved}
               onChange={(v) => setCurrentSaved(parseFloat(v) || 0)} prefix="R" />
-            <InputField id="mo"   label="Monthly Contribution" value={monthlySave}
+            <InputField id="mo"   label="Monthly Contribution" value={monthlySave} error={errors.monthlySave}
               onChange={(v) => setMonthlySave(parseFloat(v) || 0)} prefix="R" />
           </div>
 
@@ -280,23 +265,6 @@ export function EducationSavings() {
             </p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-            className="glass-card-static p-4 space-y-2">
-            <p className="text-sm font-semibold"
-              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Required Monthly</p>
-            <p className="text-3xl font-extrabold"
-              style={{ color: textTone(C.brown), fontFamily: 'var(--font-display)' }}>
-              {formatRand(Math.max(0, requiredMonthly), 0)}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-              per month at {vehicle.rate}% p.a. to fully fund {duration} years of {PRESETS[presetIdx].label.toLowerCase()}
-            </p>
-            {!isFunded && monthlySave > 0 && (
-              <p className="text-xs" style={{ color: textTone(C.orange) }}>
-                You're saving {formatRand(monthlySave, 0)}/mo — increase by {formatRand(Math.max(0, requiredMonthly - monthlySave), 0)}/mo
-              </p>
-            )}
-          </motion.div>
         </div>
       </div>
 
@@ -320,9 +288,16 @@ export function EducationSavings() {
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Education costs and inflation rates are estimates based on publicly available SA data. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Costs rise by {inflRate}% a year until study starts and through each year of study. The presets are rough estimates, so use real fees where you have them.</>,
+          <>Savings grow at {vehicle.rate}% a year, added monthly. The full cost is compared with the fund on the first day of study, which is cautious because money not yet spent would keep growing.</>,
+          vehicle.taxFree
+            ? <>A tax-free savings account has limits of {formatRand(vehicle.limit, 0)} a year and {formatRand(vehicle.cap, 0)} in a lifetime.</>
+            : <>Tax on the growth is not included.</>,
+          <>Fees are not included.</>,
+        ]}
+      />
     </div>
   );
 }
