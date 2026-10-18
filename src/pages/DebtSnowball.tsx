@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { Snowflake, Plus, Trash2, Trophy } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatMonths } from '../utils/format';
 import { alpha, SERIES, textTone } from '../utils/color';
 import { ResultPanel } from '../components/results/ResultPanel';
 import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
@@ -170,16 +170,11 @@ export function DebtSnowball() {
     : extraError
       ?? (totalBalance <= 0 ? 'Add a debt with a balance to see when it is paid off.' : undefined)
       ?? (activeResult.months >= 600 ? 'At these payments the debt is not paid off within 50 years. Raise the payments to see a date.' : undefined);
-  const span = (months: number) => {
-    const y = Math.floor(months / 12);
-    const m = months % 12;
-    return [y > 0 ? `${y} year${y === 1 ? '' : 's'}` : '', m > 0 ? `${m} month${m === 1 ? '' : 's'}` : ''].filter(Boolean).join(' ') || '0 months';
-  };
   const comparisonText = Math.abs(interestSavedVsAvalanche) <= 100
     ? 'Both methods cost about the same here.'
     : interestSavedVsAvalanche > 0
       ? strategy === 'snowball'
-        ? `The avalanche method would save ${formatRand(interestSavedVsAvalanche, 0)} in interest${monthsSavedVsAvalanche > 0 ? ` and ${span(monthsSavedVsAvalanche)}` : ''}.`
+        ? `The avalanche method would save ${formatRand(interestSavedVsAvalanche, 0)} in interest${monthsSavedVsAvalanche > 0 ? ` and ${formatMonths(monthsSavedVsAvalanche)}` : ''}.`
         : `That is ${formatRand(interestSavedVsAvalanche, 0)} less interest than the snowball method.`
       : strategy === 'snowball'
         ? `That is ${formatRand(-interestSavedVsAvalanche, 0)} less interest than the avalanche method.`
@@ -256,7 +251,7 @@ export function DebtSnowball() {
 
       <ResultPanel
         label="Debt-free in"
-        value={span(activeResult.months)}
+        value={formatMonths(activeResult.months)}
         blocked={blocked}
         summary={<>
           Paying {formatRand(totalMinPay + extraPayment, 0)} a month with the {strategy} method clears {formatRand(totalBalance, 0)} of
@@ -266,7 +261,7 @@ export function DebtSnowball() {
           { label: 'Total debt', value: formatRand(totalBalance, 0) },
           { label: 'Paid each month', value: formatRand(totalMinPay + extraPayment, 0) },
           { label: 'Total interest', value: formatRand(activeResult.totalInterest, 0) },
-          { label: `With ${strategy === 'snowball' ? 'avalanche' : 'snowball'}`, value: span(otherResult.months) },
+          { label: `With ${strategy === 'snowball' ? 'avalanche' : 'snowball'}`, value: formatMonths(otherResult.months) },
         ]}
       />
 
