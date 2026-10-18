@@ -2,11 +2,15 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Receipt, Info, ArrowLeftRight, Plus, Trash2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { StatementRow } from '../components/statement/StatementRow';
+import { nonNegativeError } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -85,6 +89,17 @@ export function VatCalculator() {
 
   const shareState: ShareState = { mode, amount, annualTurnover, viewMode };
 
+  const errors = {
+    amount: nonNegativeError(amount),
+    annualTurnover: nonNegativeError(annualTurnover),
+  };
+  const assumptions = [
+    <>VAT is 15% of the price before VAT. To take VAT out of a price that includes it, divide by 1.15.</>,
+    <>From 1 April 2026 you must register once taxable supplies pass {formatRand(VAT_REG_THRESHOLD, 0)} in any 12 months, and you may register from {formatRand(VAT_VOLUNTARY_THRESHOLD, 0)}.</>,
+    <>The estimate of when you reach the threshold is a rough guide based on the turnover you enter.</>,
+    <>On an invoice, mark zero-rated and exempt items as not taxable, such as exports, financial services and residential rent.</>,
+  ];
+
   return (
     <motion.div
       className="space-y-6 pb-16"
@@ -154,6 +169,7 @@ export function VatCalculator() {
                 id="vat-amount"
                 label={mode === 'add' ? 'Excl. VAT amount (R)' : 'Incl. VAT amount (R)'}
                 value={amount}
+                error={errors.amount}
                 onChange={(v) => setAmount(Number(v))}
                 prefix="R" min={0}
               />
@@ -161,7 +177,7 @@ export function VatCalculator() {
               <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
                 style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
                 <Info size={13} style={{ color: textTone(C.blue) }} />
-                <span style={{ color: 'var(--ink-muted)' }}>SA VAT rate is 15% (effective 1 May 2025).</span>
+                <span style={{ color: 'var(--ink-muted)' }}>The SA VAT rate is 15%.</span>
               </div>
 
               <hr style={{ borderColor: 'var(--rule)' }} />
@@ -173,6 +189,7 @@ export function VatCalculator() {
                 id="vat-turnover"
                 label="Annual turnover (R)"
                 value={annualTurnover}
+                error={errors.annualTurnover}
                 onChange={(v) => setAnnualTurnover(Number(v))}
                 prefix="R" min={0}
               />
@@ -199,31 +216,32 @@ export function VatCalculator() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3">
-                <StatCard label="VAT amount (15%)"    value={formatRand(result.vatAmount)} color="orange"   icon={Receipt} />
-                <StatCard label="Amount excl. VAT"    value={formatRand(result.exclVat)}   color="blue"  icon={Receipt} />
-                <StatCard label="Amount incl. VAT"    value={formatRand(result.inclVat)}   color="green" icon={Receipt} />
-              </div>
+              <ResultPanel
+                label={mode === 'add' ? 'Price with VAT' : 'VAT in this price'}
+                value={formatRand(mode === 'add' ? result.inclVat : result.vatAmount)}
+                blocked={errors.amount}
+                summary={mode === 'add'
+                  ? `${formatRand(result.exclVat)} plus 15% VAT of ${formatRand(result.vatAmount)} comes to ${formatRand(result.inclVat)}.`
+                  : `${formatRand(result.inclVat)} includes ${formatRand(result.vatAmount)} VAT, so the price before VAT is ${formatRand(result.exclVat)}.`}
+                figures={[
+                  { label: 'VAT', value: formatRand(result.vatAmount) },
+                  { label: 'Before VAT', value: formatRand(result.exclVat) },
+                  { label: 'With VAT', value: formatRand(result.inclVat) },
+                ]}
+              />
 
-              <div className="p-5 rounded-2xl"
-                style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
-                <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>Quick reference</h2>
-                <div className="space-y-0 text-xs">
-                  {[
-                    ['VAT rate',                         '15%'],
-                    ['Mandatory registration threshold', `${formatRand(VAT_REG_THRESHOLD, 0)} / 12 months`],
-                    ['Voluntary registration threshold', `${formatRand(VAT_VOLUNTARY_THRESHOLD, 0)} / 12 months`],
-                    ['VAT return periods',               'Monthly or bi-monthly'],
-                    ['Penalty for late registration',    '10% of VAT owed'],
-                  ].map(([label, val]) => (
-                    <div key={label} className="flex justify-between py-1.5"
-                      style={{ borderBottom: '1px solid var(--rule)', color: 'var(--ink-muted)' }}>
-                      <span>{label}</span>
-                      <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <BreakdownList
+                title="Quick reference"
+                lines={[
+                  { label: 'VAT rate', display: '15%' },
+                  { label: 'Must register above', display: `${formatRand(VAT_REG_THRESHOLD, 0)} in 12 months` },
+                  { label: 'May register from', display: `${formatRand(VAT_VOLUNTARY_THRESHOLD, 0)} in 12 months` },
+                  { label: 'VAT returns', display: 'Monthly or every two months' },
+                  { label: 'Penalty for registering late', display: '10% of VAT owed' },
+                ]}
+              />
+
+              <AssumptionsDrawer items={assumptions} />
             </div>
           </div>
         </>
@@ -246,7 +264,7 @@ export function VatCalculator() {
 
             <div className="space-y-2">
               {/* Header */}
-              <div className="grid grid-cols-12 gap-2 text-xs font-semibold mb-1"
+              <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-semibold mb-1" aria-hidden
                 style={{ color: 'var(--ink-muted)' }}>
                 <span className="col-span-5">Description</span>
                 <span className="col-span-3">Amount (excl. VAT)</span>
@@ -255,14 +273,15 @@ export function VatCalculator() {
                 <span className="col-span-1" />
               </div>
 
-              {lineItems.map((line) => (
-                <div key={line.id} className="grid grid-cols-12 gap-2 items-center py-1.5"
+              {lineItems.map((line, index) => (
+                <div key={line.id} className="grid grid-cols-12 gap-2 items-center py-2 sm:py-1.5"
                   style={{ borderBottom: '1px solid var(--rule)' }}>
-                  <div className="col-span-5">
+                  <div className="col-span-12 sm:col-span-5">
                     <input
                       type="text"
                       value={line.description}
                       onChange={(e) => updateLine(line.id, 'description', e.target.value)}
+                      aria-label={`Description, line ${index + 1}`}
                       placeholder="Description"
                       className="w-full px-2 py-1 rounded text-sm"
                       style={{
@@ -272,12 +291,13 @@ export function VatCalculator() {
                       }}
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-5 sm:col-span-3">
                     <input
                       type="number"
                       value={line.amount}
                       min={0}
                       onChange={(e) => updateLine(line.id, 'amount', Number(e.target.value))}
+                      aria-label={`Amount before VAT, line ${index + 1}`}
                       className="w-full px-2 py-1 rounded text-sm"
                       style={{
                         background: 'var(--paper)',
@@ -289,6 +309,8 @@ export function VatCalculator() {
                   <div className="col-span-2 flex justify-center">
                     <button
                       onClick={() => updateLine(line.id, 'taxable', !line.taxable)}
+                      aria-pressed={line.taxable}
+                      aria-label={`Taxable, line ${index + 1}`}
                       className="px-2 py-1 rounded text-xs font-medium transition-colors"
                       style={{
                         background: line.taxable ? alpha(C.green, 13) : alpha(C.orange, 13),
@@ -298,11 +320,11 @@ export function VatCalculator() {
                       {line.taxable ? 'Yes' : 'No'}
                     </button>
                   </div>
-                  <div className="col-span-1 text-right text-xs" style={{ color: 'var(--ink-muted)' }}>
+                  <div className="col-span-4 sm:col-span-1 text-right text-xs" style={{ color: 'var(--ink-muted)' }}>
                     {line.taxable ? formatRand(line.amount * VAT_RATE) : '--'}
                   </div>
                   <div className="col-span-1 flex justify-end">
-                    <button onClick={() => removeLine(line.id)}>
+                    <button onClick={() => removeLine(line.id)} aria-label={`Remove line ${index + 1}`}>
                       <Trash2 size={13} style={{ color: textTone(C.red) }} />
                     </button>
                   </div>
@@ -310,37 +332,28 @@ export function VatCalculator() {
               ))}
             </div>
 
-            {/* Invoice totals */}
-            <div className="mt-4 pt-3 space-y-1.5 text-sm">
-              {[
-                ['Taxable subtotal (excl. VAT)', formatRand(invoiceTotals.taxableExcl), 'var(--ink-muted)'],
-                ['Non-taxable items',            formatRand(invoiceTotals.nonTaxable),  'var(--ink-muted)'],
-                ['VAT (15%)',                    formatRand(invoiceTotals.vat),          C.orange],
-                ['Invoice total (incl. VAT)',    formatRand(invoiceTotals.total),        C.green],
-              ].map(([label, val, color]) => (
-                <div key={label as string} className="flex justify-between items-center py-1"
-                  style={{ borderTop: '1px solid var(--rule)' }}>
-                  <span style={{ color: 'var(--ink-muted)' }}>{label as string}</span>
-                  <span style={{ color: textTone(color as string), fontWeight: 500 }}>{val as string}</span>
-                </div>
-              ))}
-            </div>
+            <dl className="mt-4 pt-3 text-sm border-t border-rule">
+              <StatementRow line={{ label: 'Taxable items, before VAT', value: invoiceTotals.taxableExcl }} />
+              <StatementRow line={{ label: 'Items without VAT', value: invoiceTotals.nonTaxable }} />
+              <StatementRow line={{ label: 'VAT at 15%', value: invoiceTotals.vat }} />
+              <div className="border-t border-rule mt-1 pt-1">
+                <StatementRow line={{ label: 'Invoice total', value: invoiceTotals.total }} strong />
+              </div>
+            </dl>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <StatCard label="VAT amount"      value={formatRand(invoiceTotals.vat)}   color="orange"   icon={Receipt} />
-            <StatCard label="Subtotal excl."  value={formatRand(invoiceTotals.taxableExcl + invoiceTotals.nonTaxable)} color="blue" icon={Receipt} />
-            <StatCard label="Invoice total"   value={formatRand(invoiceTotals.total)} color="green" icon={Receipt} />
-          </div>
+          <ResultPanel
+            label="Invoice total"
+            value={formatRand(invoiceTotals.total)}
+            summary={`${formatRand(invoiceTotals.taxableExcl + invoiceTotals.nonTaxable)} before VAT, plus ${formatRand(invoiceTotals.vat)} VAT on the taxable items.`}
+            figures={[
+              { label: 'VAT', value: formatRand(invoiceTotals.vat) },
+              { label: 'Before VAT', value: formatRand(invoiceTotals.taxableExcl + invoiceTotals.nonTaxable) },
+              { label: 'Lines', value: String(lineItems.length) },
+            ]}
+          />
 
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              Toggle "Taxable?" for zero-rated or exempt items (e.g. financial services, residential rent, exports).
-              15% VAT applies only to standard-rated supplies.
-            </span>
-          </div>
+          <AssumptionsDrawer items={assumptions} />
         </div>
       )}
     </motion.div>
