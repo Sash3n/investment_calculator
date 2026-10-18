@@ -9,7 +9,7 @@ import { InputField } from '../components/ui/InputField';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPAYE, type PAYEInputs } from '../utils/tax';
-import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
+import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, TAX_YEARS, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
 import { textTone } from '../utils/color';
 
@@ -251,7 +251,7 @@ export function SalaryCalculator() {
             <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
               {medDependants < 0
                 ? 'No medical aid — no tax credit applied.'
-                : `Medical credit: R364/mo main + R364/mo 1st dep + R246/mo each extra`}
+                : `Medical credit: R${TAX_YEARS[taxYear].medCredits.main}/mo main + R${TAX_YEARS[taxYear].medCredits.firstDep}/mo 1st dep + R${TAX_YEARS[taxYear].medCredits.extraDep}/mo each extra`}
             </p>
           </div>
         </motion.div>
