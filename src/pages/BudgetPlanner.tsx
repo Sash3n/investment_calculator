@@ -17,6 +17,8 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { formatRand, formatRandShort } from '../utils/format';
 import { alpha, SERIES, tokenColor, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -291,7 +293,7 @@ export function BudgetPlanner() {
   const handleAddTx = async () => {
     const amt  = parseFloat(form.amount);
     const tag  = tags.find((t) => t.id === form.tagId);
-    if (!form.description || !amt || !tag || !user) return;
+    if (!form.description || !(amt > 0) || !tag || !user) return;
     const ym   = form.date.slice(0, 7);
     await addTx({
       description: form.description,
@@ -323,8 +325,7 @@ export function BudgetPlanner() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const netColor  = net >= 0 ? 'var(--gain)' : 'var(--loss)';
-  const srColor   = savingsRate >= 20 ? 'var(--gain)' : savingsRate >= 10 ? 'var(--note-orange)' : 'var(--loss)';
+  const amountError = form.amount !== '' && !(parseFloat(form.amount) > 0) ? 'Enter an amount above zero.' : undefined;
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5">
@@ -407,28 +408,24 @@ export function BudgetPlanner() {
       {/* ═══ MONTHLY VIEW ═══════════════════════════════════════════════════ */}
       {viewMode === 'monthly' && (
         <>
-          {/* KPIs */}
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Income',       value: formatRand(income, 0),   color: 'var(--gain)' },
-              { label: 'Expenses',     value: formatRand(expenses, 0), color: 'var(--loss)' },
-              { label: 'Net',          value: formatRand(net, 0),      color: netColor,
-                sub: net >= 0 ? 'surplus' : 'deficit' },
-              { label: 'Savings Rate', value: `${savingsRate.toFixed(1)}%`, color: srColor,
-                sub: savingsRate >= 20 ? 'Excellent' : savingsRate >= 10 ? 'Good' : income === 0 ? '—' : 'Low' },
-            ].map((k) => (
-              <div key={k.label} className="glass-card-static p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                  style={{ color: 'var(--ink-subtle)' }}>{k.label}</p>
-                <p className="text-lg font-bold leading-tight"
-                  style={{ color: textTone(k.color), fontFamily: 'var(--font-display)' }}>{k.value}</p>
-                {'sub' in k && k.sub && (
-                  <p className="text-[10px] mt-0.5" style={{ color: textTone(k.color) }}>{k.sub}</p>
-                )}
-              </div>
-            ))}
-          </motion.div>
+          <ResultPanel
+            label={`Left over in ${fmtYM(currentYM)}`}
+            value={formatRand(net, 0)}
+            tone={monthTxs.length === 0 ? 'default' : net >= 0 ? 'gain' : 'loss'}
+            summary={monthTxs.length === 0
+              ? 'Add this month’s income and spending to see what is left over.'
+              : <>
+                  You brought in {formatRand(income, 0)} and spent {formatRand(expenses, 0)}
+                  {income > 0 ? `, so you kept ${savingsRate.toFixed(0)}% of your income` : ''}.
+                  {expByTag.length > 0 && ` Your biggest spend was ${expByTag[0].name} at ${formatRand(expByTag[0].value, 0)}.`}
+                </>}
+            figures={[
+              { label: 'Income', value: formatRand(income, 0) },
+              { label: 'Spending', value: formatRand(expenses, 0) },
+              { label: 'Kept', value: income > 0 ? `${savingsRate.toFixed(1)}%` : 'No income yet' },
+              { label: 'Entries', value: String(monthTxs.length) },
+            ]}
+          />
 
           {/* Add transaction */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
@@ -473,9 +470,10 @@ export function BudgetPlanner() {
                     <div className="grid grid-cols-2 gap-3">
                       {/* Description */}
                       <div className="col-span-2 flex flex-col gap-1">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider"
+                        <label htmlFor="tx-description" className="text-[10px] font-semibold uppercase tracking-wider"
                           style={{ color: 'var(--ink-muted)' }}>Description</label>
                         <input
+                          id="tx-description"
                           className="input-dark px-3 py-2 rounded-xl text-sm"
                           placeholder="e.g. Payflex - Takealot"
                           value={form.description}
@@ -486,22 +484,27 @@ export function BudgetPlanner() {
 
                       {/* Amount */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider"
+                        <label htmlFor="tx-amount" className="text-[10px] font-semibold uppercase tracking-wider"
                           style={{ color: 'var(--ink-muted)' }}>Amount (R)</label>
                         <input
-                          className="input-dark px-3 py-2 rounded-xl text-sm"
+                          id="tx-amount"
+                          className={`input-dark px-3 py-2 rounded-xl text-sm ${amountError ? 'input-error' : ''}`}
                           type="number" placeholder="0.00"
                           value={form.amount}
+                          aria-invalid={amountError ? true : undefined}
+                          aria-describedby={amountError ? 'tx-amount-error' : undefined}
                           onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddTx()}
                         />
+                        {amountError && <p id="tx-amount-error" className="text-xs font-medium text-loss-ink" aria-live="polite">{amountError}</p>}
                       </div>
 
                       {/* Date */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider"
+                        <label htmlFor="tx-date" className="text-[10px] font-semibold uppercase tracking-wider"
                           style={{ color: 'var(--ink-muted)' }}>Date</label>
                         <input
+                          id="tx-date"
                           className="input-dark px-3 py-2 rounded-xl text-sm"
                           type="date"
                           value={form.date}
@@ -536,7 +539,7 @@ export function BudgetPlanner() {
                     </div>
 
                     <button onClick={handleAddTx}
-                      disabled={!form.description || !form.amount || !form.tagId || !user}
+                      disabled={!form.description || !form.amount || !!amountError || !form.tagId || !user}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
                       style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: 'var(--gain-ink)', border: '1px solid color-mix(in srgb, var(--gain) 30%, transparent)' }}>
                       {user ? 'Add Transaction' : 'Sign in to add'}
@@ -655,6 +658,13 @@ export function BudgetPlanner() {
               )}
             </motion.div>
           )}
+
+          <AssumptionsDrawer
+            items={[
+              <>The figures are the transactions you entered for {fmtYM(currentYM)}. Nothing is estimated.</>,
+              <>“Kept” is income less spending, as a share of income. Saving 10% to 20% of income is a common goal.</>,
+            ]}
+          />
         </>
       )}
 
@@ -861,7 +871,7 @@ export function BudgetPlanner() {
       </AnimatePresence>
 
       <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Data saved securely to your account. Not financial advice.
+        Your transactions are saved to your account.
       </p>
     </div>
   );
@@ -890,8 +900,8 @@ function TxRow({ tx, onRemove }: { tx: Transaction; onRemove: () => void }) {
         style={{ color: tx.type === 'income' ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
         {tx.type === 'expense' ? '-' : '+'}{formatRand(tx.amount, 0)}
       </p>
-      <button onClick={onRemove}
-        className="opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-all flex-shrink-0"
+      <button onClick={onRemove} aria-label={`Delete ${tx.description}`}
+        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded-lg transition-all flex-shrink-0"
         style={{ color: 'var(--loss-ink)', background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
         <Trash2 size={12} />
       </button>

@@ -7,7 +7,7 @@ import {
 import { Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { ShareButton } from '../components/ui/ShareButton';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatMonths } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, textTone } from '../utils/color';
 import { ResultPanel } from '../components/results/ResultPanel';
@@ -155,11 +155,6 @@ export function BondExtra() {
     totalExtra > 0 ? `${formatRand(totalExtra, 0)} extra a month` : '',
     annualLumpSum > 0 ? `${formatRand(annualLumpSum, 0)} once a year` : '',
   ].filter(Boolean).join(' and ');
-  const span = (months: number) => {
-    const y = Math.floor(months / 12);
-    const m = months % 12;
-    return [y > 0 ? `${y} year${y === 1 ? '' : 's'}` : '', m > 0 ? `${m} month${m === 1 ? '' : 's'}` : ''].filter(Boolean).join(' ') || '0 months';
-  };
 
   return (
     <motion.div
@@ -231,11 +226,11 @@ export function BondExtra() {
             tone={interestSaved > 0 ? 'gain' : 'default'}
             blocked={blocked}
             summary={hasAnyExtra
-              ? `Paying in ${extraText} pays the bond off ${span(monthsSaved)} sooner, after ${span(withExtra.monthsPaid)} instead of ${span(base.monthsPaid)}.`
+              ? `Paying in ${extraText} pays the bond off ${formatMonths(monthsSaved)} sooner, after ${formatMonths(withExtra.monthsPaid)} instead of ${formatMonths(base.monthsPaid)}.`
               : 'Add an extra monthly payment, a yearly lump sum or the bi-weekly schedule to see how much interest and time it saves.'}
             figures={[
-              { label: 'Time saved', value: span(monthsSaved) },
-              { label: 'Paid off after', value: span(withExtra.monthsPaid) },
+              { label: 'Time saved', value: formatMonths(monthsSaved) },
+              { label: 'Paid off after', value: formatMonths(withExtra.monthsPaid) },
               { label: 'Interest, normal repayment', value: formatRand(base.totalInterest, 0) },
               { label: 'Interest with extra', value: formatRand(withExtra.totalInterest, 0) },
             ]}

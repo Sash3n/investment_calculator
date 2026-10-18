@@ -32,7 +32,7 @@ export function ResultPanel({ label, value, summary, figures, tone = 'default', 
   const id = useId();
   if (blocked) {
     return (
-      <section className={`glass-card-static p-6 ${className}`} aria-labelledby={id}>
+      <section className={`glass-card-static p-6 @container ${className}`} aria-labelledby={id}>
         <h2 id={id} className="text-sm font-medium text-ink-muted">{label}</h2>
         <p className="text-4xl sm:text-5xl font-semibold leading-none mt-2 text-ink-subtle" style={{ fontFamily: 'var(--font-display)' }} aria-hidden>
           —
@@ -42,14 +42,14 @@ export function ResultPanel({ label, value, summary, figures, tone = 'default', 
     );
   }
   return (
-    <section className={`glass-card-static p-6 ${className}`} aria-labelledby={id}>
+    <section className={`glass-card-static p-6 @container ${className}`} aria-labelledby={id}>
       <h2 id={id} className="text-sm font-medium text-ink-muted">{label}</h2>
       <p className={`text-4xl sm:text-5xl font-semibold leading-none mt-2 ${toneClass[tone]}`} style={{ fontFamily: 'var(--font-display)' }}>
         {value}
       </p>
       <p className="text-base text-ink-muted leading-relaxed mt-4 max-w-prose" aria-live="polite">{summary}</p>
       {figures && figures.length > 0 && (
-        <dl className="grid grid-cols-2 xl:grid-cols-4 gap-x-4 gap-y-3 mt-5 pt-4 border-t border-rule">
+        <dl className="grid grid-cols-2 @xl:grid-cols-4 gap-x-4 gap-y-3 mt-5 pt-4 border-t border-rule">
           {figures.map((f) => (
             <div key={f.label} className="min-w-0">
               <dt className="text-xs text-ink-subtle">{f.label}</dt>

@@ -1,20 +1,14 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Info, AlertTriangle, TrendingDown, Shield } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
-import { formatRand } from '../utils/format';
+import { formatRand, formatMonths } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha, textTone } from '../utils/color';
-
-const C = {
-  blue:  'var(--note-blue)',
-  green: 'var(--gain)',
-  orange:   'var(--note-orange)',
-  red:     'var(--loss)',
-  brown:  'var(--note-brown)',
-};
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 
 // Retirement lump sum tax table 2025/26
 function calcLumpSumTax(lumpSum: number): number {
@@ -115,13 +109,18 @@ export function RetrenchmentCalc() {
     };
   }, [yearsService, weeklySalary, monthlySalary, monthlyExpenses, priorLumpsums, leaveDays]);
 
-  const runwayMonths  = Math.floor(result.monthsRunway);
-  const runwayYears   = Math.floor(runwayMonths / 12);
-  const runwayRem     = runwayMonths % 12;
-  const totalRunway   = result.monthsRunway + result.uifMonths;
-  const totalRunwayMo = Math.floor(totalRunway);
-  const totalRunwayYr = Math.floor(totalRunwayMo / 12);
-  const totalRunwayRm = totalRunwayMo % 12;
+  const totalRunway = result.monthsRunway + result.uifMonths;
+  const grossPayout = result.severancePay + result.noticePay + result.leavePayout;
+
+  const errors = {
+    yearsService: rangeError(yearsService, 0, 60, 'years of service'),
+    monthlySalary: weeklySalary > 0 ? nonNegativeError(monthlySalary) : positiveError(monthlySalary, 'Enter your monthly pay before tax.'),
+    weeklySalary: nonNegativeError(weeklySalary),
+    leaveDays: rangeError(leaveDays, 0, 60, 'leave', ' days'),
+    monthlyExpenses: nonNegativeError(monthlyExpenses),
+    priorLumpsums: nonNegativeError(priorLumpsums),
+  };
+  const blocked = errors.yearsService ?? errors.monthlySalary ?? errors.weeklySalary ?? errors.leaveDays;
 
   const shareState: ShareState = {
     yearsService, weeklySalary, monthlySalary, monthlyExpenses, priorLumpsums, leaveDays,
@@ -156,117 +155,55 @@ export function RetrenchmentCalc() {
           <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Your details
           </h2>
-          <InputField id="ret-years"   label="Years of service"                             value={yearsService}    onChange={(v) => setYearsService(Number(v))}    suffix="yrs" min={0} max={60} />
-          <InputField id="ret-monthly" label="Monthly salary (gross)"                       value={monthlySalary}   onChange={(v) => setMonthlySalary(Number(v))}   prefix="R" min={0} />
-          <InputField id="ret-weekly"  label="Weekly salary (if known — overrides monthly)" value={weeklySalary}    onChange={(v) => setWeeklySalary(Number(v))}    prefix="R" min={0} />
-          <InputField id="ret-leave"   label="Accrued leave days"                           value={leaveDays}       onChange={(v) => setLeaveDays(Number(v))}       suffix="days" min={0} max={60} />
-          <InputField id="ret-exp"     label="Monthly living expenses"                      value={monthlyExpenses} onChange={(v) => setMonthlyExpenses(Number(v))} prefix="R" min={0} />
-          <InputField id="ret-prior"   label="Prior retirement lump sums received"          value={priorLumpsums}   onChange={(v) => setPriorLumpsums(Number(v))}   prefix="R" min={0} />
-
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              BCEA: 1 week pay per completed year of service (severance) + notice pay + accrued leave.
-              UIF capped at R17,712/month income.
-            </span>
-          </div>
+          <InputField id="ret-years"   label="Years of service"                             value={yearsService} error={errors.yearsService}    onChange={(v) => setYearsService(Number(v))}    suffix="yrs" min={0} max={60} />
+          <InputField id="ret-monthly" label="Monthly salary (gross)"                       value={monthlySalary} error={errors.monthlySalary}   onChange={(v) => setMonthlySalary(Number(v))}   prefix="R" min={0} />
+          <InputField id="ret-weekly"  label="Weekly salary (if known — overrides monthly)" value={weeklySalary} error={errors.weeklySalary}    onChange={(v) => setWeeklySalary(Number(v))}    prefix="R" min={0} />
+          <InputField id="ret-leave"   label="Accrued leave days"                           value={leaveDays} error={errors.leaveDays}       onChange={(v) => setLeaveDays(Number(v))}       suffix="days" min={0} max={60} />
+          <InputField id="ret-exp"     label="Monthly living expenses"                      value={monthlyExpenses} error={errors.monthlyExpenses} onChange={(v) => setMonthlyExpenses(Number(v))} prefix="R" min={0} />
+          <InputField id="ret-prior"   label="Prior retirement lump sums received"          value={priorLumpsums} error={errors.priorLumpsums}   onChange={(v) => setPriorLumpsums(Number(v))}   prefix="R" min={0} />
         </div>
 
         {/* Results */}
         <div className="lg:col-span-2 space-y-4">
 
-          {/* Primary stat cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Total net payout"   value={formatRand(result.totalNet)}        color="green" icon={Briefcase} />
-            <StatCard label="Total runway"        value={totalRunwayYr > 0 ? `${totalRunwayYr}yr ${totalRunwayRm}mo` : `${totalRunwayMo}mo`} color="blue" icon={TrendingDown} />
-            <StatCard label="UIF monthly benefit" value={formatRand(result.uif.monthlyBenefit)} color="orange" icon={Shield} />
-            <StatCard label="UIF entitlement"     value={`${result.uif.weeksEntitled} weeks`} color="orange" icon={Shield} />
-          </div>
+          <ResultPanel
+            label="Total payout after tax"
+            value={formatRand(result.totalNet, 0)}
+            blocked={blocked}
+            summary={<>
+              Severance, notice pay and leave come to {formatRand(grossPayout, 0)} before tax.
+              {monthlyExpenses > 0 && ` After tax, that covers ${formatMonths(Math.floor(result.monthsRunway))} of your ${formatRand(monthlyExpenses, 0)} monthly costs, or ${formatMonths(Math.floor(totalRunway))} with UIF.`}
+              {monthlyExpenses > 0 && result.monthsRunway < 3 && ' That is under 3 months from the payout alone, so it is worth reviewing your costs now.'}
+            </>}
+            figures={[
+              { label: 'Severance after tax', value: formatRand(result.netSeverance, 0) },
+              { label: 'UIF each month', value: formatRand(result.uif.monthlyBenefit, 0) },
+              { label: 'UIF for up to', value: `${result.uif.weeksEntitled} weeks` },
+              { label: 'Runway with UIF', value: monthlyExpenses > 0 ? formatMonths(Math.floor(totalRunway)) : 'Add your costs' },
+            ]}
+          />
 
-          {/* Runway callout */}
-          {result.totalNet > 0 && monthlyExpenses > 0 && (
-          <div className="p-4 rounded-xl text-sm"
-            style={{
-              background: result.monthsRunway < 3 ? alpha(C.red, 7) : alpha(C.green, 7),
-              border: `1px solid ${alpha(result.monthsRunway < 3 ? C.red : C.green, 20)}`,
-            }}>
-            {result.monthsRunway < 3 ? (
-              <div className="flex items-start gap-2">
-                <AlertTriangle size={15} style={{ color: textTone(C.red) }} />
-                <span style={{ color: 'var(--ink-muted)' }}>
-                  Your lump sum runway is under 3 months. Combined with UIF you have{' '}
-                  <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{totalRunwayMo} months</span> total.
-                  Review expenses immediately.
-                </span>
-              </div>
-            ) : (
-              <span style={{ color: 'var(--ink-muted)' }}>
-                Your lump sums cover{' '}
-                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
-                  {runwayYears > 0 ? `${runwayYears}yr ` : ''}{runwayRem}mo
-                </span>
-                {' '}of expenses. Adding UIF extends this to{' '}
-                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
-                  {totalRunwayYr > 0 ? `${totalRunwayYr}yr ` : ''}{totalRunwayRm}mo
-                </span>.
-              </span>
-            )}
-          </div>
-          )}
-
-          {/* Full breakdown table */}
-          <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
-            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>Full payout breakdown</h2>
-            <div className="space-y-0 text-sm">
-              {[
-                { label: 'Severance pay (gross)',          val: formatRand(result.severancePay),   note: `${Math.floor(yearsService)} wks @ ${formatRand(weeklySalary > 0 ? weeklySalary : result.dailyRate * 5)}/wk` },
-                { label: 'Tax on severance (lump sum table)', val: `- ${formatRand(result.tax)}`,  note: '' },
-                { label: 'Net severance',                  val: formatRand(result.netSeverance),   note: '' },
-                { label: `${noticeLabel(yearsService)} (gross)`, val: formatRand(result.noticePay), note: 'Est. 25% PAYE' },
-                { label: 'Net notice pay',                 val: formatRand(result.netNoticePay),   note: '' },
-                { label: `Leave payout — ${leaveDays} days (gross)`, val: formatRand(result.leavePayout), note: 'Est. 25% PAYE' },
-                { label: 'Net leave payout',               val: formatRand(result.netLeavePayout), note: '' },
-                { label: 'Total net lump sum',             val: formatRand(result.totalNet),       note: '', bold: true },
-              ].map(({ label, val, note, bold }) => (
-                <div key={label} className="flex justify-between items-center py-2"
-                  style={{ borderBottom: '1px solid var(--rule)' }}>
-                  <div>
-                    <span style={{ color: bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: bold ? 600 : 400 }}>
-                      {label}
-                    </span>
-                    {note && <span className="ml-2 text-xs" style={{ color: 'var(--ink-subtle)' }}>{note}</span>}
-                  </div>
-                  <span style={{ color: textTone(bold ? C.green : 'var(--ink)'), fontWeight: bold ? 600 : 500 }}>{val}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* UIF section */}
-          <div className="p-5 rounded-2xl"
-            style={{ background: alpha(C.orange, 3), border: `1px solid ${alpha(C.orange, 20)}` }}>
-            <div className="flex items-center gap-2 mb-3">
-              <Shield size={15} style={{ color: textTone(C.orange) }} />
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>UIF benefit estimate</h2>
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              {[
-                ['Monthly benefit',    formatRand(result.uif.monthlyBenefit)],
-                ['Weeks entitled',     `${result.uif.weeksEntitled} weeks`],
-                ['Total UIF value',    formatRand(result.uif.monthlyBenefit * result.uifMonths)],
-              ].map(([lbl, val]) => (
-                <div key={lbl}>
-                  <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>{lbl}</p>
-                  <p className="font-semibold" style={{ color: 'var(--ink)' }}>{val}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs mt-3" style={{ color: 'var(--ink-muted)' }}>
-              UIF income replacement rate varies 38%–58% on a sliding scale. Capped at R17,712/month
-              income ceiling. Register at uFiling.co.za within 6 months of retrenchment.
-            </p>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <BreakdownList
+              title="Payout before and after tax"
+              lines={[
+                { label: 'Severance pay', value: result.severancePay, note: `${Math.floor(yearsService)} weeks at ${formatRand(result.dailyRate * 5, 0)} a week` },
+                { label: 'Tax on severance', value: result.tax, kind: 'less', note: 'Retirement lump sum table' },
+                { label: noticeLabel(yearsService), value: result.noticePay },
+                { label: 'Tax on notice pay', value: result.noticePay - result.netNoticePay, kind: 'less', note: 'Estimated at 25%' },
+                { label: `Leave payout (${leaveDays} days)`, value: result.leavePayout },
+                { label: 'Tax on leave payout', value: result.leavePayout - result.netLeavePayout, kind: 'less', note: 'Estimated at 25%' },
+              ]}
+              total={{ label: 'Total after tax', value: result.totalNet }}
+            />
+            <BreakdownList
+              title="UIF benefit estimate"
+              lines={[
+                { label: 'Paid each month', value: result.uif.monthlyBenefit },
+                { label: 'Weeks you can claim', display: `${result.uif.weeksEntitled} weeks` },
+              ]}
+              total={{ label: 'Total UIF', value: result.uif.monthlyBenefit * result.uifMonths }}
+            />
           </div>
 
           {/* Lump sum tax table */}
@@ -293,6 +230,15 @@ export function RetrenchmentCalc() {
               Cumulative — prior lump sums received affect which bracket applies.
             </p>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>Severance is 1 week’s pay for each completed year of service, the minimum in the Basic Conditions of Employment Act. Your contract or a retrenchment agreement may give more.</>,
+              <>Severance is taxed with the retirement lump sum table, together with any lump sums you received before. Notice pay and leave are taxed as normal pay; here that is an estimate of 25%.</>,
+              <>UIF pays a share of your pay, on pay up to R17,712 a month, for up to 34 weeks depending on how long you contributed. Claim within 6 months of leaving work.</>,
+              <>Runway divides the payout after tax by your monthly costs, then adds the months UIF pays. Interest and inflation are not included.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>

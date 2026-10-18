@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatMonths } from '../utils/format';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError } from '../utils/validation';
+import { TAX_YEARS, DEFAULT_TAX_YEAR } from '../config/taxYears';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -74,6 +78,13 @@ export function EmergencyFund() {
   const recommendedMonths = jobSecurity === 'stable' ? 3 : jobSecurity === 'moderate' ? 6 : 9;
   const adequacy = targetMonths >= recommendedMonths;
 
+  const errors = {
+    monthlyExpenses: positiveError(monthlyExpenses, 'Enter your essential monthly costs.'),
+    currentSaved: nonNegativeError(currentSaved),
+    monthlySave: nonNegativeError(monthlySave),
+  };
+  const blocked = errors.monthlyExpenses ?? errors.currentSaved ?? errors.monthlySave;
+
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
 
@@ -96,26 +107,28 @@ export function EmergencyFund() {
         </div>
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Target Fund',        value: formatRand(target, 0),             color: C.blue },
-          { label: 'Currently Saved',    value: formatRand(currentSaved, 0),       color: pctFunded >= 100 ? C.green : pctFunded >= 50 ? C.orange : C.red },
-          { label: 'Gap to Fill',        value: gap > 0 ? formatRand(gap, 0) : 'Funded!', color: gap > 0 ? C.red : C.green },
-          { label: 'Months to Goal',     value: gap <= 0 ? 'Done!' : monthsToTarget === Infinity ? '∞' : `${monthsToTarget} mo`,
-            color: gap <= 0 ? C.green : monthsToTarget < 24 ? C.orange : C.red,
-            sub: monthsToTarget < Infinity && monthsToTarget > 0 ? `${(monthsToTarget / 12).toFixed(1)} yrs` : '' },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-            <p className="text-base font-bold leading-tight"
-              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
-            {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
-          </div>
-        ))}
-      </motion.div>
+      <ResultPanel
+        label="Emergency fund target"
+        value={formatRand(target, 0)}
+        blocked={blocked}
+        summary={<>
+          That is {targetMonths} months of your essential costs.{' '}
+          {gap <= 0
+            ? 'You have already saved enough to cover it.'
+            : monthsToTarget === Infinity
+              ? `You have ${pctFunded.toFixed(0)}% of it. Add a monthly amount to see when you reach the rest.`
+              : monthsToTarget >= 600
+                ? `You have ${pctFunded.toFixed(0)}% of it, but at ${formatRand(monthlySave, 0)} a month you would not reach it within 50 years.`
+                : `You have ${pctFunded.toFixed(0)}% of it. Saving ${formatRand(monthlySave, 0)} a month at ${vehicle.rate}% gets you there in ${formatMonths(monthsToTarget)}.`}
+          {!adequacy && ` With ${jobSecurity === 'risky' ? 'variable' : jobSecurity} income, ${recommendedMonths} months is the usual guide.`}
+        </>}
+        figures={[
+          { label: 'Already saved', value: formatRand(currentSaved, 0) },
+          { label: 'Still to save', value: formatRand(gap, 0) },
+          { label: 'Time to reach it', value: gap <= 0 ? 'Reached' : monthsToTarget === Infinity || monthsToTarget >= 600 ? 'Not reached' : formatMonths(monthsToTarget) },
+          { label: 'Usual guide', value: `${recommendedMonths} months` },
+        ]}
+      />
 
       {/* Progress bar */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
@@ -145,14 +158,14 @@ export function EmergencyFund() {
             Your Situation
           </p>
 
-          <InputField id="exp" label="Monthly Essential Expenses" value={monthlyExpenses}
+          <InputField id="exp" label="Monthly Essential Expenses" value={monthlyExpenses} error={errors.monthlyExpenses}
             onChange={(v) => setMonthlyExpenses(parseFloat(v) || 0)} prefix="R"
             help="Housing, food, transport, utilities, insurance — bare minimum to survive" />
 
-          <InputField id="saved" label="Already Saved" value={currentSaved}
+          <InputField id="saved" label="Already Saved" value={currentSaved} error={errors.currentSaved}
             onChange={(v) => setCurrentSaved(parseFloat(v) || 0)} prefix="R" />
 
-          <InputField id="save" label="Monthly Contribution" value={monthlySave}
+          <InputField id="save" label="Monthly Contribution" value={monthlySave} error={errors.monthlySave}
             onChange={(v) => setMonthlySave(parseFloat(v) || 0)} prefix="R" />
 
           <div className="flex flex-col gap-1.5">
@@ -229,26 +242,6 @@ export function EmergencyFund() {
             </p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-            className="p-4 rounded-xl flex items-start gap-3"
-            style={{
-              background: adequacy ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--note-orange) 8%, transparent)',
-              border: `1px solid ${adequacy ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-orange) 20%, transparent)'}`,
-            }}>
-            {adequacy
-              ? <CheckCircle2 size={16} style={{ color: textTone(C.green), flexShrink: 0, marginTop: 1 }} />
-              : <AlertCircle  size={16} style={{ color: textTone(C.orange), flexShrink: 0, marginTop: 1 }} />}
-            <div>
-              <p className="text-sm font-semibold"
-                style={{ color: textTone(adequacy ? C.green : C.orange) }}>
-                {adequacy ? 'Target looks adequate' : `Consider increasing target to ${recommendedMonths} months`}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                Based on {jobSecurity} income security, {recommendedMonths} months is recommended.
-                Your target: {formatRand(target, 0)}
-              </p>
-            </div>
-          </motion.div>
         </div>
       </div>
 
@@ -281,9 +274,14 @@ export function EmergencyFund() {
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Interest rates are indicative. Keep emergency funds in easily accessible, low-risk accounts. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Interest of {vehicle.rate}% a year is added every month and stays the same. The rates in the list are a guide, not quotes.</>,
+          <>Interest is tax-free up to {formatRand(TAX_YEARS[DEFAULT_TAX_YEAR].interestExemption.under65, 0)} a year if you are under 65, or {formatRand(TAX_YEARS[DEFAULT_TAX_YEAR].interestExemption.age65plus, 0)} from 65. Tax on interest above that is not included.</>,
+          <>Your essential costs stay at {formatRand(monthlyExpenses, 0)} a month. Inflation is not included, so review the target each year.</>,
+          <>The usual guide is 3 months of costs for stable income, 6 for moderate and 9 for variable income.</>,
+        ]}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@
 import type { MortgageInputs, PropertyInputs } from '../types';
 import type { AffordabilityInputs } from './affordability';
 import type { STRvsLTRInputs } from './shortTermRental';
+import { formatRand } from './format';
 
 export type FieldErrors<K extends string> = Partial<Record<K, string>>;
 
@@ -192,6 +193,21 @@ export function municipalInputErrors(i: { propValue: number; waterKl: number; el
     electricityBasic: nonNegativeError(i.electricityBasic),
     escalation: rangeError(i.escalation, 0, 25, 'an increase', '%'),
     rateInRand: nonNegativeError(i.rateInRand),
+  };
+}
+
+export function debtErrors(d: { balance: number; rate: number; minPayment: number }) {
+  const monthlyInterest = (d.balance * d.rate) / 100 / 12;
+  return {
+    balance: nonNegativeError(d.balance),
+    rate: rangeError(d.rate, 0, 50, 'a rate', '%'),
+    minPayment: d.minPayment < 0
+      ? 'Enter zero or more.'
+      : d.balance > 0 && d.minPayment === 0
+        ? 'Enter the minimum payment, or this debt is left out.'
+        : d.balance > 0 && d.minPayment <= monthlyInterest
+          ? `This doesn’t cover the interest of about ${formatRand(Math.ceil(monthlyInterest), 0)} a month.`
+          : undefined,
   };
 }
 

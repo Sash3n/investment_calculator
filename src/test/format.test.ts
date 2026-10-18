@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatRand, formatRandShort, formatNumber } from '../utils/format';
+import { formatRand, formatRandShort, formatNumber, formatMonths } from '../utils/format';
 
 const NBSP = ' ';
 const nb = (s: string) => s.replace(/ /g, NBSP);
@@ -45,5 +45,14 @@ describe('formatNumber', () => {
     expect(formatNumber(1234567)).toBe(nb('1 234 567'));
     expect(formatNumber(1234.5, 1)).toBe(nb('1 234,5'));
     expect(formatNumber(-42)).toBe('-42');
+  });
+});
+
+describe('formatMonths', () => {
+  it('writes years and months in words', () => {
+    expect(formatMonths(0)).toBe('0 months');
+    expect(formatMonths(1)).toBe('1 month');
+    expect(formatMonths(12)).toBe('1 year');
+    expect(formatMonths(38)).toBe('3 years 2 months');
   });
 });

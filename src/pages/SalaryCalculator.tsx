@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
-import { Briefcase, TrendingDown, Info, Plus, Trash2 } from 'lucide-react';
+import { Briefcase, Plus, Trash2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
@@ -14,6 +14,9 @@ import { calcPAYE, type PAYEInputs } from '../utils/tax';
 import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, TAX_YEARS, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
 import { textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError } from '../utils/validation';
 
 type AgeGroupLocal = AgeGroup;
 
@@ -75,6 +78,18 @@ export function SalaryCalculator() {
     } satisfies PAYEInputs, taxYear),
     [grossMonthly, ageGroup, raContrib, medDependants, taxYear]
   );
+
+  // PAYE saved by the annuity: the same pay worked out without it
+  const raTaxSaving = useMemo(
+    () => raContrib > 0
+      ? calcPAYE({ grossMonthly, ageGroup, raMonthlyContrib: 0, medAidDependants: medDependants }, taxYear).monthlyPAYE - result.monthlyPAYE
+      : 0,
+    [grossMonthly, ageGroup, raContrib, medDependants, taxYear, result.monthlyPAYE],
+  );
+
+  const incomeErrors = incomes.map((i) => nonNegativeError(i.amount));
+  const raError = nonNegativeError(raContrib);
+  const blocked = incomeErrors.find(Boolean) ?? raError ?? positiveError(grossMonthly, 'Enter your monthly pay before tax.');
 
   const mult  = showAnnual ? 12 : 1;
   const label = showAnnual ? 'Annual' : 'Monthly';
@@ -225,7 +240,7 @@ export function SalaryCalculator() {
                     </button>
                   )}
                 </div>
-                <InputField id={`income-${inc.id}`} label="Gross Monthly Amount" value={inc.amount}
+                <InputField id={`income-${inc.id}`} label="Gross Monthly Amount" value={inc.amount} error={incomeErrors[idx]}
                   onChange={(v) => updateIncome(inc.id, 'amount', v)} prefix="R" />
               </div>
             ))}
@@ -261,7 +276,7 @@ export function SalaryCalculator() {
             </div>
           </div>
 
-          <InputField id="ra" label="Monthly RA Contribution" value={raContrib}
+          <InputField id="ra" label="Monthly RA Contribution" value={raContrib} error={raError}
             onChange={(v) => setRaContrib(parseFloat(v) || 0)} prefix="R"
             help={taxYear === '2027'
               ? 'Tax-deductible up to 27.5% of income (max R430K/yr)'
@@ -295,47 +310,23 @@ export function SalaryCalculator() {
           </div>
         </motion.div>
 
-        {/* KPI panel */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-          className="space-y-3">
-          {/* Main hero */}
-          <div className="glass-card p-5 text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-wider mb-2"
-              style={{ color: 'var(--ink-muted)' }}>
-              {label} Take-Home Pay
-            </p>
-            <p className="text-4xl font-extrabold mb-1"
-              style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
-              {formatRand(result.monthlyNet * mult, 0)}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--ink-subtle)' }}>
-              Effective tax rate: <span style={{ color: textTone(C.orange) }}>{result.effectiveRate.toFixed(1)}%</span>
-              &ensp;|&ensp;Marginal rate: <span style={{ color: textTone(C.red) }}>{result.marginalRate.toFixed(0)}%</span>
-            </p>
-          </div>
-
-          {/* Deductions grid */}
-          {[
-            { label: 'Gross Salary',       value: grossMonthly * mult,        color: 'var(--ink)' },
-            { label: 'PAYE Income Tax',    value: result.monthlyPAYE  * mult, color: C.red },
-            { label: 'UIF (employee 1%)', value: result.monthlyUIF   * mult, color: C.orange },
-            { label: 'RA Contribution',   value: result.monthlyRA    * mult, color: C.blue },
-            ...(medDependants >= 0 ? [{ label: 'Medical Aid Credit', value: -(result.medCreditMonthly * mult), color: C.teal, note: 'tax credit' }] : []),
-            { label: 'Net Take-Home',      value: result.monthlyNet   * mult, color: C.green, bold: true },
-          ].map((row) => (
-            <div key={row.label}
-              className="flex items-center justify-between px-4 py-2.5 rounded-xl"
-              style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
-              <span className="text-xs" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
-                {row.label}
-                {'note' in row && row.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--ink-subtle)' }}>({row.note})</span>}
-              </span>
-              <span className="text-sm font-bold" style={{ color: textTone(row.color) }}>
-                {row.value < 0 ? '-' : ''}{formatRand(Math.abs(row.value), 0)}
-              </span>
-            </div>
-          ))}
-        </motion.div>
+        <ResultPanel
+          className="self-start"
+          label={`${label} take-home pay`}
+          value={formatRand(result.monthlyNet * mult, 0)}
+          blocked={blocked}
+          summary={<>
+            From {formatRand(grossMonthly * mult, 0)} before tax, PAYE takes {formatRand(result.monthlyPAYE * mult, 0)} and
+            UIF {formatRand(result.monthlyUIF * mult, 0)}{raContrib > 0 ? `, and ${formatRand(raContrib * mult, 0)} goes to your retirement annuity` : ''}.
+            {raTaxSaving > 0 && ` The annuity cuts your PAYE by about ${formatRand(raTaxSaving * mult, 0)}.`}
+          </>}
+          figures={[
+            { label: `${label} PAYE`, value: formatRand(result.monthlyPAYE * mult, 0) },
+            { label: 'Effective tax rate', value: formatPercent(result.effectiveRate, 1) },
+            { label: 'Tax on your next rand', value: formatPercent(result.marginalRate, 0) },
+            { label: 'Medical aid credit', value: medDependants >= 0 ? formatRand(result.medCreditMonthly * mult, 0) : 'None' },
+          ]}
+        />
       </div>
 
       {/* Payslip */}
@@ -377,44 +368,6 @@ export function SalaryCalculator() {
         </div>
       </motion.div>
 
-      {/* Tax detail box */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-        className="glass-card-static p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Info size={14} style={{ color: textTone(C.orange) }} />
-          <p className="text-sm font-semibold"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-            Tax Calculation Detail
-          </p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          {[
-            { label: 'Taxable Income',   value: formatRand(result.taxableIncome / 12 * mult, 0), color: 'var(--ink)' },
-            { label: 'Gross Tax',        value: formatRand(result.grossTaxBefore / 12 * mult, 0), color: C.red },
-            { label: 'Rebates',          value: `-${formatRand(result.rebateAmount / 12 * mult, 0)}`, color: C.green },
-            { label: 'Med Aid Credit',   value: medDependants >= 0 ? `-${formatRand(result.medCreditAnnual / 12 * mult, 0)}` : 'None', color: medDependants >= 0 ? C.teal : 'var(--ink-subtle)' },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl p-3"
-              style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
-              <p className="text-sm font-bold" style={{ color: textTone(item.color) }}>{item.value}</p>
-            </div>
-          ))}
-        </div>
-        {raContrib > 0 && (
-          <div className="mt-3 flex items-start gap-2 p-3 rounded-xl"
-            style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            <TrendingDown size={14} style={{ color: textTone(C.blue), flexShrink: 0, marginTop: 1 }} />
-            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-              Your RA contribution of <strong style={{ color: textTone(C.blue) }}>{formatRand(raContrib, 0)}/mo</strong> reduces
-              taxable income by <strong style={{ color: textTone(C.blue) }}>{formatRand(result.raDeduction, 0)}/yr</strong>,
-              saving roughly <strong style={{ color: textTone(C.green) }}>{formatRand((result.grossTaxBefore - (result.grossTaxBefore - result.raDeduction * result.marginalRate / 100)) / 12, 0)}/mo</strong> in PAYE.
-            </p>
-          </div>
-        )}
-      </motion.div>
-
       {/* Salary comparison bar chart */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
         className="glass-card-static p-5">
@@ -437,9 +390,15 @@ export function SalaryCalculator() {
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        SARS {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year. Does not include employer UIF, SDL, or pension fund contributions. Not tax advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Tax uses the SARS tables for the {TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} tax year, with the rebate for your age group{medDependants >= 0 ? ' and the medical aid tax credit' : ''}.</>,
+          <>PAYE is worked out on a full year’s pay and divided by 12. Your employer’s payroll may differ by a few rand because of rounding.</>,
+          <>UIF is {formatPercent(TAX_YEARS[taxYear].uif.rate * 100, 0)} of your pay, up to {formatRand(TAX_YEARS[taxYear].uif.capMonthly, 2)} a month.</>,
+          <>Retirement annuity contributions are deducted up to 27.5% of your income, capped at {formatRand(TAX_YEARS[taxYear].retirement.cap, 0)} a year.</>,
+          <>Not included: employer UIF and SDL, pension or provident fund contributions through work, fringe benefits and bonuses.</>,
+        ]}
+      />
     </div>
   );
 }
