@@ -12,7 +12,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const SARB_URL =
   'https://custom.resbank.co.za/SarbWebApi/WebIndicators/CurrentMarketRates';
 
-const FALLBACK = { repoRate: 6.75, primeRate: 10.25, asOf: null, fallback: true };
+// Last confirmed rates: SARB MPC, September 2026, effective 25 September 2026.
+// Keep in step with SARB_FALLBACK in src/config/referenceRates.ts.
+const FALLBACK = { repoRate: 7.25, primeRate: 10.75, asOf: '2026-09-25', fallback: true };
 
 interface SarbRate {
   Name: string;
