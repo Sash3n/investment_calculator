@@ -18,6 +18,8 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
 import { MortgageSentence } from '../components/mortgage/MortgageSentence';
+import { Statement } from '../components/statement/Statement';
+import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcTransferDuty } from '../utils/tax';
 import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
@@ -27,6 +29,7 @@ import { textTone } from '../utils/color';
 
 const ROWS_PER_PAGE = 24;
 const VIEW_KEY = 'fincalc-mortgage-view';
+type MortgageView = 'simple' | 'full' | 'statement';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -97,10 +100,13 @@ export function MortgageCalculator() {
   const [showWithExtras, setShowWithExtras] = useState(false);
 
   // Simple (sentence) or full view; remembered per browser, full by default
-  const [view, setView] = useState<'simple' | 'full'>(() => {
-    try { return localStorage.getItem(VIEW_KEY) === 'simple' ? 'simple' : 'full'; } catch { return 'full'; }
+  const [view, setView] = useState<MortgageView>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      return saved === 'simple' || saved === 'statement' ? saved : 'full';
+    } catch { return 'full'; }
   });
-  const chooseView = (next: 'simple' | 'full') => {
+  const chooseView = (next: MortgageView) => {
     setView(next);
     try { localStorage.setItem(VIEW_KEY, next); } catch { /* storage blocked */ }
   };
@@ -235,6 +241,61 @@ export function MortgageCalculator() {
     ? ((inputs.deposit / inputs.purchasePrice) * 100).toFixed(1)
     : '0';
 
+  // Payslip-style statement of the same figures
+  const perPayment = inputs.frequency === 'biweekly' ? 'bi-weekly payment' : 'month';
+  const statement: StatementData = {
+    title: 'Bond statement',
+    subtitle: `${formatRand(result.loanAmount, 0)} at ${inputs.interestRate}% over ${inputs.termYears} years`,
+    sections: [
+      {
+        heading: 'The loan',
+        lines: ([
+          { label: 'Purchase price', value: inputs.purchasePrice },
+          { label: 'Deposit', value: inputs.deposit, kind: 'less' },
+          inputs.initiationFeeCapitalised ? { label: 'Initiation fee added to the loan', value: inputs.initiationFee } : null,
+          inputs.bondRegistrationIncluded ? { label: 'Bond registration added to the loan', value: result.bondRegCost } : null,
+        ] as (StatementLine | null)[]).filter((l): l is StatementLine => l !== null),
+        subtotal: { label: 'Loan amount', value: result.loanAmount },
+      },
+      {
+        heading: 'Cash on transfer day',
+        lines: [
+          { label: 'Deposit', value: inputs.deposit },
+          inputs.transferDutyExempt ? { label: 'Transfer duty', display: 'Exempt' } : { label: 'Transfer duty', value: upfrontCosts.transferDuty },
+          inputs.bondRegistrationIncluded ? { label: 'Bond registration', display: 'Added to the loan' } : { label: 'Bond registration', value: upfrontCosts.bondRegCost },
+          inputs.initiationFeeCapitalised ? { label: 'Initiation fee', display: 'Added to the loan' } : { label: 'Initiation fee', value: inputs.initiationFee },
+          { label: 'Utility connection', value: inputs.utilityConnectionFee ?? 0 },
+        ],
+        subtotal: { label: 'Total cash needed', value: upfrontCosts.totalCashRequired },
+      },
+      {
+        heading: `Each ${perPayment}`,
+        lines: ([
+          { label: 'Repayment', value: result.standardPayment },
+          !(inputs.frequency === 'biweekly') && inputs.monthlyServiceFee > 0 ? { label: 'Service fee', value: inputs.monthlyServiceFee } : null,
+          inputs.extraPayment > 0 ? { label: 'Extra payment', value: inputs.extraPayment } : null,
+        ] as (StatementLine | null)[]).filter((l): l is StatementLine => l !== null),
+      },
+    ],
+    total: {
+      label: `Total each ${perPayment}`,
+      value: result.standardPayment + (inputs.frequency === 'biweekly' ? 0 : inputs.monthlyServiceFee) + inputs.extraPayment,
+    },
+    after: [
+      {
+        heading: 'Over the life of the loan',
+        lines: ([
+          { label: 'Total interest', value: result.totalInterestStandard },
+          inputs.extraPayment > 0 || inputs.lumpSumAmount > 0 ? { label: 'Total interest with your extra payments', value: result.totalInterestWithExtras } : null,
+          inputs.monthlyServiceFee > 0 ? { label: 'Service fees', value: result.totalServiceFees } : null,
+          { label: 'Total paid, including fees', value: result.totalCostIncludingFees },
+          { label: 'Paid off', display: formatDate(inputs.extraPayment > 0 || inputs.lumpSumAmount > 0 ? result.payoffDateWithExtras : result.payoffDate) },
+        ] as (StatementLine | null)[]).filter((l): l is StatementLine => l !== null),
+      },
+    ],
+    footnote: 'Estimate only, not financial advice. Bank fees and rates vary.',
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -248,8 +309,8 @@ export function MortgageCalculator() {
         icon={Building2}
       />
 
-      <div className="tab-bar max-w-xs mb-6" role="tablist" aria-label="Calculator view">
-        {([['simple', 'Simple view'], ['full', 'Full view']] as const).map(([id, label]) => (
+      <div className="tab-bar max-w-md mb-6" role="tablist" aria-label="Calculator view">
+        {([['simple', 'Simple view'], ['full', 'Full view'], ['statement', 'Statement']] as const).map(([id, label]) => (
           <button
             key={id}
             role="tab"
@@ -264,6 +325,8 @@ export function MortgageCalculator() {
 
       {view === 'simple' ? (
         <MortgageSentence inputs={inputs} result={result} onChange={set} />
+      ) : view === 'statement' ? (
+        <div className="max-w-3xl mx-auto"><Statement data={statement} /></div>
       ) : (<>
       <div className="two-col-layout">
         {/* ── Input panel ──────────────────────────────── */}
