@@ -10,7 +10,7 @@ import clsx from 'clsx';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, PAGE_TITLES, type NavItem } from '../../config/nav';
 import { CommandPalette } from '../CommandPalette';
 import { DisclaimerFooter, DisclaimerLink } from '../Disclaimer';
-import { JourneyProvider } from '../../journeys/JourneyContext';
+import { JourneyProvider } from '../../journeys/JourneyProvider';
 import { JourneyBar } from '../../journeys/JourneyBar';
 import { useNavPrefs } from '../../hooks/useNavPrefs';
 import { alpha, textTone } from '../../utils/color';

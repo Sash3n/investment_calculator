@@ -1,24 +1,18 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { JourneyValues } from '../config/journeys';
 
-interface Published {
+export interface PublishedJourneyValues {
   path: string;
   values: JourneyValues;
 }
 
-interface JourneyContextValue {
-  published: Published | null;
-  publish: (p: Published | null) => void;
+export interface JourneyContextValue {
+  published: PublishedJourneyValues | null;
+  publish: (p: PublishedJourneyValues | null) => void;
 }
 
-const JourneyContext = createContext<JourneyContextValue | null>(null);
-
-export function JourneyProvider({ children }: { children: ReactNode }) {
-  const [published, publish] = useState<Published | null>(null);
-  const value = useMemo(() => ({ published, publish }), [published]);
-  return <JourneyContext.Provider value={value}>{children}</JourneyContext.Provider>;
-}
+export const JourneyContext = createContext<JourneyContextValue | null>(null);
 
 /** Figures the current page has published for the next journey step, if any. */
 export function usePublishedJourneyValues(): JourneyValues | null {

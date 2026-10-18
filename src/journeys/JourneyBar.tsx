@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, X } from 'lucide-react';
 import { JOURNEY_BY_ID, journeyHref } from '../config/journeys';
 import { encodeState } from '../utils/share';
-import { usePublishedJourneyValues } from './JourneyContext';
+import { usePublishedJourneyValues } from './journeyContext';
 
 /**
  * Shown above a calculator opened from a journey: the question, the steps, and

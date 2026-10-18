@@ -11,7 +11,7 @@ import { Statement } from '../components/statement/Statement';
 import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { alpha, textTone } from '../utils/color';
-import { useJourneyValues } from '../journeys/JourneyContext';
+import { useJourneyValues } from '../journeys/journeyContext';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 

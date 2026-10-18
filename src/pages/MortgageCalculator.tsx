@@ -27,7 +27,7 @@ import { formatRand, formatYears, formatDate, formatPercent } from '../utils/for
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 import { textTone } from '../utils/color';
-import { useJourneyValues } from '../journeys/JourneyContext';
+import { useJourneyValues } from '../journeys/journeyContext';
 
 const ROWS_PER_PAGE = 24;
 const VIEW_KEY = 'fincalc-mortgage-view';

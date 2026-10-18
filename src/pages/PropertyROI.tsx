@@ -21,7 +21,7 @@ import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
 import { DEFAULT_PROPERTY_INPUTS } from '../config/calculatorDefaults';
 import { seriesColors, textTone } from '../utils/color';
-import { useJourneyValues } from '../journeys/JourneyContext';
+import { useJourneyValues } from '../journeys/journeyContext';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',

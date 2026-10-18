@@ -19,7 +19,7 @@ import { VersusView } from '../components/versus/VersusView';
 import { formatRand, formatPercent, formatYears, formatDate } from '../utils/format';
 import type { InvestingInputs } from '../types';
 import { textTone } from '../utils/color';
-import { useJourneyValues } from '../journeys/JourneyContext';
+import { useJourneyValues } from '../journeys/journeyContext';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',

@@ -16,7 +16,7 @@ import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcAffordability, type AffordabilityInputs } from '../utils/affordability';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import { alpha, seriesColors, textTone } from '../utils/color';
-import { useJourneyValues } from '../journeys/JourneyContext';
+import { useJourneyValues } from '../journeys/journeyContext';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
