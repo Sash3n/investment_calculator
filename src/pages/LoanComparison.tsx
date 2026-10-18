@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { Scale, Plus, Trash2, Trophy } from 'lucide-react';
+import { Scale, Plus, Trash2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { alpha, SERIES, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { loanOfferErrors } from '../utils/validation';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -169,6 +172,14 @@ export function LoanComparison() {
 
   const balanceChart = useMemo(() => buildBalanceChart(loans), [loans]);
 
+  const errors = loans.map(loanOfferErrors);
+  const firstProblem = loans
+    .map((l, i) => ({ label: l.label, message: errors[i].amount ?? errors[i].interestRate ?? errors[i].termYears }))
+    .find((p) => p.message);
+  const blocked = firstProblem ? `${firstProblem.label}: ${firstProblem.message}` : undefined;
+  const worstTotal = results.reduce((a, b) => a.grandTotal > b.grandTotal ? a : b);
+  const totalSaving = worstTotal.grandTotal - bestTotal.grandTotal;
+
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
 
@@ -227,15 +238,15 @@ export function LoanComparison() {
 
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--ink-subtle)' }}>Loan Details</p>
             <div className="grid grid-cols-2 gap-3">
-              <InputField id={`amount-${loan.id}`} label="Loan Amount" value={loan.amount}
+              <InputField id={`amount-${loan.id}`} label="Loan Amount" value={loan.amount} error={errors[idx].amount}
                 onChange={(v) => updateLoan(loan.id, 'amount', v)} prefix="R" />
-              <InputField id={`rate-${loan.id}`} label="Interest Rate" value={loan.interestRate}
+              <InputField id={`rate-${loan.id}`} label="Interest Rate" value={loan.interestRate} error={errors[idx].interestRate}
                 onChange={(v) => updateLoan(loan.id, 'interestRate', v)} suffix="%" step={0.25} />
-              <InputField id={`term-${loan.id}`} label="Term" value={loan.termYears}
+              <InputField id={`term-${loan.id}`} label="Term" value={loan.termYears} error={errors[idx].termYears}
                 onChange={(v) => updateLoan(loan.id, 'termYears', v)} suffix="yrs" />
-              <InputField id={`init-${loan.id}`} label="Initiation Fee" value={loan.initiationFee}
+              <InputField id={`init-${loan.id}`} label="Initiation Fee" value={loan.initiationFee} error={errors[idx].initiationFee}
                 onChange={(v) => updateLoan(loan.id, 'initiationFee', v)} prefix="R" />
-              <InputField id={`fee-${loan.id}`} label="Monthly Service Fee" value={loan.monthlyServiceFee}
+              <InputField id={`fee-${loan.id}`} label="Monthly Service Fee" value={loan.monthlyServiceFee} error={errors[idx].monthlyServiceFee}
                 onChange={(v) => updateLoan(loan.id, 'monthlyServiceFee', v)} prefix="R" />
             </div>
 
@@ -276,28 +287,24 @@ export function LoanComparison() {
         ))}
       </div>
 
-      {/* Winners */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {[
-          { label: 'Lowest Monthly Payment', winner: bestMonthly, value: formatRand(bestMonthly.totalMonthly, 0) + '/mo' },
-          { label: 'Lowest Grand Total (all costs)', winner: bestTotal, value: formatRand(bestTotal.grandTotal, 0) },
-        ].map((item) => (
-          <div key={item.label} className="rounded-xl p-4 flex items-center gap-3"
-            style={{ background: alpha(item.winner.color, 5), border: `1px solid ${alpha(item.winner.color, 19)}` }}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: alpha(item.winner.color, 13) }}>
-              <Trophy size={14} style={{ color: textTone(item.winner.color) }} />
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
-              <p className="text-sm font-bold" style={{ color: textTone(item.winner.color) }}>
-                {item.winner.label} — {item.value}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ResultPanel
+        label={`${bestTotal.label} costs the least over the full term`}
+        value={formatRand(bestTotal.grandTotal, 0)}
+        blocked={blocked}
+        summary={<>
+          {totalSaving > 0
+            ? `Counting interest, fees and costs on transfer day, ${bestTotal.label} costs ${formatRand(totalSaving, 0)} less than ${worstTotal.label}.`
+            : 'Counting interest, fees and costs on transfer day, the offers cost the same.'}
+          {' '}
+          {bestMonthly.id === bestTotal.id
+            ? `It also has the lowest monthly payment, ${formatRand(bestMonthly.totalMonthly, 0)} with the service fee.`
+            : `${bestMonthly.label} has the lowest monthly payment, ${formatRand(bestMonthly.totalMonthly, 0)} with the service fee, but costs more overall.`}
+        </>}
+        figures={[
+          ...results.map((r) => ({ label: `${r.label} in total`, value: formatRand(r.grandTotal, 0) })),
+          { label: 'Lowest monthly payment', value: `${formatRand(bestMonthly.totalMonthly, 0)}/mo` },
+        ]}
+      />
 
       {/* Comparison table */}
       <div className="glass-card-static p-5">
@@ -387,9 +394,14 @@ export function LoanComparison() {
         </ResponsiveContainer>
       </div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Transfer duty and bond registration are auto-calculated from loan amount but can be overridden. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Each offer keeps its interest rate for the whole term, and every repayment is made on time.</>,
+          <>The total counts every repayment, the monthly service fee, the initiation fee, transfer duty and bond registration.</>,
+          <>Transfer duty and bond registration are worked out from the loan amount, because the price of the home isn’t asked for. With a deposit, the real transfer duty is higher. Type over either figure to use your own.</>,
+          <>An initiation fee added to the loan is repaid with interest. One paid upfront is not.</>,
+        ]}
+      />
     </div>
   );
 }

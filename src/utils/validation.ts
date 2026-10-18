@@ -157,6 +157,24 @@ export function airbnbInputErrors(i: STRvsLTRInputs): FieldErrors<keyof STRvsLTR
   };
 }
 
+export interface LoanOfferChecked {
+  amount: number;
+  interestRate: number;
+  termYears: number;
+  initiationFee: number;
+  monthlyServiceFee: number;
+}
+
+export function loanOfferErrors(i: LoanOfferChecked): FieldErrors<keyof LoanOfferChecked> {
+  return {
+    amount: positiveError(i.amount, 'Enter the loan amount.'),
+    interestRate: rangeError(i.interestRate, 0, 30, 'a rate', '%'),
+    termYears: rangeError(i.termYears, 1, 30, 'a term', ' years'),
+    initiationFee: nonNegativeError(i.initiationFee),
+    monthlyServiceFee: nonNegativeError(i.monthlyServiceFee),
+  };
+}
+
 export function affordabilityInputErrors(i: AffordabilityInputs): FieldErrors<keyof AffordabilityInputs> {
   return {
     grossMonthlyIncome: positiveError(i.grossMonthlyIncome, 'Enter your income before tax.'),
