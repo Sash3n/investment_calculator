@@ -111,12 +111,18 @@ function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourit
 }
 
 const COLLAPSE_KEY = 'fincalc-nav-collapsed';
+const THEME_KEY = 'fincalc-color-theme';
 
 export function AppShell() {
   const liveRate = usePrimeRate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Light paper is the default. The old 'fincalc-theme' key was written on every
+  // visit, so it cannot tell a real choice from the old dark default; a new key is
+  // only written when the visitor actually toggles. public/theme-init.js reads it too.
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('fincalc-theme') as 'dark' | 'light') ?? 'dark';
+    try {
+      return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+    } catch { return 'light'; }
   });
   const { user, signIn, signOut } = useAuth();
   const location = useLocation();
@@ -152,10 +158,14 @@ export function AppShell() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('fincalc-theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  const toggleTheme = () =>
+    setTheme((t) => {
+      const next = t === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem(THEME_KEY, next); } catch { /* storage blocked */ }
+      return next;
+    });
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
