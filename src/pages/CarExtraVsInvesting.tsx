@@ -13,19 +13,19 @@ import { calcPayment } from '../utils/mortgage';
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const VEHICLE_OPTIONS = [
@@ -228,8 +228,8 @@ export function CarExtraVsInvesting() {
   const finalInterestSaved = finalRow?.interestSaved ?? 0;
 
   const barData = [
-    { label: 'Interest Saved\n(extra payment)', value: finalInterestSaved, color: C.indigo },
-    { label: 'Portfolio Value\n(invest instead)', value: finalInvestValue, color: C.emerald },
+    { label: 'Interest Saved\n(extra payment)', value: finalInterestSaved, color: C.blue },
+    { label: 'Portfolio Value\n(invest instead)', value: finalInvestValue, color: C.green },
   ];
 
   return (
@@ -239,15 +239,15 @@ export function CarExtraVsInvesting() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(236,72,153,0.12)', border: '1px solid rgba(236,72,153,0.25)' }}>
-            <Car size={20} className="text-[#EC4899]" />
+            style={{ background: 'color-mix(in srgb, var(--note-red) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-red) 25%, transparent)' }}>
+            <Car size={20} className="text-note-red" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Car: Extra Payment vs Investing
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Should you pay extra on your car loan, or invest that money instead?
             </p>
           </div>
@@ -260,22 +260,22 @@ export function CarExtraVsInvesting() {
           initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
           className="flex items-center gap-4 p-5 rounded-2xl"
           style={{
-            background: winner === 'invest' ? 'rgba(16,185,129,0.08)' : 'rgba(99,102,241,0.08)',
-            border: `1px solid ${winner === 'invest' ? 'rgba(16,185,129,0.3)' : 'rgba(99,102,241,0.3)'}`,
+            background: winner === 'invest' ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--note-blue) 8%, transparent)',
+            border: `1px solid ${winner === 'invest' ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--note-blue) 30%, transparent)'}`,
           }}
         >
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: winner === 'invest' ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)' }}>
-            <Trophy size={18} style={{ color: winner === 'invest' ? C.emerald : C.indigo }} />
+            style={{ background: winner === 'invest' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
+            <Trophy size={18} style={{ color: winner === 'invest' ? C.green : C.blue }} />
           </div>
           <div className="flex-1">
             <p className="text-base font-bold"
-              style={{ color: winner === 'invest' ? C.emerald : C.indigo, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: winner === 'invest' ? C.green : C.blue, fontFamily: 'var(--font-display)' }}>
               {winner === 'invest'
                 ? `Investing wins by ${formatRand(winnerAmount, 0)} over ${Math.round(termMonths / 12)} years`
                 : `Paying extra wins by ${formatRand(winnerAmount, 0)} over ${Math.round(termMonths / 12)} years`}
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
               {winner === 'invest'
                 ? `Your ${formatRand(extraPayment, 0)}/mo invested at ${expectedReturn}% p.a. grows to ${formatRand(finalInvestValue, 0)}, beating the ${formatRand(finalInterestSaved, 0)} interest saved on the car loan.`
                 : `Paying ${formatRand(extraPayment, 0)}/mo extra saves ${formatRand(finalInterestSaved, 0)} in car interest — better than the ${formatRand(finalInvestValue, 0)} investment portfolio at ${expectedReturn}% p.a.`}
@@ -290,7 +290,7 @@ export function CarExtraVsInvesting() {
         {/* Car loan */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
           className="glass-card p-5 space-y-4">
-          <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Car Loan Details
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -307,7 +307,7 @@ export function CarExtraVsInvesting() {
             onChange={(v) => setTermMonths(parseInt(v))} options={VEHICLE_OPTIONS} />
 
           {/* Loan summary */}
-          <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+          <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
             {[
               { label: 'Loan Amount',       value: formatRand(scenario.loanAmount, 0) },
               { label: 'Financed Amount',   value: formatRand(scenario.financedAmount, 0), note: balloonPercent > 0 ? `balloon: ${formatRand(scenario.balloonAmount, 0)}` : undefined },
@@ -315,10 +315,10 @@ export function CarExtraVsInvesting() {
               { label: 'Total Interest',    value: formatRand(scenario.interestStandard, 0), color: C.red },
             ].map((r) => (
               <div key={r.label} className="flex justify-between items-center">
-                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {r.label}{r.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>({r.note})</span>}
+                <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+                  {r.label}{r.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--ink-subtle)' }}>({r.note})</span>}
                 </span>
-                <span className="text-xs font-semibold" style={{ color: r.color ?? 'var(--color-text)' }}>{r.value}</span>
+                <span className="text-xs font-semibold" style={{ color: r.color ?? 'var(--ink)' }}>{r.value}</span>
               </div>
             ))}
           </div>
@@ -328,14 +328,14 @@ export function CarExtraVsInvesting() {
             help="Amount you could either pay extra on the car or invest each month" />
 
           {extraPayment > 0 && (
-            <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.1)' }}>
+            <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'color-mix(in srgb, var(--note-blue) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 10%, transparent)' }}>
               {[
-                { label: 'Interest Saved',  value: formatRand(scenario.interestSaved, 0),  color: C.emerald },
-                { label: 'Months Saved',    value: `${scenario.monthsSaved} months`,        color: C.indigo },
-                { label: 'Paid off in',     value: `${scenario.monthsWithExtra} months`,    color: 'var(--color-text)' },
+                { label: 'Interest Saved',  value: formatRand(scenario.interestSaved, 0),  color: C.green },
+                { label: 'Months Saved',    value: `${scenario.monthsSaved} months`,        color: C.blue },
+                { label: 'Paid off in',     value: `${scenario.monthsWithExtra} months`,    color: 'var(--ink)' },
               ].map((r) => (
                 <div key={r.label} className="flex justify-between items-center">
-                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{r.label}</span>
+                  <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>{r.label}</span>
                   <span className="text-xs font-bold" style={{ color: r.color }}>{r.value}</span>
                 </div>
               ))}
@@ -346,7 +346,7 @@ export function CarExtraVsInvesting() {
         {/* Investment */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
           className="glass-card p-5 space-y-4">
-          <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Investment Scenario
           </p>
           <SelectField id="vehicle" label="Investment Vehicle" value={vehicle}
@@ -362,8 +362,8 @@ export function CarExtraVsInvesting() {
           )}
           {isTFSA && (
             <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', color: 'var(--color-text-muted)' }}>
-              <Info size={13} style={{ color: C.emerald, flexShrink: 0, marginTop: 1 }} />
+              style={{ background: 'color-mix(in srgb, var(--gain) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)', color: 'var(--ink-muted)' }}>
+              <Info size={13} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
               TFSA contributions are after-tax and grow tax-free — no CGT or dividend tax. Subject to R36,000/yr and R500,000 lifetime limits.
             </div>
           )}
@@ -372,15 +372,15 @@ export function CarExtraVsInvesting() {
           <div className="grid grid-cols-2 gap-3 pt-2">
             {[
               { label: 'Rate on Car Loan',    value: `${interestRate}%`,              color: C.red,     sub: 'guaranteed "return" from paying extra' },
-              { label: 'Expected Investment', value: `${expectedReturn}%`,             color: C.emerald, sub: isTFSA ? 'tax-free' : `after ~${cgtRate}% CGT` },
-              { label: 'Interest Saved',      value: formatRand(scenario.interestSaved, 0), color: C.indigo, sub: 'if paying extra' },
-              { label: 'Portfolio at Term',   value: formatRand(finalInvestValue, 0), color: C.amber,   sub: 'if investing instead' },
+              { label: 'Expected Investment', value: `${expectedReturn}%`,             color: C.green, sub: isTFSA ? 'tax-free' : `after ~${cgtRate}% CGT` },
+              { label: 'Interest Saved',      value: formatRand(scenario.interestSaved, 0), color: C.blue, sub: 'if paying extra' },
+              { label: 'Portfolio at Term',   value: formatRand(finalInvestValue, 0), color: C.orange,   sub: 'if investing instead' },
             ].map((kpi) => (
               <div key={kpi.label} className="glass-card-static p-3 rounded-xl">
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                  style={{ color: 'var(--color-text-subtle)' }}>{kpi.label}</p>
-                <p className="text-sm font-bold" style={{ color: kpi.color, fontFamily: 'var(--font-heading)' }}>{kpi.value}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{kpi.sub}</p>
+                  style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
+                <p className="text-sm font-bold" style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
               </div>
             ))}
           </div>
@@ -391,18 +391,18 @@ export function CarExtraVsInvesting() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Final Outcome at End of Term
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           Both options use the same {formatRand(extraPayment, 0)}/month over {Math.round(termMonths / 12)} years
         </p>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={barData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Bar dataKey="value" name="Amount" radius={[6, 6, 0, 0]}>
               {barData.map((entry, i) => (
                 <rect key={i} fill={entry.color} />
@@ -416,27 +416,27 @@ export function CarExtraVsInvesting() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
         className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Comparison
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           Interest saved (extra payment) vs portfolio value (investing) — where they cross, the winner switches
         </p>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={yearData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
               formatter={(v, name) => [formatRand(Number(v), 0), name]}
               contentStyle={TOOLTIP_STYLE}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+            <ReferenceLine y={0} stroke="color-mix(in srgb, var(--ink) 10%, transparent)" />
             <Line type="monotone" dataKey="interestSaved" name="Interest Saved (pay extra)"
-              stroke={C.indigo} strokeWidth={2} dot={false} />
+              stroke={C.blue} strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="investValue" name="Portfolio Value (invest)"
-              stroke={C.emerald} strokeWidth={2} dot={false} />
+              stroke={C.green} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </motion.div>
@@ -445,16 +445,16 @@ export function CarExtraVsInvesting() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
         className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-3"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Detailed Year-by-Year Breakdown
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Year', 'Interest Saved', 'Portfolio Value', 'Difference', 'Leading'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -463,20 +463,20 @@ export function CarExtraVsInvesting() {
                 const diff = row.investValue - row.interestSaved;
                 return (
                   <tr key={row.year} style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
+                    background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-semibold" style={{ color: 'var(--color-text-muted)' }}>{row.year}</td>
-                    <td className="py-2 px-3" style={{ color: C.indigo }}>{formatRand(row.interestSaved, 0)}</td>
-                    <td className="py-2 px-3" style={{ color: C.emerald }}>{formatRand(row.investValue, 0)}</td>
-                    <td className="py-2 px-3" style={{ color: diff > 0 ? C.emerald : C.indigo }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink-muted)' }}>{row.year}</td>
+                    <td className="py-2 px-3" style={{ color: C.blue }}>{formatRand(row.interestSaved, 0)}</td>
+                    <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(row.investValue, 0)}</td>
+                    <td className="py-2 px-3" style={{ color: diff > 0 ? C.green : C.blue }}>
                       {diff > 0 ? '+' : ''}{formatRand(diff, 0)}
                     </td>
                     <td className="py-2 px-3">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                         style={{
-                          background: row.winner === 'invest' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)',
-                          color: row.winner === 'invest' ? C.emerald : C.indigo,
+                          background: row.winner === 'invest' ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
+                          color: row.winner === 'invest' ? C.green : C.blue,
                         }}>
                         {row.winner === 'invest' ? 'Investing' : 'Pay Extra'}
                       </span>
@@ -489,7 +489,7 @@ export function CarExtraVsInvesting() {
         </div>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Investment returns are not guaranteed. Car interest savings are deterministic. Past performance does not predict future returns. Not financial advice.
       </p>
     </div>

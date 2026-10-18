@@ -20,10 +20,11 @@ import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/ta
 import { useAuth } from '../context/AuthContext';
 import { useSavedProperties } from '../hooks/useFirestore';
 import type { AgeGroup, PortfolioRentalProperty } from '../types';
+import { alpha } from '../utils/color';
 
 const C = {
-  indigo: '#6366F1', amber: '#F59E0B', emerald: '#10B981',
-  red: '#EF4444', cyan: '#06B6D4', violet: '#8B5CF6',
+  blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
+  red: 'var(--loss)', teal: 'var(--note-teal)', brown: 'var(--note-brown)',
 };
 
 const AGE_OPTIONS = [
@@ -55,9 +56,9 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 150 }}>
-      <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>{label}</p>
+      <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: 'var(--color-text-muted)' }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: 'var(--ink-muted)' }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -132,10 +133,10 @@ export function PropertyPortfolioTax() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Property Portfolio Tax
             </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Combined rental tax across your portfolio, and the Section 13sex break at {S13SEX_MIN_UNITS}+ new units · {yearLabel}
             </p>
           </div>
@@ -166,31 +167,31 @@ export function PropertyPortfolioTax() {
                 {user && savedProperties.length > 0 && (
                   <button onClick={() => setShowImport((v) => !v)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                    style={{ background: 'rgba(6,182,212,0.12)', color: C.cyan, border: `1px solid ${C.cyan}44` }}>
+                    style={{ background: 'color-mix(in srgb, var(--note-teal) 12%, transparent)', color: C.teal, border: `1px solid ${alpha(C.teal, 27)}` }}>
                     <CloudDownload size={13} /> Import
                   </button>
                 )}
                 <button onClick={addProperty}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                  style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+                  style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
                   <Plus size={13} /> Add
                 </button>
               </div>
             </div>
 
             {showImport && (
-              <div className="p-3 rounded-xl space-y-2" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>From your saved portfolio:</p>
+              <div className="p-3 rounded-xl space-y-2" style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+                <p className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>From your saved portfolio:</p>
                 {savedProperties.map((sp) => (
                   <button key={sp.id} onClick={() => importSaved(sp.name, sp.inputs)}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm transition-all hover:bg-[rgba(99,102,241,0.08)]"
-                    style={{ color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
-                    {sp.name} <span className="text-xs" style={{ color: 'var(--color-text-subtle)' }}>
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm transition-all hover:bg-note-blue/8"
+                    style={{ color: 'var(--ink)', border: '1px solid var(--rule)' }}>
+                    {sp.name} <span className="text-xs" style={{ color: 'var(--ink-subtle)' }}>
                       · {formatRandShort(sp.inputs.purchasePrice)} · rent {formatRandShort(sp.inputs.rentScenario1)}/mo
                     </span>
                   </button>
                 ))}
-                <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
                   Bond interest is estimated at 80% of repayments — replace it with the figure from your bank statement for accuracy.
                 </p>
               </div>
@@ -204,17 +205,17 @@ export function PropertyPortfolioTax() {
               const open = expanded === p.id;
               const res = result.perProperty.find((r) => r.id === p.id);
               return (
-                <div key={p.id} className="rounded-xl" style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
+                <div key={p.id} className="rounded-xl" style={{ border: '1px solid var(--rule)', background: 'var(--paper-raised)' }}>
                   <button onClick={() => setExpanded(open ? null : p.id)}
                     className="w-full flex items-center gap-3 px-4 py-3">
-                    <Building2 size={15} style={{ color: p.isNewUnused ? C.emerald : 'var(--color-text-subtle)' }} />
-                    <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{p.name}</span>
+                    <Building2 size={15} style={{ color: p.isNewUnused ? C.green : 'var(--ink-subtle)' }} />
+                    <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{p.name}</span>
                     {res && (
-                      <span className="text-xs font-semibold" style={{ color: res.netProfit >= 0 ? C.emerald : C.red }}>
+                      <span className="text-xs font-semibold" style={{ color: res.netProfit >= 0 ? C.green : C.red }}>
                         {res.netProfit >= 0 ? '+' : ''}{formatRandShort(res.netProfit)}/yr
                       </span>
                     )}
-                    {open ? <ChevronUp size={14} style={{ color: 'var(--color-text-subtle)' }} /> : <ChevronDown size={14} style={{ color: 'var(--color-text-subtle)' }} />}
+                    {open ? <ChevronUp size={14} style={{ color: 'var(--ink-subtle)' }} /> : <ChevronDown size={14} style={{ color: 'var(--ink-subtle)' }} />}
                   </button>
                   {open && (
                     <div className="px-4 pb-4 space-y-3">
@@ -241,15 +242,15 @@ export function PropertyPortfolioTax() {
                       <InputField label="Other Deductions (annual)" id={`${p.id}-oth`} value={p.otherAnnualDeductions}
                         onChange={(v) => update(p.id, { otherAnnualDeductions: parseFloat(v) || 0 })} prefix="R"
                         help="Advertising, accounting, garden services, etc." />
-                      <div className="pt-1 space-y-2" style={{ borderTop: '1px dashed var(--color-border)' }}>
-                        <p className="text-[10px] font-bold uppercase tracking-wider pt-2" style={{ color: 'var(--color-text-subtle)' }}>
+                      <div className="pt-1 space-y-2" style={{ borderTop: '1px dashed var(--rule)' }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider pt-2" style={{ color: 'var(--ink-subtle)' }}>
                           Section 13sex qualification
                         </p>
                         <div className="flex items-center gap-3">
                           <input type="checkbox" id={`${p.id}-new`} checked={p.isNewUnused}
                             onChange={(e) => update(p.id, { isNewUnused: e.target.checked })}
-                            className="w-4 h-4 accent-[#10B981]" />
-                          <label htmlFor={`${p.id}-new`} className="text-xs cursor-pointer" style={{ color: 'var(--color-text-muted)' }}>
+                            className="w-4 h-4 accent-gain" />
+                          <label htmlFor={`${p.id}-new`} className="text-xs cursor-pointer" style={{ color: 'var(--ink-muted)' }}>
                             Bought new and unused (required for 13sex)
                           </label>
                         </div>
@@ -260,8 +261,8 @@ export function PropertyPortfolioTax() {
                             <div className="flex items-center gap-3">
                               <input type="checkbox" id={`${p.id}-low`} checked={p.isLowCostHousing}
                                 onChange={(e) => update(p.id, { isLowCostHousing: e.target.checked })}
-                                className="w-4 h-4 accent-[#10B981]" />
-                              <label htmlFor={`${p.id}-low`} className="text-xs cursor-pointer" style={{ color: 'var(--color-text-muted)' }}>
+                                className="w-4 h-4 accent-gain" />
+                              <label htmlFor={`${p.id}-low`} className="text-xs cursor-pointer" style={{ color: 'var(--ink-muted)' }}>
                                 Low-cost housing (10% over 10 years)
                               </label>
                             </div>
@@ -270,7 +271,7 @@ export function PropertyPortfolioTax() {
                       </div>
                       <button onClick={() => removeProperty(p.id)}
                         className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-                        style={{ background: 'rgba(239,68,68,0.08)', color: C.red, border: '1px solid rgba(239,68,68,0.2)' }}>
+                        style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: C.red, border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
                         <Trash2 size={12} /> Remove
                       </button>
                     </div>
@@ -285,25 +286,25 @@ export function PropertyPortfolioTax() {
         <div className="space-y-5">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard label="Net Rental Income" value={formatRand(result.netRentalIncome, 0)}
-              color={result.netRentalIncome >= 0 ? 'emerald' : 'red'} icon={Building2} />
-            <StatCard label="Tax on Rentals" value={formatRand(result.taxAttributableToRental, 0)} color="amber" icon={Receipt} />
+              color={result.netRentalIncome >= 0 ? 'green' : 'red'} icon={Building2} />
+            <StatCard label="Tax on Rentals" value={formatRand(result.taxAttributableToRental, 0)} color="orange" icon={Receipt} />
             <StatCard label="After-Tax Cash Flow" value={`${formatRand(result.afterTaxMonthlyCashFlow, 0)}/mo`}
-              color={result.afterTaxMonthlyCashFlow >= 0 ? 'emerald' : 'red'} icon={TrendingUp} />
-            <StatCard label="Marginal Rate" value={`${result.marginalRate.toFixed(0)}%`} color="indigo" icon={TrendingUp} />
+              color={result.afterTaxMonthlyCashFlow >= 0 ? 'green' : 'red'} icon={TrendingUp} />
+            <StatCard label="Marginal Rate" value={`${result.marginalRate.toFixed(0)}%`} color="blue" icon={TrendingUp} />
           </div>
 
           {/* Section 13sex status banner */}
           <div className="p-4 rounded-xl flex items-start gap-3" style={{
-            background: result.s13Qualifies ? 'rgba(16,185,129,0.10)' : 'rgba(245,158,11,0.08)',
-            border: `1px solid ${result.s13Qualifies ? C.emerald : C.amber}44`,
+            background: result.s13Qualifies ? 'color-mix(in srgb, var(--gain) 10%, transparent)' : 'color-mix(in srgb, var(--note-orange) 8%, transparent)',
+            border: `1px solid ${alpha(result.s13Qualifies ? C.green : C.orange, 27)}`,
           }}>
             {result.s13Qualifies
-              ? <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0" style={{ color: C.emerald }} />
-              : <XCircle size={18} className="mt-0.5 flex-shrink-0" style={{ color: C.amber }} />}
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              ? <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0" style={{ color: C.green }} />
+              : <XCircle size={18} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />}
+            <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               {result.s13Qualifies ? (
                 <>
-                  <span className="font-semibold" style={{ color: C.emerald }}>
+                  <span className="font-semibold" style={{ color: C.green }}>
                     Section 13sex unlocked with {result.s13QualifyingUnits} qualifying units.
                   </span>{' '}
                   You can deduct {formatRand(result.s13?.annualDeduction ?? 0, 0)} per year
@@ -311,7 +312,7 @@ export function PropertyPortfolioTax() {
                 </>
               ) : (
                 <>
-                  <span className="font-semibold" style={{ color: C.amber }}>
+                  <span className="font-semibold" style={{ color: C.orange }}>
                     {result.s13QualifyingUnits} of {S13SEX_MIN_UNITS} qualifying units
                   </span>{' '}
                   — buy {unitsShort} more new-and-unused residential {unitsShort === 1 ? 'unit' : 'units'} to unlock the
@@ -329,13 +330,13 @@ export function PropertyPortfolioTax() {
               <div style={{ height: 240 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={barData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
-                    <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(Number(v))} />
-                    <Tooltip content={<RandTooltip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--rule)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+                    <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => formatRandShort(Number(v))} />
+                    <Tooltip content={<RandTooltip />} cursor={{ fill: 'color-mix(in srgb, var(--note-blue) 6%, transparent)' }} />
                     <Bar dataKey="profit" name="Net profit" radius={[4, 4, 0, 0]}>
                       {barData.map((d, i) => (
-                        <Cell key={i} fill={d.profit >= 0 ? C.emerald : C.red} />
+                        <Cell key={i} fill={d.profit >= 0 ? C.green : C.red} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -349,19 +350,19 @@ export function PropertyPortfolioTax() {
             <div className="glass-card p-5 space-y-4">
               <SectionHeader title="Tax: With vs Without Section 13sex" icon={Receipt} />
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Standard treatment</p>
+                <div className="p-4 rounded-xl" style={{ background: 'color-mix(in srgb, var(--loss) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Standard treatment</p>
                   <p className="text-xl font-bold" style={{ color: C.red }}>
                     {formatRand(result.taxAttributableToRental + result.taxOnOtherIncomeOnly, 0)}
                   </p>
-                  <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>total tax, year 1</p>
+                  <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>total tax, year 1</p>
                 </div>
-                <div className="p-4 rounded-xl" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>With Section 13sex{raMonthly > 0 ? ' + RA' : ''}</p>
-                  <p className="text-xl font-bold" style={{ color: C.emerald }}>
+                <div className="p-4 rounded-xl" style={{ background: 'color-mix(in srgb, var(--gain) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>With Section 13sex{raMonthly > 0 ? ' + RA' : ''}</p>
+                  <p className="text-xl font-bold" style={{ color: C.green }}>
                     {formatRand(Math.max(0, result.taxAttributableToRental + result.taxOnOtherIncomeOnly - (raMonthly > 0 ? result.s13.combinedAnnualTaxSaving : result.s13.annualTaxSaving)), 0)}
                   </p>
-                  <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                  <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
                     saves {formatRand(raMonthly > 0 ? result.s13.combinedAnnualTaxSaving : result.s13.annualTaxSaving, 0)}/yr
                   </p>
                 </div>
@@ -369,15 +370,15 @@ export function PropertyPortfolioTax() {
 
               <button onClick={() => setShowSchedule((v) => !v)}
                 className="flex items-center gap-1.5 text-xs font-semibold"
-                style={{ color: C.indigo }}>
+                style={{ color: C.blue }}>
                 {showSchedule ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 {showSchedule ? 'Hide' : 'Show'} year-by-year schedule
               </button>
               {showSchedule && (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  <table className="w-full text-xs" style={{ color: 'var(--ink-muted)' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <tr style={{ borderBottom: '1px solid var(--rule)' }}>
                         <th className="text-left py-2">Year</th>
                         <th className="text-right py-2">Deduction</th>
                         <th className="text-right py-2">Tax Saving</th>
@@ -386,11 +387,11 @@ export function PropertyPortfolioTax() {
                     </thead>
                     <tbody>
                       {result.s13.schedule.map((row) => (
-                        <tr key={row.year} style={{ borderBottom: '1px dashed var(--color-border)' }}>
+                        <tr key={row.year} style={{ borderBottom: '1px dashed var(--rule)' }}>
                           <td className="py-1.5">{row.year}</td>
                           <td className="text-right">{formatRand(row.deduction, 0)}</td>
-                          <td className="text-right" style={{ color: C.emerald }}>{formatRand(row.taxSaving, 0)}</td>
-                          <td className="text-right font-semibold" style={{ color: 'var(--color-text)' }}>{formatRand(row.cumulativeSaving, 0)}</td>
+                          <td className="text-right" style={{ color: C.green }}>{formatRand(row.taxSaving, 0)}</td>
+                          <td className="text-right font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(row.cumulativeSaving, 0)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -400,9 +401,9 @@ export function PropertyPortfolioTax() {
             </div>
           )}
 
-          <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
-            <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: C.amber }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+          <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
+            <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               Section 13sex requires at least {S13SEX_MIN_UNITS} new-and-unused residential units owned by the same
               taxpayer, all used to produce rental income; the allowance applies to building cost excluding land.
               Rental losses may be ring-fenced under s20A. Based on {yearLabel} SARS tables. Not tax advice —

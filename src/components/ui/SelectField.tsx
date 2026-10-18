@@ -36,7 +36,7 @@ export function SelectField({
       <label
         htmlFor={id}
         className="text-xs font-semibold uppercase tracking-wider"
-        style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
+        style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}
       >
         {label}
       </label>
@@ -46,7 +46,7 @@ export function SelectField({
         onChange={handleChange}
         disabled={disabled}
         className={clsx('select-dark', disabled && 'opacity-50 cursor-not-allowed')}
-        style={{ fontFamily: 'var(--font-body)' }}
+        style={{ fontFamily: 'var(--font-text)' }}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -57,7 +57,7 @@ export function SelectField({
       {help && (
         <p
           className="text-xs leading-relaxed"
-          style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
+          style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}
         >
           {help}
         </p>

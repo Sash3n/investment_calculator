@@ -11,6 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcIncomeTax, getMarginalRate } from '../utils/tax';
 import type { AgeGroup } from '../types';
+import { alpha } from '../utils/color';
 
 // ── SARS 2026/27 Constants (effective 1 March 2026) ───────────────────────────
 const RA_PCT_CAP           = 0.275;           // 27.5% of greater of income or remuneration
@@ -36,20 +37,20 @@ function calcRetirementLumpSumTax(lumpSum: number): number {
 
 
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const AGE_GROUP_OPTIONS = [
@@ -269,7 +270,7 @@ export function RaPlanner() {
 
   const retirementAgeValid = inp.retirementAge >= MIN_RETIRE_AGE;
   const overContrib        = annualContrib > deductionLimit;
-  const utilizationColor   = raUtilisationPct >= 90 ? C.emerald : raUtilisationPct >= 50 ? C.amber : C.red;
+  const utilizationColor   = raUtilisationPct >= 90 ? C.green : raUtilisationPct >= 50 ? C.orange : C.red;
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -278,20 +279,20 @@ export function RaPlanner() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-            <Shield size={20} className="text-[#6366F1]" />
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+            <Shield size={20} className="text-note-blue" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Retirement Annuity Planner
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               27.5% deduction · 2-Pot system · SARS 2026/27 · Living annuity modelling
             </p>
           </div>
           <span className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
             RA cap R430,000
           </span>
         </div>
@@ -300,9 +301,9 @@ export function RaPlanner() {
       {/* Retirement age warning */}
       {!retirementAgeValid && (
         <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-          <AlertTriangle size={14} className="text-[#EF4444] mt-0.5 flex-shrink-0" />
-          <span style={{ color: '#FCA5A5' }}>
+          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
+          <AlertTriangle size={14} className="text-loss mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--loss)' }}>
             The minimum RA retirement age in South Africa is <strong>55</strong>. You cannot access your RA before this age (except for disability or formal tax emigration).
           </span>
         </div>
@@ -311,9 +312,9 @@ export function RaPlanner() {
       {/* Over-contribution warning */}
       {overContrib && (
         <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <AlertTriangle size={14} className="text-[#F59E0B] mt-0.5 flex-shrink-0" />
-          <span style={{ color: '#FCD34D' }}>
+          style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
+          <AlertTriangle size={14} className="text-note-orange mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--note-orange)' }}>
             Your RA contribution of {formatRand(annualContrib, 0)}/year exceeds your deductible limit of {formatRand(deductionLimit, 0)}/year.
             The excess of <strong>{formatRand(excessContrib, 0)}</strong> is not deductible now — but it carries forward and is deductible in future tax years, and is tax-free when withdrawn at retirement.
           </span>
@@ -327,43 +328,43 @@ export function RaPlanner() {
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-            <TrendingUp size={15} className="text-[#10B981]" />
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
+            <TrendingUp size={15} className="text-gain" />
           </div>
           <p className="text-sm font-semibold"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             SARS Subsidy — How Much the Government Pays
           </p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>Your contribution</p>
-            <p className="text-lg font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink-subtle)' }}>Your contribution</p>
+            <p className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               {formatRand(inp.monthlyRAContribution, 0)}<span className="text-xs font-normal">/mo</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>SARS pays</p>
-            <p className="text-lg font-bold" style={{ color: C.emerald, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink-subtle)' }}>SARS pays</p>
+            <p className="text-lg font-bold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
               {formatRand(monthlyTaxSaving, 0)}<span className="text-xs font-normal">/mo</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>Your actual cost</p>
-            <p className="text-lg font-bold" style={{ color: C.indigo, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink-subtle)' }}>Your actual cost</p>
+            <p className="text-lg font-bold" style={{ color: C.blue, fontFamily: 'var(--font-display)' }}>
               {formatRand(effectiveMonthlyCost, 0)}<span className="text-xs font-normal">/mo</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>SARS subsidy</p>
-            <p className="text-lg font-bold" style={{ color: C.amber, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink-subtle)' }}>SARS subsidy</p>
+            <p className="text-lg font-bold" style={{ color: C.orange, fontFamily: 'var(--font-display)' }}>
               {formatPercent(sarsSubsidyPct, 0)}
             </p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
               {marginalRate.toFixed(0)}% marginal bracket
             </p>
           </div>
@@ -372,22 +373,22 @@ export function RaPlanner() {
         {/* RA deduction utilisation bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span style={{ color: 'var(--color-text-muted)' }}>RA deduction utilisation</span>
+            <span style={{ color: 'var(--ink-muted)' }}>RA deduction utilisation</span>
             <span className="font-semibold" style={{ color: utilizationColor }}>
               {formatRand(annualContrib, 0)} / {formatRand(deductionLimit, 0)} ({raUtilisationPct.toFixed(0)}%)
             </span>
           </div>
           <div className="h-2 rounded-full overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            style={{ background: 'color-mix(in srgb, var(--ink) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
             <motion.div
               className="h-full rounded-full"
-              style={{ background: `linear-gradient(90deg, ${C.indigo}, ${utilizationColor})` }}
+              style={{ background: `linear-gradient(90deg, ${C.blue}, ${utilizationColor})` }}
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, raUtilisationPct)}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
             />
           </div>
-          <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-subtle)' }}>
+          <p className="text-[10px] mt-1" style={{ color: 'var(--ink-subtle)' }}>
             Annual deduction cap: R430,000 (27.5% of income, whichever is lower) — SARS 2026/27 Budget
           </p>
         </div>
@@ -398,11 +399,11 @@ export function RaPlanner() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <Wallet size={15} className="text-[#6366F1]" />
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              <Wallet size={15} className="text-note-blue" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Your Details
             </p>
           </div>
@@ -426,11 +427,11 @@ export function RaPlanner() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
-              <PieChart size={15} className="text-[#F59E0B]" />
+              style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
+              <PieChart size={15} className="text-note-orange" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Current Balances &amp; Retirement
             </p>
           </div>
@@ -455,19 +456,19 @@ export function RaPlanner() {
       {/* Summary stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total at Retirement" value={formatRand(totalAtRetirement, 0)}
-          sub={`Age ${inp.retirementAge}`} color="emerald" delay={0} />
+          sub={`Age ${inp.retirementAge}`} color="green" delay={0} />
         <StatCard label="Net Lump Sum" value={formatRand(netLumpSum, 0)}
-          sub={`Savings Pot + Vested 1/3 (after tax)`} color="amber" delay={0.05} />
+          sub={`Savings Pot + Vested 1/3 (after tax)`} color="orange" delay={0.05} />
         <StatCard label="Monthly Income" value={formatRand(monthlyIncome, 0)}
-          sub={`${inp.drawdownRatePercent}% drawdown · living annuity`} color="indigo" delay={0.1} />
+          sub={`${inp.drawdownRatePercent}% drawdown · living annuity`} color="blue" delay={0.1} />
         <StatCard label="Cumulative Tax Saved" value={formatRand(totalCumulativeTax, 0)}
-          sub={`Over ${yearsToRetire} years`} color="emerald" delay={0.15} />
+          sub={`Over ${yearsToRetire} years`} color="green" delay={0.15} />
       </div>
 
       {/* 2-Pot explainer */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           2-Pot System at Retirement (Age {inp.retirementAge})
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -475,7 +476,7 @@ export function RaPlanner() {
             {
               label: 'Savings Pot',
               value: savingsPotAtRetire,
-              color: C.emerald,
+              color: C.green,
               badge: 'Fully accessible',
               detail: `Taxed at marginal rate on withdrawal. Min withdrawal: R2,000/year.`,
               seeding: `Seeded from vested pot (10%, capped R30,000) on 1 Sep 2024.`,
@@ -483,7 +484,7 @@ export function RaPlanner() {
             {
               label: 'Retirement Pot',
               value: retirePotAtRetire,
-              color: C.indigo,
+              color: C.blue,
               badge: 'Must annuitise',
               detail: totalAtRetirement < DE_MINIMIS_THRESHOLD
                 ? `Total RA < R360,000 — you may fully commute (take as lump sum).`
@@ -492,7 +493,7 @@ export function RaPlanner() {
             {
               label: 'Vested Pot',
               value: vestedAtRetire,
-              color: C.amber,
+              color: C.orange,
               badge: 'Old rules apply',
               detail: `Up to 1/3 as lump sum (lump sum tax table). Remaining 2/3 must be annuitised.`,
               lumpSum: vestedLumpSum,
@@ -500,34 +501,34 @@ export function RaPlanner() {
             },
           ].map((pot) => (
             <div key={pot.label} className="rounded-xl p-4"
-              style={{ background: `${pot.color}0D`, border: `1px solid ${pot.color}30` }}>
+              style={{ background: `${alpha(pot.color, 5)}`, border: `1px solid ${alpha(pot.color, 19)}` }}>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-bold" style={{ color: pot.color }}>{pot.label}</p>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: `${pot.color}20`, color: pot.color }}>
+                  style={{ background: `${alpha(pot.color, 13)}`, color: pot.color }}>
                   {pot.badge}
                 </span>
               </div>
               <p className="text-xl font-bold mb-2"
-                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                 {formatRand(pot.value, 0)}
               </p>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                 {pot.detail}
               </p>
               {pot.lumpSum !== undefined && (
                 <div className="mt-2 pt-2 border-t border-white/10 space-y-1 text-[11px]">
                   <div className="flex justify-between">
-                    <span style={{ color: 'var(--color-text-muted)' }}>Lump sum (1/3)</span>
-                    <span style={{ color: C.amber }}>{formatRand(pot.lumpSum, 0)}</span>
+                    <span style={{ color: 'var(--ink-muted)' }}>Lump sum (1/3)</span>
+                    <span style={{ color: C.orange }}>{formatRand(pot.lumpSum, 0)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span style={{ color: 'var(--color-text-muted)' }}>Lump sum tax</span>
+                    <span style={{ color: 'var(--ink-muted)' }}>Lump sum tax</span>
                     <span style={{ color: C.red }}>{formatRand(pot.lumpSumTax ?? 0, 0)}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <span style={{ color: 'var(--color-text-muted)' }}>Net lump sum</span>
-                    <span style={{ color: C.emerald }}>{formatRand((pot.lumpSum ?? 0) - (pot.lumpSumTax ?? 0), 0)}</span>
+                    <span style={{ color: 'var(--ink-muted)' }}>Net lump sum</span>
+                    <span style={{ color: C.green }}>{formatRand((pot.lumpSum ?? 0) - (pot.lumpSumTax ?? 0), 0)}</span>
                   </div>
                 </div>
               )}
@@ -537,11 +538,11 @@ export function RaPlanner() {
 
         {canFullyCommute && (
           <div className="mt-3 flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-            <Info size={13} className="text-[#10B981] mt-0.5 flex-shrink-0" />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
+            <Info size={13} className="text-gain mt-0.5 flex-shrink-0" />
+            <span style={{ color: 'var(--ink-muted)' }}>
               Your projected total retirement interest ({formatRand(totalAtRetirement, 0)}) falls below the
-              <strong style={{ color: 'var(--color-text)' }}> R360,000 de minimis threshold</strong> (SARS 2026/27).
+              <strong style={{ color: 'var(--ink)' }}> R360,000 de minimis threshold</strong> (SARS 2026/27).
               You may elect to take the full amount as a lump sum instead of purchasing an annuity.
             </span>
           </div>
@@ -554,44 +555,44 @@ export function RaPlanner() {
         {/* Pot growth stacked area */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Pot Growth Over Time
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Savings Pot (accessible) · Retirement Pot (annuity) · Vested (old rules)
           </p>
           <ResponsiveContainer width="100%" height={230}>
             <AreaChart data={potChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradSP" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={C.emerald} stopOpacity={0.05} />
+                  <stop offset="5%"  stopColor={C.green} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0.05} />
                 </linearGradient>
                 <linearGradient id="gradRP" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.05} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.05} />
                 </linearGradient>
                 <linearGradient id="gradVP" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.amber} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={C.amber} stopOpacity={0.05} />
+                  <stop offset="5%"  stopColor={C.orange} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={C.orange} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }}
-                label={{ value: 'Age', position: 'insideBottom', offset: -2, fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }}
+                label={{ value: 'Age', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0),
                   name === 'savings' ? 'Savings Pot' : name === 'retire' ? 'Retirement Pot' : 'Vested Pot']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               <Area type="monotone" dataKey="vested"  name="Vested" stackId="1"
-                stroke={C.amber}   fill="url(#gradVP)" strokeWidth={1.5} />
+                stroke={C.orange}   fill="url(#gradVP)" strokeWidth={1.5} />
               <Area type="monotone" dataKey="retire"  name="Retirement Pot" stackId="1"
-                stroke={C.indigo}  fill="url(#gradRP)" strokeWidth={1.5} />
+                stroke={C.blue}  fill="url(#gradRP)" strokeWidth={1.5} />
               <Area type="monotone" dataKey="savings" name="Savings Pot" stackId="1"
-                stroke={C.emerald} fill="url(#gradSP)" strokeWidth={1.5} />
+                stroke={C.green} fill="url(#gradSP)" strokeWidth={1.5} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -599,40 +600,40 @@ export function RaPlanner() {
         {/* RA vs ETF comparison */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             RA vs ETF (Same Out-of-Pocket Cost)
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             RA: full contribution, tax-deferred. ETF: after-tax equivalent ({formatRand(etfMonthlyContrib, 0)}/mo), 20% div WHT + CGT at exit.
           </p>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={comparisonChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradRA" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradETF" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.cyan} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={C.cyan} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.teal} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={C.teal} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name === 'ra' ? 'RA (tax-deferred)' : 'ETF (after div WHT)']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-              <Area type="monotone" dataKey="ra"  name="RA"  stroke={C.indigo} fill="url(#gradRA)"  strokeWidth={2} />
-              <Area type="monotone" dataKey="etf" name="ETF" stroke={C.cyan}   fill="url(#gradETF)" strokeWidth={2} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+              <Area type="monotone" dataKey="ra"  name="RA"  stroke={C.blue} fill="url(#gradRA)"  strokeWidth={2} />
+              <Area type="monotone" dataKey="etf" name="ETF" stroke={C.teal}   fill="url(#gradETF)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
           <div className="mt-3 flex items-center justify-between text-xs p-2 rounded-lg"
-            style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <span style={{ color: 'var(--color-text-muted)' }}>ETF after CGT at retirement</span>
-            <span className="font-semibold" style={{ color: C.cyan }}>{formatRand(etfAfterCGT, 0)}</span>
+            style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)' }}>
+            <span style={{ color: 'var(--ink-muted)' }}>ETF after CGT at retirement</span>
+            <span className="font-semibold" style={{ color: C.teal }}>{formatRand(etfAfterCGT, 0)}</span>
           </div>
         </div>
       </div>
@@ -640,16 +641,16 @@ export function RaPlanner() {
       {/* Vesting scenarios */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Retirement Scenarios by Age
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[640px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Retire at', 'Total Wealth', 'Savings Pot', 'Annuity Pot', 'Net Lump Sum (tax)', `Monthly Income (${inp.drawdownRatePercent}%)`].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -660,29 +661,29 @@ export function RaPlanner() {
                 const isTarget = s.age === inp.retirementAge;
                 return (
                   <tr key={s.age} style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    background: isTarget ? 'rgba(99,102,241,0.06)' : 'transparent',
+                    borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
+                    background: isTarget ? 'color-mix(in srgb, var(--note-blue) 6%, transparent)' : 'transparent',
                   }}>
                     <td className="py-2.5 px-3 font-bold"
-                      style={{ color: isTarget ? C.indigo : '#818CF8' }}>
+                      style={{ color: isTarget ? C.blue : 'var(--note-blue)' }}>
                       Age {s.age}{isTarget ? ' ★' : ''}
                     </td>
-                    <td className="py-2.5 px-3 font-semibold" style={{ color: C.emerald }}>
+                    <td className="py-2.5 px-3 font-semibold" style={{ color: C.green }}>
                       {formatRand(s.totalWealth, 0)}
                     </td>
-                    <td className="py-2.5 px-3" style={{ color: C.emerald }}>
+                    <td className="py-2.5 px-3" style={{ color: C.green }}>
                       {formatRand(s.sp, 0)}
                     </td>
-                    <td className="py-2.5 px-3" style={{ color: C.indigo }}>
+                    <td className="py-2.5 px-3" style={{ color: C.blue }}>
                       {formatRand(s.annuityPot, 0)}
                     </td>
-                    <td className="py-2.5 px-3" style={{ color: C.amber }}>
+                    <td className="py-2.5 px-3" style={{ color: C.orange }}>
                       {formatRand(netLump, 0)}
                       <span className="ml-1 text-[10px]" style={{ color: C.red }}>
                         (-{formatRand(s.lumpSumTaxScen, 0)} tax)
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-semibold" style={{ color: 'var(--color-text)' }}>
+                    <td className="py-2.5 px-3 font-semibold" style={{ color: 'var(--ink)' }}>
                       {formatRand(s.monthlyIncomeScen, 0)}/mo
                     </td>
                   </tr>
@@ -691,7 +692,7 @@ export function RaPlanner() {
             </tbody>
           </table>
         </div>
-        <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-subtle)' }}>
+        <p className="text-[10px] mt-2" style={{ color: 'var(--ink-subtle)' }}>
           ★ = your selected retirement age · Lump sum tax based on retirement lump sum table (R550k tax-free, then 18%/27%/36%) · Monthly income uses living annuity at selected drawdown rate
         </p>
       </div>
@@ -699,33 +700,33 @@ export function RaPlanner() {
       {/* Year-by-year table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Contribution Breakdown
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[700px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Age', 'Annual Contrib.', 'Tax Saving', 'Effective Cost', 'Savings Pot', 'Retire Pot', 'Total Wealth', 'Cum. Tax Saved'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
                 <tr key={r.year} style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.04)',
-                  background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                  borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
+                  background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                 }}>
-                  <td className="py-2 px-3 font-bold" style={{ color: '#818CF8' }}>{r.age}</td>
-                  <td className="py-2 px-3" style={{ color: C.indigo }}>{formatRand(r.annualContrib, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.emerald }}>{formatRand(r.annualTaxSaving, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.amber }}>{formatRand(r.effectiveCost, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.emerald }}>{formatRand(r.savingsPot, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.indigo }}>{formatRand(r.retirePot, 0)}</td>
-                  <td className="py-2 px-3 font-semibold" style={{ color: 'var(--color-text)' }}>{formatRand(r.totalWealth, 0)}</td>
-                  <td className="py-2 px-3 font-semibold" style={{ color: C.emerald }}>{formatRand(r.cumulativeTaxSaved, 0)}</td>
+                  <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue)' }}>{r.age}</td>
+                  <td className="py-2 px-3" style={{ color: C.blue }}>{formatRand(r.annualContrib, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(r.annualTaxSaving, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: C.orange }}>{formatRand(r.effectiveCost, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(r.savingsPot, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: C.blue }}>{formatRand(r.retirePot, 0)}</td>
+                  <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(r.totalWealth, 0)}</td>
+                  <td className="py-2 px-3 font-semibold" style={{ color: C.green }}>{formatRand(r.cumulativeTaxSaved, 0)}</td>
                 </tr>
               ))}
             </tbody>
@@ -739,30 +740,30 @@ export function RaPlanner() {
           {
             title: 'Savings Pot (1/3)',
             body: 'One-third of all new contributions since 1 Sep 2024. Accessible once per tax year, minimum R2,000. Taxed at your marginal income tax rate — not the lump sum table.',
-            color: C.emerald,
+            color: C.green,
           },
           {
             title: 'Retirement Pot (2/3)',
             body: 'Two-thirds of new contributions. Cannot be accessed before retirement (age 55 minimum). Must be used to purchase a life or living annuity. No lump sum allowed (unless total RA < R360,000).',
-            color: C.indigo,
+            color: C.blue,
           },
           {
             title: 'Living Annuity',
             body: `Drawdown between 2.5% and 17.5% per year (FSCA rules). Reviewed annually on policy anniversary. If balance drops below R150,000 (2026/27), you may fully commute.`,
-            color: C.amber,
+            color: C.orange,
           },
         ].map((card) => (
           <div key={card.title} className="rounded-xl p-4"
-            style={{ background: `${card.color}10`, border: `1px solid ${card.color}30` }}>
+            style={{ background: `${alpha(card.color, 6)}`, border: `1px solid ${alpha(card.color, 19)}` }}>
             <p className="text-xs font-bold mb-1" style={{ color: card.color }}>{card.title}</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               {card.body}
             </p>
           </div>
         ))}
       </div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         SARS 2026/27 tax year · RA deduction cap R430,000 · Retirement lump sum tax-free threshold R550,000 · Living annuity 2.5%–17.5% FSCA · Not financial advice — consult a CFP.
       </p>
     </div>

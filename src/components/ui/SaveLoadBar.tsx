@@ -76,11 +76,11 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
     return (
       <div
         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-        style={{ background: 'rgba(100,116,139,0.08)', border: '1px solid var(--color-border)' }}
+        style={{ background: 'color-mix(in srgb, var(--ink-subtle) 8%, transparent)', border: '1px solid var(--rule)' }}
       >
-        <LogIn size={13} style={{ color: 'var(--color-text-subtle)' }} />
-        <span style={{ color: 'var(--color-text-muted)' }}>
-          <button onClick={signIn} className="underline font-medium" style={{ color: '#818CF8' }}>
+        <LogIn size={13} style={{ color: 'var(--ink-subtle)' }} />
+        <span style={{ color: 'var(--ink-muted)' }}>
+          <button onClick={signIn} className="underline font-medium" style={{ color: 'var(--note-blue)' }}>
             Sign in
           </button>
           {' '}to save & load snapshots
@@ -90,16 +90,16 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
   }
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--rule)' }}>
       {/* Toolbar */}
       <div
         className="flex items-center gap-2 px-3 py-2"
-        style={{ background: 'var(--color-surface)' }}
+        style={{ background: 'var(--paper-raised)' }}
       >
         {/* Active-edit indicator */}
         {activeEntry && (
           <div className="flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-lg truncate max-w-[140px]"
-            style={{ background: 'rgba(245,158,11,0.08)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', color: 'var(--note-orange)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
             <Pencil size={10} />
             <span className="truncate">{activeEntry.title}</span>
           </div>
@@ -109,7 +109,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
           onClick={handleSave}
           disabled={saving}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-60"
-          style={{ background: 'rgba(99,102,241,0.12)', color: saved ? '#10B981' : '#818CF8', border: '1px solid rgba(99,102,241,0.25)' }}
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: saved ? 'var(--gain)' : 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
         >
           <Save size={12} />
           {saved ? 'Saved!' : saving ? 'Saving…' : activeEntryId ? 'Update snapshot' : 'Save snapshot'}
@@ -120,7 +120,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
           <button
             onClick={() => setActiveEntryId(null)}
             className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all"
-            style={{ color: 'var(--color-text-subtle)', border: '1px solid var(--color-border)' }}
+            style={{ color: 'var(--ink-subtle)', border: '1px solid var(--rule)' }}
             title="Discard edit — save as new snapshot instead"
           >
             <FilePlus size={11} /> New
@@ -130,7 +130,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
         <button
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-auto"
-          style={{ background: relevant.length ? 'rgba(245,158,11,0.08)' : 'transparent', color: 'var(--color-text-muted)', border: `1px solid ${relevant.length ? 'rgba(245,158,11,0.2)' : 'var(--color-border)'}` }}
+          style={{ background: relevant.length ? 'color-mix(in srgb, var(--note-orange) 8%, transparent)' : 'transparent', color: 'var(--ink-muted)', border: `1px solid ${relevant.length ? 'color-mix(in srgb, var(--note-orange) 20%, transparent)' : 'var(--rule)'}` }}
         >
           <FolderOpen size={12} />
           {relevant.length} saved
@@ -142,7 +142,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
       {error && (
         <div
           className="px-3 py-2 text-xs flex items-center gap-2"
-          style={{ background: 'rgba(239,68,68,0.08)', borderTop: '1px solid rgba(239,68,68,0.2)', color: '#EF4444' }}
+          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', borderTop: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)', color: 'var(--loss)' }}
         >
           <span className="flex-1">{error}</span>
           <button onClick={() => setError(null)} className="font-bold opacity-60 hover:opacity-100">✕</button>
@@ -151,24 +151,24 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
 
       {/* Saved entries */}
       {open && (
-        <div style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-bg)' }}>
+        <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--paper)' }}>
           {loading ? (
             <div className="flex justify-center py-4">
-              <div className="w-4 h-4 rounded-full border-2 border-[#6366F1] border-t-transparent animate-spin" />
+              <div className="w-4 h-4 rounded-full border-2 border-note-blue border-t-transparent animate-spin" />
             </div>
           ) : relevant.length === 0 ? (
-            <p className="text-xs text-center py-4" style={{ color: 'var(--color-text-subtle)' }}>
+            <p className="text-xs text-center py-4" style={{ color: 'var(--ink-subtle)' }}>
               No saved snapshots yet — click "Save snapshot" above.
             </p>
           ) : (
-            <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+            <div className="divide-y" style={{ borderColor: 'var(--rule)' }}>
               {relevant.map((entry) => (
                 <div
                   key={entry.id}
                   className="flex items-center gap-3 px-3 py-2.5"
-                  style={activeEntryId === entry.id ? { background: 'rgba(245,158,11,0.05)' } : undefined}
+                  style={activeEntryId === entry.id ? { background: 'color-mix(in srgb, var(--note-orange) 5%, transparent)' } : undefined}
                 >
-                  <Clock size={13} style={{ color: activeEntryId === entry.id ? '#F59E0B' : 'var(--color-text-subtle)', flexShrink: 0 }} />
+                  <Clock size={13} style={{ color: activeEntryId === entry.id ? 'var(--note-orange)' : 'var(--ink-subtle)', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
                     {renamingId === entry.id ? (
                       <input
@@ -177,17 +177,17 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                         onChange={(e) => setRenameValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') commitRename(entry.id); if (e.key === 'Escape') setRenamingId(null); }}
                         className="w-full text-xs font-medium rounded px-1.5 py-0.5 outline-none"
-                        style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-text)', border: '1px solid rgba(99,102,241,0.35)' }}
+                        style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 35%, transparent)' }}
                       />
                     ) : (
-                      <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                      <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>
                         {entry.title}
                       </p>
                     )}
-                    <p className="text-[10px] truncate" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[10px] truncate" style={{ color: 'var(--ink-muted)' }}>
                       {entry.summary}
                     </p>
-                    <p className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>
+                    <p className="text-[9px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
                       {entry.savedAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -197,7 +197,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                         <button
                           onClick={() => commitRename(entry.id)}
                           className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.25)' }}
+                          style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', color: 'var(--gain)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}
                           title="Save name"
                         >
                           <Check size={11} />
@@ -205,7 +205,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                         <button
                           onClick={() => setRenamingId(null)}
                           className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{ background: 'rgba(100,116,139,0.1)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+                          style={{ background: 'color-mix(in srgb, var(--ink-subtle) 10%, transparent)', color: 'var(--ink-muted)', border: '1px solid var(--rule)' }}
                           title="Cancel"
                         >
                           <X size={11} />
@@ -216,7 +216,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                         <button
                           onClick={() => startRename(entry.id, entry.title)}
                           className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{ background: 'rgba(100,116,139,0.08)', color: 'var(--color-text-subtle)', border: '1px solid var(--color-border)' }}
+                          style={{ background: 'color-mix(in srgb, var(--ink-subtle) 8%, transparent)', color: 'var(--ink-subtle)', border: '1px solid var(--rule)' }}
                           title="Rename"
                         >
                           <Pencil size={11} />
@@ -229,9 +229,9 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                           }}
                           className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all"
                           style={{
-                            background: activeEntryId === entry.id ? 'rgba(245,158,11,0.15)' : 'rgba(99,102,241,0.12)',
-                            color: activeEntryId === entry.id ? '#F59E0B' : '#818CF8',
-                            border: `1px solid ${activeEntryId === entry.id ? 'rgba(245,158,11,0.3)' : 'rgba(99,102,241,0.2)'}`,
+                            background: activeEntryId === entry.id ? 'color-mix(in srgb, var(--note-orange) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
+                            color: activeEntryId === entry.id ? 'var(--note-orange)' : 'var(--note-blue)',
+                            border: `1px solid ${activeEntryId === entry.id ? 'color-mix(in srgb, var(--note-orange) 30%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)'}`,
                           }}
                         >
                           {activeEntryId === entry.id ? 'Editing' : 'Edit'}
@@ -242,7 +242,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                             if (activeEntryId === entry.id) setActiveEntryId(null);
                           }}
                           className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}
+                          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
                           title="Delete"
                         >
                           <Trash2 size={11} />

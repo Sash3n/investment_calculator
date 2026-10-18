@@ -26,9 +26,9 @@ export function ShareButton({ state }: { state: unknown }) {
       onClick={onClick}
       className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"
       style={{
-        background: copied ? 'rgba(16,185,129,0.12)' : 'var(--color-surface)',
-        border: `1px solid ${copied ? 'rgba(16,185,129,0.4)' : 'var(--color-border)'}`,
-        color: copied ? '#10B981' : 'var(--color-text-muted)',
+        background: copied ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'var(--paper-raised)',
+        border: `1px solid ${copied ? 'color-mix(in srgb, var(--gain) 40%, transparent)' : 'var(--rule)'}`,
+        color: copied ? 'var(--gain)' : 'var(--ink-muted)',
       }}
       title="Copy a shareable link to this scenario"
     >

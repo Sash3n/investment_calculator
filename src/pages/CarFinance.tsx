@@ -20,12 +20,11 @@ import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { CarInputs } from '../types';
 
 const CHART_COLORS = {
-  indigo: '#6366F1',
-  amber: '#F59E0B',
-  emerald: '#10B981',
-  red: '#EF4444',
-  cyan: '#06B6D4',
-  pink: '#EC4899',
+  blue: 'var(--note-blue)',
+  orange: 'var(--note-orange)',
+  green: 'var(--gain)',
+  red: 'var(--loss)',
+  teal: 'var(--note-teal)',
 };
 
 const DEFAULT_INPUTS: CarInputs = {
@@ -46,7 +45,7 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
-      <p className="text-[#94A3B8] mb-2 font-semibold">{label}</p>
+      <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="mb-1" style={{ color: p.color }}>
           {p.name}: {formatRand(p.value)}
@@ -132,19 +131,19 @@ export function CarFinance() {
 
   // Monthly cost breakdown bar
   const monthlyCostData = [
-    { name: 'Instalment', value: Math.round(result.monthlyInstalment), fill: CHART_COLORS.indigo },
-    { name: 'Insurance', value: inputs.monthlyInsurance, fill: CHART_COLORS.amber },
-    { name: 'Fuel', value: inputs.monthlyFuel, fill: CHART_COLORS.emerald },
-    { name: 'Maintenance', value: inputs.monthlyMaintenance, fill: CHART_COLORS.cyan },
+    { name: 'Instalment', value: Math.round(result.monthlyInstalment), fill: CHART_COLORS.blue },
+    { name: 'Insurance', value: inputs.monthlyInsurance, fill: CHART_COLORS.orange },
+    { name: 'Fuel', value: inputs.monthlyFuel, fill: CHART_COLORS.green },
+    { name: 'Maintenance', value: inputs.monthlyMaintenance, fill: CHART_COLORS.teal },
   ];
 
   // Pie: total cost breakdown
   const totalCostPie = [
-    { name: 'Principal', value: Math.round(result.loanAmount), fill: CHART_COLORS.indigo },
+    { name: 'Principal', value: Math.round(result.loanAmount), fill: CHART_COLORS.blue },
     { name: 'Interest', value: Math.round(result.totalInterest), fill: CHART_COLORS.red },
-    { name: 'Insurance', value: inputs.monthlyInsurance * inputs.termMonths, fill: CHART_COLORS.amber },
-    { name: 'Fuel', value: inputs.monthlyFuel * inputs.termMonths, fill: CHART_COLORS.emerald },
-    { name: 'Maintenance', value: inputs.monthlyMaintenance * inputs.termMonths, fill: CHART_COLORS.cyan },
+    { name: 'Insurance', value: inputs.monthlyInsurance * inputs.termMonths, fill: CHART_COLORS.orange },
+    { name: 'Fuel', value: inputs.monthlyFuel * inputs.termMonths, fill: CHART_COLORS.green },
+    { name: 'Maintenance', value: inputs.monthlyMaintenance * inputs.termMonths, fill: CHART_COLORS.teal },
   ];
 
   // Depreciation line chart
@@ -210,8 +209,8 @@ export function CarFinance() {
       <div className="two-col-layout">
         {/* Input panel */}
         <div className="glass-card-static p-6 space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569]"
-             style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest text-ink-subtle"
+             style={{ fontFamily: 'var(--font-text)' }}>
             Finance Details
           </p>
           <InputField label="Vehicle Price" id="vp" value={inputs.vehiclePrice}
@@ -225,8 +224,8 @@ export function CarFinance() {
             <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
               onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
             <button
-              className="text-xs text-[#6366F1] hover:text-[#818CF8] transition-colors flex items-center gap-1"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-xs text-note-blue hover:text-note-blue transition-colors flex items-center gap-1"
+              style={{ fontFamily: 'var(--font-text)' }}
               onClick={() => set('interestRate', String(liveRate.primeRate))}
             >
               <Zap size={11} />
@@ -250,9 +249,9 @@ export function CarFinance() {
             onChange={(v) => set('extraMonthlyPayment', v)} prefix="R" step={500} min={0}
             help={inputs.extraMonthlyPayment > 0 ? `Saves ${result.monthsSaved} month${result.monthsSaved !== 1 ? 's' : ''} · pays off in ${result.actualTermMonths} months` : 'Optional: pay off faster & save interest'} />
 
-          <div className="border-t border-[rgba(255,255,255,0.07)] pt-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-4"
-               style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="border-t border-ink/7 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-ink-subtle mb-4"
+               style={{ fontFamily: 'var(--font-text)' }}>
               Monthly Running Costs
             </p>
             <div className="space-y-4">
@@ -290,24 +289,24 @@ export function CarFinance() {
           {/* Stat cards */}
           <div className="four-col-stats">
             <StatCard label="Monthly Instalment" value={formatRand(result.monthlyInstalment)}
-              color="indigo" delay={0} />
+              color="blue" delay={0} />
             <StatCard label="Total Repayments" value={formatRand(result.totalRepayments)}
-              color="amber" delay={0.05} />
+              color="orange" delay={0.05} />
             <StatCard label="Total Interest" value={formatRand(result.totalInterest)}
               color="red" delay={0.1} />
             <StatCard label="Total Cost of Ownership" value={formatRand(result.totalCostOfOwnership)}
-              sub={`${termYears.toFixed(0)} yr period`} color="emerald" delay={0.15} />
+              sub={`${termYears.toFixed(0)} yr period`} color="green" delay={0.15} />
           </div>
 
           {/* Minimum instalment override notice */}
           {result.instalmentOverride && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-[#F59E0B] flex items-start gap-3">
-              <AlertTriangle size={16} className="text-[#F59E0B] mt-0.5 flex-shrink-0" />
+            <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange flex items-start gap-3">
+              <AlertTriangle size={16} className="text-note-orange mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-[#F59E0B]" style={{ fontFamily: 'var(--font-heading)' }}>
+                <p className="text-sm font-semibold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>
                   Bank Minimum Overrides Calculated Payment
                 </p>
-                <p className="text-xs text-[#94A3B8] mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
                   Your bank quotes <strong>{formatRand(inputs.minimumInstalment)}/month</strong> vs our calculated <strong>{formatRand(result.calculatedInstalment)}/month</strong>.
                   The surplus <strong>{formatRand(inputs.minimumInstalment - result.calculatedInstalment)}</strong> goes to principal — you'll pay off faster than the standard term.
                 </p>
@@ -317,39 +316,39 @@ export function CarFinance() {
 
           {/* Service fee summary */}
           {inputs.monthlyServiceFee > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-[#F59E0B] grid grid-cols-3 gap-4">
+            <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange grid grid-cols-3 gap-4">
               <div>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Effective Monthly</p>
-                <p className="text-base font-bold text-[#F59E0B]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
-                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>instalment + service fee</p>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Effective Monthly</p>
+                <p className="text-base font-bold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>instalment + service fee</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Total Service Fees</p>
-                <p className="text-base font-bold text-[#EF4444]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.totalServiceFees)}</p>
-                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>over {inputs.termMonths} months</p>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Total Service Fees</p>
+                <p className="text-base font-bold text-loss" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
+                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>over {inputs.termMonths} months</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>True Monthly Cost</p>
-                <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
-                <p className="text-[10px] text-[#64748B] mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>all-in per month</p>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>True Monthly Cost</p>
+                <p className="text-base font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>all-in per month</p>
               </div>
             </div>
           )}
 
           {/* Extra payment savings */}
           {inputs.extraMonthlyPayment > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-[#10B981] grid grid-cols-3 gap-4">
+            <div className="glass-card-static p-4 border-l-[3px] border-l-gain grid grid-cols-3 gap-4">
               <div>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Interest Saved</p>
-                <p className="text-base font-bold text-[#10B981]" style={{ fontFamily: 'var(--font-heading)' }}>{formatRand(result.interestSaved)}</p>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Interest Saved</p>
+                <p className="text-base font-bold text-gain" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.interestSaved)}</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Months Saved</p>
-                <p className="text-base font-bold text-[#10B981]" style={{ fontFamily: 'var(--font-heading)' }}>{result.monthsSaved} months</p>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Months Saved</p>
+                <p className="text-base font-bold text-gain" style={{ fontFamily: 'var(--font-display)' }}>{result.monthsSaved} months</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-body)' }}>Payoff In</p>
-                <p className="text-base font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>{result.actualTermMonths} months</p>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Payoff In</p>
+                <p className="text-base font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>{result.actualTermMonths} months</p>
               </div>
             </div>
           )}
@@ -357,16 +356,16 @@ export function CarFinance() {
           {/* Additional metrics */}
           <div className="glass-card-static p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
             {[
-              { label: 'Balloon Amount', value: formatRand(result.balloonAmount), color: inputs.balloonPercent > 0 ? '#F59E0B' : '#64748B' },
-              { label: 'Effective Annual Cost', value: formatRand(result.effectiveAnnualCost), color: '#EF4444' },
-              { label: 'Underwater Months', value: `${result.underwaterMonths} months`, color: result.underwaterMonths > 0 ? '#EF4444' : '#10B981' },
+              { label: 'Balloon Amount', value: formatRand(result.balloonAmount), color: inputs.balloonPercent > 0 ? 'var(--note-orange)' : 'var(--ink-subtle)' },
+              { label: 'Effective Annual Cost', value: formatRand(result.effectiveAnnualCost), color: 'var(--loss)' },
+              { label: 'Underwater Months', value: `${result.underwaterMonths} months`, color: result.underwaterMonths > 0 ? 'var(--loss)' : 'var(--gain)' },
             ].map((s) => (
               <div key={s.label}>
-                <p className="text-[10px] text-[#64748B] uppercase tracking-wider mb-1"
-                   style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1"
+                   style={{ fontFamily: 'var(--font-text)' }}>
                   {s.label}
                 </p>
-                <p className="text-base font-bold" style={{ color: s.color, fontFamily: 'var(--font-heading)' }}>
+                <p className="text-base font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
                   {s.value}
                 </p>
               </div>
@@ -375,13 +374,13 @@ export function CarFinance() {
 
           {/* Underwater warning */}
           {result.underwaterMonths > 0 && (
-            <div className="glass-card-static p-4 border-l-[3px] border-l-[#EF4444] flex items-start gap-3">
-              <AlertTriangle size={16} className="text-[#EF4444] mt-0.5 flex-shrink-0" />
+            <div className="glass-card-static p-4 border-l-[3px] border-l-loss flex items-start gap-3">
+              <AlertTriangle size={16} className="text-loss mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-[#EF4444]" style={{ fontFamily: 'var(--font-heading)' }}>
+                <p className="text-sm font-semibold text-loss" style={{ fontFamily: 'var(--font-display)' }}>
                   Negative Equity Warning
                 </p>
-                <p className="text-xs text-[#94A3B8] mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
                   Your loan balance exceeds the car's depreciated value for{' '}
                   <strong>{result.underwaterMonths} months</strong>. If you sell or write off the vehicle during
                   this period, you would owe more than the car is worth.
@@ -392,15 +391,15 @@ export function CarFinance() {
 
           {/* Balance vs Value AreaChart */}
           <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold text-[#F1F5F9] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold text-ink mb-4" style={{ fontFamily: 'var(--font-display)' }}>
               Loan Balance vs Car Value Over Term
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={balanceValueData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradCarVal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.emerald} stopOpacity={0.2} />
-                    <stop offset="95%" stopColor={CHART_COLORS.emerald} stopOpacity={0.02} />
+                    <stop offset="5%" stopColor={CHART_COLORS.green} stopOpacity={0.2} />
+                    <stop offset="95%" stopColor={CHART_COLORS.green} stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="gradCarBal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={CHART_COLORS.red} stopOpacity={0.2} />
@@ -408,17 +407,17 @@ export function CarFinance() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748B' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
-                <Area type="monotone" dataKey="Car Value" stroke={CHART_COLORS.emerald}
+                <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-muted)' }} />
+                <Area type="monotone" dataKey="Car Value" stroke={CHART_COLORS.green}
                   fill="url(#gradCarVal)" strokeWidth={2} />
                 <Area type="monotone" dataKey="Loan Balance" stroke={CHART_COLORS.red}
                   fill="url(#gradCarBal)" strokeWidth={2} />
                 {inputs.extraMonthlyPayment > 0 && (
-                  <Area type="monotone" dataKey="Balance (Extra)" stroke={CHART_COLORS.indigo}
+                  <Area type="monotone" dataKey="Balance (Extra)" stroke={CHART_COLORS.blue}
                     fill="none" strokeWidth={2} strokeDasharray="5 3" />
                 )}
               </AreaChart>
@@ -428,18 +427,18 @@ export function CarFinance() {
           <div className="two-col-charts">
             {/* Monthly cost breakdown */}
             <div className="glass-card-static p-5">
-              <p className="text-sm font-semibold text-[#F1F5F9] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+              <p className="text-sm font-semibold text-ink mb-4" style={{ fontFamily: 'var(--font-display)' }}>
                 Monthly Cost Breakdown
               </p>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={monthlyCostData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }}
                     tickFormatter={(v) => `R ${(v / 1000).toFixed(1)}K`} />
-                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+                  <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                     formatter={(v: unknown) => [formatRand(Number(v)), 'Monthly']}
-                    contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '12px', color: '#F1F5F9' }}
+                    contentStyle={{ background: 'color-mix(in srgb, var(--paper-raised) 95%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 12%, transparent)', borderRadius: '10px', fontSize: '12px', color: 'var(--ink)' }}
                   />
                   <Bar dataKey="value" radius={[5, 5, 0, 0]}>
                     {monthlyCostData.map((entry, i) => (
@@ -452,7 +451,7 @@ export function CarFinance() {
 
             {/* Total cost pie */}
             <div className="glass-card-static p-5">
-              <p className="text-sm font-semibold text-[#F1F5F9] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+              <p className="text-sm font-semibold text-ink mb-4" style={{ fontFamily: 'var(--font-display)' }}>
                 Total Cost Breakdown ({termYears.toFixed(0)} yrs)
               </p>
               <ResponsiveContainer width="100%" height={200}>
@@ -463,11 +462,11 @@ export function CarFinance() {
                       <Cell key={i} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+                  <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                     formatter={(v: unknown) => [formatRand(Number(v)), '']}
-                    contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '12px', color: '#F1F5F9' }}
+                    contentStyle={{ background: 'color-mix(in srgb, var(--paper-raised) 95%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 12%, transparent)', borderRadius: '10px', fontSize: '12px', color: 'var(--ink)' }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 10, color: '#94A3B8' }} />
+                  <Legend wrapperStyle={{ fontSize: 10, color: 'var(--ink-muted)' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -475,22 +474,22 @@ export function CarFinance() {
 
           {/* Depreciation LineChart */}
           <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold text-[#F1F5F9] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold text-ink mb-1" style={{ fontFamily: 'var(--font-display)' }}>
               Depreciation Schedule
             </p>
-            <p className="text-xs text-[#64748B] mb-4" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-ink-subtle mb-4" style={{ fontFamily: 'var(--font-text)' }}>
               Yr1: 15% · Yr2: 12% · Yr3+: 10% per annum
             </p>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={depreciationData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
-                <Line type="monotone" dataKey="Vehicle Value" stroke={CHART_COLORS.emerald}
-                  strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS.emerald }} />
+                <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-muted)' }} />
+                <Line type="monotone" dataKey="Vehicle Value" stroke={CHART_COLORS.green}
+                  strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS.green }} />
                 <Line type="monotone" dataKey="Loan Balance" stroke={CHART_COLORS.red}
                   strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS.red }} />
               </LineChart>
@@ -499,37 +498,37 @@ export function CarFinance() {
 
           {/* Finance vs Cash comparison */}
           <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold text-[#F1F5F9] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold text-ink mb-1" style={{ fontFamily: 'var(--font-display)' }}>
               Finance vs Cash Purchase
             </p>
-            <p className="text-xs text-[#64748B] mb-4" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-ink-subtle mb-4" style={{ fontFamily: 'var(--font-text)' }}>
               Opportunity cost assumes cash invested at 10% p.a. over {termYears.toFixed(0)} years.
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <div className="glass-card-static p-4 border-l-[3px] border-l-[#6366F1]">
-                <p className="text-xs text-[#94A3B8] mb-2" style={{ fontFamily: 'var(--font-body)' }}>
+              <div className="glass-card-static p-4 border-l-[3px] border-l-note-blue">
+                <p className="text-xs text-ink-muted mb-2" style={{ fontFamily: 'var(--font-text)' }}>
                   Finance Route
                 </p>
-                <p className="text-xl font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>
+                <p className="text-xl font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   {formatRand(result.totalCostOfOwnership)}
                 </p>
-                <p className="text-xs text-[#64748B] mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-xs text-ink-subtle mt-1" style={{ fontFamily: 'var(--font-text)' }}>
                   Total out-of-pocket over {termYears.toFixed(0)} years
                 </p>
               </div>
-              <div className="glass-card-static p-4 border-l-[3px] border-l-[#F59E0B]">
-                <p className="text-xs text-[#94A3B8] mb-2" style={{ fontFamily: 'var(--font-body)' }}>
+              <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange">
+                <p className="text-xs text-ink-muted mb-2" style={{ fontFamily: 'var(--font-text)' }}>
                   Cash Purchase Opportunity Cost
                 </p>
-                <p className="text-xl font-bold text-[#F59E0B]" style={{ fontFamily: 'var(--font-heading)' }}>
+                <p className="text-xl font-bold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>
                   {formatRand(result.cashPurchaseOpportunityCost)}
                 </p>
-                <p className="text-xs text-[#64748B] mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-xs text-ink-subtle mt-1" style={{ fontFamily: 'var(--font-text)' }}>
                   What your capital could have grown to
                 </p>
               </div>
             </div>
-            <p className="text-xs text-[#94A3B8] mt-4" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-ink-muted mt-4" style={{ fontFamily: 'var(--font-text)' }}>
               Note: Cash purchase avoids interest ({formatRand(result.totalInterest)}) but forfeits investment growth.
               Finance preserves liquidity for higher-yield investments.
             </p>
@@ -541,23 +540,23 @@ export function CarFinance() {
       <div className="mt-6">
         <button
           onClick={() => setTableOpen((o) => !o)}
-          className="w-full glass-card-static p-4 flex items-center justify-between text-left hover:border-[rgba(99,102,241,0.3)] transition-all"
+          className="w-full glass-card-static p-4 flex items-center justify-between text-left hover:border-note-blue/30 transition-all"
         >
-          <span className="text-sm font-semibold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <span className="text-sm font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
             Amortization Schedule
           </span>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[#64748B]" style={{ fontFamily: 'var(--font-body)' }}>
+            <span className="text-xs text-ink-subtle" style={{ fontFamily: 'var(--font-text)' }}>
               {result.amortization.length} payments
             </span>
-            {tableOpen ? <ChevronUp size={16} className="text-[#6366F1]" /> : <ChevronDown size={16} className="text-[#6366F1]" />}
+            {tableOpen ? <ChevronUp size={16} className="text-note-blue" /> : <ChevronDown size={16} className="text-note-blue" />}
           </div>
         </button>
 
         {tableOpen && (
           <div className="glass-card-static mt-2 overflow-hidden">
             {/* Tab + page controls */}
-            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[rgba(255,255,255,0.07)] flex-wrap gap-3">
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-ink/7 flex-wrap gap-3">
               <div className="flex gap-2">
                 {(['Standard', 'With Extras'] as const).map((tab) => {
                   const isExtras = tab === 'With Extras';
@@ -570,11 +569,11 @@ export function CarFinance() {
                       className={clsx(
                         'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                         showWithExtras === isExtras && !disabled
-                          ? 'bg-[rgba(99,102,241,0.2)] text-[#818CF8] border border-[rgba(99,102,241,0.3)]'
-                          : 'text-[#64748B] hover:text-[#94A3B8]',
+                          ? 'bg-note-blue/20 text-note-blue border border-note-blue/30'
+                          : 'text-ink-subtle hover:text-ink-muted',
                         disabled && 'opacity-30 cursor-not-allowed'
                       )}
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      style={{ fontFamily: 'var(--font-text)' }}
                     >
                       {tab}
                     </button>
@@ -586,14 +585,14 @@ export function CarFinance() {
                 const activeRows = showWithExtras ? result.amortizationWithExtras : result.amortization;
                 const totalPages = Math.ceil(activeRows.length / ROWS_PER_PAGE);
                 return totalPages > 1 ? (
-                  <div className="flex items-center gap-2 text-xs text-[#64748B]" style={{ fontFamily: 'var(--font-body)' }}>
+                  <div className="flex items-center gap-2 text-xs text-ink-subtle" style={{ fontFamily: 'var(--font-text)' }}>
                     <button disabled={tablePage === 0} onClick={() => setTablePage((p) => p - 1)}
-                      className="p-1 rounded hover:text-[#F1F5F9] disabled:opacity-30">
+                      className="p-1 rounded hover:text-ink disabled:opacity-30">
                       <ChevronLeft size={14} />
                     </button>
                     <span>Page {tablePage + 1} / {totalPages}</span>
                     <button disabled={tablePage >= totalPages - 1} onClick={() => setTablePage((p) => p + 1)}
-                      className="p-1 rounded hover:text-[#F1F5F9] disabled:opacity-30">
+                      className="p-1 rounded hover:text-ink disabled:opacity-30">
                       <ChevronRight size={14} />
                     </button>
                   </div>
@@ -602,11 +601,11 @@ export function CarFinance() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+              <table className="w-full text-xs" style={{ fontFamily: 'var(--font-text)' }}>
                 <thead>
-                  <tr className="border-b border-[rgba(255,255,255,0.07)]">
+                  <tr className="border-b border-ink/7">
                     {['#', 'Opening Balance', 'Payment', 'Principal', 'Interest', 'Closing Balance', 'Cum. Interest'].map((h) => (
-                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#475569] whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-ink-subtle whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -614,14 +613,14 @@ export function CarFinance() {
                   {(showWithExtras ? result.amortizationWithExtras : result.amortization)
                     .slice(tablePage * ROWS_PER_PAGE, (tablePage + 1) * ROWS_PER_PAGE)
                     .map((row) => (
-                      <tr key={row.period} className="border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(99,102,241,0.05)] transition-colors">
-                        <td className="px-4 py-2 text-[#64748B]">{row.period}</td>
-                        <td className="px-4 py-2 text-[#94A3B8]">{formatRand(row.openingBalance)}</td>
-                        <td className="px-4 py-2 font-semibold text-[#F1F5F9]">{formatRand(row.payment)}</td>
-                        <td className="px-4 py-2 text-[#10B981]">{formatRand(row.principal)}</td>
-                        <td className="px-4 py-2 text-[#EF4444]">{formatRand(row.interest)}</td>
-                        <td className="px-4 py-2 text-[#94A3B8]">{formatRand(row.closingBalance)}</td>
-                        <td className="px-4 py-2 text-[#F59E0B]">{formatRand(row.cumulativeInterest)}</td>
+                      <tr key={row.period} className="border-b border-ink/4 hover:bg-note-blue/5 transition-colors">
+                        <td className="px-4 py-2 text-ink-subtle">{row.period}</td>
+                        <td className="px-4 py-2 text-ink-muted">{formatRand(row.openingBalance)}</td>
+                        <td className="px-4 py-2 font-semibold text-ink">{formatRand(row.payment)}</td>
+                        <td className="px-4 py-2 text-gain">{formatRand(row.principal)}</td>
+                        <td className="px-4 py-2 text-loss">{formatRand(row.interest)}</td>
+                        <td className="px-4 py-2 text-ink-muted">{formatRand(row.closingBalance)}</td>
+                        <td className="px-4 py-2 text-note-orange">{formatRand(row.cumulativeInterest)}</td>
                       </tr>
                     ))}
                 </tbody>

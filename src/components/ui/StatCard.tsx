@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { type LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 
-type ColorVariant = 'indigo' | 'amber' | 'emerald' | 'red';
+type ColorVariant = 'blue' | 'orange' | 'green' | 'red';
 
 interface StatCardProps {
   label: string;
@@ -15,29 +15,29 @@ interface StatCardProps {
 }
 
 const colorMap: Record<ColorVariant, { border: string; iconBg: string; iconColor: string; subColor: string }> = {
-  indigo: {
-    border: 'border-l-[3px] border-l-[#6366F1]',
-    iconBg: 'bg-[rgba(99,102,241,0.12)]',
-    iconColor: 'text-[#6366F1]',
-    subColor: 'text-[#818CF8]',
+  blue: {
+    border: 'border-l-[3px] border-l-note-blue',
+    iconBg: 'bg-note-blue/12',
+    iconColor: 'text-note-blue',
+    subColor: 'text-note-blue',
   },
-  amber: {
-    border: 'border-l-[3px] border-l-[#F59E0B]',
-    iconBg: 'bg-[rgba(245,158,11,0.12)]',
-    iconColor: 'text-[#F59E0B]',
-    subColor: 'text-[#FCD34D]',
+  orange: {
+    border: 'border-l-[3px] border-l-note-orange',
+    iconBg: 'bg-note-orange/12',
+    iconColor: 'text-note-orange',
+    subColor: 'text-note-orange',
   },
-  emerald: {
-    border: 'border-l-[3px] border-l-[#10B981]',
-    iconBg: 'bg-[rgba(16,185,129,0.12)]',
-    iconColor: 'text-[#10B981]',
-    subColor: 'text-[#34D399]',
+  green: {
+    border: 'border-l-[3px] border-l-gain',
+    iconBg: 'bg-gain/12',
+    iconColor: 'text-gain',
+    subColor: 'text-gain',
   },
   red: {
-    border: 'border-l-[3px] border-l-[#EF4444]',
-    iconBg: 'bg-[rgba(239,68,68,0.12)]',
-    iconColor: 'text-[#EF4444]',
-    subColor: 'text-[#FCA5A5]',
+    border: 'border-l-[3px] border-l-loss',
+    iconBg: 'bg-loss/12',
+    iconColor: 'text-loss',
+    subColor: 'text-loss',
   },
 };
 
@@ -46,7 +46,7 @@ export function StatCard({
   value,
   sub,
   icon: Icon,
-  color = 'indigo',
+  color = 'blue',
   delay = 0,
   className,
 }: StatCardProps) {
@@ -67,13 +67,13 @@ export function StatCard({
       <div className="flex-1 min-w-0">
         <p
           className="text-xs font-semibold uppercase tracking-wider mb-1"
-          style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
+          style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}
         >
           {label}
         </p>
         <p
           className="text-xl font-bold leading-tight truncate"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}
         >
           {value}
         </p>

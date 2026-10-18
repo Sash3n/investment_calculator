@@ -4,6 +4,7 @@ import { History as HistoryIcon, Trash2, LogIn, Building2, Car, TrendingUp, Rece
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useHistory, type CalcType } from '../hooks/useFirestore';
+import { alpha } from '../utils/color';
 
 const CALC_ROUTES: Record<CalcType, string> = {
   mortgage:   '/mortgage',
@@ -16,13 +17,13 @@ const CALC_ROUTES: Record<CalcType, string> = {
 };
 
 const TYPE_META: Record<CalcType, { label: string; icon: typeof Home; color: string }> = {
-  mortgage:   { label: 'Mortgage',            icon: Building2,  color: '#F59E0B' },
-  property:   { label: 'Property ROI',        icon: Home,       color: '#10B981' },
-  car:        { label: 'Car Finance',         icon: Car,        color: '#EC4899' },
-  investing:  { label: 'Extra vs Investing',  icon: TrendingUp, color: '#06B6D4' },
-  strategy:   { label: 'Investment Strategy', icon: Wallet,     color: '#8B5CF6' },
-  tax:        { label: 'Tax Planner',         icon: Receipt,    color: '#10B981' },
-  assessment: { label: 'SARS Assessment',     icon: Receipt,    color: '#6366F1' },
+  mortgage:   { label: 'Mortgage',            icon: Building2,  color: 'var(--note-orange)' },
+  property:   { label: 'Property ROI',        icon: Home,       color: 'var(--gain)' },
+  car:        { label: 'Car Finance',         icon: Car,        color: 'var(--note-red)' },
+  investing:  { label: 'Extra vs Investing',  icon: TrendingUp, color: 'var(--note-teal)' },
+  strategy:   { label: 'Investment Strategy', icon: Wallet,     color: 'var(--note-brown)' },
+  tax:        { label: 'Tax Planner',         icon: Receipt,    color: 'var(--gain)' },
+  assessment: { label: 'SARS Assessment',     icon: Receipt,    color: 'var(--note-blue)' },
 };
 
 export function History() {
@@ -63,19 +64,19 @@ export function History() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-6 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-          style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
-          <HistoryIcon size={28} className="text-[#6366F1]" />
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
+          <HistoryIcon size={28} className="text-note-blue" />
         </div>
         <div>
-          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Sign in to view history</h2>
-          <p className="text-sm max-w-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--ink)' }}>Sign in to view history</h2>
+          <p className="text-sm max-w-sm" style={{ color: 'var(--ink-muted)' }}>
             Your calculation history is saved to your account. Sign in with Google to access it across all your devices.
           </p>
         </div>
         <button
           onClick={signIn}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
-          style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}
         >
           <LogIn size={16} /> Sign in with Google
         </button>
@@ -90,14 +91,14 @@ export function History() {
         className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
-            <HistoryIcon size={20} className="text-[#F59E0B]" />
+            style={{ background: 'color-mix(in srgb, var(--note-orange) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
+            <HistoryIcon size={20} className="text-note-orange" />
           </div>
           <div>
-            <h1 className="text-lg font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            <h1 className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Calculation History
             </h1>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
               Last 50 calculations · synced to your account
             </p>
           </div>
@@ -109,7 +110,7 @@ export function History() {
             <button
               onClick={() => setCompareMode(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.1)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.25)' }}
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
             >
               <GitCompare size={13} /> Compare
             </button>
@@ -118,7 +119,7 @@ export function History() {
             <button
               onClick={exitCompareMode}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs transition-all"
-              style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
+              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
             >
               <X size={13} /> Cancel
             </button>
@@ -127,7 +128,7 @@ export function History() {
             <button
               onClick={() => { if (confirm('Clear all history?')) clear(); }}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs transition-all"
-              style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
+              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
             >
               <Trash2 size={13} /> Clear all
             </button>
@@ -141,16 +142,16 @@ export function History() {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           className="rounded-xl p-3 flex items-center justify-between gap-3"
-          style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
         >
           <div>
-            <p className="text-xs font-semibold" style={{ color: '#818CF8' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--note-blue)' }}>
               {selected.length === 0 && 'Select two snapshots of the same type to compare'}
               {selected.length === 1 && `1 selected — pick one more ${selectedType ? `(${TYPE_META[selectedType].label})` : ''}`}
               {selected.length === 2 && 'Ready to compare!'}
             </p>
             {selected.length === 1 && (
-              <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
                 Only snapshots of the same calculator type can be compared.
               </p>
             )}
@@ -169,14 +170,14 @@ export function History() {
       {/* Content */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-6 h-6 rounded-full border-2 border-[#6366F1] border-t-transparent animate-spin" />
+          <div className="w-6 h-6 rounded-full border-2 border-note-blue border-t-transparent animate-spin" />
         </div>
       ) : entries.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="glass-card p-10 text-center space-y-3">
-          <HistoryIcon size={32} className="mx-auto opacity-30" style={{ color: 'var(--color-text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No history yet</p>
-          <p className="text-xs" style={{ color: 'var(--color-text-subtle)' }}>
+          <HistoryIcon size={32} className="mx-auto opacity-30" style={{ color: 'var(--ink-muted)' }} />
+          <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>No history yet</p>
+          <p className="text-xs" style={{ color: 'var(--ink-subtle)' }}>
             Save calculations from any calculator to see them here.
           </p>
         </motion.div>
@@ -199,7 +200,7 @@ export function History() {
                 className="glass-card p-4 flex items-center gap-4 transition-all"
                 style={{
                   opacity: isDisabled ? 0.35 : 1,
-                  borderColor: isSelected ? '#6366F1' : undefined,
+                  borderColor: isSelected ? 'var(--note-blue)' : undefined,
                   cursor: compareMode && !isDisabled ? 'pointer' : undefined,
                 }}
                 onClick={() => compareMode && !isDisabled && toggleSelect(entry.id, entry.type)}
@@ -209,13 +210,13 @@ export function History() {
                   <div
                     className="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center transition-all"
                     style={{
-                      background: isSelected ? '#6366F1' : 'rgba(99,102,241,0.1)',
-                      border: `2px solid ${isSelected ? '#6366F1' : 'rgba(99,102,241,0.3)'}`,
+                      background: isSelected ? 'var(--note-blue)' : 'color-mix(in srgb, var(--note-blue) 10%, transparent)',
+                      border: `2px solid ${isSelected ? 'var(--note-blue)' : 'color-mix(in srgb, var(--note-blue) 30%, transparent)'}`,
                     }}
                   >
                     {isSelected && (
                       <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M1 4L3.5 6.5L9 1" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
                     {isSelected && (
@@ -231,8 +232,8 @@ export function History() {
                   <div
                     className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 -ml-2"
                     style={{
-                      background: selected.indexOf(entry.id) === 0 ? 'rgba(99,102,241,0.2)' : 'rgba(245,158,11,0.2)',
-                      color: selected.indexOf(entry.id) === 0 ? '#818CF8' : '#F59E0B',
+                      background: selected.indexOf(entry.id) === 0 ? 'color-mix(in srgb, var(--note-blue) 20%, transparent)' : 'color-mix(in srgb, var(--note-orange) 20%, transparent)',
+                      color: selected.indexOf(entry.id) === 0 ? 'var(--note-blue)' : 'var(--note-orange)',
                     }}
                   >
                     {selected.indexOf(entry.id) === 0 ? 'A' : 'B'}
@@ -241,16 +242,16 @@ export function History() {
 
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${meta.color}18`, border: `1px solid ${meta.color}30` }}
+                  style={{ background: `${alpha(meta.color, 9)}`, border: `1px solid ${alpha(meta.color, 19)}` }}
                 >
                   <Icon size={16} style={{ color: meta.color }} />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>
                     {entry.title}
                   </p>
-                  <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                  <p className="text-xs truncate" style={{ color: 'var(--ink-muted)' }}>
                     {entry.summary}
                   </p>
                 </div>
@@ -259,7 +260,7 @@ export function History() {
                   <p className="text-[10px] font-medium" style={{ color: meta.color }}>
                     {meta.label}
                   </p>
-                  <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                  <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
                     {entry.savedAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                   {!compareMode && (
@@ -267,14 +268,14 @@ export function History() {
                       <button
                         onClick={() => navigate(CALC_ROUTES[entry.type], { state: { loadedInputs: entry.inputs, entryId: entry.id } })}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all"
-                        style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}30` }}
+                        style={{ background: `${alpha(meta.color, 9)}`, color: meta.color, border: `1px solid ${alpha(meta.color, 19)}` }}
                       >
                         <ExternalLink size={10} /> Open
                       </button>
                       <button
                         onClick={() => remove(entry.id)}
                         className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                        style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}
+                        style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
                         title="Delete"
                       >
                         <Trash2 size={10} />
@@ -288,7 +289,7 @@ export function History() {
         </div>
       )}
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         History is for reference only. All figures are estimates and do not constitute financial advice.
       </p>
     </div>

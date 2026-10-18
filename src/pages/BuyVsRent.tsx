@@ -10,6 +10,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost, calcIncomeTax } from '../utils/tax';
+import { alpha } from '../utils/color';
 
 // ── SARS 2026/27 ──────────────────────────────────────────────────────────────
 const CGT_INCLUSION    = 0.40;
@@ -17,19 +18,19 @@ const CGT_EXCLUSION    = 50_000;
 const PRIMARY_EXCL     = 3_000_000; // primary residence CGT exclusion
 
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -257,24 +258,24 @@ export function BuyVsRent() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-            <Scale size={20} className="text-[#10B981]" />
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
+            <Scale size={20} className="text-gain" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Buy vs Rent Calculator
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               True cost comparison · Net wealth at exit · Break-even year · SARS 2026/27 CGT
             </p>
           </div>
           <span
             className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
             style={{
-              background: buyWins ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)',
-              color:      buyWins ? C.emerald : C.indigo,
-              border:     `1px solid ${buyWins ? C.emerald : C.indigo}44`,
+              background: buyWins ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
+              color:      buyWins ? C.green : C.blue,
+              border:     `1px solid ${alpha(buyWins ? C.green : C.blue, 27)}`,
             }}
           >
             {winner} wins by {formatRandShort(margin)}
@@ -287,20 +288,20 @@ export function BuyVsRent() {
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="rounded-xl p-4 flex items-center gap-4 flex-wrap"
         style={{
-          background: buyWins ? 'rgba(16,185,129,0.07)' : 'rgba(99,102,241,0.07)',
-          border: `1px solid ${buyWins ? 'rgba(16,185,129,0.2)' : 'rgba(99,102,241,0.2)'}`,
+          background: buyWins ? 'color-mix(in srgb, var(--gain) 7%, transparent)' : 'color-mix(in srgb, var(--note-blue) 7%, transparent)',
+          border: `1px solid ${buyWins ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)'}`,
         }}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: buyWins ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)' }}>
-            {buyWins ? <Home size={16} style={{ color: C.emerald }} /> : <Key size={16} style={{ color: C.indigo }} />}
+            style={{ background: buyWins ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
+            {buyWins ? <Home size={16} style={{ color: C.green }} /> : <Key size={16} style={{ color: C.blue }} />}
           </div>
           <div>
-            <p className="text-xs font-bold" style={{ color: buyWins ? C.emerald : C.indigo }}>
+            <p className="text-xs font-bold" style={{ color: buyWins ? C.green : C.blue }}>
               {winner} is better over {inp.yearsToCompare} years by {formatRand(margin, 0)}
             </p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--ink-muted)' }}>
               {breakEvenYear
                 ? `Buying breaks even vs renting in Year ${breakEvenYear} (age-based on your inputs)`
                 : buyWins
@@ -312,12 +313,12 @@ export function BuyVsRent() {
         </div>
         <div className="flex gap-4 flex-shrink-0 text-right">
           <div>
-            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Buy net wealth</p>
-            <p className="text-sm font-bold" style={{ color: C.emerald }}>{formatRand(last?.netWealthBuy ?? 0, 0)}</p>
+            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Buy net wealth</p>
+            <p className="text-sm font-bold" style={{ color: C.green }}>{formatRand(last?.netWealthBuy ?? 0, 0)}</p>
           </div>
           <div>
-            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Rent net wealth</p>
-            <p className="text-sm font-bold" style={{ color: C.indigo }}>{formatRand(last?.netWealthRent ?? 0, 0)}</p>
+            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Rent net wealth</p>
+            <p className="text-sm font-bold" style={{ color: C.blue }}>{formatRand(last?.netWealthRent ?? 0, 0)}</p>
           </div>
         </div>
       </motion.div>
@@ -325,37 +326,37 @@ export function BuyVsRent() {
       {/* Upfront cost summary */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-3"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Buying — Upfront Cash Required
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
           {[
-            { label: 'Deposit',          value: deposit,           color: C.indigo },
-            { label: 'Transfer Duty',    value: transferDuty,       color: C.amber  },
-            { label: 'Bond Registration',value: bondReg,            color: C.amber  },
-            { label: 'Initiation Fee',   value: initiationFeeCash,  color: C.amber  },
+            { label: 'Deposit',          value: deposit,           color: C.blue },
+            { label: 'Transfer Duty',    value: transferDuty,       color: C.orange  },
+            { label: 'Bond Registration',value: bondReg,            color: C.orange  },
+            { label: 'Initiation Fee',   value: initiationFeeCash,  color: C.orange  },
             { label: 'Total Upfront',    value: totalUpfront,       color: C.red, bold: true },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3"
-              style={{ background: `${item.color}0D`, border: `1px solid ${item.color}25` }}>
-              <p style={{ color: 'var(--color-text-subtle)' }}>{item.label}</p>
+              style={{ background: `${alpha(item.color, 5)}`, border: `1px solid ${alpha(item.color, 15)}` }}>
+              <p style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
               <p className={`mt-1 font-${item.bold ? 'bold text-base' : 'semibold text-sm'}`}
-                style={{ color: item.color, fontFamily: 'var(--font-heading)' }}>
+                style={{ color: item.color, fontFamily: 'var(--font-display)' }}>
                 {formatRand(item.value, 0)}
               </p>
             </div>
           ))}
         </div>
         <div className="mt-3 flex items-center gap-2 text-xs p-2 rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <Info size={12} className="text-[#64748B] flex-shrink-0" />
-          <span style={{ color: 'var(--color-text-subtle)' }}>
-            Monthly bond repayment: <strong style={{ color: 'var(--color-text)' }}>{formatRand(monthlyPmt, 0)}</strong>
-            {' · '}Monthly rent: <strong style={{ color: 'var(--color-text)' }}>{formatRand(inp.monthlyRent, 0)}</strong>
+          style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)' }}>
+          <Info size={12} className="text-ink-subtle flex-shrink-0" />
+          <span style={{ color: 'var(--ink-subtle)' }}>
+            Monthly bond repayment: <strong style={{ color: 'var(--ink)' }}>{formatRand(monthlyPmt, 0)}</strong>
+            {' · '}Monthly rent: <strong style={{ color: 'var(--ink)' }}>{formatRand(inp.monthlyRent, 0)}</strong>
             {' · '}
             {monthlySaving > 0
-              ? <span>Bond costs <strong style={{ color: C.amber }}>{formatRand(monthlySaving, 0)}/mo more</strong> — renter invests this difference</span>
-              : <span>Rent costs <strong style={{ color: C.emerald }}>{formatRand(Math.abs(monthlySaving), 0)}/mo more</strong> — buyer has more monthly cash flow</span>}
+              ? <span>Bond costs <strong style={{ color: C.orange }}>{formatRand(monthlySaving, 0)}/mo more</strong> — renter invests this difference</span>
+              : <span>Rent costs <strong style={{ color: C.green }}>{formatRand(Math.abs(monthlySaving), 0)}/mo more</strong> — buyer has more monthly cash flow</span>}
           </span>
         </div>
       </div>
@@ -367,11 +368,11 @@ export function BuyVsRent() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-              <Home size={14} className="text-[#10B981]" />
+              style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
+              <Home size={14} className="text-gain" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Buying
             </p>
           </div>
@@ -403,17 +404,17 @@ export function BuyVsRent() {
               help="Bank-charged bond initiation fee" />
           </div>
           <label className="flex items-center gap-2 cursor-pointer text-xs mt-1"
-            style={{ color: 'var(--color-text-muted)' }}>
+            style={{ color: 'var(--ink-muted)' }}>
             <input type="checkbox" checked={inp.isPrimaryResidence}
               onChange={(e) => setInp((p) => ({ ...p, isPrimaryResidence: e.target.checked }))}
-              className="w-3.5 h-3.5 rounded accent-indigo-500" />
+              className="w-3.5 h-3.5 rounded accent-note-blue" />
             Primary residence (R3M CGT exclusion)
           </label>
           <label className="flex items-center gap-2 cursor-pointer text-xs"
-            style={{ color: 'var(--color-text-muted)' }}>
+            style={{ color: 'var(--ink-muted)' }}>
             <input type="checkbox" checked={inp.initiationFeeCapitalised}
               onChange={(e) => setInp((p) => ({ ...p, initiationFeeCapitalised: e.target.checked }))}
-              className="w-3.5 h-3.5 rounded accent-indigo-500" />
+              className="w-3.5 h-3.5 rounded accent-note-blue" />
             Initiation fee capitalised (add to loan instead of cash)
           </label>
         </div>
@@ -422,11 +423,11 @@ export function BuyVsRent() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <Key size={14} className="text-[#6366F1]" />
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              <Key size={14} className="text-note-blue" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Renting
             </p>
           </div>
@@ -437,9 +438,9 @@ export function BuyVsRent() {
               onChange={n((v) => ({ annualRentEscalation: v }))} suffix="%" step={0.5} />
           </div>
           <div className="mt-2 p-3 rounded-xl text-xs"
-            style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}>
-            <p className="font-semibold mb-1" style={{ color: C.indigo }}>Renter invests:</p>
-            <ul className="space-y-1" style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
+            <p className="font-semibold mb-1" style={{ color: C.blue }}>Renter invests:</p>
+            <ul className="space-y-1" style={{ color: 'var(--ink-muted)' }}>
               <li>• Deposit + transfer duty + bond reg + initiation fee upfront ({formatRand(totalUpfront, 0)})</li>
               <li>• Monthly saving if bond &gt; rent ({formatRand(Math.max(0, monthlySaving), 0)}/mo)</li>
             </ul>
@@ -450,11 +451,11 @@ export function BuyVsRent() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
-              <TrendingUp size={14} className="text-[#F59E0B]" />
+              style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
+              <TrendingUp size={14} className="text-note-orange" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Investment &amp; Period
             </p>
           </div>
@@ -464,7 +465,7 @@ export function BuyVsRent() {
               help="ETF / unit trust return assumption" />
             <div className="flex flex-col gap-1.5">
               <p className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                 Comparison Period
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -473,9 +474,9 @@ export function BuyVsRent() {
                     onClick={() => setInp((p) => ({ ...p, yearsToCompare: y }))}
                     className="py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
-                      background: inp.yearsToCompare === y ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${inp.yearsToCompare === y ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                      color: inp.yearsToCompare === y ? C.amber : 'var(--color-text-muted)',
+                      background: inp.yearsToCompare === y ? 'color-mix(in srgb, var(--note-orange) 20%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                      border: `1px solid ${inp.yearsToCompare === y ? 'color-mix(in srgb, var(--note-orange) 40%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
+                      color: inp.yearsToCompare === y ? C.orange : 'var(--ink-muted)',
                     }}
                   >
                     {y}yr
@@ -490,21 +491,21 @@ export function BuyVsRent() {
       {/* Summary stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Buy Net Wealth" value={formatRand(last?.netWealthBuy ?? 0, 0)}
-          sub={`After CGT + sale costs · Y${inp.yearsToCompare}`} color="emerald" delay={0} />
+          sub={`After CGT + sale costs · Y${inp.yearsToCompare}`} color="green" delay={0} />
         <StatCard label="Rent Net Wealth" value={formatRand(last?.netWealthRent ?? 0, 0)}
-          sub="Portfolio after CGT · same period" color="indigo" delay={0.05} />
+          sub="Portfolio after CGT · same period" color="blue" delay={0.05} />
         <StatCard
           label={buyWins ? 'Buy Advantage' : 'Rent Advantage'}
           value={formatRand(margin, 0)}
           sub={`${winner} wins at year ${inp.yearsToCompare}`}
-          color={buyWins ? 'emerald' : 'indigo'}
+          color={buyWins ? 'green' : 'blue'}
           delay={0.1}
         />
         <StatCard
           label="Break-even Year"
           value={breakEvenYear ? `Year ${breakEvenYear}` : buyWins ? 'From start' : 'Never'}
           sub="When buying overtakes renting"
-          color="amber"
+          color="orange"
           delay={0.15}
         />
       </div>
@@ -515,40 +516,40 @@ export function BuyVsRent() {
         {/* Net wealth trajectories */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Net Wealth: Buy vs Rent + Invest
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Buying: property equity after CGT &amp; sale costs minus sunk costs. Renting: investment portfolio after CGT minus total rent paid.
           </p>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradBuy" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={C.emerald} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.green} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradRent" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name === 'buying' ? 'Buy (net)' : name === 'renting' ? 'Rent + Invest (net)' : 'Property Equity']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               {breakEvenYear && (
-                <ReferenceLine x={`Y${breakEvenYear}`} stroke={C.amber} strokeDasharray="4 2"
-                  label={{ value: `Break-even Y${breakEvenYear}`, fontSize: 10, fill: C.amber, position: 'top' }} />
+                <ReferenceLine x={`Y${breakEvenYear}`} stroke={C.orange} strokeDasharray="4 2"
+                  label={{ value: `Break-even Y${breakEvenYear}`, fontSize: 10, fill: C.orange, position: 'top' }} />
               )}
               <Area type="monotone" dataKey="buying"  name="Buying"
-                stroke={C.emerald} fill="url(#gradBuy)"  strokeWidth={2} />
+                stroke={C.green} fill="url(#gradBuy)"  strokeWidth={2} />
               <Area type="monotone" dataKey="renting" name="Renting + Investing"
-                stroke={C.indigo}  fill="url(#gradRent)" strokeWidth={2} />
+                stroke={C.blue}  fill="url(#gradRent)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -556,24 +557,24 @@ export function BuyVsRent() {
         {/* Annual cost comparison */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Annual Running Cost
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Buying: bond repayment + rates + levies + insurance + maintenance. Renting: rent (escalating).
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={costChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name === 'buy' ? 'Buying (total cost)' : 'Rent paid']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-              <Bar dataKey="buy"  name="Buying" fill={C.emerald} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="rent" name="Renting" fill={C.indigo}  radius={[3, 3, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+              <Bar dataKey="buy"  name="Buying" fill={C.green} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="rent" name="Renting" fill={C.blue}  radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -582,16 +583,16 @@ export function BuyVsRent() {
       {/* Year-by-year table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Comparison
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[780px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Year', 'Property Value', 'Equity', 'Buy Net Wealth', 'Monthly Rent', 'Portfolio', 'Rent Net Wealth', 'Advantage'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -601,34 +602,34 @@ export function BuyVsRent() {
                 const isBreakEven  = r.year === breakEvenYear;
                 return (
                   <tr key={r.year} style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
                     background: isBreakEven
-                      ? 'rgba(245,158,11,0.06)'
-                      : i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                      ? 'color-mix(in srgb, var(--note-orange) 6%, transparent)'
+                      : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: isBreakEven ? C.amber : '#818CF8' }}>
+                    <td className="py-2 px-3 font-bold" style={{ color: isBreakEven ? C.orange : 'var(--note-blue)' }}>
                       Y{r.year}{isBreakEven ? ' ⚡' : ''}
                     </td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text)' }}>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.propertyValue, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.emerald }}>
+                    <td className="py-2 px-3" style={{ color: C.green }}>
                       {formatRand(r.equity, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: buyAhead ? C.emerald : 'var(--color-text-muted)' }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: buyAhead ? C.green : 'var(--ink-muted)' }}>
                       {formatRand(r.netWealthBuy, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                       {formatRand(r.monthlyRentYear, 0)}/mo
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.cyan }}>
+                    <td className="py-2 px-3" style={{ color: C.teal }}>
                       {formatRand(r.investPortfolio, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: !buyAhead ? C.indigo : 'var(--color-text-muted)' }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: !buyAhead ? C.blue : 'var(--ink-muted)' }}>
                       {formatRand(r.netWealthRent, 0)}
                     </td>
                     <td className="py-2 px-3 font-bold"
-                      style={{ color: buyAhead ? C.emerald : C.indigo }}>
+                      style={{ color: buyAhead ? C.green : C.blue }}>
                       {buyAhead ? '+' : ''}{formatRand(r.advantage, 0)}
                       <span className="ml-1 text-[10px] font-normal">
                         {buyAhead ? '(buy)' : '(rent)'}
@@ -640,21 +641,21 @@ export function BuyVsRent() {
             </tbody>
           </table>
         </div>
-        <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-subtle)' }}>
+        <p className="text-[10px] mt-2" style={{ color: 'var(--ink-subtle)' }}>
           ⚡ = break-even year · Net wealth = equity or portfolio after CGT &amp; costs, minus all sunk costs · Advantage is buying minus renting net wealth
         </p>
       </div>
 
       {/* Methodology note */}
       <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}>
-        <Info size={14} className="text-[#6366F1] mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--color-text-muted)' }}>
-          <strong style={{ color: 'var(--color-text)' }}>Methodology:</strong> Buyer's sunk costs = mortgage interest + rates + levies + insurance + maintenance (principal repayment builds equity, not counted as a cost). Renter invests the full upfront amount (deposit + transfer duty + bond reg) plus any monthly saving (bond &gt; rent). CGT applied at exit: primary residence gets R3M exclusion; investments get R50k annual exclusion and 40% inclusion rate. Agent commission of 2.5% applied to property sale.
+        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
+        <Info size={14} className="text-note-blue mt-0.5 flex-shrink-0" />
+        <span style={{ color: 'var(--ink-muted)' }}>
+          <strong style={{ color: 'var(--ink)' }}>Methodology:</strong> Buyer's sunk costs = mortgage interest + rates + levies + insurance + maintenance (principal repayment builds equity, not counted as a cost). Renter invests the full upfront amount (deposit + transfer duty + bond reg) plus any monthly saving (bond &gt; rent). CGT applied at exit: primary residence gets R3M exclusion; investments get R50k annual exclusion and 40% inclusion rate. Agent commission of 2.5% applied to property sale.
         </span>
       </div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Projections are illustrative only. CGT based on SARS 2026/27. Returns are not guaranteed. Not financial advice — consult a CFP.
       </p>
     </div>

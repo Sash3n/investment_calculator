@@ -11,25 +11,26 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { alpha, RING_OF_FIVE } from '../utils/color';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
-  pink:    '#EC4899',
-  teal:    '#14B8A6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
+  rose:    'var(--note-red)',
+  slate:   'var(--ink-subtle)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 // ── Water tier types ───────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ interface Municipality {
 
 const MUNICIPALITIES: Municipality[] = [
   {
-    id: 'coj', name: 'City of Johannesburg', shortName: 'Joburg', color: C.indigo,
+    id: 'coj', name: 'City of Johannesburg', shortName: 'Joburg', color: C.blue,
     rateInRand: 0.009545, rebateStd: 300_000, rebatePct: 30,
     refuse: 285, sewerage: 255, basicService: 120,
     tariffYear: '2025/26', rateEstimated: false,
@@ -71,7 +72,7 @@ const MUNICIPALITIES: Municipality[] = [
     ],
   },
   {
-    id: 'coct', name: 'City of Cape Town', shortName: 'Cape Town', color: C.cyan,
+    id: 'coct', name: 'City of Cape Town', shortName: 'Cape Town', color: C.teal,
     rateInRand: 0.007055, rebateStd: 450_000, rebatePct: 50,
     refuse: 265, sewerage: 325, basicService: 100,
     tariffYear: '2025/26', rateEstimated: false,
@@ -84,7 +85,7 @@ const MUNICIPALITIES: Municipality[] = [
     ],
   },
   {
-    id: 'cot', name: 'City of Tshwane', shortName: 'Tshwane', color: C.emerald,
+    id: 'cot', name: 'City of Tshwane', shortName: 'Tshwane', color: C.green,
     rateInRand: 0.009100, rebateStd: 200_000, rebatePct: 25,
     refuse: 225, sewerage: 205, basicService: 95,
     tariffYear: '2025/26', rateEstimated: true,
@@ -98,7 +99,7 @@ const MUNICIPALITIES: Municipality[] = [
     ],
   },
   {
-    id: 'emm', name: 'Ekurhuleni Metro', shortName: 'Ekurhuleni', color: C.amber,
+    id: 'emm', name: 'Ekurhuleni Metro', shortName: 'Ekurhuleni', color: C.orange,
     rateInRand: 0.009800, rebateStd: 250_000, rebatePct: 25,
     refuse: 245, sewerage: 225, basicService: 90,
     tariffYear: '2025/26', rateEstimated: true,
@@ -112,7 +113,7 @@ const MUNICIPALITIES: Municipality[] = [
     ],
   },
   {
-    id: 'ethekwini', name: 'eThekwini (Durban)', shortName: 'Durban', color: C.violet,
+    id: 'ethekwini', name: 'eThekwini (Durban)', shortName: 'Durban', color: C.brown,
     rateInRand: 0.010850, rebateStd: 200_000, rebatePct: 20,
     refuse: 205, sewerage: 235, basicService: 85,
     tariffYear: '2025/26', rateEstimated: true,
@@ -125,7 +126,7 @@ const MUNICIPALITIES: Municipality[] = [
     ],
   },
   {
-    id: 'nmb', name: 'Nelson Mandela Bay', shortName: 'NMB', color: C.pink,
+    id: 'nmb', name: 'Nelson Mandela Bay', shortName: 'NMB', color: C.rose,
     rateInRand: 0.012500, rebateStd: 150_000, rebatePct: 20,
     refuse: 185, sewerage: 195, basicService: 80,
     tariffYear: '2025/26', rateEstimated: true,
@@ -138,7 +139,7 @@ const MUNICIPALITIES: Municipality[] = [
     ],
   },
   {
-    id: 'bcc', name: 'Buffalo City (East London)', shortName: 'Buffalo City', color: C.teal,
+    id: 'bcc', name: 'Buffalo City (East London)', shortName: 'Buffalo City', color: C.slate,
     rateInRand: 0.011000, rebateStd: 150_000, rebatePct: 20,
     refuse: 175, sewerage: 185, basicService: 75,
     tariffYear: '2025/26', rateEstimated: true,
@@ -195,7 +196,9 @@ function calcBill(
   };
 }
 
-const DONUT_COLORS = [C.indigo, C.cyan, C.emerald, C.amber, C.violet];
+// Rates, water, sewerage, refuse, basic: a rotation of RING_OF_FIVE that keeps water teal
+const [BASIC_C, RATES_C, WATER_C, SEWER_C, REFUSE_C] = RING_OF_FIVE;
+const DONUT_COLORS = [RATES_C, WATER_C, SEWER_C, REFUSE_C, BASIC_C];
 
 // ── Share state ────────────────────────────────────────────────────────────────
 interface ShareState {
@@ -239,11 +242,11 @@ export function MunicipalRates() {
 
   // Donut chart data
   const donutData = useMemo(() => [
-    { name: 'Rates',          value: Math.round(bill.rates),    color: C.indigo  },
-    { name: 'Water',          value: Math.round(bill.water),    color: C.cyan    },
-    { name: 'Sewerage',       value: Math.round(bill.sewerage), color: C.emerald },
-    { name: 'Refuse',         value: Math.round(bill.refuse),   color: C.amber   },
-    { name: 'Basic services', value: Math.round(bill.basic),    color: C.violet  },
+    { name: 'Rates',          value: Math.round(bill.rates),    color: RATES_C },
+    { name: 'Water',          value: Math.round(bill.water),    color: WATER_C },
+    { name: 'Sewerage',       value: Math.round(bill.sewerage), color: SEWER_C },
+    { name: 'Refuse',         value: Math.round(bill.refuse),   color: REFUSE_C },
+    { name: 'Basic services', value: Math.round(bill.basic),    color: BASIC_C },
   ].filter((d) => d.value > 0), [bill]);
 
   // City comparison bar data — include electricityBasic so the saving callout is apples-to-apples
@@ -283,14 +286,14 @@ export function MunicipalRates() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${C.emerald}22` }}>
-            <Building2 size={22} style={{ color: C.emerald }} />
+          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.green, 13)}` }}>
+            <Building2 size={22} style={{ color: C.green }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>
               Municipal Rates Calculator
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Estimate monthly property rates and services across 7 SA municipalities.
             </p>
           </div>
@@ -301,10 +304,10 @@ export function MunicipalRates() {
       {/* Tariff year badge */}
       <div
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}
+        style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}
       >
-        <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: C.amber }} />
-        <span style={{ color: 'var(--color-text-muted)' }}>
+        <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: C.orange }} />
+        <span style={{ color: 'var(--ink-muted)' }}>
           Tariffs are approximate 2025/26 estimates for residential properties.
           {estimated && ` ${city.name} rates are estimated — verify with your municipality.`}
           {' '}Water tiers exclude VAT. These are illustrations only — consult your municipality for exact billing.
@@ -315,9 +318,9 @@ export function MunicipalRates() {
         {/* Inputs */}
         <div
           className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+          style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
         >
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Property details
           </h2>
 
@@ -342,10 +345,10 @@ export function MunicipalRates() {
           <InputField id="mr-water" label="Monthly water usage (kL)" value={waterKl}
             onChange={(v) => setWaterKl(Number(v))} suffix="kL" min={0} max={100} />
 
-          <hr style={{ borderColor: 'var(--color-border)' }} />
+          <hr style={{ borderColor: 'var(--rule)' }} />
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--color-text-muted)' }}>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--ink-muted)' }}>
               Rate in the rand (override)
             </label>
             <div className="flex items-center gap-2">
@@ -357,22 +360,22 @@ export function MunicipalRates() {
                 onChange={(e) => setCustomRate(Number(e.target.value))}
                 className="flex-1 px-3 py-2 rounded-lg text-sm"
                 style={{
-                  background: 'var(--color-bg)',
-                  border: '1px solid var(--color-border)',
-                  color: 'var(--color-text)',
+                  background: 'var(--paper)',
+                  border: '1px solid var(--rule)',
+                  color: 'var(--ink)',
                 }}
               />
               {customRate !== null && (
                 <button
                   onClick={() => setCustomRate(null)}
                   className="text-xs px-2 py-1 rounded"
-                  style={{ background: `${C.amber}22`, color: C.amber }}
+                  style={{ background: `${alpha(C.orange, 13)}`, color: C.orange }}
                 >
                   Reset
                 </button>
               )}
             </div>
-            <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--ink-muted)' }}>
               Default: {city.rateInRand.toFixed(6)} — edit if your notice of assessment differs.
             </p>
           </div>
@@ -382,16 +385,16 @@ export function MunicipalRates() {
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.cyan}11`, border: `1px solid ${C.cyan}22` }}
+            style={{ background: `${alpha(C.teal, 7)}`, border: `1px solid ${alpha(C.teal, 13)}` }}
           >
-            <Droplets size={13} style={{ color: C.cyan }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            <Droplets size={13} style={{ color: C.teal }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               Average SA household uses 15–20 kL/month.
               First {city.waterTiers[0].upTo} kL free in {city.shortName}.
             </span>
           </div>
 
-          <hr style={{ borderColor: 'var(--color-border)' }} />
+          <hr style={{ borderColor: 'var(--rule)' }} />
 
           <InputField id="mr-esc" label="Annual tariff escalation (for projection)" value={escalation}
             onChange={(v) => setEscalation(Number(v))} suffix="%" min={0} max={25} />
@@ -399,23 +402,23 @@ export function MunicipalRates() {
           {/* City rebate & rate reference */}
           <div
             className="p-3 rounded-xl text-xs space-y-1"
-            style={{ background: `${city.color}11`, border: `1px solid ${city.color}33` }}
+            style={{ background: `${alpha(city.color, 7)}`, border: `1px solid ${alpha(city.color, 20)}` }}
           >
             <div className="font-semibold" style={{ color: city.color }}>{city.name}</div>
-            <div className="flex justify-between" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="flex justify-between" style={{ color: 'var(--ink-muted)' }}>
               <span>Rate in the rand</span>
-              <span style={{ color: 'var(--color-text)' }}>{city.rateInRand.toFixed(6)}{city.rateEstimated ? '*' : ''}</span>
+              <span style={{ color: 'var(--ink)' }}>{city.rateInRand.toFixed(6)}{city.rateEstimated ? '*' : ''}</span>
             </div>
-            <div className="flex justify-between" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="flex justify-between" style={{ color: 'var(--ink-muted)' }}>
               <span>Standard rebate</span>
-              <span style={{ color: 'var(--color-text)' }}>{formatRandShort(city.rebateStd)}</span>
+              <span style={{ color: 'var(--ink)' }}>{formatRandShort(city.rebateStd)}</span>
             </div>
-            <div className="flex justify-between" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="flex justify-between" style={{ color: 'var(--ink-muted)' }}>
               <span>Rateable value</span>
-              <span style={{ color: 'var(--color-text)' }}>{formatRandShort(bill.rateableValue)}</span>
+              <span style={{ color: 'var(--ink)' }}>{formatRandShort(bill.rateableValue)}</span>
             </div>
             {city.rateEstimated && (
-              <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+              <p className="text-[10px] mt-1" style={{ color: 'var(--ink-muted)' }}>
                 * Estimated tariff — verify at {city.shortName} municipal website.
               </p>
             )}
@@ -428,9 +431,9 @@ export function MunicipalRates() {
           {rebateType === 'indigent' && (
             <div
               className="p-4 rounded-xl text-sm"
-              style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}
+              style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}
             >
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              <span style={{ color: 'var(--ink-muted)' }}>
                 Indigent households registered with the municipality receive a full exemption from property rates and
                 a free basic allocation of water, electricity, sewerage and refuse removal.
                 Eligibility criteria vary per municipality.
@@ -440,10 +443,10 @@ export function MunicipalRates() {
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Monthly total"  value={formatRand(billTotal)}           color="indigo"  icon={Building2} />
-            <StatCard label="Annual total"   value={formatRandShort(billTotal * 12)} color="emerald" icon={TrendingUp} />
-            <StatCard label="Monthly rates"  value={formatRand(bill.rates)}          color="indigo"  icon={Building2} />
-            <StatCard label="Monthly water"  value={formatRand(bill.water)}          color="emerald" icon={Droplets} />
+            <StatCard label="Monthly total"  value={formatRand(billTotal)}           color="blue"  icon={Building2} />
+            <StatCard label="Annual total"   value={formatRandShort(billTotal * 12)} color="green" icon={TrendingUp} />
+            <StatCard label="Monthly rates"  value={formatRand(bill.rates)}          color="blue"  icon={Building2} />
+            <StatCard label="Monthly water"  value={formatRand(bill.water)}          color="green" icon={Droplets} />
           </div>
 
           {/* Move-city callout */}
@@ -453,13 +456,13 @@ export function MunicipalRates() {
             if (saving <= 50 || cheapest.name === city.shortName) return null;
             return (
               <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-                style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}>
-                <TrendingUp size={15} style={{ color: C.emerald }} />
-                <span style={{ color: 'var(--color-text-muted)' }}>
+                style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
+                <TrendingUp size={15} style={{ color: C.green }} />
+                <span style={{ color: 'var(--ink-muted)' }}>
                   Moving to{' '}
-                  <span style={{ color: C.emerald, fontWeight: 600 }}>{cheapest.name}</span>
+                  <span style={{ color: C.green, fontWeight: 600 }}>{cheapest.name}</span>
                   {' '}could save you{' '}
-                  <span style={{ color: C.emerald, fontWeight: 600 }}>{formatRand(saving)}/month</span>
+                  <span style={{ color: C.green, fontWeight: 600 }}>{formatRand(saving)}/month</span>
                   {' '}({formatRandShort(saving * 12)}/year) on the same property value.
                 </span>
               </div>
@@ -471,33 +474,33 @@ export function MunicipalRates() {
             {/* Breakdown table */}
             <div
               className="p-5 rounded-2xl"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
             >
-              <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Monthly breakdown</h2>
+              <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>Monthly breakdown</h2>
               <div className="space-y-0 text-sm">
                 {[
-                  { label: 'Property rates',        value: bill.rates,        color: C.indigo  },
-                  { label: 'Water',                 value: bill.water,        color: C.cyan    },
-                  { label: 'Sewerage',              value: bill.sewerage,     color: C.emerald },
-                  { label: 'Refuse removal',        value: bill.refuse,       color: C.amber   },
-                  { label: 'Basic services',        value: bill.basic,        color: C.violet  },
-                  ...(electricityBasic > 0 ? [{ label: 'Electricity basic', value: electricityBasic, color: C.teal }] : []),
+                  { label: 'Property rates',        value: bill.rates,        color: RATES_C },
+                  { label: 'Water',                 value: bill.water,        color: WATER_C },
+                  { label: 'Sewerage',              value: bill.sewerage,     color: SEWER_C },
+                  { label: 'Refuse removal',        value: bill.refuse,       color: REFUSE_C },
+                  { label: 'Basic services',        value: bill.basic,        color: BASIC_C },
+                  ...(electricityBasic > 0 ? [{ label: 'Electricity basic', value: electricityBasic, color: 'var(--ink-subtle)' }] : []),
                 ].map(({ label, value, color }) => (
                   <div
                     key={label}
                     className="flex justify-between items-center py-2"
-                    style={{ borderBottom: '1px solid var(--color-border)' }}
+                    style={{ borderBottom: '1px solid var(--rule)' }}
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-                      <span style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+                      <span style={{ color: 'var(--ink-muted)' }}>{label}</span>
                     </div>
-                    <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>{formatRand(value)}</span>
+                    <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{formatRand(value)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between items-center pt-2">
-                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>Total</span>
-                  <span className="font-semibold" style={{ color: C.indigo }}>{formatRand(billTotal)}</span>
+                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>Total</span>
+                  <span className="font-semibold" style={{ color: C.blue }}>{formatRand(billTotal)}</span>
                 </div>
               </div>
             </div>
@@ -505,9 +508,9 @@ export function MunicipalRates() {
             {/* Donut chart */}
             <div
               className="p-5 rounded-2xl flex flex-col"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
             >
-              <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Bill composition</h2>
+              <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>Bill composition</h2>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
@@ -533,7 +536,7 @@ export function MunicipalRates() {
                 {donutData.map((d, i) => (
                   <div key={d.name} className="flex items-center gap-1 text-xs">
                     <span className="w-2 h-2 rounded-full" style={{ background: DONUT_COLORS[i] }} />
-                    <span style={{ color: 'var(--color-text-muted)' }}>{d.name}</span>
+                    <span style={{ color: 'var(--ink-muted)' }}>{d.name}</span>
                   </div>
                 ))}
               </div>
@@ -543,19 +546,19 @@ export function MunicipalRates() {
           {/* City comparison bar chart */}
           <div
             className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
           >
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>
               City comparison — same property value across all municipalities
             </h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
               Monthly total bill at {formatRandShort(propValue)} municipal value, {rebateType} rebate, {waterKl} kL water.
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={comparisonData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(1)}k`} width={52} />
+                <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--ink-muted)' }} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-muted)' }} tickFormatter={(v) => `R${(v / 1000).toFixed(1)}k`} width={52} />
                 <ReTooltip
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), 'Monthly total']}
@@ -564,7 +567,7 @@ export function MunicipalRates() {
                   {comparisonData.map((entry) => (
                     <Cell
                       key={entry.name}
-                      fill={MUNICIPALITIES.find((m) => m.shortName === entry.name)?.color ?? C.indigo}
+                      fill={MUNICIPALITIES.find((m) => m.shortName === entry.name)?.color ?? C.blue}
                       opacity={entry.name === city.shortName ? 1 : 0.55}
                     />
                   ))}
@@ -576,13 +579,13 @@ export function MunicipalRates() {
           {/* 5-year projection */}
           <div
             className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
                 5-year cost projection
               </h2>
-              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                 {escalation}% annual tariff escalation
               </span>
             </div>
@@ -594,7 +597,7 @@ export function MunicipalRates() {
                       <th
                         key={h}
                         className="text-left py-2 pr-4 text-xs font-semibold uppercase tracking-wide"
-                        style={{ color: 'var(--color-text-muted)', borderBottom: '1px solid var(--color-border)' }}
+                        style={{ color: 'var(--ink-muted)', borderBottom: '1px solid var(--rule)' }}
                       >
                         {h}
                       </th>
@@ -607,21 +610,21 @@ export function MunicipalRates() {
                     return (
                       <tr key={row.year}>
                         <td className="py-2 pr-4" style={{
-                          color: i === 0 ? C.indigo : 'var(--color-text)',
+                          color: i === 0 ? C.blue : 'var(--ink)',
                           fontWeight: i === 0 ? 600 : 400,
-                          borderBottom: '1px solid var(--color-border)',
+                          borderBottom: '1px solid var(--rule)',
                         }}>
                           {row.year}
                         </td>
-                        <td className="py-2 pr-4" style={{ color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)' }}>
+                        <td className="py-2 pr-4" style={{ color: 'var(--ink)', borderBottom: '1px solid var(--rule)' }}>
                           {formatRand(row.monthly)}
                         </td>
-                        <td className="py-2 pr-4" style={{ color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)' }}>
+                        <td className="py-2 pr-4" style={{ color: 'var(--ink)', borderBottom: '1px solid var(--rule)' }}>
                           {formatRandShort(row.annual)}
                         </td>
                         <td className="py-2" style={{
-                          color: i === 0 ? 'var(--color-text-muted)' : C.red,
-                          borderBottom: '1px solid var(--color-border)',
+                          color: i === 0 ? 'var(--ink-muted)' : C.red,
+                          borderBottom: '1px solid var(--rule)',
                         }}>
                           {i === 0 ? '--' : `+${formatRand(increase)}/mo`}
                         </td>
@@ -636,9 +639,9 @@ export function MunicipalRates() {
           {/* Water tier reference */}
           <div
             className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
           >
-            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>
               {city.shortName} water tariff tiers (2025/26)
             </h2>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -651,27 +654,27 @@ export function MunicipalRates() {
                   <div
                     key={i}
                     className="flex justify-between items-center p-2 rounded-lg"
-                    style={{ background: `${C.cyan}11`, border: `1px solid ${C.cyan}22` }}
+                    style={{ background: `${alpha(C.teal, 7)}`, border: `1px solid ${alpha(C.teal, 13)}` }}
                   >
-                    <span style={{ color: 'var(--color-text-muted)' }}>{rangeLabel}</span>
-                    <span style={{ color: tier.rate === 0 ? C.emerald : 'var(--color-text)', fontWeight: 500 }}>
+                    <span style={{ color: 'var(--ink-muted)' }}>{rangeLabel}</span>
+                    <span style={{ color: tier.rate === 0 ? C.green : 'var(--ink)', fontWeight: 500 }}>
                       {tier.rate === 0 ? 'Free' : `R${tier.rate.toFixed(2)}/kL`}
                     </span>
                   </div>
                 );
               })}
             </div>
-            <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
               Rates are excl. VAT. Your usage of {waterKl} kL costs {formatRand(bill.water)}/month in {city.shortName}.
             </p>
           </div>
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}
+            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}
           >
-            <Info size={13} style={{ color: C.indigo }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            <Info size={13} style={{ color: C.blue }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               This tool estimates residential property rates only. It excludes electricity usage charges, body corporate levies,
               and special rating area (SRA) levies. Electricity basic connection charges and VAT on services are not included.
               Always verify your bill against your official municipal statement.

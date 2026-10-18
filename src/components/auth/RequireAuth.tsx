@@ -14,7 +14,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       <div className="flex items-center justify-center py-32" role="status" aria-label="Checking sign-in">
         <div
           className="w-8 h-8 rounded-full animate-spin"
-          style={{ border: '3px solid var(--color-border)', borderTopColor: '#6366F1' }}
+          style={{ border: '3px solid var(--rule)', borderTopColor: 'var(--note-blue)' }}
         />
       </div>
     );
@@ -25,20 +25,20 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       <div className="p-4 md:p-6 max-w-xl mx-auto">
         <div className="glass-card p-8 mt-12 text-center space-y-4">
           <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center"
-            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-            <ShieldCheck size={26} className="text-[#6366F1]" />
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+            <ShieldCheck size={26} className="text-note-blue" />
           </div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Sign in to manage your portfolio
           </h1>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
             Your property records, expenses, maintenance logs and rent history are stored privately
             in your own cloud account, visible only to you and removable at any time.
           </p>
           <button
             onClick={signIn}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}
           >
             <LogIn size={15} />
             Sign in with Google

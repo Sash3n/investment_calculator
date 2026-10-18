@@ -10,25 +10,26 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { alpha } from '../utils/color';
 import {
   calcRetirementIncomeGoal, calcRetirementAffordability,
   simulateRetirementSavings, findRequiredMonthly,
 } from '../utils/retirementIncome';
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const SWR_OPTIONS = [
@@ -121,9 +122,9 @@ export function RetirementIncomeGoal() {
 
   // Scenario comparison — memoised to avoid re-running the solver/simulation on every keystroke
   const scenarios = useMemo(() => [
-    { label: 'Conservative', r: Math.max(1, annualReturnPercent - 2), color: C.amber },
-    { label: 'Current',      r: annualReturnPercent,                  color: C.indigo },
-    { label: 'Aggressive',   r: annualReturnPercent + 2,               color: C.emerald },
+    { label: 'Conservative', r: Math.max(1, annualReturnPercent - 2), color: C.orange },
+    { label: 'Current',      r: annualReturnPercent,                  color: C.blue },
+    { label: 'Aggressive',   r: annualReturnPercent + 2,               color: C.green },
   ].map(({ label, r, color }) => {
     if (mode === 'income') {
       const pmt = findRequiredMonthly(incomeResult.lumpSumTarget, incomeResult.years, r, currentSavings, contributionEscalation);
@@ -155,12 +156,12 @@ export function RetirementIncomeGoal() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${C.amber}22` }}>
-            <Sunset size={22} style={{ color: C.amber }} />
+          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.orange, 13)}` }}>
+            <Sunset size={22} style={{ color: C.orange }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Retirement Income Goal</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Retirement Income Goal</h1>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Set a retirement income goal and find the monthly investment — or see what income your current savings rate can afford.
             </p>
           </div>
@@ -169,15 +170,15 @@ export function RetirementIncomeGoal() {
       </div>
 
       {/* Mode toggle */}
-      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--rule)' }}>
         {(['income', 'afford'] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
             className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors"
             style={{
-              background: mode === m ? C.indigo : 'transparent',
-              color:      mode === m ? '#fff'   : 'var(--color-text-muted)',
+              background: mode === m ? C.blue : 'transparent',
+              color:      mode === m ? 'var(--on-accent)'   : 'var(--ink-muted)',
             }}
           >
             <ArrowLeftRight size={14} />
@@ -188,9 +189,9 @@ export function RetirementIncomeGoal() {
 
       {retirementNotInFuture && (
         <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-          style={{ background: `${C.red}11`, border: `1px solid ${C.red}44` }}>
+          style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 27)}` }}>
           <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
-          <span style={{ color: 'var(--color-text-muted)' }}>
+          <span style={{ color: 'var(--ink-muted)' }}>
             Retirement age must be after your current age — using 1 year for this calculation.
           </span>
         </div>
@@ -200,9 +201,9 @@ export function RetirementIncomeGoal() {
         {/* Inputs */}
         <div
           className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+          style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
         >
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Your goal
           </h2>
 
@@ -225,7 +226,7 @@ export function RetirementIncomeGoal() {
           )}
 
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted)' }}>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--ink-muted)' }}>
               Safe withdrawal rate
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -235,8 +236,8 @@ export function RetirementIncomeGoal() {
                   onClick={() => setSwr(opt.swr)}
                   className="py-2 rounded-lg text-xs font-semibold transition-colors"
                   style={{
-                    background: swr === opt.swr ? C.indigo : `${C.indigo}11`,
-                    color:      swr === opt.swr ? '#fff'   : C.indigo,
+                    background: swr === opt.swr ? C.blue : `${alpha(C.blue, 7)}`,
+                    color:      swr === opt.swr ? 'var(--on-accent)'   : C.blue,
                   }}
                   title={opt.sub}
                 >
@@ -260,9 +261,9 @@ export function RetirementIncomeGoal() {
             help="Increase your monthly contribution each year, e.g. with salary growth" />
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
-            <Info size={13} style={{ color: C.indigo }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: C.blue }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               {mode === 'income'
                 ? "We inflate your desired income to retirement-year Rands, convert it to a nest egg using your chosen safe withdrawal rate, then solve for the monthly contribution needed to get there."
                 : 'We grow your monthly contribution to a nest egg at retirement, then convert it back to a monthly income using your chosen safe withdrawal rate.'}
@@ -274,41 +275,41 @@ export function RetirementIncomeGoal() {
         <div className="lg:col-span-2 space-y-4">
           {mode === 'income' ? (
             <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Monthly investment needed" value={formatRand(incomeResult.requiredMonthly)} color="indigo" icon={TrendingUp} />
-              <StatCard label="Nest egg needed at retirement" value={formatRandShort(incomeResult.lumpSumTarget)} color="emerald" icon={Sunset} />
-              <StatCard label="Your contributions" value={formatRandShort(totalContrib)} color="indigo" icon={TrendingUp} />
-              <StatCard label="Returns (compounding)" value={formatRandShort(totalReturns)} color="emerald" icon={TrendingUp} />
+              <StatCard label="Monthly investment needed" value={formatRand(incomeResult.requiredMonthly)} color="blue" icon={TrendingUp} />
+              <StatCard label="Nest egg needed at retirement" value={formatRandShort(incomeResult.lumpSumTarget)} color="green" icon={Sunset} />
+              <StatCard label="Your contributions" value={formatRandShort(totalContrib)} color="blue" icon={TrendingUp} />
+              <StatCard label="Returns (compounding)" value={formatRandShort(totalReturns)} color="green" icon={TrendingUp} />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Achievable income (today's R)" value={formatRand(affordResult.achievableMonthlyIncomeToday)} color="indigo" icon={TrendingUp} />
-              <StatCard label="Income replacement" value={`${affordResult.incomeReplacementPct.toFixed(0)}%`} color="amber" icon={Sunset} />
-              <StatCard label="Monthly investment" value={formatRand(affordResult.monthlyContribution)} color="indigo" icon={TrendingUp} />
-              <StatCard label="Nest egg at retirement" value={formatRandShort(affordResult.finalBalance)} color="emerald" icon={Sunset} />
+              <StatCard label="Achievable income (today's R)" value={formatRand(affordResult.achievableMonthlyIncomeToday)} color="blue" icon={TrendingUp} />
+              <StatCard label="Income replacement" value={`${affordResult.incomeReplacementPct.toFixed(0)}%`} color="orange" icon={Sunset} />
+              <StatCard label="Monthly investment" value={formatRand(affordResult.monthlyContribution)} color="blue" icon={TrendingUp} />
+              <StatCard label="Nest egg at retirement" value={formatRandShort(affordResult.finalBalance)} color="green" icon={Sunset} />
             </div>
           )}
 
           {mode === 'income' ? (
             <div className="p-4 rounded-xl text-sm"
-              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+              <span style={{ color: 'var(--ink-muted)' }}>
                 To draw {formatRand(desiredMonthlyIncome)}/month in today's Rands from age {retirementAge}, you'll need a nest egg of{' '}
-                <span style={{ color: C.amber, fontWeight: 600 }}>{formatRandShort(incomeResult.lumpSumTarget)}</span>
+                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRandShort(incomeResult.lumpSumTarget)}</span>
                 {' '}by then ({formatRandShort(incomeResult.realLumpSumTarget)} in today's Rands) — that takes{' '}
-                <span style={{ color: C.amber, fontWeight: 600 }}>{formatRand(incomeResult.requiredMonthly)}/month</span>
+                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRand(incomeResult.requiredMonthly)}/month</span>
                 {' '}invested over the next {incomeResult.years} years at {annualReturnPercent}% p.a.
               </span>
             </div>
           ) : (
             <div className="p-4 rounded-xl text-sm"
-              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+              <span style={{ color: 'var(--ink-muted)' }}>
                 Investing {savingsRatePercent}% of your {formatRand(currentMonthlyIncome)}/month income (
-                <span style={{ color: C.amber, fontWeight: 600 }}>{formatRand(affordResult.monthlyContribution)}/month</span>
+                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRand(affordResult.monthlyContribution)}/month</span>
                 ) from age {currentAge} to {retirementAge} builds a nest egg of{' '}
-                <span style={{ color: C.amber, fontWeight: 600 }}>{formatRandShort(affordResult.finalBalance)}</span>
+                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRandShort(affordResult.finalBalance)}</span>
                 {' '}— enough to support{' '}
-                <span style={{ color: C.amber, fontWeight: 600 }}>{formatRand(affordResult.achievableMonthlyIncomeToday)}/month</span>
+                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRand(affordResult.achievableMonthlyIncomeToday)}/month</span>
                 {' '}in today's Rands, {affordResult.incomeReplacementPct.toFixed(0)}% of your current income.
               </span>
             </div>
@@ -316,9 +317,9 @@ export function RetirementIncomeGoal() {
 
           {startLaterEffect > 0 && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${C.red}11`, border: `1px solid ${C.red}33` }}>
+              style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 20)}` }}>
               <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              <span style={{ color: 'var(--ink-muted)' }}>
                 {mode === 'income' ? (
                   <>
                     If you wait 2 years to start, you would need{' '}
@@ -338,63 +339,63 @@ export function RetirementIncomeGoal() {
 
           {/* Chart */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)' }}>
               Growth over {years} years
             </h2>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="rig-contrib" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.violet} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={C.violet} stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor={C.brown} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={C.brown} stopOpacity={0.05} />
                   </linearGradient>
                   <linearGradient id="rig-returns" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.5} />
-                    <stop offset="95%" stopColor={C.indigo} stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor={C.blue} stopOpacity={0.5} />
+                    <stop offset="95%" stopColor={C.blue} stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={(v) => `Yr ${v}`} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={formatRandShort} width={64} />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${C.indigo}55`, strokeWidth: 1 }}
+                  cursor={{ stroke: `${alpha(C.blue, 33)}`, strokeWidth: 1 }}
                 />
                 {mode === 'income' && (
-                  <ReferenceLine y={nestEgg} stroke={C.emerald} strokeDasharray="5 3"
-                    label={{ value: 'Nest egg target', fill: C.emerald, fontSize: 11, position: 'insideTopRight' }} />
+                  <ReferenceLine y={nestEgg} stroke={C.green} strokeDasharray="5 3"
+                    label={{ value: 'Nest egg target', fill: C.green, fontSize: 11, position: 'insideTopRight' }} />
                 )}
                 <Area type="monotone" dataKey="contributed" name="Contributions" stackId="1"
-                  stroke={C.violet} fill="url(#rig-contrib)" strokeWidth={2} />
+                  stroke={C.brown} fill="url(#rig-contrib)" strokeWidth={2} />
                 <Area type="monotone" dataKey="returns" name="Returns" stackId="1"
-                  stroke={C.indigo} fill="url(#rig-returns)" strokeWidth={2} />
+                  stroke={C.blue} fill="url(#rig-returns)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* Drawdown sustainability */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>
               Will it last? Drawdown simulation
             </h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
               Withdrawing {formatRandShort(monthlyWithdrawalFuture)}/month (inflation-adjusted) from age {retirementAge}, while the balance keeps growing at {annualReturnPercent}% p.a.
             </p>
             <div className="flex items-start gap-3 p-3 rounded-xl text-sm mb-4"
               style={{
-                background: depletionAge !== null ? `${C.red}11` : `${C.emerald}11`,
-                border: `1px solid ${depletionAge !== null ? C.red : C.emerald}33`,
+                background: depletionAge !== null ? `${alpha(C.red, 7)}` : `${alpha(C.green, 7)}`,
+                border: `1px solid ${alpha(depletionAge !== null ? C.red : C.green, 20)}`,
               }}>
               {depletionAge !== null ? (
                 <>
                   <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
-                  <span style={{ color: 'var(--color-text-muted)' }}>
+                  <span style={{ color: 'var(--ink-muted)' }}>
                     At this withdrawal rate and return, the nest egg runs out at age{' '}
                     <span style={{ color: C.red, fontWeight: 600 }}>{depletionAge}</span>. Consider a lower
                     SWR, a higher return, or a smaller income target.
@@ -402,8 +403,8 @@ export function RetirementIncomeGoal() {
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.emerald }} />
-                  <span style={{ color: 'var(--color-text-muted)' }}>
+                  <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.green }} />
+                  <span style={{ color: 'var(--ink-muted)' }}>
                     The nest egg sustains this income for at least {drawdown.length} years into retirement
                     (to around age {retirementAge + drawdown.length}).
                   </span>
@@ -414,44 +415,44 @@ export function RetirementIncomeGoal() {
               <AreaChart data={drawdown} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="rig-drawdown" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.amber} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={C.amber} stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor={C.orange} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={C.orange} stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="age" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                <XAxis dataKey="age" tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={(v) => `Age ${v}`} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={formatRandShort} width={64} />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), 'Balance']}
                   labelFormatter={(l) => `Age ${l}`}
-                  cursor={{ stroke: `${C.amber}55`, strokeWidth: 1 }}
+                  cursor={{ stroke: `${alpha(C.orange, 33)}`, strokeWidth: 1 }}
                 />
-                <Area type="monotone" dataKey="balance" name="Balance" stroke={C.amber} fill="url(#rig-drawdown)" strokeWidth={2} />
+                <Area type="monotone" dataKey="balance" name="Balance" stroke={C.orange} fill="url(#rig-drawdown)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* Scenario comparison */}
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>
               Scenario comparison
             </h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
               Conservative (-2%), Current, Aggressive (+2%) return rates
             </p>
             <div className="grid grid-cols-3 gap-3">
               {scenarios.map(({ label, r, color, value }) => (
                 <div key={label} className="p-3 rounded-xl text-xs"
-                  style={{ background: `${color}11`, border: `1px solid ${color}33` }}>
+                  style={{ background: `${alpha(color, 7)}`, border: `1px solid ${alpha(color, 20)}` }}>
                   <div className="font-semibold mb-2" style={{ color }}>{label} ({r}%)</div>
-                  <div style={{ color: 'var(--color-text-muted)' }}>
+                  <div style={{ color: 'var(--ink-muted)' }}>
                     {mode === 'income' ? 'Monthly needed' : 'Achievable income'}
                   </div>
-                  <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--color-text)' }}>
+                  <div className="text-sm font-semibold mt-0.5" style={{ color: 'var(--ink)' }}>
                     {formatRand(value)}
                   </div>
                 </div>
@@ -460,9 +461,9 @@ export function RetirementIncomeGoal() {
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
-            <Info size={13} style={{ color: C.indigo }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: C.blue }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               For a different framing of the same retirement question, see the FIRE Calculator (target a
               retirement age from a savings rate) or Wealth Target Planner (target a Rand lump sum directly).
             </span>

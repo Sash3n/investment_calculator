@@ -10,23 +10,24 @@ import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
+import { alpha } from '../utils/color';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const SA_DIVIDENDS_TAX = 0.20;
@@ -198,22 +199,22 @@ export function DividendCalculator() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)' }}
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 30%, transparent)' }}
           >
-            <TrendingUp size={20} className="text-[#10B981]" />
+            <TrendingUp size={20} className="text-gain" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Dividend Income Calculator
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               SA &amp; International · DRIP projections · Dividends Tax applied
             </p>
           </div>
           <span
             className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'rgba(16,185,129,0.1)', color: C.emerald, border: `1px solid ${C.emerald}44` }}
+            style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
           >
             {formatRand(firstRow?.afterTaxDividend ?? 0, 0)}/yr net yr 1
           </span>
@@ -221,7 +222,7 @@ export function DividendCalculator() {
           <button
             onClick={() => setInp(DEFAULT_INPUTS)}
             className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-medium transition-all flex-shrink-0"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)', color: 'var(--ink-muted)' }}
             title="Reset to defaults"
           >
             <RotateCcw size={13} /> Reset
@@ -235,14 +236,14 @@ export function DividendCalculator() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         {[
-          { label: 'Total Contributed', value: formatRandShort(totalContributed), color: C.emerald },
-          { label: `Year ${inp.years} Net Income`, value: formatRand(lastRow?.afterTaxDividend ?? 0, 0), color: C.cyan },
-          { label: 'Total Net Income', value: formatRandShort(totalIncome), color: C.indigo },
-          { label: `Final Portfolio`, value: formatRandShort(finalValue), color: C.amber },
+          { label: 'Total Contributed', value: formatRandShort(totalContributed), color: C.green },
+          { label: `Year ${inp.years} Net Income`, value: formatRand(lastRow?.afterTaxDividend ?? 0, 0), color: C.teal },
+          { label: 'Total Net Income', value: formatRandShort(totalIncome), color: C.blue },
+          { label: `Final Portfolio`, value: formatRandShort(finalValue), color: C.orange },
         ].map(({ label, value, color }) => (
           <div key={label} className="glass-card-static rounded-xl p-4" style={{ borderLeft: `3px solid ${color}` }}>
-            <p className="text-[11px] mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
-            <p className="text-lg font-bold" style={{ color, fontFamily: 'var(--font-heading)' }}>{value}</p>
+            <p className="text-[11px] mb-1" style={{ color: 'var(--ink-muted)' }}>{label}</p>
+            <p className="text-lg font-bold" style={{ color, fontFamily: 'var(--font-display)' }}>{value}</p>
           </div>
         ))}
       </motion.div>
@@ -254,11 +255,11 @@ export function DividendCalculator() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <DollarSign size={15} className="text-[#6366F1]" />
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              <DollarSign size={15} className="text-note-blue" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Investment Details
             </p>
           </div>
@@ -284,7 +285,7 @@ export function DividendCalculator() {
             {/* DRIP toggle */}
             <div className="flex flex-col gap-1.5">
               <p className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                 Reinvest Dividends (DRIP)
               </p>
               <div className="flex gap-2 mt-1">
@@ -294,9 +295,9 @@ export function DividendCalculator() {
                     onClick={() => setInp((p) => ({ ...p, drip: v }))}
                     className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
-                      background: inp.drip === v ? (v ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.15)') : 'rgba(255,255,255,0.04)',
-                      color: inp.drip === v ? (v ? C.emerald : C.red) : 'var(--color-text-muted)',
-                      border: `1px solid ${inp.drip === v ? (v ? C.emerald + '55' : C.red + '55') : 'rgba(255,255,255,0.08)'}`,
+                      background: inp.drip === v ? (v ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--loss) 15%, transparent)') : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                      color: inp.drip === v ? (v ? C.green : C.red) : 'var(--ink-muted)',
+                      border: `1px solid ${inp.drip === v ? (v ? alpha(C.green, 33) : alpha(C.red, 33)) : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                     }}
                   >
                     {v ? 'Yes' : 'No'}
@@ -311,11 +312,11 @@ export function DividendCalculator() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.25)' }}>
-              <Globe size={15} className="text-[#06B6D4]" />
+              style={{ background: 'color-mix(in srgb, var(--note-teal) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-teal) 25%, transparent)' }}>
+              <Globe size={15} className="text-note-teal" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Market &amp; Tax
             </p>
           </div>
@@ -323,7 +324,7 @@ export function DividendCalculator() {
           {/* Market toggle */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2"
-              style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+              style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Market
             </p>
             <div className="flex gap-2">
@@ -333,9 +334,9 @@ export function DividendCalculator() {
                   onClick={() => setInp((p) => ({ ...p, market: m }))}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
                   style={{
-                    background: inp.market === m ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-                    color: inp.market === m ? C.indigo : 'var(--color-text-muted)',
-                    border: `1px solid ${inp.market === m ? C.indigo + '55' : 'rgba(255,255,255,0.08)'}`,
+                    background: inp.market === m ? 'color-mix(in srgb, var(--note-blue) 20%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                    color: inp.market === m ? C.blue : 'var(--ink-muted)',
+                    border: `1px solid ${inp.market === m ? alpha(C.blue, 33) : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}
                 >
                   {m === 'SA' ? '🇿🇦 South Africa' : '🌍 International'}
@@ -347,7 +348,7 @@ export function DividendCalculator() {
           {/* TFSA wrapper toggle */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2"
-              style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+              style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Account Type
             </p>
             <div className="flex gap-2">
@@ -357,9 +358,9 @@ export function DividendCalculator() {
                   onClick={() => setInp((p) => ({ ...p, tfsa: v }))}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
                   style={{
-                    background: inp.tfsa === v ? (v ? 'rgba(16,185,129,0.2)' : 'rgba(99,102,241,0.2)') : 'rgba(255,255,255,0.04)',
-                    color: inp.tfsa === v ? (v ? C.emerald : C.indigo) : 'var(--color-text-muted)',
-                    border: `1px solid ${inp.tfsa === v ? (v ? C.emerald + '55' : C.indigo + '55') : 'rgba(255,255,255,0.08)'}`,
+                    background: inp.tfsa === v ? (v ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)') : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                    color: inp.tfsa === v ? (v ? C.green : C.blue) : 'var(--ink-muted)',
+                    border: `1px solid ${inp.tfsa === v ? (v ? alpha(C.green, 33) : alpha(C.blue, 33)) : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}
                 >
                   {v ? '✓ Tax-Free (TFSA)' : 'Taxable Account'}
@@ -371,15 +372,15 @@ export function DividendCalculator() {
           {/* TFSA benefit callout */}
           {inp.tfsa && (
             <div className="rounded-xl p-3 space-y-1"
-              style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
-              <p className="text-xs font-bold" style={{ color: C.emerald }}>Tax-Free Savings Account</p>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: 'color-mix(in srgb, var(--gain) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 18%, transparent)' }}>
+              <p className="text-xs font-bold" style={{ color: C.green }}>Tax-Free Savings Account</p>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                 {inp.market === 'SA'
                   ? 'No 20% Dividends Tax inside a TFSA — you keep the full dividend.'
                   : 'No SA Dividends Tax inside a TFSA. Foreign withholding tax is still deducted at source and cannot be reclaimed.'}
-                {' '}This plan keeps an extra <strong style={{ color: 'var(--color-text)' }}>{formatRand(tfsaSaving, 0)}</strong> over {inp.years} years vs a taxable account.
+                {' '}This plan keeps an extra <strong style={{ color: 'var(--ink)' }}>{formatRand(tfsaSaving, 0)}</strong> over {inp.years} years vs a taxable account.
               </p>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
                 Remember TFSA limits: R36,000/year and R500,000 lifetime in contributions.
               </p>
             </div>
@@ -388,11 +389,11 @@ export function DividendCalculator() {
           {/* SA tax info */}
           {!inp.tfsa && inp.market === 'SA' && (
             <div className="rounded-xl p-3 space-y-1"
-              style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
-              <p className="text-xs font-bold" style={{ color: C.emerald }}>SA Dividends Tax</p>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: 'color-mix(in srgb, var(--gain) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 18%, transparent)' }}>
+              <p className="text-xs font-bold" style={{ color: C.green }}>SA Dividends Tax</p>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                 20% withheld at source by the company before you receive payment.
-                Your effective net yield is <strong style={{ color: 'var(--color-text)' }}>
+                Your effective net yield is <strong style={{ color: 'var(--ink)' }}>
                   {formatPercent(inp.dividendYield * 0.8, 2)}
                 </strong> after tax.
               </p>
@@ -412,12 +413,12 @@ export function DividendCalculator() {
               </div>
               {!inp.tfsa && (
                 <div className="rounded-xl p-3"
-                  style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
-                  <p className="text-xs font-bold mb-1" style={{ color: C.amber }}>International Tax Treatment</p>
-                  <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--note-orange) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 18%, transparent)' }}>
+                  <p className="text-xs font-bold mb-1" style={{ color: C.orange }}>International Tax Treatment</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                     Foreign withholding tax is deducted first. SA then applies a 20% Dividends Tax — but under
                     most double-taxation agreements (e.g. SA–US DTA), credit is given for foreign tax paid.
-                    Effective rate used: <strong style={{ color: 'var(--color-text)' }}>
+                    Effective rate used: <strong style={{ color: 'var(--ink)' }}>
                       {formatPercent(taxRate * 100, 0)}
                     </strong> (the higher of the two rates).
                   </p>
@@ -428,13 +429,13 @@ export function DividendCalculator() {
 
           {/* Effective net yield summary */}
           <div className="grid grid-cols-2 gap-2 pt-1">
-            <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Gross Yield</p>
-              <p className="text-base font-bold" style={{ color: C.amber }}>{formatPercent(inp.dividendYield, 2)}</p>
+            <div className="rounded-lg p-3" style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
+              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Gross Yield</p>
+              <p className="text-base font-bold" style={{ color: C.orange }}>{formatPercent(inp.dividendYield, 2)}</p>
             </div>
-            <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Net Yield (after tax)</p>
-              <p className="text-base font-bold" style={{ color: C.emerald }}>
+            <div className="rounded-lg p-3" style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
+              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Net Yield (after tax)</p>
+              <p className="text-base font-bold" style={{ color: C.green }}>
                 {formatPercent(inp.dividendYield * (1 - taxRate), 2)}
               </p>
             </div>
@@ -446,14 +447,14 @@ export function DividendCalculator() {
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
         className="glass-card p-5"
-        style={{ borderColor: 'rgba(139,92,246,0.25)' }}
+        style={{ borderColor: 'color-mix(in srgb, var(--note-brown) 25%, transparent)' }}
       >
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)' }}>
-            <Target size={15} style={{ color: C.violet }} />
+            style={{ background: 'color-mix(in srgb, var(--note-brown) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-brown) 25%, transparent)' }}>
+            <Target size={15} style={{ color: C.brown }} />
           </div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Income Goal
           </p>
         </div>
@@ -463,22 +464,22 @@ export function DividendCalculator() {
             onChange={n((v) => ({ targetMonthlyIncome: v }))} prefix="R"
             help="Net (after-tax) passive income you want" />
 
-          <div className="rounded-xl p-3" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Capital needed today</p>
-            <p className="text-lg font-bold" style={{ color: C.indigo, fontFamily: 'var(--font-heading)' }}>
+          <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)' }}>Capital needed today</p>
+            <p className="text-lg font-bold" style={{ color: C.blue, fontFamily: 'var(--font-display)' }}>
               {netYieldFrac > 0 ? formatRandShort(capitalForGoal) : '—'}
             </p>
-            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
               at a {formatPercent(netYieldFrac * 100, 2)} net yield
             </p>
           </div>
 
-          <div className="rounded-xl p-3" style={{ background: goalYear ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)', border: `1px solid ${goalYear ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)'}` }}>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Your plan reaches it</p>
-            <p className="text-lg font-bold" style={{ color: goalYear ? C.emerald : C.red, fontFamily: 'var(--font-heading)' }}>
+          <div className="rounded-xl p-3" style={{ background: goalYear ? 'color-mix(in srgb, var(--gain) 7%, transparent)' : 'color-mix(in srgb, var(--loss) 7%, transparent)', border: `1px solid ${goalYear ? 'color-mix(in srgb, var(--gain) 18%, transparent)' : 'color-mix(in srgb, var(--loss) 18%, transparent)'}` }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)' }}>Your plan reaches it</p>
+            <p className="text-lg font-bold" style={{ color: goalYear ? C.green : C.red, fontFamily: 'var(--font-display)' }}>
               {goalYear ? `Year ${goalYear}` : `Not within ${inp.years} yrs`}
             </p>
-            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
               {goalYear
                 ? `${formatRand(inp.targetMonthlyIncome, 0)}/mo net dividends`
                 : 'Raise contributions, yield, or horizon'}
@@ -493,36 +494,36 @@ export function DividendCalculator() {
         {/* Portfolio value + cumulative income */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Portfolio Growth &amp; Cumulative Income
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Portfolio value (with {inp.drip ? 'DRIP' : 'no DRIP'}) vs total net dividends received
           </p>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={growthChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradPort" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={C.emerald} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.green} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} interval={Math.floor(inp.years / 5)} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} interval={Math.floor(inp.years / 5)} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name]}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               <Area type="monotone" dataKey="portfolio" name="Portfolio Value"
-                stroke={C.indigo} fill="url(#gradPort)" strokeWidth={2.5} />
+                stroke={C.blue} fill="url(#gradPort)" strokeWidth={2.5} />
               <Area type="monotone" dataKey="income" name="Cumulative Net Income"
-                stroke={C.emerald} fill="url(#gradIncome)" strokeWidth={2} />
+                stroke={C.green} fill="url(#gradIncome)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -530,27 +531,27 @@ export function DividendCalculator() {
         {/* DRIP vs no-DRIP annual income */}
         <div className="glass-card-static p-5">
           <div className="flex items-center gap-2 mb-1">
-            <Repeat size={14} style={{ color: C.cyan }} />
+            <Repeat size={14} style={{ color: C.teal }} />
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               DRIP vs No-DRIP Annual Income
             </p>
           </div>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Annual net dividend income — reinvesting grows both the portfolio and the dividend base
           </p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={incomeChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} interval={Math.floor(inp.years / 5)} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} interval={Math.floor(inp.years / 5)} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [formatRand(Number(v), 0), name]}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-              <Bar dataKey="drip"   name="With DRIP"    fill={C.emerald} radius={[3, 3, 0, 0]} opacity={0.85} />
-              <Bar dataKey="noDrip" name="Without DRIP" fill={C.indigo}  radius={[3, 3, 0, 0]} opacity={0.6} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+              <Bar dataKey="drip"   name="With DRIP"    fill={C.green} radius={[3, 3, 0, 0]} opacity={0.85} />
+              <Bar dataKey="noDrip" name="Without DRIP" fill={C.blue}  radius={[3, 3, 0, 0]} opacity={0.6} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -559,13 +560,13 @@ export function DividendCalculator() {
       {/* Year-by-year table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Projection
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[700px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {[
                   'Year',
                   'Portfolio Value',
@@ -576,7 +577,7 @@ export function DividendCalculator() {
                   'Cumulative Net Income',
                 ].filter(Boolean).map((h) => (
                   <th key={h!} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -584,29 +585,29 @@ export function DividendCalculator() {
               {rows.map((r, i) => (
                 <tr key={r.year}
                   style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
+                    background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}
                 >
-                  <td className="py-2 px-3 font-bold" style={{ color: C.indigo }}>{r.year}</td>
-                  <td className="py-2 px-3 font-semibold" style={{ color: 'var(--color-text)' }}>
+                  <td className="py-2 px-3 font-bold" style={{ color: C.blue }}>{r.year}</td>
+                  <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink)' }}>
                     {formatRand(r.portfolioValue, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: C.amber }}>
+                  <td className="py-2 px-3" style={{ color: C.orange }}>
                     {formatRand(r.grossDividend, 0)}
                   </td>
-                  <td className="py-2 px-3 font-semibold" style={{ color: C.emerald }}>
+                  <td className="py-2 px-3 font-semibold" style={{ color: C.green }}>
                     {formatRand(r.afterTaxDividend, 0)}
                   </td>
                   {inp.market === 'International' && (
-                    <td className="py-2 px-3" style={{ color: C.cyan }}>
+                    <td className="py-2 px-3" style={{ color: C.teal }}>
                       {formatRand(r.zarIncome, 0)}
                     </td>
                   )}
-                  <td className="py-2 px-3" style={{ color: C.violet }}>
+                  <td className="py-2 px-3" style={{ color: C.brown }}>
                     {formatPercent(r.yieldOnCost, 2)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>
+                  <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                     {formatRand(r.cumulativeIncome, 0)}
                   </td>
                 </tr>
@@ -619,9 +620,9 @@ export function DividendCalculator() {
       {/* How it works */}
       <div className="glass-card-static p-5 space-y-5">
         <div className="flex items-center gap-2">
-          <Info size={16} style={{ color: C.cyan }} />
+          <Info size={16} style={{ color: C.teal }} />
           <p className="text-sm font-semibold"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             How This Calculator Works
           </p>
         </div>
@@ -630,9 +631,9 @@ export function DividendCalculator() {
 
           {/* DRIP */}
           <div className="rounded-xl p-4 space-y-2"
-            style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
-            <p className="text-xs font-bold" style={{ color: C.emerald }}>Dividend Reinvestment (DRIP)</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: 'color-mix(in srgb, var(--gain) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 15%, transparent)' }}>
+            <p className="text-xs font-bold" style={{ color: C.green }}>Dividend Reinvestment (DRIP)</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               When DRIP is on, your after-tax dividends are added back into the portfolio each year.
               This grows your portfolio faster — and because the dividend yield applies to a larger base,
               your income compounds over time. The difference between DRIP and no-DRIP becomes dramatic
@@ -642,9 +643,9 @@ export function DividendCalculator() {
 
           {/* Yield on cost */}
           <div className="rounded-xl p-4 space-y-2"
-            style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}>
-            <p className="text-xs font-bold" style={{ color: C.violet }}>Yield on Cost</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-brown) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-brown) 15%, transparent)' }}>
+            <p className="text-xs font-bold" style={{ color: C.brown }}>Yield on Cost</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               Yield on cost measures your dividend income as a percentage of your <em>original</em> investment —
               not the current portfolio value. As dividends grow year after year, your yield on cost rises
               even if the current yield stays flat. A stock paying 4% today with 7% annual dividend growth
@@ -654,9 +655,9 @@ export function DividendCalculator() {
 
           {/* SA Dividends Tax */}
           <div className="rounded-xl p-4 space-y-2"
-            style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
-            <p className="text-xs font-bold" style={{ color: C.amber }}>SA Dividends Tax (20%)</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 15%, transparent)' }}>
+            <p className="text-xs font-bold" style={{ color: C.orange }}>SA Dividends Tax (20%)</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               SARS levies a 20% Dividends Tax on dividends paid by SA-resident companies.
               It is withheld at source — meaning the company deducts it before paying you.
               Certain investors (companies, qualifying pension funds, public benefit organisations)
@@ -666,9 +667,9 @@ export function DividendCalculator() {
 
           {/* International */}
           <div className="rounded-xl p-4 space-y-2"
-            style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)' }}>
-            <p className="text-xs font-bold" style={{ color: C.cyan }}>International Dividends &amp; Withholding Tax</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-teal) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-teal) 15%, transparent)' }}>
+            <p className="text-xs font-bold" style={{ color: C.teal }}>International Dividends &amp; Withholding Tax</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               Foreign companies deduct a withholding tax before paying dividends to SA investors.
               US ETFs (e.g. via NYSE) typically withhold 15% under the SA–US DTA. SA then applies
               its own 20% Dividends Tax, but credits foreign tax already paid. This calculator uses
@@ -680,10 +681,10 @@ export function DividendCalculator() {
 
         <div
           className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}
+          style={{ background: 'color-mix(in srgb, var(--loss) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
         >
-          <Info size={13} className="text-[#EF4444] mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--color-text-muted)' }}>
+          <Info size={13} className="text-loss mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--ink-muted)' }}>
             Projections are illustrative only. Returns, dividend growth, and exchange rates are not guaranteed.
             Tax treatment depends on your personal circumstances. This is not financial or tax advice — consult a CFP or tax practitioner.
           </span>

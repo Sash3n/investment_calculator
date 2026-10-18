@@ -10,20 +10,21 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { alpha } from '../utils/color';
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 interface AmortRow {
@@ -157,12 +158,12 @@ export function BondExtra() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${C.emerald}22` }}>
-            <Building2 size={22} style={{ color: C.emerald }} />
+          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.green, 13)}` }}>
+            <Building2 size={22} style={{ color: C.green }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Bond Extra Payment</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Bond Extra Payment</h1>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Extra monthly payments, annual lump sums, and bi-weekly schedules — see the real impact.
             </p>
           </div>
@@ -172,16 +173,16 @@ export function BondExtra() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Bond details
           </h2>
           <InputField id="be-loan"  label="Outstanding loan (R)"       value={loan}          onChange={(v) => setLoan(Number(v))}          prefix="R"   min={1} />
           <InputField id="be-rate"  label="Interest rate"              value={rate}          onChange={(v) => setRate(Number(v))}          suffix="%"   min={0} max={30} />
           <InputField id="be-term"  label="Remaining term"             value={term}          onChange={(v) => setTerm(Number(v))}          suffix="yrs" min={1} max={30} />
 
-          <hr style={{ borderColor: 'var(--color-border)' }} />
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          <hr style={{ borderColor: 'var(--rule)' }} />
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Extra payments
           </h2>
 
@@ -193,47 +194,47 @@ export function BondExtra() {
             onClick={() => setBiweekly(!biweekly)}
             className="w-full flex items-center justify-between p-3 rounded-xl text-sm transition-colors"
             style={{
-              background: biweekly ? `${C.emerald}15` : 'transparent',
-              border: `1px solid ${biweekly ? C.emerald : 'var(--color-border)'}`,
-              color: 'var(--color-text)',
+              background: biweekly ? `${alpha(C.green, 8)}` : 'transparent',
+              border: `1px solid ${biweekly ? C.green : 'var(--rule)'}`,
+              color: 'var(--ink)',
             }}
           >
             <span>Bi-weekly payment schedule</span>
-            <span className="text-xs" style={{ color: biweekly ? C.emerald : 'var(--color-text-muted)' }}>
+            <span className="text-xs" style={{ color: biweekly ? C.green : 'var(--ink-muted)' }}>
               {biweekly ? 'ON' : 'OFF'}
             </span>
           </button>
           {biweekly && (
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
               26 half-payments per year = 13 full payments — equivalent to +{formatRand(biweeklyExtra)}/mo extra.
             </p>
           )}
 
           {!hasAnyExtra && (
             <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}>
-              <AlertCircle size={13} style={{ color: C.amber }} />
-              <span style={{ color: 'var(--color-text-muted)' }}>Add an extra payment to see the impact.</span>
+              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+              <AlertCircle size={13} style={{ color: C.orange }} />
+              <span style={{ color: 'var(--ink-muted)' }}>Add an extra payment to see the impact.</span>
             </div>
           )}
         </div>
 
         <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Interest saved"            value={formatRandShort(interestSaved)}        color="emerald" icon={TrendingDown} />
-            <StatCard label="Time saved"                value={`${yearsSaved}yr ${remMonthsSaved}mo`} color="indigo"  icon={CheckCircle2} />
+            <StatCard label="Interest saved"            value={formatRandShort(interestSaved)}        color="green" icon={TrendingDown} />
+            <StatCard label="Time saved"                value={`${yearsSaved}yr ${remMonthsSaved}mo`} color="blue"  icon={CheckCircle2} />
             <StatCard label="Total interest (standard)" value={formatRandShort(base.totalInterest)}   color="red"     icon={TrendingDown} />
-            <StatCard label="Total interest (w/ extra)" value={formatRandShort(withExtra.totalInterest)} color="amber" icon={TrendingDown} />
+            <StatCard label="Total interest (w/ extra)" value={formatRandShort(withExtra.totalInterest)} color="orange" icon={TrendingDown} />
           </div>
 
           {hasAnyExtra && interestSaved > 0 && (
             <div className="p-4 rounded-xl text-sm"
-              style={{ background: `${C.emerald}11`, border: `1px solid ${C.emerald}33` }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
+              <span style={{ color: 'var(--ink-muted)' }}>
                 Your extra payments save{' '}
-                <span style={{ color: C.emerald, fontWeight: 600 }}>{formatRandShort(interestSaved)}</span>
+                <span style={{ color: C.green, fontWeight: 600 }}>{formatRandShort(interestSaved)}</span>
                 {' '}in interest and cut{' '}
-                <span style={{ color: C.emerald, fontWeight: 600 }}>
+                <span style={{ color: C.green, fontWeight: 600 }}>
                   {yearsSaved > 0 ? `${yearsSaved}yr ` : ''}{remMonthsSaved}mo
                 </span>
                 {' '}off your bond term.
@@ -245,8 +246,8 @@ export function BondExtra() {
           )}
 
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)' }}>
               Outstanding balance over time
             </h2>
             <ResponsiveContainer width="100%" height={260}>
@@ -257,34 +258,34 @@ export function BondExtra() {
                     <stop offset="95%" stopColor={C.red}     stopOpacity={0.03} />
                   </linearGradient>
                   <linearGradient id="be-extra" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={C.emerald} stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor={C.green} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={C.green} stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={(v) => `Yr ${v}`} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-muted)' }}
                   tickFormatter={formatRandShort} width={64} />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${C.indigo}55`, strokeWidth: 1 }}
+                  cursor={{ stroke: `${alpha(C.blue, 33)}`, strokeWidth: 1 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Area type="monotone" dataKey="standard"  name="Standard"      stroke={C.red}     fill="url(#be-std)"   strokeWidth={2} />
-                <Area type="monotone" dataKey="withExtra" name="With extra pmt" stroke={C.emerald} fill="url(#be-extra)" strokeWidth={2} />
+                <Area type="monotone" dataKey="withExtra" name="With extra pmt" stroke={C.green} fill="url(#be-extra)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* Year-by-year amortization table */}
           <div className="rounded-2xl overflow-hidden"
-            style={{ border: '1px solid var(--color-border)' }}>
+            style={{ border: '1px solid var(--rule)' }}>
             <button
               className="w-full flex items-center justify-between p-4 text-sm font-semibold"
-              style={{ background: 'var(--color-surface)', color: 'var(--color-text)' }}
+              style={{ background: 'var(--paper-raised)', color: 'var(--ink)' }}
               onClick={() => setShowTable(!showTable)}
             >
               <span>Year-by-year amortization table</span>
@@ -294,20 +295,20 @@ export function BondExtra() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}>
+                    <tr style={{ background: 'var(--paper-raised)', borderBottom: '1px solid var(--rule)' }}>
                       {['Year', 'Interest paid', 'Principal paid', 'Closing balance'].map((h) => (
                         <th key={h} className="text-left py-2 px-3 font-semibold"
-                          style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                          style={{ color: 'var(--ink-muted)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {yearlyTable.map(({ yr, interest, principal, endBal }) => (
-                      <tr key={yr} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>{yr}</td>
+                      <tr key={yr} style={{ borderBottom: '1px solid var(--rule)' }}>
+                        <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>{yr}</td>
                         <td className="py-2 px-3" style={{ color: C.red }}>{formatRand(interest)}</td>
-                        <td className="py-2 px-3" style={{ color: C.emerald }}>{formatRand(principal)}</td>
-                        <td className="py-2 px-3 font-medium" style={{ color: 'var(--color-text)' }}>{formatRand(endBal)}</td>
+                        <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(principal)}</td>
+                        <td className="py-2 px-3 font-medium" style={{ color: 'var(--ink)' }}>{formatRand(endBal)}</td>
                       </tr>
                     ))}
                   </tbody>

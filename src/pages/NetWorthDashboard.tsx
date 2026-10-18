@@ -16,6 +16,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
+import { seriesColors } from '../utils/color';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,40 +72,43 @@ const DEFAULT_LIAB: Liabilities = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
-  pink:    '#EC4899',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
+  rose:    'var(--note-red)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
+const ASSET_COLORS = seriesColors(8);
+const LIAB_COLORS = seriesColors(5);
+
 const ASSET_FIELDS: { key: keyof Assets; label: string; icon: typeof Building2; color: string }[] = [
-  { key: 'primaryHome',    label: 'Primary Home',      icon: Building2,  color: C.indigo  },
-  { key: 'rentalProperty', label: 'Rental Property',   icon: Building2,  color: C.violet  },
-  { key: 'tfsa',           label: 'TFSA',              icon: Wallet,     color: C.emerald },
-  { key: 'ra',             label: 'Retirement Annuity', icon: PieChart,   color: C.amber   },
-  { key: 'etf',            label: 'ETF / Unit Trusts',  icon: TrendingUp, color: C.cyan    },
-  { key: 'cash',           label: 'Cash & Savings',    icon: Wallet,     color: C.emerald },
-  { key: 'car',            label: 'Vehicle(s)',         icon: Car,        color: C.pink    },
-  { key: 'other',          label: 'Other Assets',      icon: Wallet,     color: '#94A3B8' },
+  { key: 'primaryHome',    label: 'Primary Home',      icon: Building2,  color: ASSET_COLORS[0] },
+  { key: 'rentalProperty', label: 'Rental Property',   icon: Building2,  color: ASSET_COLORS[1] },
+  { key: 'tfsa',           label: 'TFSA',              icon: Wallet,     color: ASSET_COLORS[2] },
+  { key: 'ra',             label: 'Retirement Annuity', icon: PieChart,   color: ASSET_COLORS[3] },
+  { key: 'etf',            label: 'ETF / Unit Trusts',  icon: TrendingUp, color: ASSET_COLORS[4] },
+  { key: 'cash',           label: 'Cash & Savings',    icon: Wallet,     color: ASSET_COLORS[5] },
+  { key: 'car',            label: 'Vehicle(s)',         icon: Car,        color: ASSET_COLORS[6] },
+  { key: 'other',          label: 'Other Assets',      icon: Wallet,     color: ASSET_COLORS[7] },
 ];
 
 const LIAB_FIELDS: { key: keyof Liabilities; label: string; color: string }[] = [
-  { key: 'homeLoan',     label: 'Home Loan',      color: C.red    },
-  { key: 'carLoan',      label: 'Car Loan',        color: C.amber  },
-  { key: 'personalLoan', label: 'Personal Loan',   color: C.violet },
-  { key: 'creditCard',   label: 'Credit Card',     color: C.pink   },
-  { key: 'other',        label: 'Other Liabilities', color: '#94A3B8' },
+  { key: 'homeLoan',     label: 'Home Loan',      color: LIAB_COLORS[0] },
+  { key: 'carLoan',      label: 'Car Loan',        color: LIAB_COLORS[1] },
+  { key: 'personalLoan', label: 'Personal Loan',   color: LIAB_COLORS[2] },
+  { key: 'creditCard',   label: 'Credit Card',     color: LIAB_COLORS[3] },
+  { key: 'other',        label: 'Other Liabilities', color: LIAB_COLORS[4] },
 ];
 
 // ─── Firestore helpers ────────────────────────────────────────────────────────
@@ -217,15 +221,15 @@ export function NetWorthDashboard() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-            <PieChart size={20} className="text-[#6366F1]" />
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+            <PieChart size={20} className="text-note-blue" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Net Worth Dashboard
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Track assets vs liabilities over time — saved to your account
             </p>
           </div>
@@ -238,17 +242,17 @@ export function NetWorthDashboard() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         {[
-          { label: 'Total Assets',     value: formatRand(totalAssets, 0),  color: C.emerald, sub: '' },
+          { label: 'Total Assets',     value: formatRand(totalAssets, 0),  color: C.green, sub: '' },
           { label: 'Total Liabilities', value: formatRand(totalLiab, 0),   color: C.red,     sub: '' },
-          { label: 'Net Worth',         value: formatRand(netWorth, 0),    color: netWorth >= 0 ? C.indigo : C.red, sub: '' },
-          { label: 'Debt-to-Asset',     value: `${debtRatio.toFixed(1)}%`, color: debtRatio < 40 ? C.emerald : debtRatio < 70 ? C.amber : C.red,
+          { label: 'Net Worth',         value: formatRand(netWorth, 0),    color: netWorth >= 0 ? C.blue : C.red, sub: '' },
+          { label: 'Debt-to-Asset',     value: `${debtRatio.toFixed(1)}%`, color: debtRatio < 40 ? C.green : debtRatio < 70 ? C.orange : C.red,
             sub: debtRatio < 40 ? 'Healthy' : debtRatio < 70 ? 'Moderate' : 'High' },
         ].map((kpi) => (
           <div key={kpi.label} className="glass-card-static p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>{kpi.label}</p>
+              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-lg font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>
               {kpi.value}
             </p>
             {kpi.sub && (
@@ -266,11 +270,11 @@ export function NetWorthDashboard() {
         {/* Assets */}
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <p className="text-sm font-bold" style={{ color: C.emerald, fontFamily: 'var(--font-heading)' }}>
+            <div className="w-2 h-2 rounded-full bg-gain" />
+            <p className="text-sm font-bold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
               Assets
             </p>
-            <span className="ml-auto text-xs font-semibold" style={{ color: C.emerald }}>
+            <span className="ml-auto text-xs font-semibold" style={{ color: C.green }}>
               {formatRand(totalAssets, 0)}
             </span>
           </div>
@@ -291,8 +295,8 @@ export function NetWorthDashboard() {
         {/* Liabilities */}
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-red-400" />
-            <p className="text-sm font-bold" style={{ color: C.red, fontFamily: 'var(--font-heading)' }}>
+            <div className="w-2 h-2 rounded-full bg-loss" />
+            <p className="text-sm font-bold" style={{ color: C.red, fontFamily: 'var(--font-display)' }}>
               Liabilities
             </p>
             <span className="ml-auto text-xs font-semibold" style={{ color: C.red }}>
@@ -320,15 +324,15 @@ export function NetWorthDashboard() {
         className="glass-card-static p-5"
       >
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Breakdown
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={barData} margin={{ top: 5, right: 10, left: 5, bottom: 40 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#64748B' }} angle={-35} textAnchor="end" interval={0} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'var(--ink-subtle)' }} angle={-35} textAnchor="end" interval={0} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Bar dataKey="value" radius={[4, 4, 0, 0]}>
               {barData.map((entry, i) => (
                 <Cell key={i} fill={entry.color} />
@@ -344,16 +348,16 @@ export function NetWorthDashboard() {
         className="glass-card p-5"
       >
         <p className="text-sm font-semibold mb-3"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Save Snapshot
         </p>
-        <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-3" style={{ color: 'var(--ink-muted)' }}>
           Save today's figures to track your net worth over time. Requires a Google account.
         </p>
         <div className="flex gap-3 flex-wrap">
           <input
             className="flex-1 min-w-[160px] px-3 py-2 rounded-xl text-sm bg-transparent border outline-none"
-            style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-text)' }}
+            style={{ borderColor: 'color-mix(in srgb, var(--ink) 12%, transparent)', color: 'var(--ink)' }}
             placeholder={`e.g. ${new Date().toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}`}
             value={saveLabel}
             onChange={(e) => setSaveLabel(e.target.value)}
@@ -363,7 +367,7 @@ export function NetWorthDashboard() {
               onClick={handleSave}
               disabled={saving}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.15)', color: C.indigo, border: `1px solid rgba(99,102,241,0.3)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
               <Save size={14} />
               {saving ? 'Saving…' : 'Save Snapshot'}
             </button>
@@ -371,7 +375,7 @@ export function NetWorthDashboard() {
             <button
               onClick={signIn}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.15)', color: C.indigo, border: `1px solid rgba(99,102,241,0.3)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
               <LogIn size={14} />
               Sign in to Save
             </button>
@@ -386,38 +390,38 @@ export function NetWorthDashboard() {
           className="glass-card-static p-5"
         >
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Net Worth Trend
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Your net worth over time from saved snapshots
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={trendData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradNW" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradA" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={C.emerald} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.green} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradL" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor={C.red} stopOpacity={0.2} />
                   <stop offset="95%" stopColor={C.red} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-              <Area type="monotone" dataKey="assets" name="Assets" stroke={C.emerald}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+              <Area type="monotone" dataKey="assets" name="Assets" stroke={C.green}
                 strokeWidth={2} fill="url(#gradA)" />
               <Area type="monotone" dataKey="liabilities" name="Liabilities" stroke={C.red}
                 strokeWidth={2} fill="url(#gradL)" />
-              <Area type="monotone" dataKey="netWorth" name="Net Worth" stroke={C.indigo}
+              <Area type="monotone" dataKey="netWorth" name="Net Worth" stroke={C.blue}
                 strokeWidth={2.5} fill="url(#gradNW)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -435,10 +439,10 @@ export function NetWorthDashboard() {
             onClick={() => setShowHistory((v) => !v)}
           >
             <p className="text-sm font-semibold flex-1"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Saved Snapshots ({snapshots.length})
             </p>
-            {showHistory ? <ChevronUp size={15} style={{ color: 'var(--color-text-muted)' }} /> : <ChevronDown size={15} style={{ color: 'var(--color-text-muted)' }} />}
+            {showHistory ? <ChevronUp size={15} style={{ color: 'var(--ink-muted)' }} /> : <ChevronDown size={15} style={{ color: 'var(--ink-muted)' }} />}
           </button>
           <AnimatePresence>
             {showHistory && (
@@ -449,29 +453,29 @@ export function NetWorthDashboard() {
                 <div className="mt-3 space-y-2">
                   {[...snapshots].reverse().map((s) => (
                     <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate"
-                          style={{ color: 'var(--color-text)' }}>
+                          style={{ color: 'var(--ink)' }}>
                           {s.label || s.savedAt.toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}
                         </p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                           {s.savedAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold"
-                          style={{ color: s.netWorth >= 0 ? C.indigo : C.red }}>
+                          style={{ color: s.netWorth >= 0 ? C.blue : C.red }}>
                           {formatRand(s.netWorth, 0)}
                         </p>
-                        <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+                        <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
                           net worth
                         </p>
                       </div>
                       <button
                         onClick={() => remove(s.id)}
                         className="p-1.5 rounded-lg transition-all"
-                        style={{ color: C.red, background: 'rgba(239,68,68,0.08)' }}>
+                        style={{ color: C.red, background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -483,7 +487,7 @@ export function NetWorthDashboard() {
         </motion.div>
       )}
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Snapshots stored securely in your account. Not financial advice.
       </p>
     </div>

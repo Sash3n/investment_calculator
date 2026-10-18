@@ -19,11 +19,11 @@ import { formatRand, formatPercent, formatYears, formatDate } from '../utils/for
 import type { InvestingInputs } from '../types';
 
 const CHART_COLORS = {
-  indigo: '#6366F1',
-  amber: '#F59E0B',
-  emerald: '#10B981',
-  red: '#EF4444',
-  cyan: '#06B6D4',
+  blue: 'var(--note-blue)',
+  orange: 'var(--note-orange)',
+  green: 'var(--gain)',
+  red: 'var(--loss)',
+  teal: 'var(--note-teal)',
 };
 
 const ETF_OPTIONS = [
@@ -52,7 +52,7 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
-      <p className="text-[#94A3B8] mb-2 font-semibold">{label}</p>
+      <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="mb-1" style={{ color: p.color }}>
           {p.name}: {formatRand(p.value)}
@@ -190,8 +190,8 @@ export function PaymentVsInvesting() {
       <div className="two-col-layout">
         {/* Input panel */}
         <div className="glass-card-static p-6 space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569]"
-             style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest text-ink-subtle"
+             style={{ fontFamily: 'var(--font-text)' }}>
             Bond Details
           </p>
           <InputField label="Current Loan Balance" id="bal" value={inputs.loanBalance}
@@ -204,9 +204,9 @@ export function PaymentVsInvesting() {
             onChange={(v) => set('extraMonthlyAmount', v)} prefix="R" step={500}
             help={`Standard payment: ${formatRand(standardPayment)}/mo`} />
 
-          <div className="border-t border-[rgba(255,255,255,0.07)] pt-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-4"
-               style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="border-t border-ink/7 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-ink-subtle mb-4"
+               style={{ fontFamily: 'var(--font-text)' }}>
               Investment Assumptions
             </p>
             <div className="space-y-4">
@@ -247,14 +247,14 @@ export function PaymentVsInvesting() {
             className="glass-card-static p-5 text-center"
           >
             <div className="flex items-center justify-center gap-2 mb-3">
-              <Trophy size={20} className={result.winner === 'investing' ? 'text-[#10B981]' : 'text-[#6366F1]'} />
+              <Trophy size={20} className={result.winner === 'investing' ? 'text-gain' : 'text-note-blue'} />
               <span
                 className={clsx('winner-badge text-base', result.winner === 'investing' ? 'investing' : 'bond')}
               >
                 {winnerLabel}
               </span>
             </div>
-            <p className="text-xs text-[#94A3B8] max-w-sm mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-ink-muted max-w-sm mx-auto" style={{ fontFamily: 'var(--font-text)' }}>
               {result.winner === 'investing'
                 ? `Investing your R ${inputs.extraMonthlyAmount.toLocaleString()}/month in ${ETF_OPTIONS.find(e => e.value === inputs.investmentVehicle)?.label?.split('(')[0].trim() ?? 'an ETF'} at ${inputs.expectedReturn}% p.a. yields more (after CGT) than the interest you would save by paying off the bond faster.`
                 : `Paying an extra R ${inputs.extraMonthlyAmount.toLocaleString()}/month off your bond at ${inputs.interestRate}% is a guaranteed ${inputs.interestRate}% tax-free return — better than the after-tax investment outcome in this scenario.`}
@@ -264,27 +264,27 @@ export function PaymentVsInvesting() {
           {/* A vs B columns */}
           <div className="grid grid-cols-2 gap-4">
             {/* Column A */}
-            <div className="glass-card-static p-5 border-l-[3px] border-l-[#6366F1]">
+            <div className="glass-card-static p-5 border-l-[3px] border-l-note-blue">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-[rgba(99,102,241,0.15)] flex items-center justify-center">
-                  <span className="text-xs font-bold text-[#6366F1]" style={{ fontFamily: 'var(--font-heading)' }}>A</span>
+                <div className="w-7 h-7 rounded-lg bg-note-blue/15 flex items-center justify-center">
+                  <span className="text-xs font-bold text-note-blue" style={{ fontFamily: 'var(--font-display)' }}>A</span>
                 </div>
-                <p className="text-sm font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>
+                <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   Extra to Bond
                 </p>
               </div>
               <div className="space-y-3">
                 {[
-                  { label: 'Interest Saved', value: formatRand(result.interestSaved), color: '#10B981' },
-                  { label: 'Months Saved', value: formatYears(result.monthsSaved), color: '#6366F1' },
-                  { label: 'New Payoff Date', value: formatDate(result.newPayoffDate), color: '#F1F5F9' },
-                  { label: 'Effective Return', value: formatPercent(result.effectiveReturnA), color: '#6366F1' },
+                  { label: 'Interest Saved', value: formatRand(result.interestSaved), color: 'var(--gain)' },
+                  { label: 'Months Saved', value: formatYears(result.monthsSaved), color: 'var(--note-blue)' },
+                  { label: 'New Payoff Date', value: formatDate(result.newPayoffDate), color: 'var(--ink)' },
+                  { label: 'Effective Return', value: formatPercent(result.effectiveReturnA), color: 'var(--note-blue)' },
                 ].map((s) => (
                   <div key={s.label}>
-                    <p className="text-[10px] text-[#64748B] uppercase tracking-wider" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
                       {s.label}
                     </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: s.color, fontFamily: 'var(--font-heading)' }}>
+                    <p className="text-sm font-bold mt-0.5" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
                       {s.value}
                     </p>
                   </div>
@@ -293,27 +293,27 @@ export function PaymentVsInvesting() {
             </div>
 
             {/* Column B */}
-            <div className="glass-card-static p-5 border-l-[3px] border-l-[#10B981]">
+            <div className="glass-card-static p-5 border-l-[3px] border-l-gain">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-[rgba(16,185,129,0.15)] flex items-center justify-center">
-                  <span className="text-xs font-bold text-[#10B981]" style={{ fontFamily: 'var(--font-heading)' }}>B</span>
+                <div className="w-7 h-7 rounded-lg bg-gain/15 flex items-center justify-center">
+                  <span className="text-xs font-bold text-gain" style={{ fontFamily: 'var(--font-display)' }}>B</span>
                 </div>
-                <p className="text-sm font-bold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>
+                <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   Invest Instead
                 </p>
               </div>
               <div className="space-y-3">
                 {[
-                  { label: 'Portfolio at Payoff', value: formatRand(result.portfolioValueAtPayoff), color: '#10B981' },
-                  { label: 'After-Tax Value', value: formatRand(result.afterTaxPortfolioValue), color: '#34D399' },
-                  { label: 'vs Scenario A', value: formatRand(result.netBenefitB), color: result.netBenefitB >= 0 ? '#10B981' : '#EF4444' },
-                  { label: 'Payoff Date (B)', value: formatDate(result.standardPayoffDate), color: '#F1F5F9' },
+                  { label: 'Portfolio at Payoff', value: formatRand(result.portfolioValueAtPayoff), color: 'var(--gain)' },
+                  { label: 'After-Tax Value', value: formatRand(result.afterTaxPortfolioValue), color: 'var(--gain)' },
+                  { label: 'vs Scenario A', value: formatRand(result.netBenefitB), color: result.netBenefitB >= 0 ? 'var(--gain)' : 'var(--loss)' },
+                  { label: 'Payoff Date (B)', value: formatDate(result.standardPayoffDate), color: 'var(--ink)' },
                 ].map((s) => (
                   <div key={s.label}>
-                    <p className="text-[10px] text-[#64748B] uppercase tracking-wider" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
                       {s.label}
                     </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: s.color, fontFamily: 'var(--font-heading)' }}>
+                    <p className="text-sm font-bold mt-0.5" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
                       {s.value}
                     </p>
                   </div>
@@ -324,38 +324,38 @@ export function PaymentVsInvesting() {
 
           {/* Stat overview */}
           <div className="four-col-stats">
-            <StatCard label="Bond Interest Rate" value={formatPercent(inputs.interestRate)} color="indigo" delay={0} />
-            <StatCard label="ETF Return" value={formatPercent(inputs.expectedReturn)} color="emerald" delay={0.05} />
-            <StatCard label="Extra/Month" value={formatRand(inputs.extraMonthlyAmount)} color="amber" delay={0.1} />
+            <StatCard label="Bond Interest Rate" value={formatPercent(inputs.interestRate)} color="blue" delay={0} />
+            <StatCard label="ETF Return" value={formatPercent(inputs.expectedReturn)} color="green" delay={0.05} />
+            <StatCard label="Extra/Month" value={formatRand(inputs.extraMonthlyAmount)} color="orange" delay={0.1} />
             <StatCard label="CGT Rate" value={formatPercent(inputs.cgtRate)} color="red" delay={0.15} />
           </div>
 
           {/* Area chart: interest saved vs portfolio value */}
           <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold text-[#F1F5F9] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold text-ink mb-4" style={{ fontFamily: 'var(--font-display)' }}>
               Cumulative Benefit Over Time
             </p>
             <ResponsiveContainer width="100%" height={230}>
               <AreaChart data={areaData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradIntSaved" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.indigo} stopOpacity={0.25} />
-                    <stop offset="95%" stopColor={CHART_COLORS.indigo} stopOpacity={0.02} />
+                    <stop offset="5%" stopColor={CHART_COLORS.blue} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={CHART_COLORS.blue} stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="gradPortfolio" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.emerald} stopOpacity={0.25} />
-                    <stop offset="95%" stopColor={CHART_COLORS.emerald} stopOpacity={0.02} />
+                    <stop offset="5%" stopColor={CHART_COLORS.green} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={CHART_COLORS.green} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
-                <Area type="monotone" dataKey="Interest Saved (A)" stroke={CHART_COLORS.indigo}
+                <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-muted)' }} />
+                <Area type="monotone" dataKey="Interest Saved (A)" stroke={CHART_COLORS.blue}
                   fill="url(#gradIntSaved)" strokeWidth={2} />
-                <Area type="monotone" dataKey="Portfolio Value (B)" stroke={CHART_COLORS.emerald}
+                <Area type="monotone" dataKey="Portfolio Value (B)" stroke={CHART_COLORS.green}
                   fill="url(#gradPortfolio)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -363,23 +363,23 @@ export function PaymentVsInvesting() {
 
           {/* Line chart: net worth comparison */}
           <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold text-[#F1F5F9] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold text-ink mb-1" style={{ fontFamily: 'var(--font-display)' }}>
               Net Worth Comparison
             </p>
-            <p className="text-xs text-[#64748B] mb-4" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-ink-subtle mb-4" style={{ fontFamily: 'var(--font-text)' }}>
               A: Equity gained from paying down bond · B: Portfolio + standard bond equity
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={netWorthData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#64748B' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#64748B' }}
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }}
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
-                <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
-                <Line type="monotone" dataKey="Net Worth A (Bond↓)" stroke={CHART_COLORS.indigo}
+                <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-muted)' }} />
+                <Line type="monotone" dataKey="Net Worth A (Bond↓)" stroke={CHART_COLORS.blue}
                   strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Net Worth B (Portfolio)" stroke={CHART_COLORS.emerald}
+                <Line type="monotone" dataKey="Net Worth B (Portfolio)" stroke={CHART_COLORS.green}
                   strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -390,15 +390,15 @@ export function PaymentVsInvesting() {
       {/* Year-by-year comparison table */}
       <div className="glass-card-static mt-6 p-5">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-semibold text-[#F1F5F9]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
             Year-by-Year Comparison
           </p>
-          <div className="flex items-center gap-3 text-xs text-[#64748B]" style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="flex items-center gap-3 text-xs text-ink-subtle" style={{ fontFamily: 'var(--font-text)' }}>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#6366F1] inline-block" /> Scenario A
+              <span className="w-2 h-2 rounded-full bg-note-blue inline-block" /> Scenario A
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block" /> Scenario B
+              <span className="w-2 h-2 rounded-full bg-gain inline-block" /> Scenario B
             </span>
           </div>
         </div>
@@ -418,19 +418,19 @@ export function PaymentVsInvesting() {
               {result.yearByYear.map((row) => (
                 <tr key={row.year}>
                   <td>{row.year}</td>
-                  <td style={{ color: '#6366F1' }}>{formatRand(row.bondBalanceA)}</td>
-                  <td style={{ color: '#94A3B8' }}>{formatRand(row.bondBalanceB)}</td>
-                  <td style={{ color: '#10B981' }}>{formatRand(row.investmentValue)}</td>
-                  <td style={{ color: row.netDifference >= 0 ? '#10B981' : '#6366F1' }}>
+                  <td style={{ color: 'var(--note-blue)' }}>{formatRand(row.bondBalanceA)}</td>
+                  <td style={{ color: 'var(--ink-muted)' }}>{formatRand(row.bondBalanceB)}</td>
+                  <td style={{ color: 'var(--gain)' }}>{formatRand(row.investmentValue)}</td>
+                  <td style={{ color: row.netDifference >= 0 ? 'var(--gain)' : 'var(--note-blue)' }}>
                     {row.netDifference >= 0 ? '+' : ''}{formatRand(row.netDifference)}
                   </td>
                   <td>
                     <span
                       className="text-xs font-semibold px-2 py-0.5 rounded-full"
                       style={{
-                        background: row.winner === 'B' ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)',
-                        color: row.winner === 'B' ? '#10B981' : '#6366F1',
-                        fontFamily: 'var(--font-body)',
+                        background: row.winner === 'B' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)',
+                        color: row.winner === 'B' ? 'var(--gain)' : 'var(--note-blue)',
+                        fontFamily: 'var(--font-text)',
                       }}
                     >
                       {row.winner === 'A' ? 'Extra Payment' : 'Investing'}
@@ -443,13 +443,13 @@ export function PaymentVsInvesting() {
         </div>
 
         {/* SA Tax disclosure */}
-        <div className="mt-5 p-4 bg-[rgba(245,158,11,0.06)] border border-[rgba(245,158,11,0.15)] rounded-xl flex items-start gap-3">
-          <Zap size={14} className="text-[#F59E0B] mt-0.5 flex-shrink-0" />
+        <div className="mt-5 p-4 bg-note-orange/6 border border-note-orange/15 rounded-xl flex items-start gap-3">
+          <Zap size={14} className="text-note-orange mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-xs font-semibold text-[#F59E0B] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p className="text-xs font-semibold text-note-orange mb-1" style={{ fontFamily: 'var(--font-display)' }}>
               SA Tax Note
             </p>
-            <p className="text-xs text-[#94A3B8] leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-ink-muted leading-relaxed" style={{ fontFamily: 'var(--font-text)' }}>
               Capital Gains Tax (CGT) in South Africa applies only to gains above the R40,000 annual exclusion.
               The calculation uses a {inputs.cgtRate}% effective CGT rate (40% inclusion × marginal rate).
               Bond interest savings are effectively a tax-free, guaranteed return equal to your interest rate.

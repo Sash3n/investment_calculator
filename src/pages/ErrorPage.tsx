@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
+import { alpha } from '../utils/color';
 
 export function ErrorPage() {
   const error = useRouteError();
@@ -26,17 +27,17 @@ export function ErrorPage() {
   }
 
   const statusColor =
-    status >= 500 ? '#EF4444' : status === 403 ? '#F59E0B' : '#6366F1';
+    status >= 500 ? 'var(--loss)' : status === 403 ? 'var(--note-orange)' : 'var(--note-blue)';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
-      style={{ background: 'var(--color-bg, #0A0F1E)' }}>
+      style={{ background: 'var(--color-bg, var(--paper))' }}>
 
       {/* Glow */}
       <div
         className="absolute w-[400px] h-[400px] rounded-full pointer-events-none"
         style={{
-          background: `radial-gradient(circle, ${statusColor}18 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${alpha(statusColor, 9)} 0%, transparent 70%)`,
           top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
         }}
@@ -51,7 +52,7 @@ export function ErrorPage() {
         {/* Icon */}
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-          style={{ background: `${statusColor}18`, border: `1px solid ${statusColor}30` }}
+          style={{ background: `${alpha(statusColor, 9)}`, border: `1px solid ${alpha(statusColor, 19)}` }}
         >
           <AlertTriangle size={28} style={{ color: statusColor }} />
         </div>
@@ -60,8 +61,8 @@ export function ErrorPage() {
         <p
           className="text-7xl font-black leading-none mb-4"
           style={{
-            fontFamily: 'var(--font-heading)',
-            background: `linear-gradient(135deg, ${statusColor} 0%, ${statusColor}99 100%)`,
+            fontFamily: 'var(--font-display)',
+            background: `linear-gradient(135deg, ${statusColor} 0%, ${alpha(statusColor, 60)} 100%)`,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}
@@ -72,13 +73,13 @@ export function ErrorPage() {
         {/* Message */}
         <h1
           className="text-xl font-bold mb-2"
-          style={{ color: 'var(--color-text, #F1F5F9)', fontFamily: 'var(--font-heading)' }}
+          style={{ color: 'var(--color-text, var(--ink))', fontFamily: 'var(--font-display)' }}
         >
           {title}
         </h1>
         <p
           className="text-sm mb-8"
-          style={{ color: 'var(--color-text-muted, #94A3B8)', fontFamily: 'var(--font-body)' }}
+          style={{ color: 'var(--color-text-muted, var(--ink-muted))', fontFamily: 'var(--font-text)' }}
         >
           {message}
         </p>
@@ -100,7 +101,7 @@ export function ErrorPage() {
         {import.meta.env.DEV && error instanceof Error && (
           <div
             className="mt-8 p-4 rounded-xl text-left text-xs font-mono overflow-auto max-h-32"
-            style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444' }}
+            style={{ background: 'color-mix(in srgb, var(--loss) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)', color: 'var(--loss)' }}
           >
             {error.stack ?? error.message}
           </div>

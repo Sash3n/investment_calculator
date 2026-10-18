@@ -13,14 +13,15 @@ import { formatRand, formatPercent } from '../utils/format';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { StatCard } from '../components/ui/StatCard';
 import jsPDF from 'jspdf';
+import { seriesColors } from '../utils/color';
 
-const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#EF4444', '#F97316'];
+const COLORS = seriesColors(8);
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
-      <p className="text-[#94A3B8] mb-2 font-semibold">{label}</p>
+      <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="mb-1" style={{ color: p.color ?? p.fill }}>
           {p.name}: {typeof p.value === 'number' ? formatRand(p.value, 0) : p.value}
@@ -50,11 +51,11 @@ function exportPortfolioPDF(
     border:  [51,  65,  85]  as [number,number,number],
     text:    [241, 245, 249] as [number,number,number],
     muted:   [100, 116, 139] as [number,number,number],
-    indigo:  [99,  102, 241] as [number,number,number],
-    emerald: [16,  185, 129] as [number,number,number],
-    amber:   [245, 158, 11]  as [number,number,number],
+    blue:  [99,  102, 241] as [number,number,number],
+    green: [16,  185, 129] as [number,number,number],
+    orange:   [245, 158, 11]  as [number,number,number],
     red:     [239, 68,  68]  as [number,number,number],
-    cyan:    [6,   182, 212] as [number,number,number],
+    teal:    [6,   182, 212] as [number,number,number],
   };
 
   // ── Page 1: Landscape summary ─────────────────────────────────────────────
@@ -66,7 +67,7 @@ function exportPortfolioPDF(
 
   // Header bar
   doc.setFillColor(...C.surf); doc.rect(0, 0, LW, 28, 'F');
-  doc.setFillColor(...C.indigo); doc.rect(0, 26, LW, 2, 'F');
+  doc.setFillColor(...C.blue); doc.rect(0, 26, LW, 2, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...C.text);
   doc.text('FinCalc ZA', M, 11);
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...C.muted);
@@ -83,11 +84,11 @@ function exportPortfolioPDF(
   // ── Stat boxes (5 across landscape width) ─────────────────────────────────
   const bw = (TW - 12) / 5;
   const statBoxes = [
-    { label: 'Portfolio Value',    value: formatRand(totals.totalValue, 0),    color: C.indigo  },
-    { label: 'Total Equity',       value: formatRand(totals.totalEquity, 0),   color: C.emerald },
+    { label: 'Portfolio Value',    value: formatRand(totals.totalValue, 0),    color: C.blue  },
+    { label: 'Total Equity',       value: formatRand(totals.totalEquity, 0),   color: C.green },
     { label: 'Total Debt',         value: formatRand(totals.totalDebt, 0),     color: C.red     },
-    { label: 'Monthly Cash Flow',  value: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? C.emerald : C.red },
-    { label: 'Blended Yield',      value: formatPercent(totals.blendedYield),  color: C.amber   },
+    { label: 'Monthly Cash Flow',  value: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? C.green : C.red },
+    { label: 'Blended Yield',      value: formatPercent(totals.blendedYield),  color: C.orange   },
   ];
   statBoxes.forEach((b, i) => {
     const x = M + i * (bw + 3);
@@ -102,7 +103,7 @@ function exportPortfolioPDF(
   y += 26;
 
   // ── Section title ──────────────────────────────────────────────────────────
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.indigo);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.blue);
   doc.text('PROPERTIES', M, y);
   doc.setDrawColor(...C.border); doc.setLineWidth(0.3);
   doc.line(M, y + 1.5, LW - M, y + 1.5);
@@ -166,11 +167,11 @@ function exportPortfolioPDF(
       null,                                         // Property name → default text
       null,                                         // Price
       null,                                         // Deposit
-      C.amber,                                      // Bond repayment → amber
-      cf  >= 0 ? C.emerald : C.red,                 // Cash flow
-      ny  >= 0 ? C.emerald : C.red,                 // Net yield
-      roi >= 0 ? C.emerald : C.red,                 // 10yr ROI
-      eq  >= 0 ? C.emerald : C.red,                 // Equity
+      C.orange,                                      // Bond repayment
+      cf  >= 0 ? C.green : C.red,                 // Cash flow
+      ny  >= 0 ? C.green : C.red,                 // Net yield
+      roi >= 0 ? C.green : C.red,                 // 10yr ROI
+      eq  >= 0 ? C.green : C.red,                 // Equity
     ];
 
     cx = M + 2;
@@ -192,17 +193,17 @@ function exportPortfolioPDF(
   // ── Totals summary row ─────────────────────────────────────────────────────
   y += 2;
   doc.setFillColor(...C.surf2); doc.rect(M, y, TW, 7, 'F');
-  doc.setFillColor(...C.indigo); doc.rect(M, y, 2, 7, 'F'); // left accent
+  doc.setFillColor(...C.blue); doc.rect(M, y, 2, 7, 'F'); // left accent
   doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.muted);
   doc.text('TOTALS', M + 4, y + 4.8);
 
   const totalsValues: { val: string; color: [number,number,number] }[] = [
-    { val: formatRand(totals.totalValue, 0),    color: C.indigo  },
+    { val: formatRand(totals.totalValue, 0),    color: C.blue  },
     { val: '—',                                  color: C.muted   },
-    { val: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? C.emerald : C.red },
-    { val: formatPercent(totals.blendedYield),  color: C.amber   },
+    { val: formatRand(totals.totalCashFlow, 0), color: totals.totalCashFlow >= 0 ? C.green : C.red },
+    { val: formatPercent(totals.blendedYield),  color: C.orange   },
     { val: '—',                                  color: C.muted   },
-    { val: formatRand(totals.totalEquity, 0),   color: C.emerald },
+    { val: formatRand(totals.totalEquity, 0),   color: C.green },
   ];
   // Map to columns 1-7 (skip col 0 which has the label)
   cx = M + 2 + cols[0].w;
@@ -227,7 +228,7 @@ function exportPortfolioPDF(
 
     // Header bar
     doc.setFillColor(...C.surf); doc.rect(0, 0, PW, 28, 'F');
-    doc.setFillColor(...C.indigo); doc.rect(0, 26, PW, 2, 'F');
+    doc.setFillColor(...C.blue); doc.rect(0, 26, PW, 2, 'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...C.text);
     doc.text(prop.inputs.propertyName || 'Investment Property', PM, 11);
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...C.muted);
@@ -241,10 +242,10 @@ function exportPortfolioPDF(
     // ── 4 key stat boxes ──
     const pbw = (PTW - 9) / 4;
     const pBoxes = [
-      { label: 'Loan Amount',    value: formatRand(r.loanAmount, 0),            color: C.indigo  },
-      { label: 'Bond Repayment', value: formatRand(r.monthlyBondRepayment, 0),  color: C.amber   },
-      { label: 'Cash Flow (S1)', value: formatRand(cf, 0),                      color: cf >= 0 ? C.emerald : C.red },
-      { label: 'Net Yield (S1)', value: formatPercent(r.netYieldS1),            color: r.netYieldS1 >= 0 ? C.emerald : C.red },
+      { label: 'Loan Amount',    value: formatRand(r.loanAmount, 0),            color: C.blue  },
+      { label: 'Bond Repayment', value: formatRand(r.monthlyBondRepayment, 0),  color: C.orange   },
+      { label: 'Cash Flow (S1)', value: formatRand(cf, 0),                      color: cf >= 0 ? C.green : C.red },
+      { label: 'Net Yield (S1)', value: formatPercent(r.netYieldS1),            color: r.netYieldS1 >= 0 ? C.green : C.red },
     ];
     pBoxes.forEach((b, bi) => {
       const bx = PM + bi * (pbw + 3);
@@ -261,7 +262,7 @@ function exportPortfolioPDF(
     const half = PTW / 2 - 3;
 
     const drawSection = (sx: number, sy: number, sw: number, title: string, rows: { label: string; value: string; color?: [number,number,number] }[]): number => {
-      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.indigo);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.blue);
       doc.text(title.toUpperCase(), sx, sy);
       doc.setDrawColor(...C.border); doc.setLineWidth(0.25);
       doc.line(sx, sy + 1.5, sx + sw, sy + 1.5);
@@ -282,28 +283,28 @@ function exportPortfolioPDF(
     leftY = drawSection(lx, leftY, half, 'Bond & Acquisition', [
       { label: 'Purchase Price',   value: formatRand(prop.inputs.purchasePrice, 0) },
       { label: 'Deposit',          value: formatRand(prop.inputs.deposit, 0) },
-      { label: 'Loan Amount',      value: formatRand(r.loanAmount, 0),           color: C.indigo },
+      { label: 'Loan Amount',      value: formatRand(r.loanAmount, 0),           color: C.blue },
       { label: 'Interest Rate',    value: formatPercent(prop.inputs.interestRate) },
       { label: 'Bond Term',        value: `${prop.inputs.bondTerm} years` },
-      { label: 'Monthly Repayment',value: formatRand(r.monthlyBondRepayment, 0), color: C.amber },
-      { label: 'Transfer Duty',    value: prop.inputs.transferDutyExempt ? 'Exempt' : formatRand(r.transferDuty, 0), color: prop.inputs.transferDutyExempt ? C.emerald : C.red },
-      { label: 'Total Cash In',    value: formatRand(r.totalCashRequired, 0),    color: C.indigo },
+      { label: 'Monthly Repayment',value: formatRand(r.monthlyBondRepayment, 0), color: C.orange },
+      { label: 'Transfer Duty',    value: prop.inputs.transferDutyExempt ? 'Exempt' : formatRand(r.transferDuty, 0), color: prop.inputs.transferDutyExempt ? C.green : C.red },
+      { label: 'Total Cash In',    value: formatRand(r.totalCashRequired, 0),    color: C.blue },
     ]);
 
     leftY = drawSection(lx, leftY, half, 'Returns', [
-      { label: 'Gross Yield S1',  value: formatPercent(r.grossYieldS1),   color: C.indigo },
-      { label: 'Net Yield S1',    value: formatPercent(r.netYieldS1),     color: r.netYieldS1  >= 0 ? C.emerald : C.red },
-      { label: 'Net Yield S2',    value: formatPercent(r.netYieldS2),     color: r.netYieldS2  >= 0 ? C.emerald : C.red },
-      { label: '5-Year ROI S1',   value: formatPercent(r.roi5YearS1, 1),  color: r.roi5YearS1  >= 0 ? C.emerald : C.red },
-      { label: '10-Year ROI S1',  value: formatPercent(r.roi10YearS1, 1), color: r.roi10YearS1 >= 0 ? C.emerald : C.red },
-      { label: 'Equity (Yr 1)',   value: formatRand(eq, 0),               color: eq >= 0 ? C.emerald : C.red },
+      { label: 'Gross Yield S1',  value: formatPercent(r.grossYieldS1),   color: C.blue },
+      { label: 'Net Yield S1',    value: formatPercent(r.netYieldS1),     color: r.netYieldS1  >= 0 ? C.green : C.red },
+      { label: 'Net Yield S2',    value: formatPercent(r.netYieldS2),     color: r.netYieldS2  >= 0 ? C.green : C.red },
+      { label: '5-Year ROI S1',   value: formatPercent(r.roi5YearS1, 1),  color: r.roi5YearS1  >= 0 ? C.green : C.red },
+      { label: '10-Year ROI S1',  value: formatPercent(r.roi10YearS1, 1), color: r.roi10YearS1 >= 0 ? C.green : C.red },
+      { label: 'Equity (Yr 1)',   value: formatRand(eq, 0),               color: eq >= 0 ? C.green : C.red },
     ]);
 
     // Right column: Monthly costs & cash flow
     const rx = PM + half + 6;
     let rightY = py;
     rightY = drawSection(rx, rightY, half, 'Monthly Costs', [
-      { label: 'Bond Repayment',   value: formatRand(r.monthlyBondRepayment, 0), color: C.amber },
+      { label: 'Bond Repayment',   value: formatRand(r.monthlyBondRepayment, 0), color: C.orange },
       { label: 'Levies',           value: formatRand(prop.inputs.monthlyLevies, 0) },
       { label: 'Rates & Taxes',    value: formatRand(prop.inputs.monthlyRates, 0) },
       { label: 'Insurance',        value: formatRand(prop.inputs.insurance, 0) },
@@ -318,13 +319,13 @@ function exportPortfolioPDF(
       { label: 'Vacancy Rate',     value: formatPercent(prop.inputs.vacancyRate) },
       { label: 'Effective Rent S1',value: formatRand(r.monthlyEffectiveRentS1, 0) },
       { label: 'Mgmt Fee S1',      value: formatRand(r.managementFeeS1, 0) },
-      { label: 'Net Cash Flow S1', value: formatRand(cf, 0),                     color: cf >= 0 ? C.emerald : C.red },
-      { label: 'Net Cash Flow S2', value: formatRand(r.cashFlowS2, 0),           color: r.cashFlowS2 >= 0 ? C.emerald : C.red },
+      { label: 'Net Cash Flow S1', value: formatRand(cf, 0),                     color: cf >= 0 ? C.green : C.red },
+      { label: 'Net Cash Flow S2', value: formatRand(r.cashFlowS2, 0),           color: r.cashFlowS2 >= 0 ? C.green : C.red },
     ]);
 
     // ── 5-year projection mini table ──────────────────────────────────────
     const tableY = Math.max(leftY, rightY) + 4;
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.indigo);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.blue);
     doc.text('PROPERTY VALUE PROJECTION', PM, tableY);
     doc.setDrawColor(...C.border); doc.setLineWidth(0.25);
     doc.line(PM, tableY + 1.5, PW - PM, tableY + 1.5);
@@ -362,7 +363,7 @@ function exportPortfolioPDF(
       ];
       tcx = PM + 2;
       tCols.forEach((tc, tci) => {
-        const c2: [number,number,number] = tci === 3 ? (rowEq >= 0 ? C.emerald : C.red) : tci === 4 ? C.cyan : C.text;
+        const c2: [number,number,number] = tci === 3 ? (rowEq >= 0 ? C.green : C.red) : tci === 4 ? C.teal : C.text;
         doc.setTextColor(...c2);
         if (tc.r) doc.text(vals2[tci], tcx + tc.w - 2, ty + 4, { align: 'right' });
         else       doc.text(vals2[tci], tcx, ty + 4);
@@ -417,7 +418,7 @@ export function PortfolioSummary() {
     properties.map((p, i) => ({
       name: p.inputs.propertyName?.substring(0, 14) ?? `P${i+1}`,
       cashFlow: Math.round(results[i].cashFlowS1),
-      fill: results[i].cashFlowS1 >= 0 ? '#10B981' : '#EF4444',
+      fill: results[i].cashFlowS1 >= 0 ? 'var(--gain)' : 'var(--loss)',
     })), [properties, results]);
 
   const yieldData = useMemo(() =>
@@ -444,18 +445,18 @@ export function PortfolioSummary() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-6 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <Building2 size={28} className="text-[#10B981]" />
+          style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
+          <Building2 size={28} className="text-gain" />
         </div>
         <div>
-          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Sign in to view portfolio</h2>
-          <p className="text-sm max-w-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--ink)' }}>Sign in to view portfolio</h2>
+          <p className="text-sm max-w-sm" style={{ color: 'var(--ink-muted)' }}>
             Your saved properties sync to your account. Sign in to see your portfolio summary.
           </p>
         </div>
         <button onClick={signIn}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
-          style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}>
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
           <LogIn size={16} /> Sign in with Google
         </button>
       </div>
@@ -465,7 +466,7 @@ export function PortfolioSummary() {
   if (loading) {
     return (
       <div className="flex justify-center py-24">
-        <div className="w-6 h-6 rounded-full border-2 border-[#6366F1] border-t-transparent animate-spin" />
+        <div className="w-6 h-6 rounded-full border-2 border-note-blue border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -474,12 +475,12 @@ export function PortfolioSummary() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-6 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <MapPin size={28} className="text-[#10B981]" />
+          style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
+          <MapPin size={28} className="text-gain" />
         </div>
         <div>
-          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>No properties saved yet</h2>
-          <p className="text-sm max-w-sm" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--ink)' }}>No properties saved yet</h2>
+          <p className="text-sm max-w-sm" style={{ color: 'var(--ink-muted)' }}>
             Save properties from the Property ROI calculator to see your portfolio summary here.
           </p>
         </div>
@@ -513,23 +514,23 @@ export function PortfolioSummary() {
 
       {/* Aggregate stat cards */}
       <div className="four-col-stats mb-6">
-        <StatCard label="Portfolio Value"   value={formatRand(totals.totalValue, 0)}       icon={Building2}  color="indigo" delay={0} />
-        <StatCard label="Total Equity"      value={formatRand(totals.totalEquity, 0)}       icon={TrendingUp} color="emerald" delay={0.05} sub={`${formatRand(totals.totalDebt, 0)} debt`} />
-        <StatCard label="Monthly Cash Flow" value={formatRand(totals.totalCashFlow, 0)}     icon={Wallet}     color={totals.totalCashFlow >= 0 ? 'emerald' : 'red'} delay={0.1} sub={`${totals.positive}/${properties.length} positive`} />
-        <StatCard label="Blended Yield"     value={formatPercent(totals.blendedYield)}      icon={BarChart3}  color="amber" delay={0.15} sub="gross, weighted avg" />
+        <StatCard label="Portfolio Value"   value={formatRand(totals.totalValue, 0)}       icon={Building2}  color="blue" delay={0} />
+        <StatCard label="Total Equity"      value={formatRand(totals.totalEquity, 0)}       icon={TrendingUp} color="green" delay={0.05} sub={`${formatRand(totals.totalDebt, 0)} debt`} />
+        <StatCard label="Monthly Cash Flow" value={formatRand(totals.totalCashFlow, 0)}     icon={Wallet}     color={totals.totalCashFlow >= 0 ? 'green' : 'red'} delay={0.1} sub={`${totals.positive}/${properties.length} positive`} />
+        <StatCard label="Blended Yield"     value={formatPercent(totals.blendedYield)}      icon={BarChart3}  color="orange" delay={0.15} sub="gross, weighted avg" />
       </div>
 
       {/* Summary band */}
       <div className="glass-card-static p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Cash Invested',      value: formatRand(totals.totalCashRequired, 0), color: 'var(--color-text)' },
-          { label: 'Total Debt',         value: formatRand(totals.totalDebt, 0),         color: '#EF4444' },
-          { label: 'Positive CF Props',  value: `${totals.positive} / ${properties.length}`, color: '#10B981' },
-          { label: 'Annual Cash Flow',   value: formatRand(totals.totalCashFlow * 12, 0), color: totals.totalCashFlow >= 0 ? '#10B981' : '#EF4444' },
+          { label: 'Cash Invested',      value: formatRand(totals.totalCashRequired, 0), color: 'var(--ink)' },
+          { label: 'Total Debt',         value: formatRand(totals.totalDebt, 0),         color: 'var(--loss)' },
+          { label: 'Positive CF Props',  value: `${totals.positive} / ${properties.length}`, color: 'var(--gain)' },
+          { label: 'Annual Cash Flow',   value: formatRand(totals.totalCashFlow * 12, 0), color: totals.totalCashFlow >= 0 ? 'var(--gain)' : 'var(--loss)' },
         ].map((s) => (
           <div key={s.label}>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}>{s.label}</p>
-            <p className="text-sm font-bold" style={{ color: s.color, fontFamily: 'var(--font-heading)' }}>{s.value}</p>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>{s.label}</p>
+            <p className="text-sm font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -538,15 +539,15 @@ export function PortfolioSummary() {
       <div className="grid lg:grid-cols-2 gap-5 mb-6">
         {/* Cash flow bar */}
         <div className="glass-card-static p-5">
-          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Monthly Cash Flow by Property
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={cashFlowData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `R${(v/1000).toFixed(0)}K`} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
               <Bar dataKey="cashFlow" radius={[4,4,0,0]} name="Cash Flow">
                 {cashFlowData.map((e, i) => <Cell key={i} fill={e.fill} />)}
               </Bar>
@@ -556,18 +557,18 @@ export function PortfolioSummary() {
 
         {/* Yield comparison */}
         <div className="glass-card-static p-5">
-          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Gross vs Net Yield (%)
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={yieldData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `${v}%`} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => `${Number(v).toFixed(2)}%`} contentStyle={{ background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, color: '#F1F5F9' }} />
-              <Legend wrapperStyle={{ fontSize: 12, color: '#94A3B8' }} />
-              <Bar dataKey="grossYield" name="Gross Yield" fill="#6366F1" radius={[4,4,0,0]} />
-              <Bar dataKey="netYield"   name="Net Yield"   fill="#10B981" radius={[4,4,0,0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `${v}%`} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => `${Number(v).toFixed(2)}%`} contentStyle={{ background: 'color-mix(in srgb, var(--paper-raised) 95%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 10%, transparent)', borderRadius: 10, fontSize: 12, color: 'var(--ink)' }} />
+              <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-muted)' }} />
+              <Bar dataKey="grossYield" name="Gross Yield" fill="var(--note-blue)" radius={[4,4,0,0]} />
+              <Bar dataKey="netYield"   name="Net Yield"   fill="var(--gain)" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -576,7 +577,7 @@ export function PortfolioSummary() {
       {/* Equity growth chart */}
       {equityData.length > 0 && (
         <div className="glass-card-static p-5 mb-6">
-          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Equity Growth Over Time
           </p>
           <ResponsiveContainer width="100%" height={240}>
@@ -589,11 +590,11 @@ export function PortfolioSummary() {
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `R${(v/1_000_000).toFixed(1)}M`} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `R${(v/1_000_000).toFixed(1)}M`} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               {properties.map((p, i) => {
                 const name = p.inputs.propertyName?.substring(0, 12) ?? `P${i+1}`;
                 return (
@@ -610,8 +611,8 @@ export function PortfolioSummary() {
 
       {/* Per-property breakdown table */}
       <div className="glass-card-static overflow-hidden">
-        <div className="p-4 border-b border-[rgba(255,255,255,0.06)]">
-          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+        <div className="p-4 border-b border-ink/6">
+          <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Property Breakdown
           </p>
         </div>
@@ -641,26 +642,26 @@ export function PortfolioSummary() {
                         <div className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ background: COLORS[i % COLORS.length] }} />
                         <span className="font-medium truncate max-w-[140px]"
-                          style={{ color: 'var(--color-text)' }}>
+                          style={{ color: 'var(--ink)' }}>
                           {prop.inputs.propertyName}
                         </span>
                       </div>
                     </td>
                     <td className="text-right">{formatRand(r.effectivePurchasePrice, 0)}</td>
                     <td className="text-right">{formatRand(r.monthlyBondRepayment, 0)}</td>
-                    <td className="text-right font-semibold" style={{ color: cf >= 0 ? '#10B981' : '#EF4444' }}>
+                    <td className="text-right font-semibold" style={{ color: cf >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
                       {formatRand(cf, 0)}
                     </td>
                     <td className="text-right">{formatPercent(r.netYieldS1)}</td>
                     <td className="text-right">{formatPercent(r.roi10YearS1, 1)}</td>
-                    <td className="text-right" style={{ color: equity >= 0 ? '#10B981' : '#EF4444' }}>
+                    <td className="text-right" style={{ color: equity >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
                       {formatRand(equity, 0)}
                     </td>
                     <td className="text-right">
                       <button
                         onClick={() => navigate('/property-roi', { state: { loadedInputs: prop.inputs, editingId: prop.id } })}
                         className="text-[10px] px-2 py-1 rounded-lg transition-all"
-                        style={{ background: 'rgba(99,102,241,0.1)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.2)' }}
+                        style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
                       >
                         Open
                       </button>
@@ -670,18 +671,18 @@ export function PortfolioSummary() {
               })}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop: '2px solid rgba(99,102,241,0.3)' }}>
-                <td className="font-bold" style={{ color: 'var(--color-text)' }}>Total</td>
-                <td className="text-right font-bold" style={{ color: 'var(--color-text)' }}>{formatRand(totals.totalValue, 0)}</td>
-                <td className="text-right font-bold" style={{ color: '#EF4444' }}>
+              <tr style={{ borderTop: '2px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
+                <td className="font-bold" style={{ color: 'var(--ink)' }}>Total</td>
+                <td className="text-right font-bold" style={{ color: 'var(--ink)' }}>{formatRand(totals.totalValue, 0)}</td>
+                <td className="text-right font-bold" style={{ color: 'var(--loss)' }}>
                   {formatRand(results.reduce((s,r) => s + r.monthlyBondRepayment, 0), 0)}
                 </td>
-                <td className="text-right font-bold" style={{ color: totals.totalCashFlow >= 0 ? '#10B981' : '#EF4444' }}>
+                <td className="text-right font-bold" style={{ color: totals.totalCashFlow >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
                   {formatRand(totals.totalCashFlow, 0)}
                 </td>
-                <td className="text-right font-bold" style={{ color: '#6366F1' }}>{formatPercent(totals.blendedYield)}</td>
+                <td className="text-right font-bold" style={{ color: 'var(--note-blue)' }}>{formatPercent(totals.blendedYield)}</td>
                 <td />
-                <td className="text-right font-bold" style={{ color: '#10B981' }}>{formatRand(totals.totalEquity, 0)}</td>
+                <td className="text-right font-bold" style={{ color: 'var(--gain)' }}>{formatRand(totals.totalEquity, 0)}</td>
                 <td />
               </tr>
             </tfoot>

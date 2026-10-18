@@ -6,12 +6,13 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand } from '../utils/format';
 import { readShareParam } from '../utils/share';
+import { alpha } from '../utils/color';
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
 };
 
 const VAT_RATE          = 0.15;
@@ -90,12 +91,12 @@ export function VatCalculator() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${C.amber}22` }}>
-            <Receipt size={22} style={{ color: C.amber }} />
+          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.orange, 13)}` }}>
+            <Receipt size={22} style={{ color: C.orange }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>VAT Calculator</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>VAT Calculator</h1>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Add or extract 15% VAT — or build a line-item invoice with mixed taxability.
             </p>
           </div>
@@ -104,15 +105,15 @@ export function VatCalculator() {
       </div>
 
       {/* View mode toggle */}
-      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--rule)' }}>
         {(['simple', 'invoice'] as const).map((m) => (
           <button
             key={m}
             onClick={() => setViewMode(m)}
             className="flex-1 py-3 text-sm font-medium transition-colors"
             style={{
-              background: viewMode === m ? C.amber : 'transparent',
-              color:      viewMode === m ? '#fff'  : 'var(--color-text-muted)',
+              background: viewMode === m ? C.orange : 'transparent',
+              color:      viewMode === m ? 'var(--on-accent)'  : 'var(--ink-muted)',
             }}
           >
             {m === 'simple' ? 'Simple calculator' : 'Line-item invoice'}
@@ -123,15 +124,15 @@ export function VatCalculator() {
       {viewMode === 'simple' ? (
         /* ── SIMPLE MODE ── */
         <>
-          <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+          <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--rule)' }}>
             {(['add', 'extract'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors"
                 style={{
-                  background: mode === m ? `${C.amber}33` : 'transparent',
-                  color:      mode === m ? C.amber         : 'var(--color-text-muted)',
+                  background: mode === m ? `${alpha(C.orange, 20)}` : 'transparent',
+                  color:      mode === m ? C.orange         : 'var(--ink-muted)',
                 }}
               >
                 <ArrowLeftRight size={14} />
@@ -142,8 +143,8 @@ export function VatCalculator() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4 p-5 rounded-2xl"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-              <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+              style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+              <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
                 {mode === 'add' ? 'Amount excl. VAT' : 'Amount incl. VAT'}
               </h2>
               <InputField
@@ -155,14 +156,14 @@ export function VatCalculator() {
               />
 
               <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
-                <Info size={13} style={{ color: C.indigo }} />
-                <span style={{ color: 'var(--color-text-muted)' }}>SA VAT rate is 15% (effective 1 May 2025).</span>
+                style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
+                <Info size={13} style={{ color: C.blue }} />
+                <span style={{ color: 'var(--ink-muted)' }}>SA VAT rate is 15% (effective 1 May 2025).</span>
               </div>
 
-              <hr style={{ borderColor: 'var(--color-border)' }} />
+              <hr style={{ borderColor: 'var(--rule)' }} />
 
-              <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+              <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
                 VAT registration check
               </h2>
               <InputField
@@ -175,18 +176,18 @@ export function VatCalculator() {
 
               {annualTurnover >= VAT_REG_THRESHOLD && (
                 <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                  style={{ background: `${C.red}11`, border: `1px solid ${C.red}33` }}>
+                  style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 20)}` }}>
                   <Receipt size={13} style={{ color: C.red }} />
-                  <span style={{ color: 'var(--color-text-muted)' }}>
+                  <span style={{ color: 'var(--ink-muted)' }}>
                     Your turnover exceeds R1,000,000 — you must register for VAT within 21 business days.
                   </span>
                 </div>
               )}
               {annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD && result.monthsTillRegistration > 0 && (
                 <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                  style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}33` }}>
-                  <Info size={13} style={{ color: C.amber }} />
-                  <span style={{ color: 'var(--color-text-muted)' }}>
+                  style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+                  <Info size={13} style={{ color: C.orange }} />
+                  <span style={{ color: 'var(--ink-muted)' }}>
                     At this run rate you will hit the VAT threshold in approximately{' '}
                     {result.monthsTillRegistration} month{result.monthsTillRegistration !== 1 ? 's' : ''}.
                   </span>
@@ -196,14 +197,14 @@ export function VatCalculator() {
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3">
-                <StatCard label="VAT amount (15%)"    value={formatRand(result.vatAmount)} color="amber"   icon={Receipt} />
-                <StatCard label="Amount excl. VAT"    value={formatRand(result.exclVat)}   color="indigo"  icon={Receipt} />
-                <StatCard label="Amount incl. VAT"    value={formatRand(result.inclVat)}   color="emerald" icon={Receipt} />
+                <StatCard label="VAT amount (15%)"    value={formatRand(result.vatAmount)} color="orange"   icon={Receipt} />
+                <StatCard label="Amount excl. VAT"    value={formatRand(result.exclVat)}   color="blue"  icon={Receipt} />
+                <StatCard label="Amount incl. VAT"    value={formatRand(result.inclVat)}   color="green" icon={Receipt} />
               </div>
 
               <div className="p-5 rounded-2xl"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Quick reference</h2>
+                style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+                <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>Quick reference</h2>
                 <div className="space-y-0 text-xs">
                   {[
                     ['VAT rate',                         '15%'],
@@ -213,9 +214,9 @@ export function VatCalculator() {
                     ['Penalty for late registration',    '10% of VAT owed'],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between py-1.5"
-                      style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                      style={{ borderBottom: '1px solid var(--rule)', color: 'var(--ink-muted)' }}>
                       <span>{label}</span>
-                      <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>{val}</span>
+                      <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{val}</span>
                     </div>
                   ))}
                 </div>
@@ -227,13 +228,13 @@ export function VatCalculator() {
         /* ── INVOICE MODE ── */
         <div className="space-y-4">
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Line items</h2>
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Line items</h2>
               <button
                 onClick={addLine}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background: `${C.amber}22`, color: C.amber }}
+                style={{ background: `${alpha(C.orange, 13)}`, color: C.orange }}
               >
                 <Plus size={12} />
                 Add line
@@ -243,7 +244,7 @@ export function VatCalculator() {
             <div className="space-y-2">
               {/* Header */}
               <div className="grid grid-cols-12 gap-2 text-xs font-semibold mb-1"
-                style={{ color: 'var(--color-text-muted)' }}>
+                style={{ color: 'var(--ink-muted)' }}>
                 <span className="col-span-5">Description</span>
                 <span className="col-span-3">Amount (excl. VAT)</span>
                 <span className="col-span-2 text-center">Taxable?</span>
@@ -253,7 +254,7 @@ export function VatCalculator() {
 
               {lineItems.map((line) => (
                 <div key={line.id} className="grid grid-cols-12 gap-2 items-center py-1.5"
-                  style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  style={{ borderBottom: '1px solid var(--rule)' }}>
                   <div className="col-span-5">
                     <input
                       type="text"
@@ -262,9 +263,9 @@ export function VatCalculator() {
                       placeholder="Description"
                       className="w-full px-2 py-1 rounded text-sm"
                       style={{
-                        background: 'var(--color-bg)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-text)',
+                        background: 'var(--paper)',
+                        border: '1px solid var(--rule)',
+                        color: 'var(--ink)',
                       }}
                     />
                   </div>
@@ -276,9 +277,9 @@ export function VatCalculator() {
                       onChange={(e) => updateLine(line.id, 'amount', Number(e.target.value))}
                       className="w-full px-2 py-1 rounded text-sm"
                       style={{
-                        background: 'var(--color-bg)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-text)',
+                        background: 'var(--paper)',
+                        border: '1px solid var(--rule)',
+                        color: 'var(--ink)',
                       }}
                     />
                   </div>
@@ -287,14 +288,14 @@ export function VatCalculator() {
                       onClick={() => updateLine(line.id, 'taxable', !line.taxable)}
                       className="px-2 py-1 rounded text-xs font-medium transition-colors"
                       style={{
-                        background: line.taxable ? `${C.emerald}22` : `${C.amber}22`,
-                        color: line.taxable ? C.emerald : C.amber,
+                        background: line.taxable ? `${alpha(C.green, 13)}` : `${alpha(C.orange, 13)}`,
+                        color: line.taxable ? C.green : C.orange,
                       }}
                     >
                       {line.taxable ? 'Yes' : 'No'}
                     </button>
                   </div>
-                  <div className="col-span-1 text-right text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  <div className="col-span-1 text-right text-xs" style={{ color: 'var(--ink-muted)' }}>
                     {line.taxable ? formatRand(line.amount * VAT_RATE) : '--'}
                   </div>
                   <div className="col-span-1 flex justify-end">
@@ -309,14 +310,14 @@ export function VatCalculator() {
             {/* Invoice totals */}
             <div className="mt-4 pt-3 space-y-1.5 text-sm">
               {[
-                ['Taxable subtotal (excl. VAT)', formatRand(invoiceTotals.taxableExcl), 'var(--color-text-muted)'],
-                ['Non-taxable items',            formatRand(invoiceTotals.nonTaxable),  'var(--color-text-muted)'],
-                ['VAT (15%)',                    formatRand(invoiceTotals.vat),          C.amber],
-                ['Invoice total (incl. VAT)',    formatRand(invoiceTotals.total),        C.emerald],
+                ['Taxable subtotal (excl. VAT)', formatRand(invoiceTotals.taxableExcl), 'var(--ink-muted)'],
+                ['Non-taxable items',            formatRand(invoiceTotals.nonTaxable),  'var(--ink-muted)'],
+                ['VAT (15%)',                    formatRand(invoiceTotals.vat),          C.orange],
+                ['Invoice total (incl. VAT)',    formatRand(invoiceTotals.total),        C.green],
               ].map(([label, val, color]) => (
                 <div key={label as string} className="flex justify-between items-center py-1"
-                  style={{ borderTop: '1px solid var(--color-border)' }}>
-                  <span style={{ color: 'var(--color-text-muted)' }}>{label as string}</span>
+                  style={{ borderTop: '1px solid var(--rule)' }}>
+                  <span style={{ color: 'var(--ink-muted)' }}>{label as string}</span>
                   <span style={{ color: color as string, fontWeight: 500 }}>{val as string}</span>
                 </div>
               ))}
@@ -324,15 +325,15 @@ export function VatCalculator() {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <StatCard label="VAT amount"      value={formatRand(invoiceTotals.vat)}   color="amber"   icon={Receipt} />
-            <StatCard label="Subtotal excl."  value={formatRand(invoiceTotals.taxableExcl + invoiceTotals.nonTaxable)} color="indigo" icon={Receipt} />
-            <StatCard label="Invoice total"   value={formatRand(invoiceTotals.total)} color="emerald" icon={Receipt} />
+            <StatCard label="VAT amount"      value={formatRand(invoiceTotals.vat)}   color="orange"   icon={Receipt} />
+            <StatCard label="Subtotal excl."  value={formatRand(invoiceTotals.taxableExcl + invoiceTotals.nonTaxable)} color="blue" icon={Receipt} />
+            <StatCard label="Invoice total"   value={formatRand(invoiceTotals.total)} color="green" icon={Receipt} />
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
-            <Info size={13} style={{ color: C.indigo }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: C.blue }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               Toggle "Taxable?" for zero-rated or exempt items (e.g. financial services, residential rent, exports).
               15% VAT applies only to standard-rated supplies.
             </span>
