@@ -18,12 +18,13 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
 import { MortgageSentence } from '../components/mortgage/MortgageSentence';
+import { DEFAULT_MORTGAGE_INPUTS } from '../config/calculatorDefaults';
 import { Statement } from '../components/statement/Statement';
 import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcTransferDuty } from '../utils/tax';
 import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
-import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
+import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 import { textTone } from '../utils/color';
 
@@ -78,22 +79,7 @@ function PieTooltip({ active, payload }: any) {
 }
 
 export function MortgageCalculator() {
-  const [inputs, setInputs] = useState<MortgageInputs>({
-    purchasePrice: 1150000,
-    deposit: 100000,
-    interestRate: FALLBACK_PRIME,
-    termYears: 20,
-    frequency: 'monthly',
-    extraPayment: 0,
-    lumpSumYear: 0,
-    lumpSumAmount: 0,
-    monthlyServiceFee: 69,
-    initiationFee: 6037,
-    initiationFeeCapitalised: false,
-    utilityConnectionFee: 1500,
-    transferDutyExempt: false,
-    bondRegistrationIncluded: false,
-  });
+  const [inputs, setInputs] = useState<MortgageInputs>(DEFAULT_MORTGAGE_INPUTS);
 
   const [tableOpen, setTableOpen] = useState(false);
   const [tablePage, setTablePage] = useState(0);
