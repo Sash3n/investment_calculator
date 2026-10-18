@@ -342,6 +342,23 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid color-mix(in srgb, var(--note-blue) 35%, transparent);
 }
 
+/* ── Disclaimer dialog ─────────────────────────────────────────── */
+.disclaimer-dialog {
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100vh - 4rem);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-pop);
+}
+
+.disclaimer-dialog::backdrop {
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
+}
+
 /* ── Recharts ──────────────────────────────────────────────────── */
 .recharts-tooltip-wrapper {
   outline: none !important;
