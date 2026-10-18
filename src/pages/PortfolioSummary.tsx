@@ -45,17 +45,18 @@ function exportPortfolioPDF(
 ) {
   // ── Theme ──────────────────────────────────────────────────────────────────
   const C = {
-    bg:      [15,  20,  40]  as [number,number,number],
-    surf:    [22,  30,  55]  as [number,number,number],
-    surf2:   [28,  38,  68]  as [number,number,number],
-    border:  [51,  65,  85]  as [number,number,number],
-    text:    [241, 245, 249] as [number,number,number],
-    muted:   [100, 116, 139] as [number,number,number],
-    blue:  [99,  102, 241] as [number,number,number],
-    green: [16,  185, 129] as [number,number,number],
-    orange:   [245, 158, 11]  as [number,number,number],
-    red:     [239, 68,  68]  as [number,number,number],
-    teal:    [6,   182, 212] as [number,number,number],
+    // The light paper tokens as RGB (jsPDF cannot read CSS variables)
+    bg:      [255, 255, 255] as [number,number,number],
+    surf:    [250, 248, 243] as [number,number,number],
+    surf2:   [248, 246, 241] as [number,number,number],
+    border:  [227, 221, 209] as [number,number,number],
+    text:    [28,  26,  22]  as [number,number,number],
+    muted:   [107, 101, 90]  as [number,number,number],
+    blue:    [47,  91,  183] as [number,number,number],
+    green:   [48,  127, 81]  as [number,number,number],
+    orange:  [179, 83,  3]   as [number,number,number],
+    red:     [179, 38,  30]  as [number,number,number],
+    teal:    [0,   117, 154] as [number,number,number],
   };
 
   // ── Page 1: Landscape summary ─────────────────────────────────────────────

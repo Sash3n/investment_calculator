@@ -724,7 +724,7 @@ export function MortgageCalculator() {
                 </button>
               </div>
               <p className="text-xs text-ink-subtle" style={{ fontFamily: 'var(--font-text)' }}>
-                Amber rows = lump sum applied
+                Highlighted rows = lump sum applied
               </p>
             </div>
 
