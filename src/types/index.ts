@@ -183,6 +183,8 @@ export interface InvestingResult {
   newPayoffDate: Date;
   standardPayoffDate: Date;
   effectiveReturnA: number;
+  /** Scenario A: investments built from the freed-up instalment after early payoff, after CGT */
+  bondRouteValue: number;
 
   // Scenario B: invest
   portfolioValueAtPayoff: number;
@@ -200,6 +202,8 @@ export interface InvestingRow {
   bondBalanceA: number;
   bondBalanceB: number;
   investmentValue: number;
+  /** Scenario A investments (after early payoff), after CGT */
+  bondRouteInvestmentValue: number;
   netDifference: number;
   winner: 'A' | 'B';
 }
