@@ -17,6 +17,7 @@ import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcExtraPaymentVsInvesting, calcStandardPayment } from '../utils/investing';
 import { formatRand, formatPercent, formatYears, formatDate } from '../utils/format';
 import type { InvestingInputs } from '../types';
+import { textTone } from '../utils/color';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -54,7 +55,7 @@ function CustomTooltip({ active, payload, label }: any) {
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: p.color }}>
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
           {p.name}: {formatRand(p.value)}
         </p>
       ))}
@@ -247,7 +248,7 @@ export function PaymentVsInvesting() {
             className="glass-card-static p-5 text-center"
           >
             <div className="flex items-center justify-center gap-2 mb-3">
-              <Trophy size={20} className={result.winner === 'investing' ? 'text-gain' : 'text-note-blue'} />
+              <Trophy size={20} className={result.winner === 'investing' ? 'text-gain-ink' : 'text-note-blue-ink'} />
               <span
                 className={clsx('winner-badge text-base', result.winner === 'investing' ? 'investing' : 'bond')}
               >
@@ -267,7 +268,7 @@ export function PaymentVsInvesting() {
             <div className="glass-card-static p-5 border-l-[3px] border-l-note-blue">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-7 h-7 rounded-lg bg-note-blue/15 flex items-center justify-center">
-                  <span className="text-xs font-bold text-note-blue" style={{ fontFamily: 'var(--font-display)' }}>A</span>
+                  <span className="text-xs font-bold text-note-blue-ink" style={{ fontFamily: 'var(--font-display)' }}>A</span>
                 </div>
                 <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   Extra to Bond
@@ -284,7 +285,7 @@ export function PaymentVsInvesting() {
                     <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
                       {s.label}
                     </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
+                    <p className="text-sm font-bold mt-0.5" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
                       {s.value}
                     </p>
                   </div>
@@ -296,7 +297,7 @@ export function PaymentVsInvesting() {
             <div className="glass-card-static p-5 border-l-[3px] border-l-gain">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-7 h-7 rounded-lg bg-gain/15 flex items-center justify-center">
-                  <span className="text-xs font-bold text-gain" style={{ fontFamily: 'var(--font-display)' }}>B</span>
+                  <span className="text-xs font-bold text-gain-ink" style={{ fontFamily: 'var(--font-display)' }}>B</span>
                 </div>
                 <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   Invest Instead
@@ -313,7 +314,7 @@ export function PaymentVsInvesting() {
                     <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
                       {s.label}
                     </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
+                    <p className="text-sm font-bold mt-0.5" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
                       {s.value}
                     </p>
                   </div>
@@ -418,10 +419,10 @@ export function PaymentVsInvesting() {
               {result.yearByYear.map((row) => (
                 <tr key={row.year}>
                   <td>{row.year}</td>
-                  <td style={{ color: 'var(--note-blue)' }}>{formatRand(row.bondBalanceA)}</td>
+                  <td style={{ color: 'var(--note-blue-ink)' }}>{formatRand(row.bondBalanceA)}</td>
                   <td style={{ color: 'var(--ink-muted)' }}>{formatRand(row.bondBalanceB)}</td>
-                  <td style={{ color: 'var(--gain)' }}>{formatRand(row.investmentValue)}</td>
-                  <td style={{ color: row.netDifference >= 0 ? 'var(--gain)' : 'var(--note-blue)' }}>
+                  <td style={{ color: 'var(--gain-ink)' }}>{formatRand(row.investmentValue)}</td>
+                  <td style={{ color: row.netDifference >= 0 ? 'var(--gain-ink)' : 'var(--note-blue-ink)' }}>
                     {row.netDifference >= 0 ? '+' : ''}{formatRand(row.netDifference)}
                   </td>
                   <td>
@@ -429,7 +430,7 @@ export function PaymentVsInvesting() {
                       className="text-xs font-semibold px-2 py-0.5 rounded-full"
                       style={{
                         background: row.winner === 'B' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)',
-                        color: row.winner === 'B' ? 'var(--gain)' : 'var(--note-blue)',
+                        color: row.winner === 'B' ? 'var(--gain-ink)' : 'var(--note-blue-ink)',
                         fontFamily: 'var(--font-text)',
                       }}
                     >
@@ -444,9 +445,9 @@ export function PaymentVsInvesting() {
 
         {/* SA Tax disclosure */}
         <div className="mt-5 p-4 bg-note-orange/6 border border-note-orange/15 rounded-xl flex items-start gap-3">
-          <Zap size={14} className="text-note-orange mt-0.5 flex-shrink-0" />
+          <Zap size={14} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-xs font-semibold text-note-orange mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-xs font-semibold text-note-orange-ink mb-1" style={{ fontFamily: 'var(--font-display)' }}>
               SA Tax Note
             </p>
             <p className="text-xs text-ink-muted leading-relaxed" style={{ fontFamily: 'var(--font-text)' }}>

@@ -14,7 +14,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -201,8 +201,8 @@ export function WealthTargetPlanner() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.blue, 13)}` }}>
-            <Target size={22} style={{ color: C.blue }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.blue, 13) }}>
+            <Target size={22} style={{ color: textTone(C.blue) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Wealth Target Planner</h1>
@@ -274,7 +274,7 @@ export function WealthTargetPlanner() {
             />
             <button
               className="mt-1 text-xs"
-              style={{ color: C.blue }}
+              style={{ color: textTone(C.blue) }}
               onClick={() => setRateOverride(null)}
             >
               Reset to preset
@@ -292,8 +292,8 @@ export function WealthTargetPlanner() {
         <div className="lg:col-span-2 space-y-4">
           {tfsaMonthlyBreached && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 27)}` }}>
-              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
+              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
               <span style={{ color: 'var(--ink-muted)' }}>
                 Required monthly of {formatRand(displayPMT)} exceeds the TFSA annual limit of R46,000
                 (R3,833/month). Consider splitting between TFSA and a unit trust.
@@ -302,8 +302,8 @@ export function WealthTargetPlanner() {
           )}
           {tfsaLifetimeBreached && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 27)}` }}>
-              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 27)}` }}>
+              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
               <span style={{ color: 'var(--ink-muted)' }}>
                 Total contributions of {formatRandShort(result.totalContrib)} exceed the TFSA lifetime cap of R500,000.
               </span>
@@ -323,11 +323,11 @@ export function WealthTargetPlanner() {
 
           {startLaterPenalty != null && startLaterPenalty > 0 && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 20)}` }}>
-              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
+              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
               <span style={{ color: 'var(--ink-muted)' }}>
                 If you wait 2 years to start, you would need{' '}
-                <span style={{ color: C.red, fontWeight: 600 }}>{formatRand(startLaterPenalty)} more per month</span>
+                <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterPenalty)} more per month</span>
                 {' '}to reach the same target.
               </span>
             </div>
@@ -360,7 +360,7 @@ export function WealthTargetPlanner() {
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${alpha(C.blue, 33)}`, strokeWidth: 1 }}
+                  cursor={{ stroke: alpha(C.blue, 33), strokeWidth: 1 }}
                 />
                 {mode === 'target' && (
                   <ReferenceLine y={target} stroke={C.green} strokeDasharray="5 3"
@@ -386,8 +386,8 @@ export function WealthTargetPlanner() {
             <div className="grid grid-cols-3 gap-3">
               {scenarios.map(({ label, r, color, pmt, finalBalance, realVal }) => (
                 <div key={label} className="p-3 rounded-xl text-xs"
-                  style={{ background: `${alpha(color, 7)}`, border: `1px solid ${alpha(color, 20)}` }}>
-                  <div className="font-semibold mb-2" style={{ color }}>{label} ({r}%)</div>
+                  style={{ background: alpha(color, 7), border: `1px solid ${alpha(color, 20)}` }}>
+                  <div className="font-semibold mb-2" style={{ color: textTone(color) }}>{label} ({r}%)</div>
                   {mode === 'target' ? (
                     <>
                       <div style={{ color: 'var(--ink-muted)' }}>Monthly needed</div>
@@ -422,8 +422,8 @@ export function WealthTargetPlanner() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {result.milestones.map((m) => (
                   <div key={m.amount} className="flex items-center gap-2 p-3 rounded-xl text-sm"
-                    style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
-                    <CheckCircle2 size={14} style={{ color: C.green }} />
+                    style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
+                    <CheckCircle2 size={14} style={{ color: textTone(C.green) }} />
                     <div>
                       <div className="font-semibold" style={{ color: 'var(--ink)' }}>
                         {formatRandShort(m.amount)}

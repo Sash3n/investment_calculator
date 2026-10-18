@@ -11,7 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const CGT_ANNUAL_EXCLUSION = 50_000;
@@ -254,7 +254,7 @@ export function TaxProjections() {
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
           >
-            <TrendingUp size={20} className="text-note-blue" />
+            <TrendingUp size={20} className="text-note-blue-ink" />
           </div>
           <div>
             <h1
@@ -269,7 +269,7 @@ export function TaxProjections() {
           </div>
           <span
             className="ml-auto text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
           >
             2026 Tax Year
           </span>
@@ -281,7 +281,7 @@ export function TaxProjections() {
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
         style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}
       >
-        <Info size={14} className="text-note-blue mt-0.5 flex-shrink-0" />
+        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
         <span style={{ color: 'var(--ink-muted)' }}>
           Shows how your rental tax liability changes year-by-year as rent escalates and bond interest deductions decrease —
           plus CGT if you sold at each year. <strong style={{ color: 'var(--ink)' }}>Net Rental Profit</strong> = Gross Rent − All Deductible Costs − Tax (principal repayment excluded — it builds equity).
@@ -296,7 +296,7 @@ export function TaxProjections() {
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-              <Building2 size={15} className="text-note-orange" />
+              <Building2 size={15} className="text-note-orange-ink" />
             </div>
             <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Property &amp; Bond
@@ -323,7 +323,7 @@ export function TaxProjections() {
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-              <Receipt size={15} className="text-note-blue" />
+              <Receipt size={15} className="text-note-blue-ink" />
             </div>
             <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Rental &amp; Income
@@ -399,7 +399,7 @@ export function TaxProjections() {
           style={{ background: 'color-mix(in srgb, var(--gain) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}
         >
           <div>
-            <p className="text-xs font-semibold mb-0.5" style={{ color: C.green }}>
+            <p className="text-xs font-semibold mb-0.5" style={{ color: textTone(C.green) }}>
               Optimal Exit: Year {bestExit.year}
             </p>
             <p className="text-[11px]" style={{ color: 'var(--ink-muted)' }}>
@@ -409,13 +409,13 @@ export function TaxProjections() {
           <div className="flex items-center gap-6 flex-shrink-0">
             <div className="text-right">
               <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Net Proceeds</p>
-              <p className="text-sm font-bold" style={{ color: C.green }}>
+              <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
                 {formatRand(bestExit.netProceedsAtExit, 0)}
               </p>
             </div>
             <div className="text-right">
               <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Total Return</p>
-              <p className="text-sm font-bold" style={{ color: C.green }}>
+              <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
                 {formatRand(bestExit.netProceedsAtExit + bestExit.cumulativeNetCash - inp.purchasePrice, 0)}
               </p>
             </div>
@@ -511,11 +511,11 @@ export function TaxProjections() {
                   borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
                   background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                 }}>
-                  <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue)' }}>Y{r.year}</td>
+                  <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue-ink)' }}>Y{r.year}</td>
                   <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                     {formatRand(r.grossRent, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: C.orange }}>
+                  <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>
                     {formatRand(r.bondInterest, 0)}
                   </td>
                   <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
@@ -524,11 +524,11 @@ export function TaxProjections() {
                   <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                     {formatRand(r.taxableRental, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: C.red }}>
+                  <td className="py-2 px-3" style={{ color: textTone(C.red) }}>
                     {formatRand(r.rentalTax, 0)}
                   </td>
                   <td className="py-2 px-3 font-semibold"
-                    style={{ color: r.netCash >= 0 ? C.green : C.red }}>
+                    style={{ color: textTone(r.netCash >= 0 ? C.green : C.red) }}>
                     {formatRand(r.netCash, 0)}
                   </td>
                 </tr>
@@ -570,27 +570,27 @@ export function TaxProjections() {
                       ? 'color-mix(in srgb, var(--gain) 6%, transparent)'
                       : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: isOptimal ? C.green : 'var(--note-blue)' }}>
+                    <td className="py-2 px-3 font-bold" style={{ color: textTone(isOptimal ? C.green : 'var(--note-blue)') }}>
                       Y{r.year}{isOptimal ? ' ★' : ''}
                     </td>
                     <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.propertyValue, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.orange }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>
                       {formatRand(r.capitalGain, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.red }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.red) }}>
                       {formatRand(r.cgtAtExit, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.green }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.green) }}>
                       {formatRand(r.netProceedsAtExit, 0)}
                     </td>
                     <td className="py-2 px-3"
-                      style={{ color: r.cumulativeNetCash >= 0 ? C.green : C.red }}>
+                      style={{ color: textTone(r.cumulativeNetCash >= 0 ? C.green : C.red) }}>
                       {formatRand(r.cumulativeNetCash, 0)}
                     </td>
                     <td className="py-2 px-3 font-semibold"
-                      style={{ color: totalReturn >= 0 ? C.green : C.red }}>
+                      style={{ color: textTone(totalReturn >= 0 ? C.green : C.red) }}>
                       {formatRand(totalReturn, 0)}
                     </td>
                   </tr>

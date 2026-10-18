@@ -10,7 +10,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -158,8 +158,8 @@ export function BondExtra() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.green, 13)}` }}>
-            <Building2 size={22} style={{ color: C.green }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.green, 13) }}>
+            <Building2 size={22} style={{ color: textTone(C.green) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Bond Extra Payment</h1>
@@ -194,13 +194,13 @@ export function BondExtra() {
             onClick={() => setBiweekly(!biweekly)}
             className="w-full flex items-center justify-between p-3 rounded-xl text-sm transition-colors"
             style={{
-              background: biweekly ? `${alpha(C.green, 8)}` : 'transparent',
+              background: biweekly ? alpha(C.green, 8) : 'transparent',
               border: `1px solid ${biweekly ? C.green : 'var(--rule)'}`,
               color: 'var(--ink)',
             }}
           >
             <span>Bi-weekly payment schedule</span>
-            <span className="text-xs" style={{ color: biweekly ? C.green : 'var(--ink-muted)' }}>
+            <span className="text-xs" style={{ color: textTone(biweekly ? C.green : 'var(--ink-muted)') }}>
               {biweekly ? 'ON' : 'OFF'}
             </span>
           </button>
@@ -212,8 +212,8 @@ export function BondExtra() {
 
           {!hasAnyExtra && (
             <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
-              <AlertCircle size={13} style={{ color: C.orange }} />
+              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
+              <AlertCircle size={13} style={{ color: textTone(C.orange) }} />
               <span style={{ color: 'var(--ink-muted)' }}>Add an extra payment to see the impact.</span>
             </div>
           )}
@@ -229,12 +229,12 @@ export function BondExtra() {
 
           {hasAnyExtra && interestSaved > 0 && (
             <div className="p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
+              style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
               <span style={{ color: 'var(--ink-muted)' }}>
                 Your extra payments save{' '}
-                <span style={{ color: C.green, fontWeight: 600 }}>{formatRandShort(interestSaved)}</span>
+                <span style={{ color: textTone(C.green), fontWeight: 600 }}>{formatRandShort(interestSaved)}</span>
                 {' '}in interest and cut{' '}
-                <span style={{ color: C.green, fontWeight: 600 }}>
+                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
                   {yearsSaved > 0 ? `${yearsSaved}yr ` : ''}{remMonthsSaved}mo
                 </span>
                 {' '}off your bond term.
@@ -271,7 +271,7 @@ export function BondExtra() {
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${alpha(C.blue, 33)}`, strokeWidth: 1 }}
+                  cursor={{ stroke: alpha(C.blue, 33), strokeWidth: 1 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Area type="monotone" dataKey="standard"  name="Standard"      stroke={C.red}     fill="url(#be-std)"   strokeWidth={2} />
@@ -306,8 +306,8 @@ export function BondExtra() {
                     {yearlyTable.map(({ yr, interest, principal, endBal }) => (
                       <tr key={yr} style={{ borderBottom: '1px solid var(--rule)' }}>
                         <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>{yr}</td>
-                        <td className="py-2 px-3" style={{ color: C.red }}>{formatRand(interest)}</td>
-                        <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(principal)}</td>
+                        <td className="py-2 px-3" style={{ color: textTone(C.red) }}>{formatRand(interest)}</td>
+                        <td className="py-2 px-3" style={{ color: textTone(C.green) }}>{formatRand(principal)}</td>
                         <td className="py-2 px-3 font-medium" style={{ color: 'var(--ink)' }}>{formatRand(endBal)}</td>
                       </tr>
                     ))}

@@ -6,7 +6,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -91,8 +91,8 @@ export function VatCalculator() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.orange, 13)}` }}>
-            <Receipt size={22} style={{ color: C.orange }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.orange, 13) }}>
+            <Receipt size={22} style={{ color: textTone(C.orange) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>VAT Calculator</h1>
@@ -131,8 +131,8 @@ export function VatCalculator() {
                 onClick={() => setMode(m)}
                 className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors"
                 style={{
-                  background: mode === m ? `${alpha(C.orange, 20)}` : 'transparent',
-                  color:      mode === m ? C.orange         : 'var(--ink-muted)',
+                  background: mode === m ? alpha(C.orange, 20) : 'transparent',
+                  color:      textTone(mode === m ? C.orange         : 'var(--ink-muted)'),
                 }}
               >
                 <ArrowLeftRight size={14} />
@@ -156,8 +156,8 @@ export function VatCalculator() {
               />
 
               <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
-                <Info size={13} style={{ color: C.blue }} />
+                style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+                <Info size={13} style={{ color: textTone(C.blue) }} />
                 <span style={{ color: 'var(--ink-muted)' }}>SA VAT rate is 15% (effective 1 May 2025).</span>
               </div>
 
@@ -176,8 +176,8 @@ export function VatCalculator() {
 
               {annualTurnover >= VAT_REG_THRESHOLD && (
                 <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                  style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 20)}` }}>
-                  <Receipt size={13} style={{ color: C.red }} />
+                  style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
+                  <Receipt size={13} style={{ color: textTone(C.red) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
                     Your turnover exceeds R1,000,000 — you must register for VAT within 21 business days.
                   </span>
@@ -185,8 +185,8 @@ export function VatCalculator() {
               )}
               {annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD && result.monthsTillRegistration > 0 && (
                 <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                  style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
-                  <Info size={13} style={{ color: C.orange }} />
+                  style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
+                  <Info size={13} style={{ color: textTone(C.orange) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
                     At this run rate you will hit the VAT threshold in approximately{' '}
                     {result.monthsTillRegistration} month{result.monthsTillRegistration !== 1 ? 's' : ''}.
@@ -234,7 +234,7 @@ export function VatCalculator() {
               <button
                 onClick={addLine}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background: `${alpha(C.orange, 13)}`, color: C.orange }}
+                style={{ background: alpha(C.orange, 13), color: textTone(C.orange) }}
               >
                 <Plus size={12} />
                 Add line
@@ -288,8 +288,8 @@ export function VatCalculator() {
                       onClick={() => updateLine(line.id, 'taxable', !line.taxable)}
                       className="px-2 py-1 rounded text-xs font-medium transition-colors"
                       style={{
-                        background: line.taxable ? `${alpha(C.green, 13)}` : `${alpha(C.orange, 13)}`,
-                        color: line.taxable ? C.green : C.orange,
+                        background: line.taxable ? alpha(C.green, 13) : alpha(C.orange, 13),
+                        color: textTone(line.taxable ? C.green : C.orange),
                       }}
                     >
                       {line.taxable ? 'Yes' : 'No'}
@@ -300,7 +300,7 @@ export function VatCalculator() {
                   </div>
                   <div className="col-span-1 flex justify-end">
                     <button onClick={() => removeLine(line.id)}>
-                      <Trash2 size={13} style={{ color: C.red }} />
+                      <Trash2 size={13} style={{ color: textTone(C.red) }} />
                     </button>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ export function VatCalculator() {
                 <div key={label as string} className="flex justify-between items-center py-1"
                   style={{ borderTop: '1px solid var(--rule)' }}>
                   <span style={{ color: 'var(--ink-muted)' }}>{label as string}</span>
-                  <span style={{ color: color as string, fontWeight: 500 }}>{val as string}</span>
+                  <span style={{ color: textTone(color as string), fontWeight: 500 }}>{val as string}</span>
                 </div>
               ))}
             </div>
@@ -331,8 +331,8 @@ export function VatCalculator() {
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: C.blue }} />
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               Toggle "Taxable?" for zero-rated or exempt items (e.g. financial services, residential rent, exports).
               15% VAT applies only to standard-rated supplies.

@@ -15,7 +15,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcAffordability, type AffordabilityInputs } from '../utils/affordability';
 import { usePrimeRate } from '../hooks/usePrimeRate';
-import { alpha, seriesColors } from '../utils/color';
+import { alpha, seriesColors, textTone } from '../utils/color';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -29,7 +29,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 160 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? C.blue }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? C.blue) }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -95,7 +95,7 @@ export function Affordability() {
               How much home loan can you qualify for? Based on SA bank affordability rules
             </p>
           </div>
-          <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+          <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
             Prime: {liveRate.loading ? '…' : `${liveRate.primeRate}%`}
           </span>
         </div>
@@ -106,7 +106,7 @@ export function Affordability() {
         <div className="glass-card p-5 space-y-4">
           <SectionHeader title="Your Finances" icon={Wallet} />
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.blue }} />
+            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>Use gross (before-tax) income. Banks assess affordability on gross salary, then verify net via bank statements.</span>
           </div>
 
@@ -149,7 +149,7 @@ export function Affordability() {
             >
               {result.desired.qualifies ? <CheckCircle2 size={24} color={C.green} className="flex-shrink-0 mt-0.5" /> : <XCircle size={24} color={C.red} className="flex-shrink-0 mt-0.5" />}
               <div className="flex-1">
-                <p className="font-semibold" style={{ color: result.desired.qualifies ? C.green : C.red, fontFamily: 'var(--font-display)' }}>
+                <p className="font-semibold" style={{ color: textTone(result.desired.qualifies ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
                   {result.desired.qualifies
                     ? `You likely qualify for a ${formatRand(result.desired.price, 0)} home`
                     : `${formatRand(result.desired.price, 0)} is above your current qualifying range`}
@@ -186,7 +186,7 @@ export function Affordability() {
                 </BarChart>
               </ResponsiveContainer>
               <p className="text-xs mt-2 flex items-center gap-1.5" style={{ color: 'var(--ink-subtle)' }}>
-                <TrendingDown size={11} style={{ color: C.red }} />
+                <TrendingDown size={11} style={{ color: textTone(C.red) }} />
                 At {formatPercent(result.stressRate, 2)}, your max loan drops to {formatRandShort(result.stressMaxLoan)} — a {formatRandShort(result.maxLoan - result.stressMaxLoan)} reduction.
               </p>
             </div>
@@ -246,8 +246,8 @@ export function Affordability() {
                 { title: 'Transfer duty', color: C.teal, body: 'SARS charges transfer duty on property above R1.1m on a sliding scale. On a R1.8m home that\'s about R21,000. Budget for it plus bond registration and conveyancing — typically 3–5% of the price in total upfront costs.' },
                 { title: 'Improve your chances', color: C.brown, body: 'Pay down existing debt, save a larger deposit, fix errors on your credit report, and avoid new credit before applying. A clean record and lower DTI can unlock a bigger bond and a better rate.' },
               ].map((item) => (
-                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: `${alpha(item.color, 3)}`, border: `1px solid ${alpha(item.color, 13)}` }}>
-                  <p className="text-xs font-bold" style={{ color: item.color }}>{item.title}</p>
+                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: alpha(item.color, 3), border: `1px solid ${alpha(item.color, 13)}` }}>
+                  <p className="text-xs font-bold" style={{ color: textTone(item.color) }}>{item.title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.body}</p>
                 </div>
               ))}

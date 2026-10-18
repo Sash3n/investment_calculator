@@ -21,7 +21,7 @@ import {
   SARS_CODE_BY_CODE, searchSarsCodes, sumCodeRows, type CodeRow,
 } from '../data/sarsCodes';
 import type { TaxAssessmentInputs, AgeGroup } from '../types';
-import { alpha, SERIES } from '../utils/color';
+import { alpha, SERIES, textTone } from '../utils/color';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -101,8 +101,8 @@ function BreakdownRow({ label, value, bold, color, negative }: {
     <div className="flex items-center justify-between py-1.5 text-sm" style={{
       borderBottom: bold ? 'none' : '1px dashed var(--rule)',
     }}>
-      <span style={{ color: color ?? 'var(--ink-muted)', fontWeight: bold ? 700 : 400 }}>{label}</span>
-      <span style={{ color: color ?? (bold ? 'var(--ink)' : 'var(--ink-muted)'), fontWeight: bold ? 700 : 500 }}>
+      <span style={{ color: textTone(color ?? 'var(--ink-muted)'), fontWeight: bold ? 700 : 400 }}>{label}</span>
+      <span style={{ color: textTone(color ?? (bold ? 'var(--ink)' : 'var(--ink-muted)')), fontWeight: bold ? 700 : 500 }}>
         {negative && value > 0 ? '− ' : ''}{formatRand(Math.abs(value), 0)}
       </span>
     </div>
@@ -137,7 +137,7 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
     <div className="glass-card p-5 space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <SectionHeader title="Fill From Your IRP5 / IT3 Codes" icon={FileText} />
-        <Link to="/sars-codes" className="text-xs underline flex items-center gap-1" style={{ color: C.teal }}>
+        <Link to="/sars-codes" className="text-xs underline flex items-center gap-1" style={{ color: textTone(C.teal) }}>
           <BookOpen size={12} /> What do the codes mean?
         </Link>
       </div>
@@ -171,9 +171,9 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
               {matches.map((m) => (
                 <button key={m.code} onClick={() => { setPickedCode(m.code); setQuery(''); }}
                   className="w-full text-left px-3 py-2 text-sm transition-all hover:bg-note-blue/10 flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold" style={{ color: C.blue }}>{m.code}</span>
+                  <span className="font-mono text-xs font-bold" style={{ color: textTone(C.blue) }}>{m.code}</span>
                   <span className="flex-1 truncate" style={{ color: 'var(--ink)' }}>{m.label}</span>
-                  {!m.mapsTo && <span className="text-[9px] uppercase" style={{ color: C.orange }}>info</span>}
+                  {!m.mapsTo && <span className="text-[9px] uppercase" style={{ color: textTone(C.orange) }}>info</span>}
                 </button>
               ))}
             </div>
@@ -183,12 +183,12 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
           onChange={(v) => setAmount(parseFloat(v) || 0)} prefix="R" />
         <button onClick={addRow} disabled={!pickedCode || amount <= 0}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
           <Plus size={14} /> Add
         </button>
       </div>
       {picked && (
-        <p className="text-[11px] -mt-1" style={{ color: picked.mapsTo ? 'var(--ink-subtle)' : C.orange }}>
+        <p className="text-[11px] -mt-1" style={{ color: textTone(picked.mapsTo ? 'var(--ink-subtle)' : C.orange) }}>
           {picked.description}
         </p>
       )}
@@ -201,14 +201,14 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
             return (
               <div key={`${r.code}-${i}`} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm"
                 style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
-                <span className="font-mono text-xs font-bold" style={{ color: C.blue }}>{r.code}</span>
+                <span className="font-mono text-xs font-bold" style={{ color: textTone(C.blue) }}>{r.code}</span>
                 <span className="flex-1 truncate" style={{ color: 'var(--ink)' }}>{meta?.label ?? 'Unknown code'}</span>
                 {meta && !meta.mapsTo && (
-                  <span className="text-[9px] uppercase font-bold" style={{ color: C.orange }}>not counted</span>
+                  <span className="text-[9px] uppercase font-bold" style={{ color: textTone(C.orange) }}>not counted</span>
                 )}
                 <span className="font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(r.amount, 0)}</span>
                 <button aria-label={`Remove ${r.code}`} onClick={() => setRows(rows.filter((_, j) => j !== i))}
-                  className="p-1 rounded-lg" style={{ color: C.red }}>
+                  className="p-1 rounded-lg" style={{ color: textTone(C.red) }}>
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -220,7 +220,7 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
       {/* Informational codes note */}
       {infoRows.length > 0 && (
         <div className="flex items-start gap-2 p-3 rounded-xl text-[11px]" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-          <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+          <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
           <span style={{ color: 'var(--ink-muted)' }}>
             {infoRows.map((r) => r.code).join(', ')}: informational codes (non-taxable, totals, or items like
             lump sums this estimator does not model) — they are kept for your record but not added to the estimate.
@@ -231,7 +231,7 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
       {/* Apply */}
       {sumEntries.length > 0 && (
         <div className="p-3 rounded-xl space-y-2" style={{ background: 'color-mix(in srgb, var(--gain) 6%, transparent)', border: `1px solid ${alpha(C.green, 20)}` }}>
-          <p className="text-xs font-semibold" style={{ color: C.green }}>Will be applied to the form:</p>
+          <p className="text-xs font-semibold" style={{ color: textTone(C.green) }}>Will be applied to the form:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
             {sumEntries.map(([field, value]) => (
               <div key={field} className="flex justify-between text-xs" style={{ color: 'var(--ink-muted)' }}>
@@ -242,7 +242,7 @@ function Irp5CodePanel({ rows, setRows, onApply }: {
           </div>
           <button onClick={onApply}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+            style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
             <ArrowDown size={14} /> Apply codes to form
           </button>
         </div>
@@ -395,13 +395,13 @@ export function TaxAssessment() {
             border: `1px solid ${alpha(refund ? C.green : C.red, 33)}`,
           }}>
             {refund
-              ? <CheckCircle2 size={34} style={{ color: C.green }} />
-              : <AlertCircle size={34} style={{ color: C.red }} />}
+              ? <CheckCircle2 size={34} style={{ color: textTone(C.green) }} />
+              : <AlertCircle size={34} style={{ color: textTone(C.red) }} />}
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>
                 {refund ? 'Estimated refund due to you' : 'Estimated amount owing to SARS'}
               </p>
-              <p className="text-3xl font-bold" style={{ color: refund ? C.green : C.red, fontFamily: 'var(--font-display)' }}>
+              <p className="text-3xl font-bold" style={{ color: textTone(refund ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
                 {formatRand(Math.abs(result.refundOrOwing), 0)}
               </p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
@@ -485,7 +485,7 @@ export function TaxAssessment() {
           {/* Dividends note */}
           {inputs.localDividends > 0 && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: `1px solid ${alpha(C.blue, 20)}` }}>
-              <Info size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.blue }} />
+              <Info size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.blue) }} />
               <span style={{ color: 'var(--ink-muted)' }}>
                 Your {formatRand(inputs.localDividends, 0)} in local dividends was taxed at source via
                 20% dividends withholding tax ({formatRand(result.dividendsTax, 0)}). It does not form part
@@ -495,7 +495,7 @@ export function TaxAssessment() {
           )}
 
           <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-            <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+            <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               Estimate based on the {yearLabel} SARS tables. Not a SARS filing and not tax advice.
               Excludes foreign income, s20A rental loss ring-fencing, retirement lump sums and

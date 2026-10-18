@@ -18,6 +18,7 @@ import { exportCarPDF } from '../utils/pdf';
 import { formatRand } from '../utils/format';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { CarInputs } from '../types';
+import { textTone } from '../utils/color';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -47,7 +48,7 @@ function CustomTooltip({ active, payload, label }: any) {
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: p.color }}>
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
           {p.name}: {formatRand(p.value)}
         </p>
       ))}
@@ -224,7 +225,7 @@ export function CarFinance() {
             <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
               onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
             <button
-              className="text-xs text-note-blue hover:text-note-blue transition-colors flex items-center gap-1"
+              className="text-xs text-note-blue-ink hover:text-note-blue-ink transition-colors flex items-center gap-1"
               style={{ fontFamily: 'var(--font-text)' }}
               onClick={() => set('interestRate', String(liveRate.primeRate))}
             >
@@ -301,9 +302,9 @@ export function CarFinance() {
           {/* Minimum instalment override notice */}
           {result.instalmentOverride && (
             <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange flex items-start gap-3">
-              <AlertTriangle size={16} className="text-note-orange mt-0.5 flex-shrink-0" />
+              <AlertTriangle size={16} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-sm font-semibold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   Bank Minimum Overrides Calculated Payment
                 </p>
                 <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
@@ -319,12 +320,12 @@ export function CarFinance() {
             <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange grid grid-cols-3 gap-4">
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Effective Monthly</p>
-                <p className="text-base font-bold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-base font-bold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
                 <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>instalment + service fee</p>
               </div>
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Total Service Fees</p>
-                <p className="text-base font-bold text-loss" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
+                <p className="text-base font-bold text-loss-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
                 <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>over {inputs.termMonths} months</p>
               </div>
               <div>
@@ -340,11 +341,11 @@ export function CarFinance() {
             <div className="glass-card-static p-4 border-l-[3px] border-l-gain grid grid-cols-3 gap-4">
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Interest Saved</p>
-                <p className="text-base font-bold text-gain" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.interestSaved)}</p>
+                <p className="text-base font-bold text-gain-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.interestSaved)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Months Saved</p>
-                <p className="text-base font-bold text-gain" style={{ fontFamily: 'var(--font-display)' }}>{result.monthsSaved} months</p>
+                <p className="text-base font-bold text-gain-ink" style={{ fontFamily: 'var(--font-display)' }}>{result.monthsSaved} months</p>
               </div>
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Payoff In</p>
@@ -365,7 +366,7 @@ export function CarFinance() {
                    style={{ fontFamily: 'var(--font-text)' }}>
                   {s.label}
                 </p>
-                <p className="text-base font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
+                <p className="text-base font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
                   {s.value}
                 </p>
               </div>
@@ -375,9 +376,9 @@ export function CarFinance() {
           {/* Underwater warning */}
           {result.underwaterMonths > 0 && (
             <div className="glass-card-static p-4 border-l-[3px] border-l-loss flex items-start gap-3">
-              <AlertTriangle size={16} className="text-loss mt-0.5 flex-shrink-0" />
+              <AlertTriangle size={16} className="text-loss-ink mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-loss" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-sm font-semibold text-loss-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   Negative Equity Warning
                 </p>
                 <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
@@ -520,7 +521,7 @@ export function CarFinance() {
                 <p className="text-xs text-ink-muted mb-2" style={{ fontFamily: 'var(--font-text)' }}>
                   Cash Purchase Opportunity Cost
                 </p>
-                <p className="text-xl font-bold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-xl font-bold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>
                   {formatRand(result.cashPurchaseOpportunityCost)}
                 </p>
                 <p className="text-xs text-ink-subtle mt-1" style={{ fontFamily: 'var(--font-text)' }}>
@@ -549,7 +550,7 @@ export function CarFinance() {
             <span className="text-xs text-ink-subtle" style={{ fontFamily: 'var(--font-text)' }}>
               {result.amortization.length} payments
             </span>
-            {tableOpen ? <ChevronUp size={16} className="text-note-blue" /> : <ChevronDown size={16} className="text-note-blue" />}
+            {tableOpen ? <ChevronUp size={16} className="text-note-blue-ink" /> : <ChevronDown size={16} className="text-note-blue-ink" />}
           </div>
         </button>
 
@@ -569,7 +570,7 @@ export function CarFinance() {
                       className={clsx(
                         'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                         showWithExtras === isExtras && !disabled
-                          ? 'bg-note-blue/20 text-note-blue border border-note-blue/30'
+                          ? 'bg-note-blue/20 text-note-blue-ink border border-note-blue/30'
                           : 'text-ink-subtle hover:text-ink-muted',
                         disabled && 'opacity-30 cursor-not-allowed'
                       )}
@@ -617,10 +618,10 @@ export function CarFinance() {
                         <td className="px-4 py-2 text-ink-subtle">{row.period}</td>
                         <td className="px-4 py-2 text-ink-muted">{formatRand(row.openingBalance)}</td>
                         <td className="px-4 py-2 font-semibold text-ink">{formatRand(row.payment)}</td>
-                        <td className="px-4 py-2 text-gain">{formatRand(row.principal)}</td>
-                        <td className="px-4 py-2 text-loss">{formatRand(row.interest)}</td>
+                        <td className="px-4 py-2 text-gain-ink">{formatRand(row.principal)}</td>
+                        <td className="px-4 py-2 text-loss-ink">{formatRand(row.interest)}</td>
                         <td className="px-4 py-2 text-ink-muted">{formatRand(row.closingBalance)}</td>
-                        <td className="px-4 py-2 text-note-orange">{formatRand(row.cumulativeInterest)}</td>
+                        <td className="px-4 py-2 text-note-orange-ink">{formatRand(row.cumulativeInterest)}</td>
                       </tr>
                     ))}
                 </tbody>

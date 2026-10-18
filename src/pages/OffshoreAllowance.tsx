@@ -10,7 +10,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort, formatNumber } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -95,8 +95,8 @@ export function OffshoreAllowance() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.teal, 13)}` }}>
-            <Globe size={22} style={{ color: C.teal }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.teal, 13) }}>
+            <Globe size={22} style={{ color: textTone(C.teal) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Offshore Allowance Planner</h1>
@@ -109,8 +109,8 @@ export function OffshoreAllowance() {
       </div>
 
       <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-        style={{ background: `${alpha(C.teal, 7)}`, border: `1px solid ${alpha(C.teal, 20)}` }}>
-        <Info size={16} style={{ color: C.teal }} />
+        style={{ background: alpha(C.teal, 7), border: `1px solid ${alpha(C.teal, 20)}` }}>
+        <Info size={16} style={{ color: textTone(C.teal) }} />
         <div style={{ color: 'var(--ink-muted)' }}>
           <span style={{ color: 'var(--ink)', fontWeight: 600 }}>SA allowances: </span>
           R1,000,000/year Single Discretionary Allowance (no SARB approval) +
@@ -138,8 +138,8 @@ export function OffshoreAllowance() {
                   onClick={() => { setCurrency(c); setSpotRate(CURRENCY_DEFAULTS[c].rate); setOffshoreReturn(CURRENCY_DEFAULTS[c].defaultReturn); }}
                   className="py-2 rounded-lg text-xs font-semibold transition-colors"
                   style={{
-                    background: currency === c ? C.teal : `${alpha(C.teal, 7)}`,
-                    color:      currency === c ? 'var(--on-accent)' : C.teal,
+                    background: currency === c ? C.teal : alpha(C.teal, 7),
+                    color:      textTone(currency === c ? 'var(--on-accent)' : C.teal),
                   }}
                 >
                   {c}
@@ -170,7 +170,7 @@ export function OffshoreAllowance() {
 
           <div className="p-4 rounded-xl text-sm"
             style={{
-              background: advantage >= 0 ? `${alpha(C.green, 7)}` : 'color-mix(in srgb, var(--note-orange) 7%, transparent)',
+              background: advantage >= 0 ? alpha(C.green, 7) : 'color-mix(in srgb, var(--note-orange) 7%, transparent)',
               border:     `1px solid ${alpha(advantage >= 0 ? C.green : C.orange, 20)}`,
             }}>
             <span style={{ color: 'var(--ink-muted)' }}>
@@ -194,7 +194,7 @@ export function OffshoreAllowance() {
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${alpha(C.blue, 33)}`, strokeWidth: 1 }}
+                  cursor={{ stroke: alpha(C.blue, 33), strokeWidth: 1 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Line type="monotone" dataKey="local"    name="Local (JSE)"               stroke={C.blue} strokeWidth={2} dot={false} />

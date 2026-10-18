@@ -6,6 +6,7 @@ import {
 import { TrendingDown, AlertCircle } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
+import { textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -76,7 +77,7 @@ export function InflationCalc() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--loss) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 25%, transparent)' }}>
-            <TrendingDown size={20} className="text-loss" />
+            <TrendingDown size={20} className="text-loss-ink" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
@@ -109,7 +110,7 @@ export function InflationCalc() {
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
               style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-base font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
             <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
           </div>
         ))}
@@ -141,7 +142,7 @@ export function InflationCalc() {
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                   style={{
                     background: presetIdx === i ? 'color-mix(in srgb, var(--loss) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                    color: presetIdx === i ? C.red : 'var(--ink-muted)',
+                    color: textTone(presetIdx === i ? C.red : 'var(--ink-muted)'),
                     border: `1px solid ${presetIdx === i ? 'color-mix(in srgb, var(--loss) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {p.label}
@@ -161,8 +162,8 @@ export function InflationCalc() {
             </p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               {formatRand(amount, 0)} today will only buy the equivalent of{' '}
-              <strong style={{ color: C.red }}>{formatRand(purchasingPower, 0)}</strong> worth of goods in {years} years at {inflationRate}% inflation.
-              That's a <strong style={{ color: C.red }}>{(((amount - purchasingPower) / amount) * 100).toFixed(0)}%</strong> loss of purchasing power.
+              <strong style={{ color: textTone(C.red) }}>{formatRand(purchasingPower, 0)}</strong> worth of goods in {years} years at {inflationRate}% inflation.
+              That's a <strong style={{ color: textTone(C.red) }}>{(((amount - purchasingPower) / amount) * 100).toFixed(0)}%</strong> loss of purchasing power.
             </p>
           </div>
 
@@ -171,15 +172,15 @@ export function InflationCalc() {
               To Maintain Purchasing Power
             </p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
-              You need <strong style={{ color: C.blue }}>{formatRand(requiredSavings, 0)}</strong> in {years} years to buy what {formatRand(amount, 0)} buys today.
-              Investing <strong style={{ color: C.green }}>{formatRand(monthlyNeeded, 0)}/mo</strong> at {investReturn}% gets you there.
+              You need <strong style={{ color: textTone(C.blue) }}>{formatRand(requiredSavings, 0)}</strong> in {years} years to buy what {formatRand(amount, 0)} buys today.
+              Investing <strong style={{ color: textTone(C.green) }}>{formatRand(monthlyNeeded, 0)}/mo</strong> at {investReturn}% gets you there.
             </p>
           </div>
 
           {realReturn < 2 && (
             <div className="p-4 rounded-xl flex items-start gap-2"
               style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
-              <AlertCircle size={14} style={{ color: C.red, flexShrink: 0, marginTop: 1 }} />
+              <AlertCircle size={14} style={{ color: textTone(C.red), flexShrink: 0, marginTop: 1 }} />
               <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                 {realReturn < 0
                   ? `Your investment return (${investReturn}%) is below inflation (${inflationRate}%). You are losing real wealth.`
@@ -192,9 +193,9 @@ export function InflationCalc() {
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-2"
               style={{ color: 'var(--ink-subtle)' }}>Rule of 72</p>
             <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-              At {inflationRate}% inflation, prices <strong style={{ color: C.orange }}>double</strong> every{' '}
-              <strong style={{ color: C.orange }}>{(72 / inflationRate).toFixed(1)} years</strong>.
-              Your investment doubles every <strong style={{ color: C.green }}>{(72 / investReturn).toFixed(1)} years</strong> at {investReturn}%.
+              At {inflationRate}% inflation, prices <strong style={{ color: textTone(C.orange) }}>double</strong> every{' '}
+              <strong style={{ color: textTone(C.orange) }}>{(72 / inflationRate).toFixed(1)} years</strong>.
+              Your investment doubles every <strong style={{ color: textTone(C.green) }}>{(72 / investReturn).toFixed(1)} years</strong> at {investReturn}%.
             </p>
           </div>
         </motion.div>

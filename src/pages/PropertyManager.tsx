@@ -16,7 +16,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 import {
   useSavedProperties, useExpenses, useMaintenance, useIncome, usePropertyRecords,
 } from '../hooks/useFirestore';
@@ -85,7 +85,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 150 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? 'var(--ink-muted)' }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? 'var(--ink-muted)') }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -221,7 +221,7 @@ export function PropertyManager() {
           </div>
           <button onClick={exportExcel}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
             <Download size={14} /> Export Excel
           </button>
         </div>
@@ -238,7 +238,7 @@ export function PropertyManager() {
               style={{
                 background: active ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'transparent',
                 border: `1px solid ${active ? 'color-mix(in srgb, var(--note-blue) 35%, transparent)' : 'var(--rule)'}`,
-                color: active ? C.blue : 'var(--ink-muted)',
+                color: textTone(active ? C.blue : 'var(--ink-muted)'),
               }}>
               <Icon size={14} /> {t.label}
             </button>
@@ -258,12 +258,12 @@ export function PropertyManager() {
           </div>
 
           <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: `1px solid ${alpha(C.green, 20)}` }}>
-            <Receipt size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.green }} />
+            <Receipt size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.green) }} />
             <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>
-              <span className="font-semibold" style={{ color: C.green }}>
+              <span className="font-semibold" style={{ color: textTone(C.green) }}>
                 {formatRand(ytdDeductible, 0)} in tax-deductible expenses this year.
               </span>{' '}
-              Use this figure in the <Link to="/property-tax" className="underline" style={{ color: C.blue }}>Property
+              Use this figure in the <Link to="/property-tax" className="underline" style={{ color: textTone(C.blue) }}>Property
               Portfolio Tax</Link> calculator to see the tax effect across your portfolio.
             </div>
           </div>
@@ -298,7 +298,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Log expense
             </button>
           </div>
@@ -337,7 +337,7 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
@@ -368,14 +368,14 @@ export function PropertyManager() {
                       <td className="py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
                       <td className="py-2 capitalize">{EXPENSE_CATEGORIES.find((c) => c.value === d.category)?.label ?? d.category}</td>
                       <td className="py-2 text-right font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(d.amount, 0)}</td>
-                      <td className="py-2 text-center">{d.taxDeductible ? <CheckCircle2 size={14} className="inline" style={{ color: C.green }} /> : '—'}</td>
+                      <td className="py-2 text-center">{d.taxDeductible ? <CheckCircle2 size={14} className="inline" style={{ color: textTone(C.green) }} /> : '—'}</td>
                       <td className="py-2 max-w-[220px] truncate">{d.note}</td>
                       <td className="py-2 text-right whitespace-nowrap">
-                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: C.blue }}
+                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: textTone(C.blue) }}
                           onClick={() => { setEditingId(d.id); setShowForm(true); setExpForm({ category: d.category, amount: d.amount, date: d.date, note: d.note, taxDeductible: d.taxDeductible }); }}>
                           <Pencil size={13} />
                         </button>
-                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: C.red }}
+                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: textTone(C.red) }}
                           onClick={() => expensesHook.remove(d.id)}>
                           <Trash2 size={13} />
                         </button>
@@ -395,7 +395,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Log job
             </button>
           </div>
@@ -438,7 +438,7 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
@@ -455,7 +455,7 @@ export function PropertyManager() {
               {[...maintenance].sort((a, b) => b.dateLogged.localeCompare(a.dateLogged)).map((d) => (
                 <div key={d.id} className="glass-card p-4 flex items-center gap-4 flex-wrap">
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                    style={{ background: `${alpha(STATUS_COLORS[d.status], 9)}`, color: STATUS_COLORS[d.status], border: `1px solid ${alpha(STATUS_COLORS[d.status], 27)}` }}>
+                    style={{ background: alpha(STATUS_COLORS[d.status], 9), color: textTone(STATUS_COLORS[d.status]), border: `1px solid ${alpha(STATUS_COLORS[d.status], 27)}` }}>
                     {MAINT_STATUSES.find((s) => s.value === d.status)?.label}
                   </span>
                   <div className="flex-1 min-w-[180px]">
@@ -468,16 +468,16 @@ export function PropertyManager() {
                   <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{d.cost > 0 ? formatRand(d.cost, 0) : '—'}</span>
                   <div className="flex gap-1">
                     {d.status !== 'done' && (
-                      <button aria-label="Mark done" title="Mark done" className="p-1.5 rounded-lg" style={{ color: C.green }}
+                      <button aria-label="Mark done" title="Mark done" className="p-1.5 rounded-lg" style={{ color: textTone(C.green) }}
                         onClick={() => maintHook.update(d.id, { status: 'done', dateCompleted: today() })}>
                         <CheckCircle2 size={14} />
                       </button>
                     )}
-                    <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: C.blue }}
+                    <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: textTone(C.blue) }}
                       onClick={() => { setEditingId(d.id); setShowForm(true); setMaintForm({ title: d.title, status: d.status, cost: d.cost, contractor: d.contractor, dateLogged: d.dateLogged, dateCompleted: d.dateCompleted, note: d.note }); }}>
                       <Pencil size={13} />
                     </button>
-                    <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: C.red }}
+                    <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: textTone(C.red) }}
                       onClick={() => maintHook.remove(d.id)}>
                       <Trash2 size={13} />
                     </button>
@@ -495,7 +495,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Log payment
             </button>
           </div>
@@ -529,7 +529,7 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
@@ -559,15 +559,15 @@ export function PropertyManager() {
                     <tr key={d.id} style={{ borderBottom: '1px dashed var(--rule)' }}>
                       <td className="py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
                       <td className="py-2 capitalize">{d.type}</td>
-                      <td className="py-2 text-right font-semibold" style={{ color: C.green }}>{formatRand(d.amount, 0)}</td>
+                      <td className="py-2 text-right font-semibold" style={{ color: textTone(C.green) }}>{formatRand(d.amount, 0)}</td>
                       <td className="py-2">{d.tenant}</td>
                       <td className="py-2 max-w-[220px] truncate">{d.note}</td>
                       <td className="py-2 text-right whitespace-nowrap">
-                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: C.blue }}
+                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: textTone(C.blue) }}
                           onClick={() => { setEditingId(d.id); setShowForm(true); setIncForm({ type: d.type, amount: d.amount, date: d.date, tenant: d.tenant, note: d.note }); }}>
                           <Pencil size={13} />
                         </button>
-                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: C.red }}
+                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: textTone(C.red) }}
                           onClick={() => incomeHook.remove(d.id)}>
                           <Trash2 size={13} />
                         </button>
@@ -587,7 +587,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Add record
             </button>
           </div>
@@ -620,7 +620,7 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
@@ -637,13 +637,13 @@ export function PropertyManager() {
               {records.map((d) => (
                 <div key={d.id} className="glass-card p-4 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <FileText size={14} style={{ color: C.brown }} />
+                    <FileText size={14} style={{ color: textTone(C.brown) }} />
                     <p className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{d.title}</p>
-                    <button aria-label="Edit" className="p-1 rounded-lg" style={{ color: C.blue }}
+                    <button aria-label="Edit" className="p-1 rounded-lg" style={{ color: textTone(C.blue) }}
                       onClick={() => { setEditingId(d.id); setShowForm(true); setRecForm({ type: d.type, title: d.title, value: d.value, renewalDate: d.renewalDate, note: d.note }); }}>
                       <Pencil size={13} />
                     </button>
-                    <button aria-label="Delete" className="p-1 rounded-lg" style={{ color: C.red }}
+                    <button aria-label="Delete" className="p-1 rounded-lg" style={{ color: textTone(C.red) }}
                       onClick={() => recordsHook.remove(d.id)}>
                       <Trash2 size={13} />
                     </button>
@@ -653,7 +653,7 @@ export function PropertyManager() {
                     {d.value > 0 ? ` · ${formatRand(d.value, 0)}` : ''}
                   </p>
                   {d.renewalDate && (
-                    <p className="text-xs flex items-center gap-1.5" style={{ color: C.orange }}>
+                    <p className="text-xs flex items-center gap-1.5" style={{ color: textTone(C.orange) }}>
                       <CalendarClock size={12} /> Renews {fmtDate(d.renewalDate)}
                     </p>
                   )}

@@ -4,7 +4,7 @@ import { History as HistoryIcon, Trash2, LogIn, Building2, Car, TrendingUp, Rece
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useHistory, type CalcType } from '../hooks/useFirestore';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const CALC_ROUTES: Record<CalcType, string> = {
   mortgage:   '/mortgage',
@@ -65,7 +65,7 @@ export function History() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-6 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-          <HistoryIcon size={28} className="text-note-blue" />
+          <HistoryIcon size={28} className="text-note-blue-ink" />
         </div>
         <div>
           <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--ink)' }}>Sign in to view history</h2>
@@ -76,7 +76,7 @@ export function History() {
         <button
           onClick={signIn}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
-          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}
         >
           <LogIn size={16} /> Sign in with Google
         </button>
@@ -92,7 +92,7 @@ export function History() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: 'color-mix(in srgb, var(--note-orange) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-            <HistoryIcon size={20} className="text-note-orange" />
+            <HistoryIcon size={20} className="text-note-orange-ink" />
           </div>
           <div>
             <h1 className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -110,7 +110,7 @@ export function History() {
             <button
               onClick={() => setCompareMode(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
             >
               <GitCompare size={13} /> Compare
             </button>
@@ -119,7 +119,7 @@ export function History() {
             <button
               onClick={exitCompareMode}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs transition-all"
-              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
+              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss-ink)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
             >
               <X size={13} /> Cancel
             </button>
@@ -128,7 +128,7 @@ export function History() {
             <button
               onClick={() => { if (confirm('Clear all history?')) clear(); }}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs transition-all"
-              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
+              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss-ink)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
             >
               <Trash2 size={13} /> Clear all
             </button>
@@ -145,7 +145,7 @@ export function History() {
           style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
         >
           <div>
-            <p className="text-xs font-semibold" style={{ color: 'var(--note-blue)' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--note-blue-ink)' }}>
               {selected.length === 0 && 'Select two snapshots of the same type to compare'}
               {selected.length === 1 && `1 selected — pick one more ${selectedType ? `(${TYPE_META[selectedType].label})` : ''}`}
               {selected.length === 2 && 'Ready to compare!'}
@@ -233,7 +233,7 @@ export function History() {
                     className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 -ml-2"
                     style={{
                       background: selected.indexOf(entry.id) === 0 ? 'color-mix(in srgb, var(--note-blue) 20%, transparent)' : 'color-mix(in srgb, var(--note-orange) 20%, transparent)',
-                      color: selected.indexOf(entry.id) === 0 ? 'var(--note-blue)' : 'var(--note-orange)',
+                      color: selected.indexOf(entry.id) === 0 ? 'var(--note-blue-ink)' : 'var(--note-orange-ink)',
                     }}
                   >
                     {selected.indexOf(entry.id) === 0 ? 'A' : 'B'}
@@ -242,9 +242,9 @@ export function History() {
 
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${alpha(meta.color, 9)}`, border: `1px solid ${alpha(meta.color, 19)}` }}
+                  style={{ background: alpha(meta.color, 9), border: `1px solid ${alpha(meta.color, 19)}` }}
                 >
-                  <Icon size={16} style={{ color: meta.color }} />
+                  <Icon size={16} style={{ color: textTone(meta.color) }} />
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -257,7 +257,7 @@ export function History() {
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                  <p className="text-[10px] font-medium" style={{ color: meta.color }}>
+                  <p className="text-[10px] font-medium" style={{ color: textTone(meta.color) }}>
                     {meta.label}
                   </p>
                   <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
@@ -268,14 +268,14 @@ export function History() {
                       <button
                         onClick={() => navigate(CALC_ROUTES[entry.type], { state: { loadedInputs: entry.inputs, entryId: entry.id } })}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all"
-                        style={{ background: `${alpha(meta.color, 9)}`, color: meta.color, border: `1px solid ${alpha(meta.color, 19)}` }}
+                        style={{ background: alpha(meta.color, 9), color: textTone(meta.color), border: `1px solid ${alpha(meta.color, 19)}` }}
                       >
                         <ExternalLink size={10} /> Open
                       </button>
                       <button
                         onClick={() => remove(entry.id)}
                         className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                        style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
+                        style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss-ink)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
                         title="Delete"
                       >
                         <Trash2 size={10} />

@@ -16,7 +16,7 @@ import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcExitPlanner, type ExitPlannerInputs } from '../utils/exitPlanner';
 import type { AgeGroup } from '../types';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -37,7 +37,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 180 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>Year {label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? p.stroke ?? C.blue }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? p.stroke ?? C.blue) }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -87,7 +87,7 @@ export function ExitPlanner() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'color-mix(in srgb, var(--note-brown) 12%, transparent)', color: C.brown, border: `1px solid ${alpha(C.brown, 27)}` }}>
+            <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ background: 'color-mix(in srgb, var(--note-brown) 12%, transparent)', color: textTone(C.brown), border: `1px solid ${alpha(C.brown, 27)}` }}>
               SARS 2026 · 40% inclusion
             </span>
             <ShareButton state={inputs} />
@@ -108,7 +108,7 @@ export function ExitPlanner() {
         <div className="glass-card p-5 space-y-4">
           <SectionHeader title="Property & Holding" icon={DoorOpen} />
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-brown) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-brown) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.brown }} />
+            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.brown) }} />
             <span style={{ color: 'var(--ink-muted)' }}>Models an investment property (no primary-residence exclusion). Recoupment claws back S13 allowances as income on sale.</span>
           </div>
 
@@ -138,7 +138,7 @@ export function ExitPlanner() {
               <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: `1px solid ${alpha(C.green, 27)}` }}>
                 <Trophy size={20} color={C.green} className="flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>Most cash: sell in year {result.bestYear.year}</p>
+                  <p className="text-sm font-semibold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>Most cash: sell in year {result.bestYear.year}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>Net {formatRand(result.bestYear.netProceedsAfterTax, 0)} after tax & sale costs.</p>
                 </div>
               </div>
@@ -147,7 +147,7 @@ export function ExitPlanner() {
               <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: `1px solid ${alpha(C.blue, 27)}` }}>
                 <TrendingUp size={20} color={C.blue} className="flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: C.blue, fontFamily: 'var(--font-display)' }}>Best tax position: year {result.bestLifetimeYear.year}</p>
+                  <p className="text-sm font-semibold" style={{ color: textTone(C.blue), fontFamily: 'var(--font-display)' }}>Best tax position: year {result.bestLifetimeYear.year}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>S13 savings minus exit tax = {formatRand(result.bestLifetimeYear.netLifetimeTaxPosition, 0)}.</p>
                 </div>
               </div>
@@ -159,7 +159,7 @@ export function ExitPlanner() {
             <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-orange) 7%, transparent)', border: `1px solid ${alpha(C.orange, 20)}` }}>
               <AlertTriangle size={18} color={C.orange} className="mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold" style={{ color: C.orange, fontFamily: 'var(--font-display)' }}>The recoupment trap</p>
+                <p className="text-sm font-semibold" style={{ color: textTone(C.orange), fontFamily: 'var(--font-display)' }}>The recoupment trap</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
                   You deduct {formatRand(result.annualDeduction, 0)}/year ({formatPercent(result.rate * 100, 0)} of building cost) for up to {result.period} years. On sale, every rand claimed is added back to your income and taxed at your marginal rate — so selling soon after claiming allowances can hand much of the benefit back to SARS.
                 </p>
@@ -219,12 +219,12 @@ export function ExitPlanner() {
                     <tr key={y.year} style={{ borderBottom: '1px solid var(--rule)', background: y.year === result.bestYear?.year ? 'color-mix(in srgb, var(--gain) 5%, transparent)' : undefined }}>
                       <td className="py-2 px-2" style={{ color: 'var(--ink)' }}>{y.year}</td>
                       <td className="py-2 px-2 text-right" style={{ color: 'var(--ink-muted)' }}>{formatRand(y.saleValue, 0)}</td>
-                      <td className="py-2 px-2 text-right" style={{ color: C.orange }}>{formatRand(y.recoupmentTax, 0)}</td>
-                      <td className="py-2 px-2 text-right" style={{ color: C.red }}>{formatRand(y.cgtTax, 0)}</td>
-                      <td className="py-2 px-2 text-right font-medium" style={{ color: C.red }}>{formatRand(y.totalExitTax, 0)}</td>
-                      <td className="py-2 px-2 text-right font-semibold" style={{ color: C.green }}>{formatRand(y.netProceedsAfterTax, 0)}</td>
+                      <td className="py-2 px-2 text-right" style={{ color: textTone(C.orange) }}>{formatRand(y.recoupmentTax, 0)}</td>
+                      <td className="py-2 px-2 text-right" style={{ color: textTone(C.red) }}>{formatRand(y.cgtTax, 0)}</td>
+                      <td className="py-2 px-2 text-right font-medium" style={{ color: textTone(C.red) }}>{formatRand(y.totalExitTax, 0)}</td>
+                      <td className="py-2 px-2 text-right font-semibold" style={{ color: textTone(C.green) }}>{formatRand(y.netProceedsAfterTax, 0)}</td>
                       {inputs.claimingS13 && (
-                        <td className="py-2 px-2 text-right font-semibold" style={{ color: y.netLifetimeTaxPosition >= 0 ? C.blue : C.red }}>{formatRand(y.netLifetimeTaxPosition, 0)}</td>
+                        <td className="py-2 px-2 text-right font-semibold" style={{ color: textTone(y.netLifetimeTaxPosition >= 0 ? C.blue : C.red) }}>{formatRand(y.netLifetimeTaxPosition, 0)}</td>
                       )}
                     </tr>
                   ))}
@@ -248,8 +248,8 @@ export function ExitPlanner() {
                 { title: 'Bracket bunching', color: C.brown, body: 'Recoupment and CGT both land in a single tax year and can push you into a higher bracket. Spreading disposals across tax years, or selling in a low-income year (e.g. after retirement), can materially cut the bill.' },
                 { title: 'Get advice', color: C.teal, body: 'This is a simplified educational model. Real recoupment caps, base-cost adjustments, and your full tax picture need a SARS-registered practitioner. Use this to spot the trade-offs, not to file a return.' },
               ].map((item) => (
-                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: `${alpha(item.color, 3)}`, border: `1px solid ${alpha(item.color, 13)}` }}>
-                  <p className="text-xs font-bold" style={{ color: item.color }}>{item.title}</p>
+                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: alpha(item.color, 3), border: `1px solid ${alpha(item.color, 13)}` }}>
+                  <p className="text-xs font-bold" style={{ color: textTone(item.color) }}>{item.title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.body}</p>
                 </div>
               ))}

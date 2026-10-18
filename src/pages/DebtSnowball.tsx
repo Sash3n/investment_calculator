@@ -7,7 +7,7 @@ import {
 import { Snowflake, Plus, Trash2, Trophy, ArrowUpDown } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
-import { alpha, SERIES } from '../utils/color';
+import { alpha, SERIES, textTone } from '../utils/color';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -187,7 +187,7 @@ export function DebtSnowball() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-teal) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-teal) 25%, transparent)' }}>
-            <Snowflake size={20} className="text-note-teal" />
+            <Snowflake size={20} className="text-note-teal-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -211,12 +211,12 @@ export function DebtSnowball() {
           <button key={s.key} onClick={() => setStrategy(s.key)}
             className="flex-1 p-4 rounded-xl text-left transition-all"
             style={{
-              background: strategy === s.key ? `${alpha(s.color, 7)}` : 'color-mix(in srgb, var(--ink) 3%, transparent)',
+              background: strategy === s.key ? alpha(s.color, 7) : 'color-mix(in srgb, var(--ink) 3%, transparent)',
               border: `2px solid ${strategy === s.key ? alpha(s.color, 25) : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
             }}>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
-              <p className="text-sm font-bold" style={{ color: strategy === s.key ? s.color : 'var(--ink)' }}>
+              <p className="text-sm font-bold" style={{ color: textTone(strategy === s.key ? s.color : 'var(--ink)') }}>
                 {s.label}
               </p>
             </div>
@@ -239,7 +239,7 @@ export function DebtSnowball() {
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
               style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-base font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
             {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
           </div>
         ))}
@@ -250,11 +250,11 @@ export function DebtSnowball() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex items-center gap-3 p-4 rounded-xl"
           style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-          <ArrowUpDown size={16} style={{ color: C.orange, flexShrink: 0 }} />
+          <ArrowUpDown size={16} style={{ color: textTone(C.orange), flexShrink: 0 }} />
           <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
             {interestSavedVsAvalanche > 0
-              ? <>Avalanche saves <strong style={{ color: C.orange }}>{formatRand(interestSavedVsAvalanche, 0)}</strong> in interest and <strong style={{ color: C.orange }}>{Math.abs(monthsSavedVsAvalanche)} months</strong> vs Snowball</>
-              : <>Snowball saves <strong style={{ color: C.teal }}>{formatRand(Math.abs(interestSavedVsAvalanche), 0)}</strong> in interest vs Avalanche (your debts have similar rates)</>}
+              ? <>Avalanche saves <strong style={{ color: textTone(C.orange) }}>{formatRand(interestSavedVsAvalanche, 0)}</strong> in interest and <strong style={{ color: textTone(C.orange) }}>{Math.abs(monthsSavedVsAvalanche)} months</strong> vs Snowball</>
+              : <>Snowball saves <strong style={{ color: textTone(C.teal) }}>{formatRand(Math.abs(interestSavedVsAvalanche), 0)}</strong> in interest vs Avalanche (your debts have similar rates)</>}
           </p>
         </motion.div>
       )}
@@ -269,7 +269,7 @@ export function DebtSnowball() {
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Your Debts</p>
             <button onClick={addDebt}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)` }}>
               <Plus size={12} /> Add Debt
             </button>
           </div>
@@ -284,11 +284,11 @@ export function DebtSnowball() {
                   value={debt.name}
                   onChange={(e) => updateDebt(debt.id, 'name', e.target.value)}
                   className="flex-1 text-sm font-semibold bg-transparent border-0 outline-none"
-                  style={{ color: DEBT_COLORS[idx % DEBT_COLORS.length] }}
+                  style={{ color: textTone(DEBT_COLORS[idx % DEBT_COLORS.length]) }}
                 />
                 {debts.length > 1 && (
                   <button onClick={() => removeDebt(debt.id)}
-                    className="p-1 rounded-lg" style={{ color: C.red, background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
+                    className="p-1 rounded-lg" style={{ color: textTone(C.red), background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
                     <Trash2 size={12} />
                   </button>
                 )}
@@ -325,18 +325,18 @@ export function DebtSnowball() {
                 const color = DEBT_COLORS[debts.indexOf(debt!) % DEBT_COLORS.length];
                 return (
                   <div key={o.id} className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: `${alpha(color, 5)}`, border: `1px solid ${alpha(color, 13)}` }}>
+                    style={{ background: alpha(color, 5), border: `1px solid ${alpha(color, 13)}` }}>
                     <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: `${alpha(color, 15)}`, color }}>
+                      style={{ background: alpha(color, 15), color: textTone(color) }}>
                       {i + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color }}>{o.name}</p>
+                      <p className="text-sm font-semibold" style={{ color: textTone(color) }}>{o.name}</p>
                       <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                         Month {o.paidOffMonth} ({(o.paidOffMonth / 12).toFixed(1)} yrs)
                       </p>
                     </div>
-                    {i === 0 && <Trophy size={14} style={{ color: C.orange }} />}
+                    {i === 0 && <Trophy size={14} style={{ color: textTone(C.orange) }} />}
                   </div>
                 );
               })}

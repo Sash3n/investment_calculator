@@ -6,7 +6,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -137,7 +137,7 @@ export function RetrenchmentCalc() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-brown) 13%, transparent)' }}>
-            <Briefcase size={22} style={{ color: 'var(--note-brown)' }} />
+            <Briefcase size={22} style={{ color: 'var(--note-brown-ink)' }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Retrenchment Calculator</h1>
@@ -164,8 +164,8 @@ export function RetrenchmentCalc() {
           <InputField id="ret-prior"   label="Prior retirement lump sums received"          value={priorLumpsums}   onChange={(v) => setPriorLumpsums(Number(v))}   prefix="R" min={0} />
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: C.blue }} />
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               BCEA: 1 week pay per completed year of service (severance) + notice pay + accrued leave.
               UIF capped at R17,712/month income.
@@ -188,26 +188,26 @@ export function RetrenchmentCalc() {
           {result.totalNet > 0 && monthlyExpenses > 0 && (
           <div className="p-4 rounded-xl text-sm"
             style={{
-              background: result.monthsRunway < 3 ? `${alpha(C.red, 7)}` : `${alpha(C.green, 7)}`,
+              background: result.monthsRunway < 3 ? alpha(C.red, 7) : alpha(C.green, 7),
               border: `1px solid ${alpha(result.monthsRunway < 3 ? C.red : C.green, 20)}`,
             }}>
             {result.monthsRunway < 3 ? (
               <div className="flex items-start gap-2">
-                <AlertTriangle size={15} style={{ color: C.red }} />
+                <AlertTriangle size={15} style={{ color: textTone(C.red) }} />
                 <span style={{ color: 'var(--ink-muted)' }}>
                   Your lump sum runway is under 3 months. Combined with UIF you have{' '}
-                  <span style={{ color: C.orange, fontWeight: 600 }}>{totalRunwayMo} months</span> total.
+                  <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{totalRunwayMo} months</span> total.
                   Review expenses immediately.
                 </span>
               </div>
             ) : (
               <span style={{ color: 'var(--ink-muted)' }}>
                 Your lump sums cover{' '}
-                <span style={{ color: C.green, fontWeight: 600 }}>
+                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
                   {runwayYears > 0 ? `${runwayYears}yr ` : ''}{runwayRem}mo
                 </span>
                 {' '}of expenses. Adding UIF extends this to{' '}
-                <span style={{ color: C.green, fontWeight: 600 }}>
+                <span style={{ color: textTone(C.green), fontWeight: 600 }}>
                   {totalRunwayYr > 0 ? `${totalRunwayYr}yr ` : ''}{totalRunwayRm}mo
                 </span>.
               </span>
@@ -236,9 +236,9 @@ export function RetrenchmentCalc() {
                     <span style={{ color: bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: bold ? 600 : 400 }}>
                       {label}
                     </span>
-                    {note && <span className="ml-2 text-xs" style={{ color: 'var(--ink-muted)', opacity: 0.7 }}>{note}</span>}
+                    {note && <span className="ml-2 text-xs" style={{ color: 'var(--ink-subtle)' }}>{note}</span>}
                   </div>
-                  <span style={{ color: bold ? C.green : 'var(--ink)', fontWeight: bold ? 600 : 500 }}>{val}</span>
+                  <span style={{ color: textTone(bold ? C.green : 'var(--ink)'), fontWeight: bold ? 600 : 500 }}>{val}</span>
                 </div>
               ))}
             </div>
@@ -246,9 +246,9 @@ export function RetrenchmentCalc() {
 
           {/* UIF section */}
           <div className="p-5 rounded-2xl"
-            style={{ background: `${alpha(C.orange, 3)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+            style={{ background: alpha(C.orange, 3), border: `1px solid ${alpha(C.orange, 20)}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <Shield size={15} style={{ color: C.orange }} />
+              <Shield size={15} style={{ color: textTone(C.orange) }} />
               <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>UIF benefit estimate</h2>
             </div>
             <div className="grid grid-cols-3 gap-4 text-sm">

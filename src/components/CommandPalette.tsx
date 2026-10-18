@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, CornerDownLeft } from 'lucide-react';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, type NavItem } from '../config/nav';
 import { useNavPrefs } from '../hooks/useNavPrefs';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 interface Scored {
   item: NavItem;
@@ -180,9 +180,9 @@ export function CommandPalette() {
                     >
                       <span
                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${alpha(item.color, 12)}` }}
+                        style={{ background: alpha(item.color, 12) }}
                       >
-                        <Icon size={15} style={{ color: item.color }} />
+                        <Icon size={15} style={{ color: textTone(item.color) }} />
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="block text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{item.label}</span>

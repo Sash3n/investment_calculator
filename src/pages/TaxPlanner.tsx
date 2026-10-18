@@ -25,7 +25,7 @@ import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '.
 import { calcPropertyROI } from '../utils/roi';
 import { useAuth } from '../context/AuthContext';
 import { useSavedProperties } from '../hooks/useFirestore';
-import { alpha, seriesColors } from '../utils/color';
+import { alpha, seriesColors, textTone } from '../utils/color';
 import type {
   RentalTaxInputs,
   Section13quatInputs,
@@ -60,7 +60,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 160 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? C.blue }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? C.blue) }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -70,7 +70,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
 function InfoBadge({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-      <Info size={13} className="mt-0.5 flex-shrink-0 text-note-blue" />
+      <Info size={13} className="mt-0.5 flex-shrink-0 text-note-blue-ink" />
       <span style={{ color: 'var(--ink-muted)' }}>{text}</span>
     </div>
   );
@@ -213,9 +213,9 @@ export function TaxPlanner() {
       onClick={() => setActiveTab(id)}
       className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
       style={{
-        background: activeTab === id ? `${alpha(color, 13)}` : 'transparent',
-        border: `1px solid ${activeTab === id ? `${alpha(color, 33)}` : 'var(--rule)'}`,
-        color: activeTab === id ? color : 'var(--ink-muted)',
+        background: activeTab === id ? alpha(color, 13) : 'transparent',
+        border: `1px solid ${activeTab === id ? alpha(color, 33) : 'var(--rule)'}`,
+        color: textTone(activeTab === id ? color : 'var(--ink-muted)'),
         fontFamily: 'var(--font-text)',
       }}
     >
@@ -230,7 +230,7 @@ export function TaxPlanner() {
       className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all duration-200"
       style={{
         background: s13Tab === id ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'transparent',
-        color: s13Tab === id ? C.blue : 'var(--ink-muted)',
+        color: textTone(s13Tab === id ? C.blue : 'var(--ink-muted)'),
         border: `1px solid ${s13Tab === id ? 'color-mix(in srgb, var(--note-blue) 30%, transparent)' : 'transparent'}`,
         fontFamily: 'var(--font-text)',
       }}
@@ -256,7 +256,7 @@ export function TaxPlanner() {
           <div className="flex items-center gap-3 flex-wrap">
             <span
               className="text-xs px-3 py-1.5 rounded-full font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
+              style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
             >
               CGT exclusion {formatRandShort(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion)}
             </span>
@@ -328,7 +328,7 @@ export function TaxPlanner() {
               ].map((item) => (
                 <div key={item.label}>
                   <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.label}</p>
-                  <p className="text-base font-bold" style={{ color: item.color, fontFamily: 'var(--font-display)' }}>{item.value}</p>
+                  <p className="text-base font-bold" style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>{item.value}</p>
                 </div>
               ))}
             </div>
@@ -401,7 +401,7 @@ export function TaxPlanner() {
                       <td
                         className="py-2 text-right font-mono"
                         style={{
-                          color: row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)',
+                          color: textTone(row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)'),
                           fontWeight: row.bold ? 600 : 400,
                         }}
                       >
@@ -455,7 +455,7 @@ export function TaxPlanner() {
                       <button
                         onClick={() => setShowPortfolioPicker(p => !p)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: `${alpha(C.teal, 8)}`, color: C.teal, border: `1px solid ${alpha(C.teal, 20)}` }}
+                        style={{ background: alpha(C.teal, 8), color: textTone(C.teal), border: `1px solid ${alpha(C.teal, 20)}` }}
                       >
                         <Building2 size={11} />
                         Portfolio
@@ -464,7 +464,7 @@ export function TaxPlanner() {
                     <button
                       onClick={addUnit}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                      style={{ background: `${alpha(C.blue, 8)}`, color: C.blue, border: `1px solid ${alpha(C.blue, 20)}` }}
+                      style={{ background: alpha(C.blue, 8), color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 20)}` }}
                     >
                       <Plus size={11} />
                       Add Unit
@@ -476,7 +476,7 @@ export function TaxPlanner() {
                 {showPortfolioPicker && portfolio.length > 0 && (
                   <div className="glass-card-static p-4 space-y-2 rounded-xl" style={{ border: `1px solid ${alpha(C.teal, 20)}` }}>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-xs font-semibold" style={{ color: C.teal }}>Select from Portfolio</p>
+                      <p className="text-xs font-semibold" style={{ color: textTone(C.teal) }}>Select from Portfolio</p>
                       <button onClick={() => setShowPortfolioPicker(false)}><X size={13} color="var(--ink-muted)" /></button>
                     </div>
                     <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Purchase price auto-reduced by 15% to estimate land exclusion. Adjust per unit after importing.</p>
@@ -486,7 +486,7 @@ export function TaxPlanner() {
                         onClick={() => importFromPortfolio(p)}
                         className="w-full text-left px-3 py-2 rounded-lg text-xs transition-all"
                         style={{ border: '1px solid var(--rule)', color: 'var(--ink)', background: 'transparent' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = `${alpha(C.teal, 3)}`)}
+                        onMouseEnter={e => (e.currentTarget.style.background = alpha(C.teal, 3))}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <span className="font-medium">{p.propertyName || 'Unnamed Property'}</span>
@@ -510,11 +510,11 @@ export function TaxPlanner() {
                       <div
                         className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none"
                         onClick={() => toggleUnitExpand(unit.id)}
-                        style={{ background: expanded ? `${alpha(C.blue, 3)}` : undefined }}
+                        style={{ background: expanded ? alpha(C.blue, 3) : undefined }}
                       >
                         <span
                           className="text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0"
-                          style={{ background: `${alpha(C.blue, 13)}`, color: C.blue }}
+                          style={{ background: alpha(C.blue, 13), color: textTone(C.blue) }}
                         >
                           {idx + 1}
                         </span>
@@ -528,11 +528,11 @@ export function TaxPlanner() {
                           placeholder={`Unit ${idx + 1}`}
                         />
                         {unit.portfolioId && (
-                          <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: `${alpha(C.teal, 8)}`, color: C.teal }}>
+                          <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: alpha(C.teal, 8), color: textTone(C.teal) }}>
                             portfolio
                           </span>
                         )}
-                        <span className="text-xs font-semibold flex-shrink-0" style={{ color: C.orange }}>{grossYield}%</span>
+                        <span className="text-xs font-semibold flex-shrink-0" style={{ color: textTone(C.orange) }}>{grossYield}%</span>
                         <span className="text-xs font-mono flex-shrink-0" style={{ color: 'var(--ink-muted)' }}>
                           {formatRandShort(unit.purchasePrice)}
                         </span>
@@ -581,7 +581,7 @@ export function TaxPlanner() {
                 })}
 
                 {s13Units.length < 5 && (
-                  <div className="p-3 rounded-xl text-xs text-center" style={{ background: 'color-mix(in srgb, var(--loss) 7%, transparent)', color: C.red, border: `1px solid ${alpha(C.red, 20)}` }}>
+                  <div className="p-3 rounded-xl text-xs text-center" style={{ background: 'color-mix(in srgb, var(--loss) 7%, transparent)', color: textTone(C.red), border: `1px solid ${alpha(C.red, 20)}` }}>
                     Add {5 - s13Units.length} more unit{5 - s13Units.length !== 1 ? 's' : ''} to qualify for Section 13sex
                   </div>
                 )}
@@ -599,7 +599,7 @@ export function TaxPlanner() {
                 >
                   {s13sexResult.qualifies ? <CheckCircle2 size={20} color={C.green} /> : <XCircle size={20} color={C.red} />}
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: s13sexResult.qualifies ? C.green : C.red, fontFamily: 'var(--font-display)' }}>
+                    <p className="text-sm font-semibold" style={{ color: textTone(s13sexResult.qualifies ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
                       {s13sexResult.qualifies ? 'Qualifies for Section 13sex' : 'Does Not Yet Qualify'}
                     </p>
                     {!s13sexResult.qualifies && <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>{s13sexResult.reason}</p>}
@@ -641,7 +641,7 @@ export function TaxPlanner() {
                               <td className="py-2 pr-4" style={{ color: row.bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: row.bold ? 600 : 400 }}>
                                 {row.label}
                               </td>
-                              <td className="py-2 text-right font-mono" style={{ color: row.color ?? (row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)'), fontWeight: row.bold ? 600 : 400 }}>
+                              <td className="py-2 text-right font-mono" style={{ color: textTone(row.color ?? (row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)')), fontWeight: row.bold ? 600 : 400 }}>
                                 {formatRand(row.value)}
                               </td>
                             </tr>
@@ -667,19 +667,19 @@ export function TaxPlanner() {
                               <tr key={u.id} style={{ borderBottom: '1px solid var(--rule)' }}>
                                 <td className="py-2" style={{ color: 'var(--ink)' }}>{u.name}</td>
                                 <td className="py-2 text-right" style={{ color: 'var(--ink-muted)' }}>{formatRand(u.purchasePrice, 0)}</td>
-                                <td className="py-2 text-right font-medium" style={{ color: C.orange }}>{formatRand(u.annualDeductionPerUnit, 0)}</td>
-                                <td className="py-2 text-right" style={{ color: u.grossYield >= 8 ? C.green : u.grossYield >= 6 ? C.orange : C.red }}>{u.grossYield.toFixed(1)}%</td>
-                                <td className="py-2 text-right" style={{ color: u.netYield >= 0 ? C.green : C.red }}>{u.netYield.toFixed(1)}%</td>
-                                <td className="py-2 text-right font-semibold" style={{ color: u.monthlyCashFlow >= 0 ? C.green : C.red }}>{formatRand(u.monthlyCashFlow, 0)}</td>
+                                <td className="py-2 text-right font-medium" style={{ color: textTone(C.orange) }}>{formatRand(u.annualDeductionPerUnit, 0)}</td>
+                                <td className="py-2 text-right" style={{ color: textTone(u.grossYield >= 8 ? C.green : u.grossYield >= 6 ? C.orange : C.red) }}>{u.grossYield.toFixed(1)}%</td>
+                                <td className="py-2 text-right" style={{ color: textTone(u.netYield >= 0 ? C.green : C.red) }}>{u.netYield.toFixed(1)}%</td>
+                                <td className="py-2 text-right font-semibold" style={{ color: textTone(u.monthlyCashFlow >= 0 ? C.green : C.red) }}>{formatRand(u.monthlyCashFlow, 0)}</td>
                               </tr>
                             ))}
                             <tr style={{ borderTop: '2px solid var(--rule)' }}>
                               <td className="py-2 font-semibold" style={{ color: 'var(--ink)' }}>Portfolio Total</td>
                               <td className="py-2 text-right font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(s13sexResult.totalCostExclLand, 0)}</td>
-                              <td className="py-2 text-right font-semibold" style={{ color: C.orange }}>{formatRand(s13sexResult.annualDeduction, 0)}</td>
-                              <td className="py-2 text-right font-semibold" style={{ color: C.orange }}>{s13sexResult.totalGrossYield.toFixed(1)}%</td>
-                              <td className="py-2 text-right font-semibold" style={{ color: s13sexResult.totalNetYield >= 0 ? C.green : C.red }}>{s13sexResult.totalNetYield.toFixed(1)}%</td>
-                              <td className="py-2 text-right font-semibold" style={{ color: s13sexResult.totalAnnualCashFlow >= 0 ? C.green : C.red }}>{formatRand(s13sexResult.totalAnnualCashFlow / 12, 0)}</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: textTone(C.orange) }}>{formatRand(s13sexResult.annualDeduction, 0)}</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: textTone(C.orange) }}>{s13sexResult.totalGrossYield.toFixed(1)}%</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: textTone(s13sexResult.totalNetYield >= 0 ? C.green : C.red) }}>{s13sexResult.totalNetYield.toFixed(1)}%</td>
+                              <td className="py-2 text-right font-semibold" style={{ color: textTone(s13sexResult.totalAnnualCashFlow >= 0 ? C.green : C.red) }}>{formatRand(s13sexResult.totalAnnualCashFlow / 12, 0)}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -761,14 +761,14 @@ export function TaxPlanner() {
                                 <tr key={row.year} style={{ borderBottom: '1px solid var(--rule)' }}>
                                   <td className="py-2" style={{ color: 'var(--ink-muted)' }}>{row.year}</td>
                                   <td className="py-2 text-right" style={{ color: 'var(--ink)' }}>{formatRand(row.deduction, 0)}</td>
-                                  <td className="py-2 text-right font-medium" style={{ color: C.green }}>{formatRand(row.taxSaving, 0)}</td>
+                                  <td className="py-2 text-right font-medium" style={{ color: textTone(C.green) }}>{formatRand(row.taxSaving, 0)}</td>
                                   {s13sexResult.raTaxSaving > 0 && (
                                     <>
-                                      <td className="py-2 text-right" style={{ color: C.brown }}>{formatRand(row.raTaxSaving, 0)}</td>
-                                      <td className="py-2 text-right font-semibold" style={{ color: C.orange }}>{formatRand(row.combinedSaving, 0)}</td>
+                                      <td className="py-2 text-right" style={{ color: textTone(C.brown) }}>{formatRand(row.raTaxSaving, 0)}</td>
+                                      <td className="py-2 text-right font-semibold" style={{ color: textTone(C.orange) }}>{formatRand(row.combinedSaving, 0)}</td>
                                     </>
                                   )}
-                                  <td className="py-2 text-right font-semibold" style={{ color: C.blue }}>{formatRand(row.cumulativeSaving, 0)}</td>
+                                  <td className="py-2 text-right font-semibold" style={{ color: textTone(C.blue) }}>{formatRand(row.cumulativeSaving, 0)}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -823,8 +823,8 @@ export function TaxPlanner() {
                   body: '• Recoupment on sale: prior deductions are clawed back as taxable income when you sell (at your marginal rate at that time)\n• "Building cost excl. land" requires a professional appraisal or developer\'s split\n• SARS scrutinises schemes arranged purely for tax — ensure genuine rental activity\n• Get a tax practitioner\'s advice before implementing',
                 },
               ].map(item => (
-                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: `${alpha(item.color, 3)}`, border: `1px solid ${alpha(item.color, 13)}` }}>
-                  <p className="text-xs font-bold" style={{ color: item.color }}>{item.title}</p>
+                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: alpha(item.color, 3), border: `1px solid ${alpha(item.color, 13)}` }}>
+                  <p className="text-xs font-bold" style={{ color: textTone(item.color) }}>{item.title}</p>
                   <p className="text-xs leading-relaxed whitespace-pre-line" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                     {item.body}
                   </p>
@@ -858,7 +858,7 @@ export function TaxPlanner() {
                 <SelectField label="Age Group" id="q-age" value={s13quat.ageGroup} onChange={(v) => setS13quat((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
 
                 <div className="p-3 rounded-xl text-xs space-y-1" style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-                  <p className="font-semibold" style={{ color: C.orange }}>UDZ Schedule</p>
+                  <p className="font-semibold" style={{ color: textTone(C.orange) }}>UDZ Schedule</p>
                   <p style={{ color: 'var(--ink-muted)' }}>New: 20% yr 1, then 8% × 10 years</p>
                   <p style={{ color: 'var(--ink-muted)' }}>Improvements: 20% × 5 years</p>
                   <p style={{ color: 'var(--ink-muted)' }}>Low-cost: 25% × 4 years</p>
@@ -905,10 +905,10 @@ export function TaxPlanner() {
                         {s13quatResult.schedule.map((row) => (
                           <tr key={row.year} style={{ borderBottom: '1px solid var(--rule)' }}>
                             <td className="py-2" style={{ color: 'var(--ink-muted)' }}>{row.year}</td>
-                            <td className="py-2 text-right" style={{ color: C.orange }}>{formatPercent(row.rate * 100, 0)}</td>
+                            <td className="py-2 text-right" style={{ color: textTone(C.orange) }}>{formatPercent(row.rate * 100, 0)}</td>
                             <td className="py-2 text-right" style={{ color: 'var(--ink)' }}>{formatRand(row.deduction, 0)}</td>
-                            <td className="py-2 text-right font-medium" style={{ color: C.green }}>{formatRand(row.taxSaving, 0)}</td>
-                            <td className="py-2 text-right font-semibold" style={{ color: C.blue }}>{formatRand(row.cumulativeSaving, 0)}</td>
+                            <td className="py-2 text-right font-medium" style={{ color: textTone(C.green) }}>{formatRand(row.taxSaving, 0)}</td>
+                            <td className="py-2 text-right font-semibold" style={{ color: textTone(C.blue) }}>{formatRand(row.cumulativeSaving, 0)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -938,12 +938,12 @@ export function TaxPlanner() {
               : 'Pre-2027 tax years: R2 million primary residence exclusion and R40,000 annual exclusion. Inclusion rate 40%.'} />
 
             <div className="p-3 rounded-xl text-xs space-y-1.5" style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: `1px solid ${alpha(C.green, 20)}` }}>
-              <p className="font-semibold" style={{ color: C.green }}>{TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} CGT Rates</p>
+              <p className="font-semibold" style={{ color: textTone(C.green) }}>{TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label} CGT Rates</p>
               <div className="grid grid-cols-2 gap-1" style={{ color: 'var(--ink-muted)' }}>
                 <span>Primary residence exclusion:</span><span className="font-semibold text-right" style={{ color: 'var(--ink)' }}>{formatRand(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion, 0)}</span>
                 <span>Annual exclusion:</span><span className="font-semibold text-right" style={{ color: 'var(--ink)' }}>{formatRand(TAX_YEARS[taxYear].cgt.annualExclusion, 0)}</span>
                 <span>Inclusion rate:</span><span className="font-semibold text-right" style={{ color: 'var(--ink)' }}>40%</span>
-                <span>Max effective CGT rate:</span><span className="font-semibold text-right" style={{ color: C.red }}>18% (45% marginal)</span>
+                <span>Max effective CGT rate:</span><span className="font-semibold text-right" style={{ color: textTone(C.red) }}>18% (45% marginal)</span>
               </div>
             </div>
 
@@ -1003,7 +1003,7 @@ export function TaxPlanner() {
                 ? <CheckCircle2 size={24} color={C.green} />
                 : <AlertCircle size={24} color={C.red} />}
               <div>
-                <p className="font-semibold" style={{ color: cgtResult.cgtPayable === 0 ? C.green : C.red, fontFamily: 'var(--font-display)' }}>
+                <p className="font-semibold" style={{ color: textTone(cgtResult.cgtPayable === 0 ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
                   {cgtResult.cgtPayable === 0 ? 'No CGT Payable' : `CGT Due: ${formatRand(cgtResult.cgtPayable)}`}
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
@@ -1105,7 +1105,7 @@ export function TaxPlanner() {
                       <td
                         className="py-2 text-right font-mono"
                         style={{
-                          color: row.value < 0 ? C.red : row.highlight ? 'var(--ink)' : 'var(--ink-muted)',
+                          color: textTone(row.value < 0 ? C.red : row.highlight ? 'var(--ink)' : 'var(--ink-muted)'),
                           fontWeight: row.highlight ? 600 : 400,
                         }}
                       >

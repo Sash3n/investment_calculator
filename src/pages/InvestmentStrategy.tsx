@@ -15,7 +15,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { formatRand, formatPercent, formatRandShort } from '../utils/format';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 import {
   calcInvestmentStrategy,
   exportStrategyToExcel,
@@ -36,8 +36,8 @@ const TAX_YEAR_OPTIONS = [
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function InfoBadge({ text, color = C.blue }: { text: string; color?: string }) {
   return (
-    <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: `${alpha(color, 7)}`, border: `1px solid ${alpha(color, 20)}` }}>
-      <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color }} />
+    <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: alpha(color, 7), border: `1px solid ${alpha(color, 20)}` }}>
+      <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(color) }} />
       <span style={{ color: 'var(--ink-muted)' }}>{text}</span>
     </div>
   );
@@ -45,8 +45,8 @@ function InfoBadge({ text, color = C.blue }: { text: string; color?: string }) {
 
 function WarnBadge({ text }: { text: string }) {
   return (
-    <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 27)}` }}>
-      <AlertTriangle size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+    <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
+      <AlertTriangle size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
       <span style={{ color: 'var(--ink-muted)' }}>{text}</span>
     </div>
   );
@@ -64,8 +64,8 @@ function ProjectionTooltip({ active, payload, label }: {
       <p className="font-semibold mb-2" style={{ color: 'var(--ink)' }}>Year {label}</p>
       {payload.map((p, i) => (
         <div key={i} className="flex justify-between gap-4">
-          <span style={{ color: p.color }}>{p.name}</span>
-          <span className="font-semibold" style={{ color: p.color }}>{formatRand(p.value, 0)}</span>
+          <span style={{ color: textTone(p.color) }}>{p.name}</span>
+          <span className="font-semibold" style={{ color: textTone(p.color) }}>{formatRand(p.value, 0)}</span>
         </div>
       ))}
     </div>
@@ -92,7 +92,7 @@ function StrategyCard({ s, isRecommended }: {
       {isRecommended && (
         <div
           className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ background: `${alpha(C.green, 13)}`, color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
+          style={{ background: alpha(C.green, 13), color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
         >
           <Star size={10} fill={C.green} />
           Recommended
@@ -101,7 +101,7 @@ function StrategyCard({ s, isRecommended }: {
 
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: borderColor }}>{s.label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: textTone(borderColor) }}>{s.label}</p>
         <div className="flex items-baseline gap-2">
           <p className="text-2xl font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             {formatRand(s.totalInvested)}
@@ -122,14 +122,14 @@ function StrategyCard({ s, isRecommended }: {
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-lg p-2" style={{ background: 'var(--paper-raised)' }}>
             <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>{label}</p>
-            <p className="text-sm font-bold mt-0.5" style={{ color }}>{value}</p>
+            <p className="text-sm font-bold mt-0.5" style={{ color: textTone(color) }}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* SARS subsidy note */}
       {subsidyPct && (
-        <div className="text-xs p-2 rounded-lg" style={{ background: `${alpha(C.green, 7)}`, color: C.green }}>
+        <div className="text-xs p-2 rounded-lg" style={{ background: alpha(C.green, 7), color: textTone(C.green) }}>
           SARS funds {subsidyPct}% of your RA ({formatRand(s.monthlyTaxSaving)}/month)
         </div>
       )}
@@ -138,12 +138,12 @@ function StrategyCard({ s, isRecommended }: {
       <div
         className="flex items-center justify-between p-2.5 rounded-lg"
         style={{
-          background: s.budgetTight ? `${alpha(C.red, 7)}` : `${alpha(C.green, 7)}`,
+          background: s.budgetTight ? alpha(C.red, 7) : alpha(C.green, 7),
           border: `1px solid ${alpha(s.budgetTight ? C.red : C.green, 20)}`,
         }}
       >
         <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>Spendable cash</span>
-        <span className="text-sm font-bold" style={{ color: s.budgetTight ? C.red : C.green }}>
+        <span className="text-sm font-bold" style={{ color: textTone(s.budgetTight ? C.red : C.green) }}>
           {formatRand(s.spendable)}/mo
         </span>
       </div>
@@ -152,7 +152,7 @@ function StrategyCard({ s, isRecommended }: {
       <div>
         <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>
           <span>% of income invested</span>
-          <span className="font-semibold" style={{ color: borderColor }}>{s.investPct.toFixed(1)}%</span>
+          <span className="font-semibold" style={{ color: textTone(borderColor) }}>{s.investPct.toFixed(1)}%</span>
         </div>
         <div className="h-1.5 rounded-full" style={{ background: 'var(--paper-raised)' }}>
           <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(s.investPct, 100)}%`, background: borderColor }} />
@@ -162,7 +162,7 @@ function StrategyCard({ s, isRecommended }: {
       {/* Projected FV */}
       <div className="pt-2 border-t" style={{ borderColor: 'var(--rule)' }}>
         <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--ink-subtle)' }}>Projected Value</p>
-        <p className="text-lg font-bold" style={{ color: borderColor, fontFamily: 'var(--font-display)' }}>
+        <p className="text-lg font-bold" style={{ color: textTone(borderColor), fontFamily: 'var(--font-display)' }}>
           {formatRand(s.projectedFV, 0)}
         </p>
       </div>
@@ -171,13 +171,13 @@ function StrategyCard({ s, isRecommended }: {
       <div className="space-y-1.5 text-xs">
         {s.pros.map((p, i) => (
           <div key={i} className="flex items-start gap-1.5">
-            <CheckCircle2 size={12} className="mt-0.5 flex-shrink-0" style={{ color: C.green }} />
+            <CheckCircle2 size={12} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.green) }} />
             <span style={{ color: 'var(--ink-muted)' }}>{p}</span>
           </div>
         ))}
         {s.cons.map((c, i) => (
           <div key={i} className="flex items-start gap-1.5">
-            <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+            <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
             <span style={{ color: 'var(--ink-muted)' }}>{c}</span>
           </div>
         ))}
@@ -201,8 +201,8 @@ function CompRow({ label, values, bestIdx, format = 'rand' }: {
           key={i}
           className="py-2 text-right text-xs font-medium"
           style={{
-            color: i === bestIdx ? C.green : 'var(--ink)',
-            background: i === bestIdx ? `${alpha(C.green, 5)}` : 'transparent',
+            color: textTone(i === bestIdx ? C.green : 'var(--ink)'),
+            background: i === bestIdx ? alpha(C.green, 5) : 'transparent',
             borderRadius: i === bestIdx ? 4 : 0,
           }}
         >
@@ -269,7 +269,7 @@ export function InvestmentStrategy() {
           <button
             onClick={() => exportStrategyToExcel(inputs, result)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: `${alpha(C.green, 13)}`, color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
+            style={{ background: alpha(C.green, 13), color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
           >
             <Download size={15} /> Export to Excel
           </button>
@@ -335,7 +335,7 @@ export function InvestmentStrategy() {
                       {result.raUtilizationPct.toFixed(0)}% of 27.5% limit used
                       {result.raCapSource === 'r350k' && ' · Annual R350K cap hit'}
                     </span>
-                    <span style={{ color: result.raUtilizationPct > 100 ? C.red : result.raUtilizationPct > 85 ? C.orange : C.green }}>
+                    <span style={{ color: textTone(result.raUtilizationPct > 100 ? C.red : result.raUtilizationPct > 85 ? C.orange : C.green) }}>
                       {formatRand(inputs.monthlyRA)}/mo
                     </span>
                   </div>
@@ -371,10 +371,10 @@ export function InvestmentStrategy() {
                 <WarnBadge text={`⚠️ Over TFSA limit by ${formatRand(result.tfsaOverBy, 0)}/year — SARS applies a 40% penalty tax on excess contributions.`} />
               )}
               {result.showTFSANudge && (
-                <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: `${alpha(C.teal, 7)}`, border: `1px solid ${alpha(C.teal, 20)}` }}>
-                  <Zap size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.teal }} />
+                <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: alpha(C.teal, 7), border: `1px solid ${alpha(C.teal, 20)}` }}>
+                  <Zap size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.teal) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
-                    <strong style={{ color: C.teal }}>New for 2026:</strong> You can contribute {formatRand(result.tfsaMonthlyLimit - inputs.monthlyTFSA, 0)}/month more tax-free — increasing from {formatRand(inputs.monthlyTFSA)} to {formatRand(result.tfsaMonthlyLimit)}/month.
+                    <strong style={{ color: textTone(C.teal) }}>New for 2026:</strong> You can contribute {formatRand(result.tfsaMonthlyLimit - inputs.monthlyTFSA, 0)}/month more tax-free — increasing from {formatRand(inputs.monthlyTFSA)} to {formatRand(result.tfsaMonthlyLimit)}/month.
                   </span>
                 </div>
               )}
@@ -444,7 +444,7 @@ export function InvestmentStrategy() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
             className="glass-card-static p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-            style={{ borderLeft: `3px solid ${C.green}`, background: `${alpha(C.green, 3)}` }}
+            style={{ borderLeft: `3px solid ${C.green}`, background: alpha(C.green, 3) }}
           >
             {[
               { label: 'Effective RA Cost', value: formatRand(result.effectiveRAMonthlyCost), sub: 'RA minus tax saving', color: C.green },
@@ -454,7 +454,7 @@ export function InvestmentStrategy() {
             ].map((item) => (
               <div key={item.label}>
                 <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.label}</p>
-                <p className="text-base font-bold" style={{ color: item.color, fontFamily: 'var(--font-display)' }}>{item.value}</p>
+                <p className="text-base font-bold" style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>{item.value}</p>
                 <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>{item.sub}</p>
               </div>
             ))}
@@ -481,7 +481,7 @@ export function InvestmentStrategy() {
                   <span
                     className="font-mono"
                     style={{
-                      color: row.green ? C.green : row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)',
+                      color: textTone(row.green ? C.green : row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)'),
                       fontWeight: row.bold ? 600 : 400,
                     }}
                   >
@@ -502,12 +502,12 @@ export function InvestmentStrategy() {
           {/* Marginal rate badge */}
           <div
             className="flex items-center gap-3 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 20)}` }}
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 20)}` }}
           >
-            <Info size={14} style={{ color: C.blue, flexShrink: 0 }} />
+            <Info size={14} style={{ color: textTone(C.blue), flexShrink: 0 }} />
             <span style={{ color: 'var(--ink-muted)' }}>
-              Marginal tax rate: <strong style={{ color: C.blue }}>{result.marginalRate.toFixed(0)}%</strong>
-              &nbsp;· Every rand added to your RA saves <strong style={{ color: C.green }}>{result.marginalRate.toFixed(0)}c in tax</strong>
+              Marginal tax rate: <strong style={{ color: textTone(C.blue) }}>{result.marginalRate.toFixed(0)}%</strong>
+              &nbsp;· Every rand added to your RA saves <strong style={{ color: textTone(C.green) }}>{result.marginalRate.toFixed(0)}c in tax</strong>
             </span>
           </div>
         </div>
@@ -535,7 +535,7 @@ export function InvestmentStrategy() {
             <tr style={{ borderBottom: '2px solid var(--rule)' }}>
               <th className="py-2 text-left font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Metric</th>
               {strategies.map((s) => (
-                <th key={s.tag} className="py-2 text-right font-semibold uppercase tracking-wider" style={{ color: strategyColors[strategies.indexOf(s)] }}>
+                <th key={s.tag} className="py-2 text-right font-semibold uppercase tracking-wider" style={{ color: textTone(strategyColors[strategies.indexOf(s)]) }}>
                   {s.tag === 'balanced' ? '⭐ ' : ''}{s.label.split('(')[0].trim()}
                 </th>
               ))}
@@ -596,9 +596,9 @@ export function InvestmentStrategy() {
             { label: 'Balanced',     value: result.projectionBalanced[result.projectionBalanced.length - 1],  color: C.green },
             { label: 'Max Tax',      value: result.projectionMaxTax[result.projectionMaxTax.length - 1],      color: C.orange },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl p-3 text-center" style={{ background: `${alpha(item.color, 7)}`, border: `1px solid ${alpha(item.color, 20)}` }}>
-              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: item.color }}>{item.label}</p>
-              <p className="text-base font-bold" style={{ color: item.color, fontFamily: 'var(--font-display)' }}>{formatRand(item.value, 0)}</p>
+            <div key={item.label} className="rounded-xl p-3 text-center" style={{ background: alpha(item.color, 7), border: `1px solid ${alpha(item.color, 20)}` }}>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: textTone(item.color) }}>{item.label}</p>
+              <p className="text-base font-bold" style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>{formatRand(item.value, 0)}</p>
               <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>after {inputs.horizonYears} years</p>
             </div>
           ))}
@@ -608,8 +608,8 @@ export function InvestmentStrategy() {
       {/* ── 2-Pot Retirement System ─────────────────────────────────────────── */}
       <div className="glass-card-static p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${alpha(C.blue, 9)}` }}>
-            <PiggyBank size={18} style={{ color: C.blue }} />
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: alpha(C.blue, 9) }}>
+            <PiggyBank size={18} style={{ color: textTone(C.blue) }} />
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>2-Pot Retirement System</p>
@@ -619,12 +619,12 @@ export function InvestmentStrategy() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           {/* Savings pot */}
-          <div className="rounded-xl p-4" style={{ background: `${alpha(C.green, 5)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
+          <div className="rounded-xl p-4" style={{ background: alpha(C.green, 5), border: `1px solid ${alpha(C.green, 20)}` }}>
             <div className="flex items-center gap-2 mb-2">
-              <Unlock size={16} style={{ color: C.green }} />
-              <p className="text-sm font-semibold" style={{ color: C.green }}>Savings Pot (1/3)</p>
+              <Unlock size={16} style={{ color: textTone(C.green) }} />
+              <p className="text-sm font-semibold" style={{ color: textTone(C.green) }}>Savings Pot (1/3)</p>
             </div>
-            <p className="text-2xl font-bold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
+            <p className="text-2xl font-bold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
               {formatRand(result.savingsPotMonthly)}<span className="text-sm font-normal">/month</span>
             </p>
             <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
@@ -632,12 +632,12 @@ export function InvestmentStrategy() {
             </p>
           </div>
           {/* Retirement pot */}
-          <div className="rounded-xl p-4" style={{ background: `${alpha(C.blue, 5)}`, border: `1px solid ${alpha(C.blue, 20)}` }}>
+          <div className="rounded-xl p-4" style={{ background: alpha(C.blue, 5), border: `1px solid ${alpha(C.blue, 20)}` }}>
             <div className="flex items-center gap-2 mb-2">
-              <Lock size={16} style={{ color: C.blue }} />
-              <p className="text-sm font-semibold" style={{ color: C.blue }}>Retirement Pot (2/3)</p>
+              <Lock size={16} style={{ color: textTone(C.blue) }} />
+              <p className="text-sm font-semibold" style={{ color: textTone(C.blue) }}>Retirement Pot (2/3)</p>
             </div>
-            <p className="text-2xl font-bold" style={{ color: C.blue, fontFamily: 'var(--font-display)' }}>
+            <p className="text-2xl font-bold" style={{ color: textTone(C.blue), fontFamily: 'var(--font-display)' }}>
               {formatRand(result.retirementPotMonthly)}<span className="text-sm font-normal">/month</span>
             </p>
             <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
@@ -655,20 +655,20 @@ export function InvestmentStrategy() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
         className="glass-card-static p-6"
-        style={{ border: `2px solid ${alpha(C.green, 33)}`, background: `${alpha(C.green, 3)}` }}
+        style={{ border: `2px solid ${alpha(C.green, 33)}`, background: alpha(C.green, 3) }}
       >
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${alpha(C.green, 13)}` }}>
-            <Zap size={20} style={{ color: C.green }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: alpha(C.green, 13) }}>
+            <Zap size={20} style={{ color: textTone(C.green) }} />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <p className="text-base font-bold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
+              <p className="text-base font-bold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
                 Smart Recommendation
               </p>
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-                style={{ background: `${alpha(C.green, 13)}`, color: C.green }}
+                style={{ background: alpha(C.green, 13), color: textTone(C.green) }}
               >
                 {result.recommendedTag === 'conservative' ? 'Conservative' : result.recommendedTag === 'balanced' ? 'Balanced' : 'Max Tax'}
               </span>
@@ -689,7 +689,7 @@ export function InvestmentStrategy() {
                 ].map((item) => (
                   <div key={item.label} className="rounded-xl p-3" style={{ background: 'var(--paper-raised)' }}>
                     <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
-                    <p className="text-sm font-bold" style={{ color: item.color, fontFamily: 'var(--font-display)' }}>{item.value}</p>
+                    <p className="text-sm font-bold" style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>{item.value}</p>
                   </div>
                 ));
               })()}
@@ -697,10 +697,10 @@ export function InvestmentStrategy() {
 
             {/* SARS subsidy callout */}
             {result.sarsSubsidyRand > 0 && (
-              <div className="flex items-center gap-2 mt-4 p-3 rounded-xl text-sm" style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
-                <ArrowRight size={15} style={{ color: C.green, flexShrink: 0 }} />
+              <div className="flex items-center gap-2 mt-4 p-3 rounded-xl text-sm" style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
+                <ArrowRight size={15} style={{ color: textTone(C.green), flexShrink: 0 }} />
                 <span style={{ color: 'var(--ink-muted)' }}>
-                  The government is subsidising <strong style={{ color: C.green }}>{formatRand(result.sarsSubsidyRand)}/month</strong> ({result.sarsSubsidyPct.toFixed(0)}%) of your RA through tax relief — that's <strong style={{ color: C.green }}>{formatRand(result.sarsSubsidyRand * 12)}/year</strong> you'd otherwise pay SARS.
+                  The government is subsidising <strong style={{ color: textTone(C.green) }}>{formatRand(result.sarsSubsidyRand)}/month</strong> ({result.sarsSubsidyPct.toFixed(0)}%) of your RA through tax relief — that's <strong style={{ color: textTone(C.green) }}>{formatRand(result.sarsSubsidyRand * 12)}/year</strong> you'd otherwise pay SARS.
                 </span>
               </div>
             )}
@@ -713,7 +713,7 @@ export function InvestmentStrategy() {
         <button
           onClick={() => exportStrategyToExcel(inputs, result)}
           className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all"
-          style={{ background: `${alpha(C.green, 13)}`, color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
+          style={{ background: alpha(C.green, 13), color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
         >
           <Download size={16} />
           Export Full Analysis to Excel

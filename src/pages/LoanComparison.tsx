@@ -8,7 +8,7 @@ import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
-import { alpha, SERIES } from '../utils/color';
+import { alpha, SERIES, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -177,7 +177,7 @@ export function LoanComparison() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-            <Scale size={20} className="text-note-orange" />
+            <Scale size={20} className="text-note-orange-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -191,7 +191,7 @@ export function LoanComparison() {
           {loans.length < 3 && (
             <button onClick={addLoan}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
               <Plus size={13} /> Add Loan
             </button>
           )}
@@ -213,13 +213,13 @@ export function LoanComparison() {
                   value={loan.label}
                   onChange={(e) => updateLoan(loan.id, 'label', e.target.value)}
                   className="text-sm font-bold bg-transparent border-0 outline-none"
-                  style={{ color: LOAN_COLORS[idx % LOAN_COLORS.length], fontFamily: 'var(--font-display)', width: 100 }}
+                  style={{ color: textTone(LOAN_COLORS[idx % LOAN_COLORS.length]), fontFamily: 'var(--font-display)', width: 100 }}
                 />
               </div>
               {loans.length > 2 && (
                 <button onClick={() => removeLoan(loan.id)}
                   className="text-xs p-1 rounded-lg transition-all"
-                  style={{ color: C.red, background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
+                  style={{ color: textTone(C.red), background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
                   <Trash2 size={13} />
                 </button>
               )}
@@ -266,9 +266,9 @@ export function LoanComparison() {
             </div>
 
             <div className="flex items-center justify-between pt-2 px-1 rounded-lg"
-              style={{ background: `${alpha(LOAN_COLORS[idx % LOAN_COLORS.length], 4)}`, border: `1px solid ${alpha(LOAN_COLORS[idx % LOAN_COLORS.length], 13)}`, padding: '8px 12px' }}>
+              style={{ background: alpha(LOAN_COLORS[idx % LOAN_COLORS.length], 4), border: `1px solid ${alpha(LOAN_COLORS[idx % LOAN_COLORS.length], 13)}`, padding: '8px 12px' }}>
               <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>Total Upfront</span>
-              <span className="text-sm font-bold" style={{ color: LOAN_COLORS[idx % LOAN_COLORS.length] }}>
+              <span className="text-sm font-bold" style={{ color: textTone(LOAN_COLORS[idx % LOAN_COLORS.length]) }}>
                 {formatRand(results[idx].totalUpfront, 0)}
               </span>
             </div>
@@ -283,15 +283,15 @@ export function LoanComparison() {
           { label: 'Lowest Grand Total (all costs)', winner: bestTotal, value: formatRand(bestTotal.grandTotal, 0) },
         ].map((item) => (
           <div key={item.label} className="rounded-xl p-4 flex items-center gap-3"
-            style={{ background: `${alpha(item.winner.color, 5)}`, border: `1px solid ${alpha(item.winner.color, 19)}` }}>
+            style={{ background: alpha(item.winner.color, 5), border: `1px solid ${alpha(item.winner.color, 19)}` }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: `${alpha(item.winner.color, 13)}` }}>
-              <Trophy size={14} style={{ color: item.winner.color }} />
+              style={{ background: alpha(item.winner.color, 13) }}>
+              <Trophy size={14} style={{ color: textTone(item.winner.color) }} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider"
                 style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
-              <p className="text-sm font-bold" style={{ color: item.winner.color }}>
+              <p className="text-sm font-bold" style={{ color: textTone(item.winner.color) }}>
                 {item.winner.label} — {item.value}
               </p>
             </div>
@@ -313,7 +313,7 @@ export function LoanComparison() {
                   style={{ color: 'var(--ink-muted)' }}>Metric</th>
                 {results.map((r) => (
                   <th key={r.id} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: r.color }}>{r.label}</th>
+                    style={{ color: textTone(r.color) }}>{r.label}</th>
                 ))}
               </tr>
             </thead>
@@ -346,9 +346,9 @@ export function LoanComparison() {
                     style={{ color: 'var(--ink-muted)' }}>{row.label}</td>
                   {row.vals.map((val, vi) => (
                     <td key={vi} className="py-2 px-3"
-                      style={{ color: row.bestIdx === vi ? C.green : 'var(--ink)', fontWeight: row.bestIdx === vi ? 700 : 400 }}>
+                      style={{ color: textTone(row.bestIdx === vi ? C.green : 'var(--ink)'), fontWeight: row.bestIdx === vi ? 700 : 400 }}>
                       {val}
-                      {row.bestIdx === vi && <span className="ml-1 text-[9px]" style={{ color: C.green }}>★</span>}
+                      {row.bestIdx === vi && <span className="ml-1 text-[9px]" style={{ color: textTone(C.green) }}>★</span>}
                     </td>
                   ))}
                 </tr>

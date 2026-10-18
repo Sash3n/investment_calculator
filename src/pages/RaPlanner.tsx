@@ -11,7 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcIncomeTax, getMarginalRate } from '../utils/tax';
 import type { AgeGroup } from '../types';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 // ── SARS 2026/27 Constants (effective 1 March 2026) ───────────────────────────
 const RA_PCT_CAP           = 0.275;           // 27.5% of greater of income or remuneration
@@ -280,7 +280,7 @@ export function RaPlanner() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-            <Shield size={20} className="text-note-blue" />
+            <Shield size={20} className="text-note-blue-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -292,7 +292,7 @@ export function RaPlanner() {
             </p>
           </div>
           <span className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 27)}` }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
             RA cap R430,000
           </span>
         </div>
@@ -302,8 +302,8 @@ export function RaPlanner() {
       {!retirementAgeValid && (
         <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
           style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
-          <AlertTriangle size={14} className="text-loss mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--loss)' }}>
+          <AlertTriangle size={14} className="text-loss-ink mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--loss-ink)' }}>
             The minimum RA retirement age in South Africa is <strong>55</strong>. You cannot access your RA before this age (except for disability or formal tax emigration).
           </span>
         </div>
@@ -313,8 +313,8 @@ export function RaPlanner() {
       {overContrib && (
         <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
           style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-          <AlertTriangle size={14} className="text-note-orange mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--note-orange)' }}>
+          <AlertTriangle size={14} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--note-orange-ink)' }}>
             Your RA contribution of {formatRand(annualContrib, 0)}/year exceeds your deductible limit of {formatRand(deductionLimit, 0)}/year.
             The excess of <strong>{formatRand(excessContrib, 0)}</strong> is not deductible now — but it carries forward and is deductible in future tax years, and is tax-free when withdrawn at retirement.
           </span>
@@ -329,7 +329,7 @@ export function RaPlanner() {
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-            <TrendingUp size={15} className="text-gain" />
+            <TrendingUp size={15} className="text-gain-ink" />
           </div>
           <p className="text-sm font-semibold"
             style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -347,21 +347,21 @@ export function RaPlanner() {
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
               style={{ color: 'var(--ink-subtle)' }}>SARS pays</p>
-            <p className="text-lg font-bold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
+            <p className="text-lg font-bold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
               {formatRand(monthlyTaxSaving, 0)}<span className="text-xs font-normal">/mo</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
               style={{ color: 'var(--ink-subtle)' }}>Your actual cost</p>
-            <p className="text-lg font-bold" style={{ color: C.blue, fontFamily: 'var(--font-display)' }}>
+            <p className="text-lg font-bold" style={{ color: textTone(C.blue), fontFamily: 'var(--font-display)' }}>
               {formatRand(effectiveMonthlyCost, 0)}<span className="text-xs font-normal">/mo</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
               style={{ color: 'var(--ink-subtle)' }}>SARS subsidy</p>
-            <p className="text-lg font-bold" style={{ color: C.orange, fontFamily: 'var(--font-display)' }}>
+            <p className="text-lg font-bold" style={{ color: textTone(C.orange), fontFamily: 'var(--font-display)' }}>
               {formatPercent(sarsSubsidyPct, 0)}
             </p>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
@@ -374,7 +374,7 @@ export function RaPlanner() {
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs mb-1">
             <span style={{ color: 'var(--ink-muted)' }}>RA deduction utilisation</span>
-            <span className="font-semibold" style={{ color: utilizationColor }}>
+            <span className="font-semibold" style={{ color: textTone(utilizationColor) }}>
               {formatRand(annualContrib, 0)} / {formatRand(deductionLimit, 0)} ({raUtilisationPct.toFixed(0)}%)
             </span>
           </div>
@@ -400,7 +400,7 @@ export function RaPlanner() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-              <Wallet size={15} className="text-note-blue" />
+              <Wallet size={15} className="text-note-blue-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -428,7 +428,7 @@ export function RaPlanner() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-              <PieChart size={15} className="text-note-orange" />
+              <PieChart size={15} className="text-note-orange-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -501,11 +501,11 @@ export function RaPlanner() {
             },
           ].map((pot) => (
             <div key={pot.label} className="rounded-xl p-4"
-              style={{ background: `${alpha(pot.color, 5)}`, border: `1px solid ${alpha(pot.color, 19)}` }}>
+              style={{ background: alpha(pot.color, 5), border: `1px solid ${alpha(pot.color, 19)}` }}>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold" style={{ color: pot.color }}>{pot.label}</p>
+                <p className="text-xs font-bold" style={{ color: textTone(pot.color) }}>{pot.label}</p>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: `${alpha(pot.color, 13)}`, color: pot.color }}>
+                  style={{ background: alpha(pot.color, 13), color: textTone(pot.color) }}>
                   {pot.badge}
                 </span>
               </div>
@@ -517,18 +517,18 @@ export function RaPlanner() {
                 {pot.detail}
               </p>
               {pot.lumpSum !== undefined && (
-                <div className="mt-2 pt-2 border-t border-white/10 space-y-1 text-[11px]">
+                <div className="mt-2 pt-2 border-t border-rule space-y-1 text-[11px]">
                   <div className="flex justify-between">
                     <span style={{ color: 'var(--ink-muted)' }}>Lump sum (1/3)</span>
-                    <span style={{ color: C.orange }}>{formatRand(pot.lumpSum, 0)}</span>
+                    <span style={{ color: textTone(C.orange) }}>{formatRand(pot.lumpSum, 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span style={{ color: 'var(--ink-muted)' }}>Lump sum tax</span>
-                    <span style={{ color: C.red }}>{formatRand(pot.lumpSumTax ?? 0, 0)}</span>
+                    <span style={{ color: textTone(C.red) }}>{formatRand(pot.lumpSumTax ?? 0, 0)}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
                     <span style={{ color: 'var(--ink-muted)' }}>Net lump sum</span>
-                    <span style={{ color: C.green }}>{formatRand((pot.lumpSum ?? 0) - (pot.lumpSumTax ?? 0), 0)}</span>
+                    <span style={{ color: textTone(C.green) }}>{formatRand((pot.lumpSum ?? 0) - (pot.lumpSumTax ?? 0), 0)}</span>
                   </div>
                 </div>
               )}
@@ -539,7 +539,7 @@ export function RaPlanner() {
         {canFullyCommute && (
           <div className="mt-3 flex items-start gap-2 p-3 rounded-xl text-xs"
             style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
-            <Info size={13} className="text-gain mt-0.5 flex-shrink-0" />
+            <Info size={13} className="text-gain-ink mt-0.5 flex-shrink-0" />
             <span style={{ color: 'var(--ink-muted)' }}>
               Your projected total retirement interest ({formatRand(totalAtRetirement, 0)}) falls below the
               <strong style={{ color: 'var(--ink)' }}> R360,000 de minimis threshold</strong> (SARS 2026/27).
@@ -633,7 +633,7 @@ export function RaPlanner() {
           <div className="mt-3 flex items-center justify-between text-xs p-2 rounded-lg"
             style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)' }}>
             <span style={{ color: 'var(--ink-muted)' }}>ETF after CGT at retirement</span>
-            <span className="font-semibold" style={{ color: C.teal }}>{formatRand(etfAfterCGT, 0)}</span>
+            <span className="font-semibold" style={{ color: textTone(C.teal) }}>{formatRand(etfAfterCGT, 0)}</span>
           </div>
         </div>
       </div>
@@ -665,21 +665,21 @@ export function RaPlanner() {
                     background: isTarget ? 'color-mix(in srgb, var(--note-blue) 6%, transparent)' : 'transparent',
                   }}>
                     <td className="py-2.5 px-3 font-bold"
-                      style={{ color: isTarget ? C.blue : 'var(--note-blue)' }}>
+                      style={{ color: textTone(isTarget ? C.blue : 'var(--note-blue)') }}>
                       Age {s.age}{isTarget ? ' ★' : ''}
                     </td>
-                    <td className="py-2.5 px-3 font-semibold" style={{ color: C.green }}>
+                    <td className="py-2.5 px-3 font-semibold" style={{ color: textTone(C.green) }}>
                       {formatRand(s.totalWealth, 0)}
                     </td>
-                    <td className="py-2.5 px-3" style={{ color: C.green }}>
+                    <td className="py-2.5 px-3" style={{ color: textTone(C.green) }}>
                       {formatRand(s.sp, 0)}
                     </td>
-                    <td className="py-2.5 px-3" style={{ color: C.blue }}>
+                    <td className="py-2.5 px-3" style={{ color: textTone(C.blue) }}>
                       {formatRand(s.annuityPot, 0)}
                     </td>
-                    <td className="py-2.5 px-3" style={{ color: C.orange }}>
+                    <td className="py-2.5 px-3" style={{ color: textTone(C.orange) }}>
                       {formatRand(netLump, 0)}
-                      <span className="ml-1 text-[10px]" style={{ color: C.red }}>
+                      <span className="ml-1 text-[10px]" style={{ color: textTone(C.red) }}>
                         (-{formatRand(s.lumpSumTaxScen, 0)} tax)
                       </span>
                     </td>
@@ -719,14 +719,14 @@ export function RaPlanner() {
                   borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
                   background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                 }}>
-                  <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue)' }}>{r.age}</td>
-                  <td className="py-2 px-3" style={{ color: C.blue }}>{formatRand(r.annualContrib, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(r.annualTaxSaving, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.orange }}>{formatRand(r.effectiveCost, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(r.savingsPot, 0)}</td>
-                  <td className="py-2 px-3" style={{ color: C.blue }}>{formatRand(r.retirePot, 0)}</td>
+                  <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue-ink)' }}>{r.age}</td>
+                  <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>{formatRand(r.annualContrib, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: textTone(C.green) }}>{formatRand(r.annualTaxSaving, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>{formatRand(r.effectiveCost, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: textTone(C.green) }}>{formatRand(r.savingsPot, 0)}</td>
+                  <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>{formatRand(r.retirePot, 0)}</td>
                   <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(r.totalWealth, 0)}</td>
-                  <td className="py-2 px-3 font-semibold" style={{ color: C.green }}>{formatRand(r.cumulativeTaxSaved, 0)}</td>
+                  <td className="py-2 px-3 font-semibold" style={{ color: textTone(C.green) }}>{formatRand(r.cumulativeTaxSaved, 0)}</td>
                 </tr>
               ))}
             </tbody>
@@ -754,8 +754,8 @@ export function RaPlanner() {
           },
         ].map((card) => (
           <div key={card.title} className="rounded-xl p-4"
-            style={{ background: `${alpha(card.color, 6)}`, border: `1px solid ${alpha(card.color, 19)}` }}>
-            <p className="text-xs font-bold mb-1" style={{ color: card.color }}>{card.title}</p>
+            style={{ background: alpha(card.color, 6), border: `1px solid ${alpha(card.color, 19)}` }}>
+            <p className="text-xs font-bold mb-1" style={{ color: textTone(card.color) }}>{card.title}</p>
             <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               {card.body}
             </p>

@@ -11,7 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 // ── TFSA 2026 Rules ───────────────────────────────────────────────────────────
 const ANNUAL_LIMIT    = 46_000; // SARS 2026/27 budget — increased from R36,000
@@ -241,7 +241,7 @@ export function TfsaOptimizer() {
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
           >
-            <Landmark size={20} className="text-note-blue" />
+            <Landmark size={20} className="text-note-blue-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -254,7 +254,7 @@ export function TfsaOptimizer() {
           </div>
           <span
             className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
           >
             Zero tax on growth
           </span>
@@ -272,7 +272,7 @@ export function TfsaOptimizer() {
           <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Lifetime Allowance Tracker
           </p>
-          <span className="text-xs font-semibold" style={{ color: C.orange }}>
+          <span className="text-xs font-semibold" style={{ color: textTone(C.orange) }}>
             {formatRand(inp.existingLifetimeUsed, 0)} used of {formatRand(LIFETIME_LIMIT, 0)}
           </span>
         </div>
@@ -292,19 +292,19 @@ export function TfsaOptimizer() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div>
             <p style={{ color: 'var(--ink-subtle)' }}>Remaining allowance</p>
-            <p className="font-bold mt-0.5" style={{ color: C.green }}>
+            <p className="font-bold mt-0.5" style={{ color: textTone(C.green) }}>
               {formatRand(remainingLifetime, 0)}
             </p>
           </div>
           <div>
             <p style={{ color: 'var(--ink-subtle)' }}>Annual limit</p>
-            <p className="font-bold mt-0.5" style={{ color: C.blue }}>
+            <p className="font-bold mt-0.5" style={{ color: textTone(C.blue) }}>
               R 46,000 / year
             </p>
           </div>
           <div>
             <p style={{ color: 'var(--ink-subtle)' }}>Years to lifetime limit</p>
-            <p className="font-bold mt-0.5" style={{ color: C.orange }}>
+            <p className="font-bold mt-0.5" style={{ color: textTone(C.orange) }}>
               {remainingLifetime <= 0 ? 'Maxed out' : `~${yearsToLimit} year${yearsToLimit !== 1 ? 's' : ''}`}
             </p>
           </div>
@@ -323,8 +323,8 @@ export function TfsaOptimizer() {
           className="flex items-start gap-3 p-3 rounded-xl text-xs"
           style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
         >
-          <AlertTriangle size={14} className="text-loss mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--loss)' }}>
+          <AlertTriangle size={14} className="text-loss-ink mt-0.5 flex-shrink-0" />
+          <span style={{ color: 'var(--loss-ink)' }}>
             Your annual contribution exceeds the R46,000 SARS limit. Excess contributions are penalised at
             <strong> 40%</strong>. The calculator caps contributions at R46,000/year. Do not over-contribute.
           </span>
@@ -336,7 +336,7 @@ export function TfsaOptimizer() {
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
         style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}
       >
-        <Info size={14} className="text-note-blue mt-0.5 flex-shrink-0" />
+        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
         <span style={{ color: 'var(--ink-muted)' }}>
           <strong style={{ color: 'var(--ink)' }}>How the comparison works:</strong> Both TFSA and Taxable
           start with the same balance and receive the same annual contributions. TFSA grows completely tax-free.
@@ -353,7 +353,7 @@ export function TfsaOptimizer() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-              <Shield size={15} className="text-note-blue" />
+              <Shield size={15} className="text-note-blue-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -379,7 +379,7 @@ export function TfsaOptimizer() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-              <TrendingUp size={15} className="text-gain" />
+              <TrendingUp size={15} className="text-gain-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -532,27 +532,27 @@ export function TfsaOptimizer() {
                       ? 'color-mix(in srgb, var(--note-orange) 4%, transparent)'
                       : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue)' }}>Y{r.year}</td>
+                    <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue-ink)' }}>Y{r.year}</td>
                     <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>{r.age}</td>
-                    <td className="py-2 px-3" style={{ color: C.blue }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>
                       {r.contribution > 0 ? formatRand(r.contribution, 0) : '—'}
                     </td>
                     <td className="py-2 px-3">
-                      <span style={{ color: r.lifetimeRemaining <= 0 ? C.orange : 'var(--ink-muted)' }}>
+                      <span style={{ color: textTone(r.lifetimeRemaining <= 0 ? C.orange : 'var(--ink-muted)') }}>
                         {formatRand(r.lifetimeUsed, 0)}
                         {limitReached && <span className="ml-1 text-[10px]">★ maxed</span>}
                       </span>
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: C.green }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: textTone(C.green) }}>
                       {formatRand(r.tfsaBalance, 0)}
                     </td>
                     <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.taxableBalance, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.orange }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>
                       {formatRand(r.taxableAnnualTax, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: C.green }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: textTone(C.green) }}>
                       {formatRand(r.cumulativeTaxSaved, 0)}
                     </td>
                   </tr>
@@ -563,16 +563,16 @@ export function TfsaOptimizer() {
               <tr style={{ borderTop: '1px solid color-mix(in srgb, var(--ink) 10%, transparent)' }}>
                 <td colSpan={4} className="py-2 px-3 text-xs font-semibold"
                   style={{ color: 'var(--ink-muted)' }}>Totals</td>
-                <td className="py-2 px-3 font-bold" style={{ color: C.green }}>
+                <td className="py-2 px-3 font-bold" style={{ color: textTone(C.green) }}>
                   {formatRand(tfsaFinal, 0)}
                 </td>
                 <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink)' }}>
                   {formatRand(taxableFinal, 0)}
                 </td>
-                <td className="py-2 px-3 font-bold" style={{ color: C.orange }}>
+                <td className="py-2 px-3 font-bold" style={{ color: textTone(C.orange) }}>
                   {formatRand(totalTaxSaved, 0)}
                 </td>
-                <td className="py-2 px-3 font-bold" style={{ color: C.green }}>
+                <td className="py-2 px-3 font-bold" style={{ color: textTone(C.green) }}>
                   +{formatRand(extraWealth, 0)}
                 </td>
               </tr>
@@ -602,8 +602,8 @@ export function TfsaOptimizer() {
         ].map((card) => (
           <div key={card.title}
             className="rounded-xl p-4"
-            style={{ background: `${alpha(card.color, 6)}`, border: `1px solid ${alpha(card.color, 19)}` }}>
-            <p className="text-xs font-bold mb-1" style={{ color: card.color }}>{card.title}</p>
+            style={{ background: alpha(card.color, 6), border: `1px solid ${alpha(card.color, 19)}` }}>
+            <p className="text-xs font-bold mb-1" style={{ color: textTone(card.color) }}>{card.title}</p>
             <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
               {card.body}
             </p>

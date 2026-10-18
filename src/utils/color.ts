@@ -43,6 +43,15 @@ export function seriesColors(n: number): string[] {
   );
 }
 
+/**
+ * Text tone of a colour: banknote and gain/loss/warn tokens become their
+ * "-ink" variant (pulled toward ink) so coloured text stays readable on tinted
+ * backgrounds in both themes. Any other colour passes through unchanged.
+ */
+export function textTone(color: string): string {
+  return color.replace(/var\(--(note-[a-z]+|gain|loss|warn)\)/g, 'var(--$1-ink)');
+}
+
 /** Hex values from the previous palette, as stored in saved user data. */
 const LEGACY_HEX: Record<string, string> = {
   '#6366F1': 'var(--note-blue)', '#818CF8': 'var(--note-blue)', '#3B82F6': 'var(--note-blue)',

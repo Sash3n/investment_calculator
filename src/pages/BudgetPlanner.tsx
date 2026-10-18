@@ -16,7 +16,7 @@ import {
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { formatRand, formatRandShort } from '../utils/format';
-import { alpha, SERIES, tokenColor } from '../utils/color';
+import { alpha, SERIES, tokenColor, textTone } from '../utils/color';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -199,7 +199,7 @@ function useTransactions(uid: string | null) {
 function TagBadge({ tag, onRemove }: { tag: BudgetTag; onRemove?: () => void }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-      style={{ background: `${alpha(tag.color, 9)}`, color: tag.color, border: `1px solid ${alpha(tag.color, 19)}` }}>
+      style={{ background: alpha(tag.color, 9), color: textTone(tag.color), border: `1px solid ${alpha(tag.color, 19)}` }}>
       {tag.name}
       {onRemove && (
         <button onClick={onRemove} className="ml-0.5 hover:opacity-70">
@@ -334,7 +334,7 @@ export function BudgetPlanner() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-            <Wallet size={20} className="text-gain" />
+            <Wallet size={20} className="text-gain-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -352,7 +352,7 @@ export function BudgetPlanner() {
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                 style={{
                   background: viewMode === m ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                  color: viewMode === m ? 'var(--gain)' : 'var(--ink-muted)',
+                  color: viewMode === m ? 'var(--gain-ink)' : 'var(--ink-muted)',
                   border: `1px solid ${viewMode === m ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 10%, transparent)'}`,
                 }}>
                 {m === 'monthly' ? 'Monthly' : 'Quarterly'}
@@ -360,7 +360,7 @@ export function BudgetPlanner() {
             ))}
             <button onClick={() => setShowTagMgr((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
               <Tag size={12} /> Tags
             </button>
           </div>
@@ -392,13 +392,13 @@ export function BudgetPlanner() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex items-center gap-3 p-4 rounded-xl"
           style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-          <LogIn size={16} style={{ color: 'var(--note-blue)' }} />
+          <LogIn size={16} style={{ color: 'var(--note-blue-ink)' }} />
           <p className="text-sm flex-1" style={{ color: 'var(--ink-muted)' }}>
             Sign in to save transactions and tags to your account.
           </p>
           <button onClick={signIn}
             className="px-3 py-1.5 rounded-xl text-xs font-semibold"
-            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
             Sign in with Google
           </button>
         </motion.div>
@@ -422,9 +422,9 @@ export function BudgetPlanner() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
                   style={{ color: 'var(--ink-subtle)' }}>{k.label}</p>
                 <p className="text-lg font-bold leading-tight"
-                  style={{ color: k.color, fontFamily: 'var(--font-display)' }}>{k.value}</p>
+                  style={{ color: textTone(k.color), fontFamily: 'var(--font-display)' }}>{k.value}</p>
                 {'sub' in k && k.sub && (
-                  <p className="text-[10px] mt-0.5" style={{ color: k.color }}>{k.sub}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: textTone(k.color) }}>{k.sub}</p>
                 )}
               </div>
             ))}
@@ -436,7 +436,7 @@ export function BudgetPlanner() {
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all w-full justify-center"
               style={{
                 background: showAddForm ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                color: showAddForm ? 'var(--gain)' : 'var(--ink-muted)',
+                color: showAddForm ? 'var(--gain-ink)' : 'var(--ink-muted)',
                 border: `1px solid ${showAddForm ? 'color-mix(in srgb, var(--gain) 25%, transparent)' : 'color-mix(in srgb, var(--ink) 10%, transparent)'}`,
               }}>
               {showAddForm ? <X size={14} /> : <Plus size={14} />}
@@ -459,7 +459,7 @@ export function BudgetPlanner() {
                               ? t === 'income' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--loss) 15%, transparent)'
                               : 'color-mix(in srgb, var(--ink) 4%, transparent)',
                             color: form.type === t
-                              ? t === 'income' ? 'var(--gain)' : 'var(--loss)'
+                              ? t === 'income' ? 'var(--gain-ink)' : 'var(--loss-ink)'
                               : 'var(--ink-muted)',
                             border: `1px solid ${form.type === t
                               ? t === 'income' ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--loss) 30%, transparent)'
@@ -519,8 +519,8 @@ export function BudgetPlanner() {
                           <button key={t.id} onClick={() => setForm((f) => ({ ...f, tagId: t.id }))}
                             className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
                             style={{
-                              background: form.tagId === t.id ? `${alpha(t.color, 15)}` : `${alpha(t.color, 5)}`,
-                              color: t.color,
+                              background: form.tagId === t.id ? alpha(t.color, 15) : alpha(t.color, 5),
+                              color: textTone(t.color),
                               border: `1px solid ${form.tagId === t.id ? alpha(t.color, 31) : alpha(t.color, 13)}`,
                               outline: form.tagId === t.id ? `2px solid ${alpha(t.color, 25)}` : 'none',
                             }}>
@@ -538,7 +538,7 @@ export function BudgetPlanner() {
                     <button onClick={handleAddTx}
                       disabled={!form.description || !form.amount || !form.tagId || !user}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-                      style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: 'var(--gain)', border: '1px solid color-mix(in srgb, var(--gain) 30%, transparent)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: 'var(--gain-ink)', border: '1px solid color-mix(in srgb, var(--gain) 30%, transparent)' }}>
                       {user ? 'Add Transaction' : 'Sign in to add'}
                     </button>
                   </div>
@@ -572,7 +572,7 @@ export function BudgetPlanner() {
                 {/* Income */}
                 {monthTxs.filter((t) => t.type === 'income').length > 0 && (
                   <p className="text-[10px] font-semibold uppercase tracking-wider pt-1 pb-0.5"
-                    style={{ color: 'var(--gain)' }}>Income</p>
+                    style={{ color: 'var(--gain-ink)' }}>Income</p>
                 )}
                 {monthTxs.filter((t) => t.type === 'income').map((tx) => (
                   <TxRow key={tx.id} tx={tx} onRemove={() => removeTx(tx.id)} />
@@ -580,7 +580,7 @@ export function BudgetPlanner() {
                 {/* Expenses */}
                 {monthTxs.filter((t) => t.type === 'expense').length > 0 && (
                   <p className="text-[10px] font-semibold uppercase tracking-wider pt-2 pb-0.5"
-                    style={{ color: 'var(--loss)' }}>Expenses</p>
+                    style={{ color: 'var(--loss-ink)' }}>Expenses</p>
                 )}
                 {monthTxs.filter((t) => t.type === 'expense').map((tx) => (
                   <TxRow key={tx.id} tx={tx} onRemove={() => removeTx(tx.id)} />
@@ -616,7 +616,7 @@ export function BudgetPlanner() {
                         <div key={e.name} className="flex items-center gap-2 text-xs">
                           <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: e.color }} />
                           <span className="flex-1 truncate" style={{ color: 'var(--ink-muted)' }}>{e.name}</span>
-                          <span className="font-semibold flex-shrink-0" style={{ color: e.color }}>{formatRand(e.value, 0)}</span>
+                          <span className="font-semibold flex-shrink-0" style={{ color: textTone(e.color) }}>{formatRand(e.value, 0)}</span>
                         </div>
                       ))}
                     </div>
@@ -646,7 +646,7 @@ export function BudgetPlanner() {
                         <div key={e.name} className="flex items-center gap-2 text-xs">
                           <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: e.color }} />
                           <span className="flex-1 truncate" style={{ color: 'var(--ink-muted)' }}>{e.name}</span>
-                          <span className="font-semibold flex-shrink-0" style={{ color: e.color }}>{formatRand(e.value, 0)}</span>
+                          <span className="font-semibold flex-shrink-0" style={{ color: textTone(e.color) }}>{formatRand(e.value, 0)}</span>
                         </div>
                       ))}
                     </div>
@@ -676,16 +676,16 @@ export function BudgetPlanner() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
                     <span style={{ color: 'var(--ink-muted)' }}>Income</span>
-                    <span style={{ color: 'var(--gain)', fontWeight: 600 }}>{formatRand(m.income, 0)}</span>
+                    <span style={{ color: 'var(--gain-ink)', fontWeight: 600 }}>{formatRand(m.income, 0)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span style={{ color: 'var(--ink-muted)' }}>Expenses</span>
-                    <span style={{ color: 'var(--loss)', fontWeight: 600 }}>{formatRand(m.expenses, 0)}</span>
+                    <span style={{ color: 'var(--loss-ink)', fontWeight: 600 }}>{formatRand(m.expenses, 0)}</span>
                   </div>
                   <div className="flex justify-between text-xs pt-1"
                     style={{ borderTop: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
                     <span style={{ color: 'var(--ink-muted)' }}>Net</span>
-                    <span style={{ color: m.net >= 0 ? 'var(--gain)' : 'var(--loss)', fontWeight: 700 }}>
+                    <span style={{ color: m.net >= 0 ? 'var(--gain-ink)' : 'var(--loss-ink)', fontWeight: 700 }}>
                       {m.net >= 0 ? '+' : ''}{formatRand(m.net, 0)}
                     </span>
                   </div>
@@ -728,7 +728,7 @@ export function BudgetPlanner() {
               <div key={k.label} className="glass-card-static p-4 text-center">
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
                   style={{ color: 'var(--ink-subtle)' }}>{k.label}</p>
-                <p className="text-base font-bold" style={{ color: k.color, fontFamily: 'var(--font-display)' }}>
+                <p className="text-base font-bold" style={{ color: textTone(k.color), fontFamily: 'var(--font-display)' }}>
                   {formatRand(k.value, 0)}
                 </p>
               </div>
@@ -745,7 +745,7 @@ export function BudgetPlanner() {
             exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="glass-card p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <Tag size={14} style={{ color: 'var(--note-blue)' }} />
+                <Tag size={14} style={{ color: 'var(--note-blue-ink)' }} />
                 <p className="text-sm font-bold"
                   style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                   Manage Tags
@@ -779,7 +779,7 @@ export function BudgetPlanner() {
                           className="px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                           style={{
                             background: newTagType === t ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                            color: newTagType === t ? 'var(--note-blue)' : 'var(--ink-muted)',
+                            color: newTagType === t ? 'var(--note-blue-ink)' : 'var(--ink-muted)',
                             border: `1px solid ${newTagType === t ? 'color-mix(in srgb, var(--note-blue) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                           }}>
                           {t}
@@ -804,7 +804,7 @@ export function BudgetPlanner() {
                   </div>
                   <button onClick={handleAddTag} disabled={!newTagName.trim()}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold disabled:opacity-40"
-                    style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
                     <Plus size={12} /> Add Tag
                   </button>
                 </div>
@@ -814,19 +814,19 @@ export function BudgetPlanner() {
               <div className="flex flex-wrap gap-2">
                 {tags.map((t) => (
                   <div key={t.id} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
-                    style={{ background: `${alpha(t.color, 5)}`, border: `1px solid ${alpha(t.color, 15)}` }}>
+                    style={{ background: alpha(t.color, 5), border: `1px solid ${alpha(t.color, 15)}` }}>
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: t.color }} />
                     {editingTagId === t.id ? (
                       <input
                         className="text-xs bg-transparent border-0 outline-none w-24"
-                        style={{ color: t.color }}
+                        style={{ color: textTone(t.color) }}
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleRename(t.id)}
                         autoFocus
                       />
                     ) : (
-                      <span className="text-xs font-semibold" style={{ color: t.color }}>{t.name}</span>
+                      <span className="text-xs font-semibold" style={{ color: textTone(t.color) }}>{t.name}</span>
                     )}
                     <span className="text-[9px] px-1 rounded" style={{ color: 'var(--ink-subtle)', background: 'color-mix(in srgb, var(--ink) 5%, transparent)' }}>
                       {t.type}
@@ -835,7 +835,7 @@ export function BudgetPlanner() {
                       <>
                         {editingTagId === t.id ? (
                           <button onClick={() => handleRename(t.id)}
-                            className="p-0.5 rounded" style={{ color: 'var(--gain)' }}>
+                            className="p-0.5 rounded" style={{ color: 'var(--gain-ink)' }}>
                             <Check size={10} />
                           </button>
                         ) : (
@@ -847,7 +847,7 @@ export function BudgetPlanner() {
                         )}
                         <button onClick={() => removeTag(t.id)}
                           className="p-0.5 rounded opacity-50 hover:opacity-100"
-                          style={{ color: 'var(--loss)' }}>
+                          style={{ color: 'var(--loss-ink)' }}>
                           <Trash2 size={10} />
                         </button>
                       </>
@@ -876,8 +876,8 @@ function TxRow({ tx, onRemove }: { tx: Transaction; onRemove: () => void }) {
       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
         style={{ background: tx.type === 'income' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--loss) 12%, transparent)' }}>
         {tx.type === 'income'
-          ? <TrendingUp size={10} style={{ color: 'var(--gain)' }} />
-          : <TrendingDown size={10} style={{ color: 'var(--loss)' }} />}
+          ? <TrendingUp size={10} style={{ color: 'var(--gain-ink)' }} />
+          : <TrendingDown size={10} style={{ color: 'var(--loss-ink)' }} />}
       </div>
       <p className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>
         {tx.description}
@@ -887,12 +887,12 @@ function TxRow({ tx, onRemove }: { tx: Transaction; onRemove: () => void }) {
         {new Date(tx.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
       </p>
       <p className="text-sm font-bold flex-shrink-0 w-28 text-right"
-        style={{ color: tx.type === 'income' ? 'var(--gain)' : 'var(--loss)' }}>
+        style={{ color: tx.type === 'income' ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
         {tx.type === 'expense' ? '-' : '+'}{formatRand(tx.amount, 0)}
       </p>
       <button onClick={onRemove}
         className="opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-all flex-shrink-0"
-        style={{ color: 'var(--loss)', background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
+        style={{ color: 'var(--loss-ink)', background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
         <Trash2 size={12} />
       </button>
     </div>

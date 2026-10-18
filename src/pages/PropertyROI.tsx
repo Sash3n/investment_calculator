@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
-import { seriesColors } from '../utils/color';
+import { seriesColors, textTone } from '../utils/color';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -63,7 +63,7 @@ function CustomTooltip({ active, payload, label }: any) {
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: p.color }}>
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
           {p.name}: {formatRand(p.value)}
         </p>
       ))}
@@ -75,7 +75,7 @@ function PieTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs">
-      <p style={{ color: payload[0].payload.fill }}>{payload[0].name}</p>
+      <p style={{ color: textTone(payload[0].payload.fill) }}>{payload[0].name}</p>
       <p className="text-ink font-bold">{formatRand(payload[0].value)}</p>
     </div>
   );
@@ -395,7 +395,7 @@ export function PropertyROI() {
 
               {/* Acquisition cost breakdown */}
               <div className="rounded-xl p-3.5 space-y-2" style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: 'var(--note-blue)' }}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: 'var(--note-blue-ink)' }}>
                   Acquisition Costs
                 </p>
                 {[
@@ -415,8 +415,8 @@ export function PropertyROI() {
                   </div>
                 ))}
                 <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-                  <span className="text-xs font-bold" style={{ color: 'var(--note-blue)' }}>Total Cash Required</span>
-                  <span className="text-sm font-bold" style={{ color: 'var(--note-blue)' }}>{formatRand(result.totalCashRequired)}</span>
+                  <span className="text-xs font-bold" style={{ color: 'var(--note-blue-ink)' }}>Total Cash Required</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--note-blue-ink)' }}>{formatRand(result.totalCashRequired)}</span>
                 </div>
                 <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
                   Bond registration costs are estimated — get a quote from your attorney.
@@ -427,7 +427,7 @@ export function PropertyROI() {
                 <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
                   onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
                 <button
-                  className="text-xs text-note-blue hover:text-note-blue transition-colors flex items-center gap-1"
+                  className="text-xs text-note-blue-ink hover:text-note-blue-ink transition-colors flex items-center gap-1"
                   style={{ fontFamily: 'var(--font-text)' }}
                   onClick={() => set('interestRate', String(liveRate.primeRate))}
                 >
@@ -483,7 +483,7 @@ export function PropertyROI() {
 
             {/* Cloud sync badge */}
             {user ? (
-              <div className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-lg" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', color: 'var(--note-blue)' }}>
+              <div className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-lg" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', color: 'var(--note-blue-ink)' }}>
                 <Cloud size={12} /> Syncing to your account
               </div>
             ) : (
@@ -493,7 +493,7 @@ export function PropertyROI() {
             )}
 
             {saveError && (
-              <div className="text-xs px-2 py-1.5 rounded-lg flex items-center gap-2" style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
+              <div className="text-xs px-2 py-1.5 rounded-lg flex items-center gap-2" style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss-ink)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
                 <span className="flex-1">{saveError}</span>
                 <button onClick={() => setSaveError(null)} className="font-bold opacity-60 hover:opacity-100">✕</button>
               </div>
@@ -561,7 +561,7 @@ export function PropertyROI() {
                        style={{ fontFamily: 'var(--font-text)' }}>
                       {s.label}
                     </p>
-                    <p className="text-base font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
+                    <p className="text-base font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
                       {s.value}
                     </p>
                   </div>
@@ -690,11 +690,11 @@ export function PropertyROI() {
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="w-9 h-9 rounded-xl bg-gain/12 flex items-center justify-center">
-                          <MapPin size={16} className="text-gain" />
+                          <MapPin size={16} className="text-gain-ink" />
                         </div>
                         <div className="flex items-center gap-1">
                           <button
-                            className="p-1 rounded-lg transition-colors text-ink-subtle hover:text-note-orange"
+                            className="p-1 rounded-lg transition-colors text-ink-subtle hover:text-note-orange-ink"
                             title="Edit in calculator"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -708,7 +708,7 @@ export function PropertyROI() {
                             <Pencil size={14} />
                           </button>
                           <button
-                            className="text-ink-subtle hover:text-loss transition-colors p-1"
+                            className="text-ink-subtle hover:text-loss-ink transition-colors p-1"
                             onClick={(e) => { e.stopPropagation(); removeFromPortfolio(prop.id); }}
                           >
                             <Trash2 size={14} />
@@ -733,14 +733,14 @@ export function PropertyROI() {
                             <p className="text-[10px] text-ink-subtle uppercase" style={{ fontFamily: 'var(--font-text)' }}>
                               {s.label}
                             </p>
-                            <p className="text-sm font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
+                            <p className="text-sm font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
                               {s.value}
                             </p>
                           </div>
                         ))}
                       </div>
                       {isSelected && (
-                        <div className="flex items-center gap-1 mt-3 text-xs text-note-blue"
+                        <div className="flex items-center gap-1 mt-3 text-xs text-note-blue-ink"
                              style={{ fontFamily: 'var(--font-text)' }}>
                           <Eye size={12} /> Viewing details below
                         </div>
@@ -832,12 +832,12 @@ export function PropertyROI() {
                             <td className="font-semibold">{prop.propertyName}</td>
                             <td>{formatRand(prop.purchasePrice, 0)}</td>
                             <td>{formatRand(r.monthlyBondRepayment)}</td>
-                            <td style={{ color: r.cashFlowS1 >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
+                            <td style={{ color: r.cashFlowS1 >= 0 ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
                               {formatRand(r.cashFlowS1)}
                             </td>
                             <td>{formatPercent(r.netYieldS1)}</td>
-                            <td style={{ color: 'var(--note-blue)' }}>{formatPercent(r.roi5YearS1, 1)}</td>
-                            <td style={{ color: 'var(--note-orange)' }}>{formatPercent(r.roi10YearS1, 1)}</td>
+                            <td style={{ color: 'var(--note-blue-ink)' }}>{formatPercent(r.roi5YearS1, 1)}</td>
+                            <td style={{ color: 'var(--note-orange-ink)' }}>{formatPercent(r.roi10YearS1, 1)}</td>
                           </tr>
                         );
                       })}

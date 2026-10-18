@@ -14,7 +14,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { readShareParam } from '../utils/share';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcSTRvsLTR, type STRvsLTRInputs } from '../utils/shortTermRental';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -27,7 +27,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 160 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? C.blue }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? C.blue) }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -135,10 +135,10 @@ export function AirbnbVsRental() {
         {/* Results */}
         <div className="space-y-5">
           {/* Winner banner */}
-          <div className="p-4 rounded-xl flex items-center gap-4" style={{ background: `${alpha(winnerColor, 7)}`, border: `1px solid ${alpha(winnerColor, 27)}` }}>
+          <div className="p-4 rounded-xl flex items-center gap-4" style={{ background: alpha(winnerColor, 7), border: `1px solid ${alpha(winnerColor, 27)}` }}>
             <Trophy size={24} color={winnerColor} className="flex-shrink-0" />
             <div>
-              <p className="font-semibold" style={{ color: winnerColor, fontFamily: 'var(--font-display)' }}>
+              <p className="font-semibold" style={{ color: textTone(winnerColor), fontFamily: 'var(--font-display)' }}>
                 {result.winner === 'tie' ? 'Both strategies earn about the same' : `${winnerLabel} wins`}
               </p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
@@ -162,7 +162,7 @@ export function AirbnbVsRental() {
             <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-teal) 7%, transparent)', border: `1px solid ${alpha(C.teal, 20)}` }}>
               <Percent size={18} color={C.teal} className="mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold" style={{ color: C.teal, fontFamily: 'var(--font-display)' }}>
+                <p className="text-sm font-semibold" style={{ color: textTone(C.teal), fontFamily: 'var(--font-display)' }}>
                   Break-even occupancy: {formatPercent(result.breakEvenOccupancy, 1)}
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
@@ -212,8 +212,8 @@ export function AirbnbVsRental() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--rule)' }}>
                     <th className="py-2 text-left font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Metric</th>
-                    <th className="py-2 text-right font-semibold uppercase tracking-wider" style={{ color: C.blue }}>Short-term</th>
-                    <th className="py-2 text-right font-semibold uppercase tracking-wider" style={{ color: C.green }}>Long-term</th>
+                    <th className="py-2 text-right font-semibold uppercase tracking-wider" style={{ color: textTone(C.blue) }}>Short-term</th>
+                    <th className="py-2 text-right font-semibold uppercase tracking-wider" style={{ color: textTone(C.green) }}>Long-term</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -227,10 +227,10 @@ export function AirbnbVsRental() {
                   ].map((row, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid var(--rule)' }}>
                       <td className="py-2 pr-4" style={{ color: row.bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: row.bold ? 600 : 400 }}>{row.label}</td>
-                      <td className="py-2 text-right font-mono" style={{ color: row.bold ? C.blue : 'var(--ink-muted)', fontWeight: row.bold ? 600 : 400 }}>
+                      <td className="py-2 text-right font-mono" style={{ color: textTone(row.bold ? C.blue : 'var(--ink-muted)'), fontWeight: row.bold ? 600 : 400 }}>
                         {row.pct ? formatPercent(row.s, 1) : formatRand(row.s, 0)}
                       </td>
-                      <td className="py-2 text-right font-mono" style={{ color: row.bold ? C.green : 'var(--ink-muted)', fontWeight: row.bold ? 600 : 400 }}>
+                      <td className="py-2 text-right font-mono" style={{ color: textTone(row.bold ? C.green : 'var(--ink-muted)'), fontWeight: row.bold ? 600 : 400 }}>
                         {row.pct ? formatPercent(row.l, 1) : formatRand(row.l, 0)}
                       </td>
                     </tr>
@@ -260,8 +260,8 @@ export function AirbnbVsRental() {
                 { title: 'Tax treatment', color: C.brown, body: 'Both are taxable rental income, but short-term letting may trigger VAT registration above the R1m turnover threshold and has different deductible expenses. Speak to a tax practitioner about your specific setup.' },
                 { title: 'Break-even occupancy', color: C.green, body: 'The single most important Airbnb number. If your realistic occupancy sits below the break-even shown above, a long-term lease earns more with far less effort. Use platform data for your suburb, not best-case assumptions.' },
               ].map((item) => (
-                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: `${alpha(item.color, 3)}`, border: `1px solid ${alpha(item.color, 13)}` }}>
-                  <p className="text-xs font-bold" style={{ color: item.color }}>{item.title}</p>
+                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: alpha(item.color, 3), border: `1px solid ${alpha(item.color, 13)}` }}>
+                  <p className="text-xs font-bold" style={{ color: textTone(item.color) }}>{item.title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.body}</p>
                 </div>
               ))}
@@ -269,7 +269,7 @@ export function AirbnbVsRental() {
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.blue }} />
+            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>Net operating income is shown before bond finance so the strategies are comparable; monthly cash flow then applies the same bond cost to both. Educational estimates only.</span>
           </div>
         </div>

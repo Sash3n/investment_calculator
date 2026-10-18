@@ -11,6 +11,7 @@ import { formatRand, formatRandShort } from '../utils/format';
 import { calcPAYE, type PAYEInputs } from '../utils/tax';
 import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
+import { textTone } from '../utils/color';
 
 type AgeGroupLocal = AgeGroup;
 
@@ -123,7 +124,7 @@ export function SalaryCalculator() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-            <Briefcase size={20} className="text-note-blue" />
+            <Briefcase size={20} className="text-note-blue-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -137,7 +138,7 @@ export function SalaryCalculator() {
           <button
             onClick={() => setShowAnnual((v) => !v)}
             className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)` }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)` }}>
             {showAnnual ? 'Show Monthly' : 'Show Annual'}
           </button>
         </div>
@@ -162,7 +163,7 @@ export function SalaryCalculator() {
               {incomes.length < 3 && (
                 <button onClick={addIncome}
                   className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg font-semibold"
-                  style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: C.blue, border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: textTone(C.blue), border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
                   <Plus size={11} /> Add Income
                 </button>
               )}
@@ -176,11 +177,11 @@ export function SalaryCalculator() {
                     value={inc.label}
                     onChange={(e) => updateIncome(inc.id, 'label', e.target.value)}
                     className="text-xs font-semibold bg-transparent border-0 outline-none"
-                    style={{ color: [C.blue, C.green, C.orange][idx % 3] }}
+                    style={{ color: textTone([C.blue, C.green, C.orange][idx % 3]) }}
                   />
                   {incomes.length > 1 && (
                     <button onClick={() => removeIncome(inc.id)}
-                      className="p-0.5 rounded" style={{ color: C.red }}>
+                      className="p-0.5 rounded" style={{ color: textTone(C.red) }}>
                       <Trash2 size={12} />
                     </button>
                   )}
@@ -194,7 +195,7 @@ export function SalaryCalculator() {
               <div className="flex items-center justify-between px-3 py-2 rounded-lg"
                 style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
                 <span className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>Total Gross Monthly</span>
-                <span className="text-sm font-bold" style={{ color: C.blue }}>{formatRand(grossMonthly, 0)}</span>
+                <span className="text-sm font-bold" style={{ color: textTone(C.blue) }}>{formatRand(grossMonthly, 0)}</span>
               </div>
             )}
           </div>
@@ -212,7 +213,7 @@ export function SalaryCalculator() {
                   className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
                     background: ageGroup === ag.value ? 'color-mix(in srgb, var(--note-blue) 18%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                    color: ageGroup === ag.value ? C.blue : 'var(--ink-muted)',
+                    color: textTone(ageGroup === ag.value ? C.blue : 'var(--ink-muted)'),
                     border: `1px solid ${ageGroup === ag.value ? 'color-mix(in srgb, var(--note-blue) 35%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {ag.label}
@@ -240,7 +241,7 @@ export function SalaryCalculator() {
                   className="flex-1 min-w-[48px] py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
                     background: medDependants === opt.value ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                    color: medDependants === opt.value ? C.green : 'var(--ink-muted)',
+                    color: textTone(medDependants === opt.value ? C.green : 'var(--ink-muted)'),
                     border: `1px solid ${medDependants === opt.value ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {opt.label}
@@ -265,12 +266,12 @@ export function SalaryCalculator() {
               {label} Take-Home Pay
             </p>
             <p className="text-4xl font-extrabold mb-1"
-              style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
+              style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
               {formatRand(result.monthlyNet * mult, 0)}
             </p>
             <p className="text-xs" style={{ color: 'var(--ink-subtle)' }}>
-              Effective tax rate: <span style={{ color: C.orange }}>{result.effectiveRate.toFixed(1)}%</span>
-              &ensp;|&ensp;Marginal rate: <span style={{ color: C.red }}>{result.marginalRate.toFixed(0)}%</span>
+              Effective tax rate: <span style={{ color: textTone(C.orange) }}>{result.effectiveRate.toFixed(1)}%</span>
+              &ensp;|&ensp;Marginal rate: <span style={{ color: textTone(C.red) }}>{result.marginalRate.toFixed(0)}%</span>
             </p>
           </div>
 
@@ -290,7 +291,7 @@ export function SalaryCalculator() {
                 {row.label}
                 {'note' in row && row.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--ink-subtle)' }}>({row.note})</span>}
               </span>
-              <span className="text-sm font-bold" style={{ color: row.color }}>
+              <span className="text-sm font-bold" style={{ color: textTone(row.color) }}>
                 {row.value < 0 ? '-' : ''}{formatRand(Math.abs(row.value), 0)}
               </span>
             </div>
@@ -322,7 +323,7 @@ export function SalaryCalculator() {
               <div key={d.name} className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: d.color }} />
                 <span className="flex-1 text-sm" style={{ color: 'var(--ink-muted)' }}>{d.name}</span>
-                <span className="text-sm font-semibold" style={{ color: d.color }}>
+                <span className="text-sm font-semibold" style={{ color: textTone(d.color) }}>
                   {formatRand(d.value, 0)}
                 </span>
                 <span className="text-xs w-10 text-right" style={{ color: 'var(--ink-subtle)' }}>
@@ -338,7 +339,7 @@ export function SalaryCalculator() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
         className="glass-card-static p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Info size={14} style={{ color: C.orange }} />
+          <Info size={14} style={{ color: textTone(C.orange) }} />
           <p className="text-sm font-semibold"
             style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Tax Calculation Detail
@@ -355,18 +356,18 @@ export function SalaryCalculator() {
               style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
               <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
                 style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
-              <p className="text-sm font-bold" style={{ color: item.color }}>{item.value}</p>
+              <p className="text-sm font-bold" style={{ color: textTone(item.color) }}>{item.value}</p>
             </div>
           ))}
         </div>
         {raContrib > 0 && (
           <div className="mt-3 flex items-start gap-2 p-3 rounded-xl"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            <TrendingDown size={14} style={{ color: C.blue, flexShrink: 0, marginTop: 1 }} />
+            <TrendingDown size={14} style={{ color: textTone(C.blue), flexShrink: 0, marginTop: 1 }} />
             <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-              Your RA contribution of <strong style={{ color: C.blue }}>{formatRand(raContrib, 0)}/mo</strong> reduces
-              taxable income by <strong style={{ color: C.blue }}>{formatRand(result.raDeduction, 0)}/yr</strong>,
-              saving roughly <strong style={{ color: C.green }}>{formatRand((result.grossTaxBefore - (result.grossTaxBefore - result.raDeduction * result.marginalRate / 100)) / 12, 0)}/mo</strong> in PAYE.
+              Your RA contribution of <strong style={{ color: textTone(C.blue) }}>{formatRand(raContrib, 0)}/mo</strong> reduces
+              taxable income by <strong style={{ color: textTone(C.blue) }}>{formatRand(result.raDeduction, 0)}/yr</strong>,
+              saving roughly <strong style={{ color: textTone(C.green) }}>{formatRand((result.grossTaxBefore - (result.grossTaxBefore - result.raDeduction * result.marginalRate / 100)) / 12, 0)}/mo</strong> in PAYE.
             </p>
           </div>
         )}

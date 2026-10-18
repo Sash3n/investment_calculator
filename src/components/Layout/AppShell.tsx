@@ -10,7 +10,7 @@ import clsx from 'clsx';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, PAGE_TITLES, type NavItem } from '../../config/nav';
 import { CommandPalette } from '../CommandPalette';
 import { useNavPrefs } from '../../hooks/useNavPrefs';
-import { alpha } from '../../utils/color';
+import { alpha, textTone } from '../../utils/color';
 
 function DisclaimerBanner() {
   const [visible, setVisible] = useState(false);
@@ -37,9 +37,9 @@ function DisclaimerBanner() {
       }}
     >
       <div className="flex gap-3">
-        <AlertTriangle size={18} className="text-note-orange flex-shrink-0 mt-0.5" />
+        <AlertTriangle size={18} className="text-note-orange-ink flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-note-orange mb-1">Educational Purposes Only</p>
+          <p className="text-xs font-semibold text-note-orange-ink mb-1">Educational Purposes Only</p>
           <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
             FinCalc ZA provides general financial illustrations for educational purposes only.
             All calculations are estimates and <strong style={{ color: 'var(--ink)' }}>do not constitute financial, tax, investment, or legal advice</strong>.
@@ -57,7 +57,7 @@ function DisclaimerBanner() {
         <button
           onClick={accept}
           className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-          style={{ background: 'color-mix(in srgb, var(--note-orange) 15%, transparent)', color: 'var(--note-orange)', border: '1px solid color-mix(in srgb, var(--note-orange) 30%, transparent)' }}
+          style={{ background: 'color-mix(in srgb, var(--note-orange) 15%, transparent)', color: 'var(--note-orange-ink)', border: '1px solid color-mix(in srgb, var(--note-orange) 30%, transparent)' }}
         >
           I understand
         </button>
@@ -90,9 +90,9 @@ function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourit
         <>
           <span
             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
-            style={{ background: isActive ? `${alpha(item.color, 13)}` : 'color-mix(in srgb, var(--ink) 4%, transparent)' }}
+            style={{ background: isActive ? alpha(item.color, 13) : 'color-mix(in srgb, var(--ink) 4%, transparent)' }}
           >
-            <Icon size={15} style={{ color: isActive ? item.color : 'var(--ink-subtle)' }} />
+            <Icon size={15} style={{ color: textTone(isActive ? item.color : 'var(--ink-subtle)') }} />
           </span>
           <span className="flex-1 truncate">{item.label}</span>
           <button
@@ -101,9 +101,9 @@ function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourit
             aria-label={favourite ? 'Unpin from favourites' : 'Pin to favourites'}
             title={favourite ? 'Unpin' : 'Pin to favourites'}
           >
-            <Star size={13} style={{ color: favourite ? 'var(--note-orange)' : 'var(--ink-subtle)' }} fill={favourite ? 'var(--note-orange)' : 'none'} />
+            <Star size={13} style={{ color: favourite ? 'var(--note-orange-ink)' : 'var(--ink-subtle)' }} fill={favourite ? 'var(--note-orange)' : 'none'} />
           </button>
-          {isActive && !favourite && <ChevronRight size={14} className="text-note-blue opacity-60 group-hover:hidden" />}
+          {isActive && !favourite && <ChevronRight size={14} className="text-note-blue-ink opacity-60 group-hover:hidden" />}
         </>
       )}
     </NavLink>
@@ -203,7 +203,7 @@ export function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-ink/8">
           <div className="w-9 h-9 rounded-xl bg-note-blue/20 flex items-center justify-center flex-shrink-0 border border-note-blue/30">
-            <BarChart3 size={18} className="text-note-blue" />
+            <BarChart3 size={18} className="text-note-blue-ink" />
           </div>
           <div>
             <p className="text-base font-bold leading-none" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -238,7 +238,7 @@ export function AppShell() {
           {favItems.length > 0 && (
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 px-3 mb-1">
-                <Star size={11} style={{ color: 'var(--note-orange)' }} fill="var(--note-orange)" />
+                <Star size={11} style={{ color: 'var(--note-orange-ink)' }} fill="var(--note-orange)" />
                 <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--ink-subtle)' }}>Favourites</span>
               </div>
               {favItems.map((item) => (
@@ -292,14 +292,14 @@ export function AppShell() {
             <div className="flex items-center gap-2 mb-2 p-2 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
               {user.photoURL && <img src={user.photoURL} alt="" className="w-6 h-6 rounded-full flex-shrink-0" />}
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold truncate" style={{ color: 'var(--note-blue)' }}>{user.displayName}</p>
+                <p className="text-[10px] font-semibold truncate" style={{ color: 'var(--note-blue-ink)' }}>{user.displayName}</p>
                 <p className="text-[9px] truncate" style={{ color: 'var(--ink-subtle)' }}>Syncing to cloud</p>
               </div>
             </div>
           )}
           <p className="text-[10px]" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>
             Prime Rate:{' '}
-            <span className="text-note-orange font-semibold">
+            <span className="text-note-orange-ink font-semibold">
               {liveRate.loading ? '…' : `${liveRate.primeRate}%`}
             </span>
             {!liveRate.loading && !liveRate.fallback && liveRate.asOf && (
@@ -310,7 +310,7 @@ export function AppShell() {
             All values in South African Rand
           </p>
           <div className="mt-2 p-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 15%, transparent)' }}>
-            <p className="text-[10px] leading-relaxed font-medium" style={{ color: 'var(--note-orange)', fontFamily: 'var(--font-text)' }}>
+            <p className="text-[10px] leading-relaxed font-medium" style={{ color: 'var(--note-orange-ink)', fontFamily: 'var(--font-text)' }}>
               ⚠ Educational use only
             </p>
             <p className="text-[9px] leading-relaxed mt-0.5" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>
@@ -379,17 +379,17 @@ export function AppShell() {
                 {user.photoURL ? (
                   <img src={user.photoURL} alt={user.displayName ?? 'User'} className="w-6 h-6 rounded-full flex-shrink-0" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--note-blue) 30%, transparent)', color: 'var(--note-blue)' }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--note-blue) 30%, transparent)', color: 'var(--note-blue-ink)' }}>
                     {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
                   </div>
                 )}
-                <span className="text-xs font-medium hidden sm:block max-w-[100px] truncate" style={{ color: 'var(--note-blue)' }}>
+                <span className="text-xs font-medium hidden sm:block max-w-[100px] truncate" style={{ color: 'var(--note-blue-ink)' }}>
                   {user.displayName?.split(' ')[0] ?? user.email}
                 </span>
                 <button
                   onClick={signOut}
                   className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium transition-all ml-1"
-                  style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
+                  style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss-ink)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
                   title="Sign out"
                 >
                   <LogOut size={11} />
@@ -400,7 +400,7 @@ export function AppShell() {
               <button
                 onClick={signIn}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}
+                style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}
               >
                 <LogIn size={13} />
                 <span className="hidden sm:inline">Sign in with Google</span>
@@ -455,7 +455,7 @@ export function AppShell() {
                       className="w-8 h-6 flex items-center justify-center rounded-lg transition-all duration-200"
                       style={{ background: isActive ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'transparent' }}
                     >
-                      <Icon size={16} style={{ color: isActive ? 'var(--note-blue)' : 'var(--ink-subtle)' }} />
+                      <Icon size={16} style={{ color: isActive ? 'var(--note-blue-ink)' : 'var(--ink-subtle)' }} />
                     </span>
                     <span className="truncate w-full text-center">{item.shortLabel}</span>
                   </>

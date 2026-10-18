@@ -22,6 +22,7 @@ import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
+import { textTone } from '../utils/color';
 
 const ROWS_PER_PAGE = 24;
 
@@ -53,7 +54,7 @@ function CustomTooltip({ active, payload, label }: any) {
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: p.color }}>
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
           {p.name}: {formatRand(p.value)}
         </p>
       ))}
@@ -65,7 +66,7 @@ function PieTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs">
-      <p style={{ color: payload[0].payload.fill }}>{payload[0].name}</p>
+      <p style={{ color: textTone(payload[0].payload.fill) }}>{payload[0].name}</p>
       <p className="text-ink font-bold">{formatRand(payload[0].value)}</p>
     </div>
   );
@@ -275,7 +276,7 @@ export function MortgageCalculator() {
               step={0.25}
             />
             <button
-              className="text-xs text-note-blue hover:text-note-blue transition-colors flex items-center gap-1"
+              className="text-xs text-note-blue-ink hover:text-note-blue-ink transition-colors flex items-center gap-1"
               style={{ fontFamily: 'var(--font-text)' }}
               onClick={() => setInputs((p) => ({ ...p, interestRate: liveRate.primeRate }))}
             >
@@ -442,31 +443,31 @@ export function MortgageCalculator() {
             </div>
             <div>
               <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Transfer Duty</p>
-              <p className={`text-base font-bold ${inputs.transferDutyExempt ? 'text-gain' : 'text-loss'}`} style={{ fontFamily: 'var(--font-display)' }}>
+              <p className={`text-base font-bold ${inputs.transferDutyExempt ? 'text-gain-ink' : 'text-loss-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
                 {inputs.transferDutyExempt ? 'Exempt' : formatRand(upfrontCosts.transferDuty)}
               </p>
             </div>
             <div>
               <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Bond Registration</p>
-              <p className={`text-base font-bold ${inputs.bondRegistrationIncluded ? 'text-gain' : 'text-loss'}`} style={{ fontFamily: 'var(--font-display)' }}>
+              <p className={`text-base font-bold ${inputs.bondRegistrationIncluded ? 'text-gain-ink' : 'text-loss-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
                 {inputs.bondRegistrationIncluded ? 'Capitalised' : formatRand(upfrontCosts.bondRegCost)}
               </p>
             </div>
             <div>
               <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Initiation Fee</p>
-              <p className={`text-base font-bold ${inputs.initiationFeeCapitalised || inputs.initiationFee === 0 ? 'text-gain' : 'text-loss'}`} style={{ fontFamily: 'var(--font-display)' }}>
+              <p className={`text-base font-bold ${inputs.initiationFeeCapitalised || inputs.initiationFee === 0 ? 'text-gain-ink' : 'text-loss-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
                 {inputs.initiationFeeCapitalised ? 'Capitalised' : inputs.initiationFee > 0 ? formatRand(inputs.initiationFee) : 'Waived'}
               </p>
             </div>
             <div>
               <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Utility Connection</p>
-              <p className={`text-base font-bold ${(inputs.utilityConnectionFee ?? 0) > 0 ? 'text-loss' : 'text-gain'}`} style={{ fontFamily: 'var(--font-display)' }}>
+              <p className={`text-base font-bold ${(inputs.utilityConnectionFee ?? 0) > 0 ? 'text-loss-ink' : 'text-gain-ink'}`} style={{ fontFamily: 'var(--font-display)' }}>
                 {(inputs.utilityConnectionFee ?? 0) > 0 ? formatRand(inputs.utilityConnectionFee ?? 0) : 'None'}
               </p>
             </div>
             <div className="col-span-2 sm:col-span-4 border-t border-ink/7 pt-3 flex items-center justify-between">
               <p className="text-xs text-ink-muted" style={{ fontFamily: 'var(--font-text)' }}>Total Cash Required on Transfer Day</p>
-              <p className="text-lg font-bold text-note-blue" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(upfrontCosts.totalCashRequired)}</p>
+              <p className="text-lg font-bold text-note-blue-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(upfrontCosts.totalCashRequired)}</p>
             </div>
           </div>
 
@@ -510,12 +511,12 @@ export function MortgageCalculator() {
             <div className="glass-card-static p-4 border-l-[3px] border-l-note-orange grid grid-cols-3 gap-4">
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Effective Monthly</p>
-                <p className="text-base font-bold text-note-orange" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
+                <p className="text-base font-bold text-note-orange-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.effectiveMonthlyPayment)}</p>
                 <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>payment + service fee</p>
               </div>
               <div>
                 <p className="text-[10px] text-ink-subtle uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-text)' }}>Total Service Fees</p>
-                <p className="text-base font-bold text-loss" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
+                <p className="text-base font-bold text-loss-ink" style={{ fontFamily: 'var(--font-display)' }}>{formatRand(result.totalServiceFees)}</p>
                 <p className="text-[10px] text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>over loan life</p>
               </div>
               <div>
@@ -556,7 +557,7 @@ export function MortgageCalculator() {
                      style={{ fontFamily: 'var(--font-text)' }}>
                     {s.label}
                   </p>
-                  <p className="text-sm font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>
+                  <p className="text-sm font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
                     {s.value}
                   </p>
                 </div>
@@ -751,12 +752,12 @@ export function MortgageCalculator() {
                       <td>{formatDate(row.date)}</td>
                       <td>{formatRand(row.openingBalance)}</td>
                       <td>{formatRand(row.scheduledPayment)}</td>
-                      <td style={{ color: row.extraPayment > 0 ? 'var(--note-orange)' : undefined }}>
+                      <td style={{ color: row.extraPayment > 0 ? 'var(--note-orange-ink)' : undefined }}>
                         {row.extraPayment > 0 ? formatRand(row.extraPayment) : '—'}
                       </td>
                       <td>{formatRand(row.totalPayment)}</td>
-                      <td style={{ color: 'var(--gain)' }}>{formatRand(row.principal)}</td>
-                      <td style={{ color: 'var(--loss)' }}>{formatRand(row.interest)}</td>
+                      <td style={{ color: 'var(--gain-ink)' }}>{formatRand(row.principal)}</td>
+                      <td style={{ color: 'var(--loss-ink)' }}>{formatRand(row.interest)}</td>
                       <td>{formatRand(row.closingBalance)}</td>
                       <td style={{ color: 'var(--ink-muted)' }}>{formatRand(row.cumulativeInterest)}</td>
                     </tr>
@@ -794,7 +795,7 @@ export function MortgageCalculator() {
       {/* Bi-weekly savings note */}
       <div className="glass-card-static mt-4 p-4 flex items-start gap-3">
         <div className="w-7 h-7 rounded-lg bg-note-orange/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Zap size={13} className="text-note-orange" />
+          <Zap size={13} className="text-note-orange-ink" />
         </div>
         <div>
           <p className="text-sm font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
@@ -802,11 +803,11 @@ export function MortgageCalculator() {
           </p>
           <p className="text-xs text-ink-muted mt-1" style={{ fontFamily: 'var(--font-text)' }}>
             Switching to bi-weekly payments saves you{' '}
-            <span className="text-gain font-semibold">
+            <span className="text-gain-ink font-semibold">
               {formatRand(result.interestSavedBiweekly)}
             </span>{' '}
             in interest and pays off your bond{' '}
-            <span className="text-note-blue font-semibold">
+            <span className="text-note-blue-ink font-semibold">
               {formatPercent(result.monthsSavedBiweekly / (inputs.termYears * 12) * 100, 1)} faster
             </span>.
             You make 26 half-payments instead of 12 full payments — effectively one extra month per year.

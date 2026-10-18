@@ -10,7 +10,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 import {
   calcRetirementIncomeGoal, calcRetirementAffordability,
   simulateRetirementSavings, findRequiredMonthly,
@@ -156,8 +156,8 @@ export function RetirementIncomeGoal() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.orange, 13)}` }}>
-            <Sunset size={22} style={{ color: C.orange }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.orange, 13) }}>
+            <Sunset size={22} style={{ color: textTone(C.orange) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Retirement Income Goal</h1>
@@ -189,8 +189,8 @@ export function RetirementIncomeGoal() {
 
       {retirementNotInFuture && (
         <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-          style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 27)}` }}>
-          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+          style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 27)}` }}>
+          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
           <span style={{ color: 'var(--ink-muted)' }}>
             Retirement age must be after your current age — using 1 year for this calculation.
           </span>
@@ -236,8 +236,8 @@ export function RetirementIncomeGoal() {
                   onClick={() => setSwr(opt.swr)}
                   className="py-2 rounded-lg text-xs font-semibold transition-colors"
                   style={{
-                    background: swr === opt.swr ? C.blue : `${alpha(C.blue, 7)}`,
-                    color:      swr === opt.swr ? 'var(--on-accent)'   : C.blue,
+                    background: swr === opt.swr ? C.blue : alpha(C.blue, 7),
+                    color:      textTone(swr === opt.swr ? 'var(--on-accent)'   : C.blue),
                   }}
                   title={opt.sub}
                 >
@@ -261,8 +261,8 @@ export function RetirementIncomeGoal() {
             help="Increase your monthly contribution each year, e.g. with salary growth" />
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: C.blue }} />
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               {mode === 'income'
                 ? "We inflate your desired income to retirement-year Rands, convert it to a nest egg using your chosen safe withdrawal rate, then solve for the monthly contribution needed to get there."
@@ -291,25 +291,25 @@ export function RetirementIncomeGoal() {
 
           {mode === 'income' ? (
             <div className="p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
               <span style={{ color: 'var(--ink-muted)' }}>
                 To draw {formatRand(desiredMonthlyIncome)}/month in today's Rands from age {retirementAge}, you'll need a nest egg of{' '}
-                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRandShort(incomeResult.lumpSumTarget)}</span>
+                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRandShort(incomeResult.lumpSumTarget)}</span>
                 {' '}by then ({formatRandShort(incomeResult.realLumpSumTarget)} in today's Rands) — that takes{' '}
-                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRand(incomeResult.requiredMonthly)}/month</span>
+                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRand(incomeResult.requiredMonthly)}/month</span>
                 {' '}invested over the next {incomeResult.years} years at {annualReturnPercent}% p.a.
               </span>
             </div>
           ) : (
             <div className="p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}>
+              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
               <span style={{ color: 'var(--ink-muted)' }}>
                 Investing {savingsRatePercent}% of your {formatRand(currentMonthlyIncome)}/month income (
-                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRand(affordResult.monthlyContribution)}/month</span>
+                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRand(affordResult.monthlyContribution)}/month</span>
                 ) from age {currentAge} to {retirementAge} builds a nest egg of{' '}
-                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRandShort(affordResult.finalBalance)}</span>
+                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRandShort(affordResult.finalBalance)}</span>
                 {' '}— enough to support{' '}
-                <span style={{ color: C.orange, fontWeight: 600 }}>{formatRand(affordResult.achievableMonthlyIncomeToday)}/month</span>
+                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRand(affordResult.achievableMonthlyIncomeToday)}/month</span>
                 {' '}in today's Rands, {affordResult.incomeReplacementPct.toFixed(0)}% of your current income.
               </span>
             </div>
@@ -317,19 +317,19 @@ export function RetirementIncomeGoal() {
 
           {startLaterEffect > 0 && (
             <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.red, 7)}`, border: `1px solid ${alpha(C.red, 20)}` }}>
-              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
+              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
               <span style={{ color: 'var(--ink-muted)' }}>
                 {mode === 'income' ? (
                   <>
                     If you wait 2 years to start, you would need{' '}
-                    <span style={{ color: C.red, fontWeight: 600 }}>{formatRand(startLaterEffect)} more per month</span>
+                    <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterEffect)} more per month</span>
                     {' '}to reach the same nest egg.
                   </>
                 ) : (
                   <>
                     If you wait 2 years to start, your achievable income drops by{' '}
-                    <span style={{ color: C.red, fontWeight: 600 }}>{formatRand(startLaterEffect)}/month</span>
+                    <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterEffect)}/month</span>
                     {' '}in today's Rands.
                   </>
                 )}
@@ -364,7 +364,7 @@ export function RetirementIncomeGoal() {
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), '']}
                   labelFormatter={(l) => `Year ${l}`}
-                  cursor={{ stroke: `${alpha(C.blue, 33)}`, strokeWidth: 1 }}
+                  cursor={{ stroke: alpha(C.blue, 33), strokeWidth: 1 }}
                 />
                 {mode === 'income' && (
                   <ReferenceLine y={nestEgg} stroke={C.green} strokeDasharray="5 3"
@@ -389,21 +389,21 @@ export function RetirementIncomeGoal() {
             </p>
             <div className="flex items-start gap-3 p-3 rounded-xl text-sm mb-4"
               style={{
-                background: depletionAge !== null ? `${alpha(C.red, 7)}` : `${alpha(C.green, 7)}`,
+                background: depletionAge !== null ? alpha(C.red, 7) : alpha(C.green, 7),
                 border: `1px solid ${alpha(depletionAge !== null ? C.red : C.green, 20)}`,
               }}>
               {depletionAge !== null ? (
                 <>
-                  <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.red }} />
+                  <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
                     At this withdrawal rate and return, the nest egg runs out at age{' '}
-                    <span style={{ color: C.red, fontWeight: 600 }}>{depletionAge}</span>. Consider a lower
+                    <span style={{ color: textTone(C.red), fontWeight: 600 }}>{depletionAge}</span>. Consider a lower
                     SWR, a higher return, or a smaller income target.
                   </span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: C.green }} />
+                  <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.green) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
                     The nest egg sustains this income for at least {drawdown.length} years into retirement
                     (to around age {retirementAge + drawdown.length}).
@@ -428,7 +428,7 @@ export function RetirementIncomeGoal() {
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(val) => [formatRand(Number(val)), 'Balance']}
                   labelFormatter={(l) => `Age ${l}`}
-                  cursor={{ stroke: `${alpha(C.orange, 33)}`, strokeWidth: 1 }}
+                  cursor={{ stroke: alpha(C.orange, 33), strokeWidth: 1 }}
                 />
                 <Area type="monotone" dataKey="balance" name="Balance" stroke={C.orange} fill="url(#rig-drawdown)" strokeWidth={2} />
               </AreaChart>
@@ -447,8 +447,8 @@ export function RetirementIncomeGoal() {
             <div className="grid grid-cols-3 gap-3">
               {scenarios.map(({ label, r, color, value }) => (
                 <div key={label} className="p-3 rounded-xl text-xs"
-                  style={{ background: `${alpha(color, 7)}`, border: `1px solid ${alpha(color, 20)}` }}>
-                  <div className="font-semibold mb-2" style={{ color }}>{label} ({r}%)</div>
+                  style={{ background: alpha(color, 7), border: `1px solid ${alpha(color, 20)}` }}>
+                  <div className="font-semibold mb-2" style={{ color: textTone(color) }}>{label} ({r}%)</div>
                   <div style={{ color: 'var(--ink-muted)' }}>
                     {mode === 'income' ? 'Monthly needed' : 'Achievable income'}
                   </div>
@@ -461,8 +461,8 @@ export function RetirementIncomeGoal() {
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: C.blue }} />
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               For a different framing of the same retirement question, see the FIRE Calculator (target a
               retirement age from a savings rate) or Wealth Target Planner (target a Rand lump sum directly).

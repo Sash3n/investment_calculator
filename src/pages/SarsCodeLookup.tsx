@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, BookOpen, ArrowRight, Info } from 'lucide-react';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 import {
   SARS_CODES, CATEGORY_LABELS, searchSarsCodes,
   type SarsCode, type SarsCodeCategory,
@@ -30,7 +30,7 @@ function CodeCard({ c }: { c: SarsCode }) {
     <div className="glass-card p-4 space-y-1.5">
       <div className="flex items-center gap-3">
         <span className="text-sm font-bold px-2.5 py-1 rounded-lg font-mono"
-          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: C.blue, border: `1px solid ${alpha(C.blue, 20)}` }}>
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 20)}` }}>
           {c.code}
         </span>
         <p className="flex-1 text-sm font-semibold" style={{ color: 'var(--ink)' }}>{c.label}</p>
@@ -40,7 +40,7 @@ function CodeCard({ c }: { c: SarsCode }) {
       </div>
       <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>{c.description}</p>
       {c.mapsTo ? (
-        <p className="text-[11px] flex items-center gap-1.5" style={{ color: C.green }}>
+        <p className="text-[11px] flex items-center gap-1.5" style={{ color: textTone(C.green) }}>
           <ArrowRight size={11} /> Counts toward “{FIELD_LABELS[c.mapsTo] ?? c.mapsTo}” in the SARS Assessment Estimator
         </p>
       ) : (
@@ -69,7 +69,7 @@ export function SarsCodeLookup() {
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
           Every code on your IRP5 / IT3 explained, and how the{' '}
-          <Link to="/tax-assessment" className="underline" style={{ color: C.blue }}>Assessment Estimator</Link> uses it
+          <Link to="/tax-assessment" className="underline" style={{ color: textTone(C.blue) }}>Assessment Estimator</Link> uses it
         </p>
       </motion.div>
 
@@ -98,8 +98,8 @@ export function SarsCodeLookup() {
           className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
           style={{
             background: category === 'all' ? 'color-mix(in srgb, var(--note-blue) 18%, transparent)' : 'transparent',
-            color: category === 'all' ? C.blue : 'var(--ink-muted)',
-            border: `1px solid ${category === 'all' ? `${alpha(C.blue, 33)}` : 'var(--rule)'}`,
+            color: textTone(category === 'all' ? C.blue : 'var(--ink-muted)'),
+            border: `1px solid ${category === 'all' ? alpha(C.blue, 33) : 'var(--rule)'}`,
           }}>
           All ({SARS_CODES.length})
         </button>
@@ -108,8 +108,8 @@ export function SarsCodeLookup() {
             className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={{
               background: category === cat ? 'color-mix(in srgb, var(--note-blue) 18%, transparent)' : 'transparent',
-              color: category === cat ? C.blue : 'var(--ink-muted)',
-              border: `1px solid ${category === cat ? `${alpha(C.blue, 33)}` : 'var(--rule)'}`,
+              color: textTone(category === cat ? C.blue : 'var(--ink-muted)'),
+              border: `1px solid ${category === cat ? alpha(C.blue, 33) : 'var(--rule)'}`,
             }}>
             {CATEGORY_LABELS[cat]}
           </button>
@@ -131,7 +131,7 @@ export function SarsCodeLookup() {
       )}
 
       <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-        <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+        <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
         <span style={{ color: 'var(--ink-muted)' }}>
           Codes per the SARS Guide for Codes Applicable to Employees Tax Certificates (PAYE-AE-06-G06).
           Common codes only — the full guide contains additional codes for special cases. Not tax advice.

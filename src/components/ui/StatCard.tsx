@@ -18,26 +18,26 @@ const colorMap: Record<ColorVariant, { border: string; iconBg: string; iconColor
   blue: {
     border: 'border-l-[3px] border-l-note-blue',
     iconBg: 'bg-note-blue/12',
-    iconColor: 'text-note-blue',
-    subColor: 'text-note-blue',
+    iconColor: 'text-note-blue-ink',
+    subColor: 'text-note-blue-ink',
   },
   orange: {
     border: 'border-l-[3px] border-l-note-orange',
     iconBg: 'bg-note-orange/12',
-    iconColor: 'text-note-orange',
-    subColor: 'text-note-orange',
+    iconColor: 'text-note-orange-ink',
+    subColor: 'text-note-orange-ink',
   },
   green: {
     border: 'border-l-[3px] border-l-gain',
     iconBg: 'bg-gain/12',
-    iconColor: 'text-gain',
-    subColor: 'text-gain',
+    iconColor: 'text-gain-ink',
+    subColor: 'text-gain-ink',
   },
   red: {
     border: 'border-l-[3px] border-l-loss',
     iconBg: 'bg-loss/12',
-    iconColor: 'text-loss',
-    subColor: 'text-loss',
+    iconColor: 'text-loss-ink',
+    subColor: 'text-loss-ink',
   },
 };
 

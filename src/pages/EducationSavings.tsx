@@ -8,6 +8,7 @@ import { GraduationCap, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
+import { textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -122,7 +123,7 @@ export function EducationSavings() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-brown) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-brown) 25%, transparent)' }}>
-            <GraduationCap size={20} className="text-note-brown" />
+            <GraduationCap size={20} className="text-note-brown-ink" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
@@ -151,7 +152,7 @@ export function EducationSavings() {
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
               style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-base font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
             {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
           </div>
         ))}
@@ -165,11 +166,11 @@ export function EducationSavings() {
           border: `1px solid ${isFunded ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)'}`,
         }}>
         {isFunded
-          ? <CheckCircle2 size={16} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
-          : <AlertCircle  size={16} style={{ color: C.blue, flexShrink: 0, marginTop: 1 }} />}
+          ? <CheckCircle2 size={16} style={{ color: textTone(C.green), flexShrink: 0, marginTop: 1 }} />
+          : <AlertCircle  size={16} style={{ color: textTone(C.blue), flexShrink: 0, marginTop: 1 }} />}
         <div>
           <p className="text-sm font-semibold"
-            style={{ color: isFunded ? C.green : C.blue }}>
+            style={{ color: textTone(isFunded ? C.green : C.blue) }}>
             {isFunded
               ? `On track! Projected fund exceeds cost by ${formatRand(futureValue - totalFutureCost, 0)}`
               : `Increase monthly savings to ${formatRand(Math.max(0, requiredMonthly), 0)}/mo to fully fund education`}
@@ -208,7 +209,7 @@ export function EducationSavings() {
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                   style={{
                     background: presetIdx === i ? 'color-mix(in srgb, var(--note-brown) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                    color: presetIdx === i ? C.brown : 'var(--ink-muted)',
+                    color: textTone(presetIdx === i ? C.brown : 'var(--ink-muted)'),
                     border: `1px solid ${presetIdx === i ? 'color-mix(in srgb, var(--note-brown) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {p.label}
@@ -240,7 +241,7 @@ export function EducationSavings() {
                 }}>
                 <div className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: vehicleIdx === i ? C.blue : 'var(--ink-subtle)' }} />
-                <span className="text-xs flex-1" style={{ color: vehicleIdx === i ? C.blue : 'var(--ink-muted)' }}>
+                <span className="text-xs flex-1" style={{ color: textTone(vehicleIdx === i ? C.blue : 'var(--ink-muted)') }}>
                   {v.label}
                 </span>
               </button>
@@ -249,7 +250,7 @@ export function EducationSavings() {
 
           {vehicleIdx === 0 && (
             <Link to="/tfsa" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: C.green }}>
+              style={{ color: textTone(C.green) }}>
               Maximise your TFSA <ArrowRight size={11} />
             </Link>
           )}
@@ -284,14 +285,14 @@ export function EducationSavings() {
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Required Monthly</p>
             <p className="text-3xl font-extrabold"
-              style={{ color: C.brown, fontFamily: 'var(--font-display)' }}>
+              style={{ color: textTone(C.brown), fontFamily: 'var(--font-display)' }}>
               {formatRand(Math.max(0, requiredMonthly), 0)}
             </p>
             <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
               per month at {vehicle.rate}% p.a. to fully fund {duration} years of {PRESETS[presetIdx].label.toLowerCase()}
             </p>
             {!isFunded && monthlySave > 0 && (
-              <p className="text-xs" style={{ color: C.orange }}>
+              <p className="text-xs" style={{ color: textTone(C.orange) }}>
                 You're saving {formatRand(monthlySave, 0)}/mo — increase by {formatRand(Math.max(0, requiredMonthly - monthlySave), 0)}/mo
               </p>
             )}

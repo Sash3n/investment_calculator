@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 export function ErrorPage() {
   const error = useRouteError();
@@ -52,9 +52,9 @@ export function ErrorPage() {
         {/* Icon */}
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-          style={{ background: `${alpha(statusColor, 9)}`, border: `1px solid ${alpha(statusColor, 19)}` }}
+          style={{ background: alpha(statusColor, 9), border: `1px solid ${alpha(statusColor, 19)}` }}
         >
-          <AlertTriangle size={28} style={{ color: statusColor }} />
+          <AlertTriangle size={28} style={{ color: textTone(statusColor) }} />
         </div>
 
         {/* Status code */}
@@ -101,7 +101,7 @@ export function ErrorPage() {
         {import.meta.env.DEV && error instanceof Error && (
           <div
             className="mt-8 p-4 rounded-xl text-left text-xs font-mono overflow-auto max-h-32"
-            style={{ background: 'color-mix(in srgb, var(--loss) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)', color: 'var(--loss)' }}
+            style={{ background: 'color-mix(in srgb, var(--loss) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)', color: 'var(--loss-ink)' }}
           >
             {error.stack ?? error.message}
           </div>

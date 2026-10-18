@@ -9,7 +9,7 @@ import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { formatRand, formatPercent, formatYears } from '../utils/format';
 import type { MortgageInputs, PropertyInputs, CarInputs } from '../types';
 import type { CalcType } from '../hooks/useFirestore';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -45,9 +45,9 @@ function delta(a: number, b: number, direction: Direction) {
 
 function ScenarioHeader({ label, title, color }: { label: string; title: string; color: string }) {
   return (
-    <div className="p-4 rounded-xl mb-1" style={{ background: `${alpha(color, 7)}`, border: `1px solid ${alpha(color, 15)}` }}>
+    <div className="p-4 rounded-xl mb-1" style={{ background: alpha(color, 7), border: `1px solid ${alpha(color, 15)}` }}>
       <p className="text-[10px] uppercase tracking-widest font-semibold mb-1"
-        style={{ color, fontFamily: 'var(--font-text)' }}>{label}</p>
+        style={{ color: textTone(color), fontFamily: 'var(--font-text)' }}>{label}</p>
       <p className="text-sm font-bold leading-snug"
         style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>{title}</p>
     </div>
@@ -60,8 +60,8 @@ function CompareTable({ rows }: { rows: CompareRow[] }) {
       {/* Header */}
       <div className="grid grid-cols-[1fr_auto_auto_auto] px-4 py-2 border-b border-ink/6">
         <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Metric</p>
-        <p className="text-[10px] uppercase tracking-wider w-32 text-right" style={{ color: CA }}>Scenario A</p>
-        <p className="text-[10px] uppercase tracking-wider w-32 text-right px-3" style={{ color: CB }}>Scenario B</p>
+        <p className="text-[10px] uppercase tracking-wider w-32 text-right" style={{ color: textTone(CA) }}>Scenario A</p>
+        <p className="text-[10px] uppercase tracking-wider w-32 text-right px-3" style={{ color: textTone(CB) }}>Scenario B</p>
         <p className="text-[10px] uppercase tracking-wider w-24 text-center" style={{ color: 'var(--ink-subtle)' }}>Diff</p>
       </div>
 
@@ -82,13 +82,13 @@ function CompareTable({ rows }: { rows: CompareRow[] }) {
 
             {/* A value */}
             <p className="text-xs font-semibold w-32 text-right"
-              style={{ color: aWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--ink)', fontFamily: 'var(--font-display)' }}>
+              style={{ color: textTone(aWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--ink)'), fontFamily: 'var(--font-display)' }}>
               {row.a}
             </p>
 
             {/* B value */}
             <p className="text-xs font-semibold w-32 text-right px-3"
-              style={{ color: bWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--ink)', fontFamily: 'var(--font-display)' }}>
+              style={{ color: textTone(bWins ? GOOD : row.aRaw === row.bRaw ? NEUTRAL : d ? BAD : 'var(--ink)'), fontFamily: 'var(--font-display)' }}>
               {row.b}
             </p>
 
@@ -100,8 +100,8 @@ function CompareTable({ rows }: { rows: CompareRow[] }) {
                 <span
                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
                   style={{
-                    background: `${alpha(GOOD, 8)}`,
-                    color: GOOD,
+                    background: alpha(GOOD, 8),
+                    color: textTone(GOOD),
                   }}
                 >
                   {d.winner === 'A'
@@ -126,7 +126,7 @@ function SectionTitle({ children }: { children: string }) {
   return (
     <div className="mt-6 mb-2 flex items-center gap-2">
       <p className="text-[10px] font-semibold uppercase tracking-widest"
-        style={{ color: CA, fontFamily: 'var(--font-text)' }}>{children}</p>
+        style={{ color: textTone(CA), fontFamily: 'var(--font-text)' }}>{children}</p>
       <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--note-blue) 20%, transparent)' }} />
     </div>
   );
@@ -311,7 +311,7 @@ export function Compare() {
         </button>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-          <GitCompare size={18} className="text-note-blue" />
+          <GitCompare size={18} className="text-note-blue-ink" />
         </div>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>

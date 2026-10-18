@@ -14,7 +14,7 @@ export function SectionHeader({ title, subtitle, icon: Icon, className }: Sectio
       <div className="flex items-center gap-3 mb-1">
         {Icon && (
           <div className="w-9 h-9 rounded-xl bg-note-blue/15 flex items-center justify-center flex-shrink-0">
-            <Icon size={18} className="text-note-blue" />
+            <Icon size={18} className="text-note-blue-ink" />
           </div>
         )}
         <h2

@@ -2,7 +2,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, BookOpen, ChevronRight, AlertTriangle, Lightbulb } from 'lucide-react';
 import { getArticle, getArticlesByCategory, CATEGORY_META } from '../data/learn';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 export function LearnArticle() {
   const { slug } = useParams<{ slug: string }>();
@@ -36,7 +36,7 @@ export function LearnArticle() {
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span
             className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
-            style={{ background: `${alpha(meta.color, 9)}`, color: meta.color }}
+            style={{ background: alpha(meta.color, 9), color: textTone(meta.color) }}
           >
             {meta.emoji} {meta.label}
           </span>
@@ -76,7 +76,7 @@ export function LearnArticle() {
                 className="flex items-start gap-3 mt-4 p-4 rounded-xl text-sm"
                 style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
               >
-                <Lightbulb size={15} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--note-blue)' }} />
+                <Lightbulb size={15} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--note-blue-ink)' }} />
                 <span style={{ color: 'var(--ink-muted)' }}>{section.tip}</span>
               </div>
             )}
@@ -86,7 +86,7 @@ export function LearnArticle() {
                 className="flex items-start gap-3 mt-4 p-4 rounded-xl text-sm"
                 style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}
               >
-                <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--note-orange)' }} />
+                <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--note-orange-ink)' }} />
                 <span style={{ color: 'var(--ink-muted)' }}>{section.warn}</span>
               </div>
             )}
@@ -98,14 +98,14 @@ export function LearnArticle() {
       {article.calcPath && (
         <div
           className="mt-10 p-5 rounded-2xl flex items-center justify-between gap-4 flex-wrap"
-          style={{ background: `${alpha(meta.color, 7)}`, border: `1px solid ${alpha(meta.color, 19)}` }}
+          style={{ background: alpha(meta.color, 7), border: `1px solid ${alpha(meta.color, 19)}` }}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg" style={{ background: `${alpha(meta.color, 13)}` }}>
-              <BookOpen size={16} style={{ color: meta.color }} />
+            <div className="p-2 rounded-lg" style={{ background: alpha(meta.color, 13) }}>
+              <BookOpen size={16} style={{ color: textTone(meta.color) }} />
             </div>
             <div>
-              <p className="text-xs font-semibold" style={{ color: meta.color }}>Put it into practice</p>
+              <p className="text-xs font-semibold" style={{ color: textTone(meta.color) }}>Put it into practice</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
                 Use the calculator to model your own numbers.
               </p>
@@ -137,7 +137,7 @@ export function LearnArticle() {
               >
                 <div>
                   <p
-                    className="text-sm font-medium group-hover:text-note-blue transition-colors"
+                    className="text-sm font-medium group-hover:text-note-blue-ink transition-colors"
                     style={{ color: 'var(--ink)' }}
                   >
                     {rel.title}

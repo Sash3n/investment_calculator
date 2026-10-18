@@ -80,7 +80,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
       >
         <LogIn size={13} style={{ color: 'var(--ink-subtle)' }} />
         <span style={{ color: 'var(--ink-muted)' }}>
-          <button onClick={signIn} className="underline font-medium" style={{ color: 'var(--note-blue)' }}>
+          <button onClick={signIn} className="underline font-medium" style={{ color: 'var(--note-blue-ink)' }}>
             Sign in
           </button>
           {' '}to save & load snapshots
@@ -99,7 +99,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
         {/* Active-edit indicator */}
         {activeEntry && (
           <div className="flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-lg truncate max-w-[140px]"
-            style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', color: 'var(--note-orange)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', color: 'var(--note-orange-ink)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
             <Pencil size={10} />
             <span className="truncate">{activeEntry.title}</span>
           </div>
@@ -109,7 +109,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
           onClick={handleSave}
           disabled={saving}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-60"
-          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: saved ? 'var(--gain)' : 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: saved ? 'var(--gain-ink)' : 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
         >
           <Save size={12} />
           {saved ? 'Saved!' : saving ? 'Saving…' : activeEntryId ? 'Update snapshot' : 'Save snapshot'}
@@ -142,7 +142,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
       {error && (
         <div
           className="px-3 py-2 text-xs flex items-center gap-2"
-          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', borderTop: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)', color: 'var(--loss)' }}
+          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', borderTop: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)', color: 'var(--loss-ink)' }}
         >
           <span className="flex-1">{error}</span>
           <button onClick={() => setError(null)} className="font-bold opacity-60 hover:opacity-100">✕</button>
@@ -168,7 +168,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                   className="flex items-center gap-3 px-3 py-2.5"
                   style={activeEntryId === entry.id ? { background: 'color-mix(in srgb, var(--note-orange) 5%, transparent)' } : undefined}
                 >
-                  <Clock size={13} style={{ color: activeEntryId === entry.id ? 'var(--note-orange)' : 'var(--ink-subtle)', flexShrink: 0 }} />
+                  <Clock size={13} style={{ color: activeEntryId === entry.id ? 'var(--note-orange-ink)' : 'var(--ink-subtle)', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
                     {renamingId === entry.id ? (
                       <input
@@ -197,7 +197,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                         <button
                           onClick={() => commitRename(entry.id)}
                           className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', color: 'var(--gain)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}
+                          style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', color: 'var(--gain-ink)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}
                           title="Save name"
                         >
                           <Check size={11} />
@@ -230,7 +230,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                           className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all"
                           style={{
                             background: activeEntryId === entry.id ? 'color-mix(in srgb, var(--note-orange) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
-                            color: activeEntryId === entry.id ? 'var(--note-orange)' : 'var(--note-blue)',
+                            color: activeEntryId === entry.id ? 'var(--note-orange-ink)' : 'var(--note-blue-ink)',
                             border: `1px solid ${activeEntryId === entry.id ? 'color-mix(in srgb, var(--note-orange) 30%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)'}`,
                           }}
                         >
@@ -242,7 +242,7 @@ export function SaveLoadBar<T>({ type, title, summary, inputs: _inputs, onLoad, 
                             if (activeEntryId === entry.id) setActiveEntryId(null);
                           }}
                           className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
+                          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', color: 'var(--loss-ink)', border: '1px solid color-mix(in srgb, var(--loss) 15%, transparent)' }}
                           title="Delete"
                         >
                           <Trash2 size={11} />

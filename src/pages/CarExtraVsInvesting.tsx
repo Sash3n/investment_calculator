@@ -9,6 +9,7 @@ import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
+import { textTone } from '../utils/color';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -240,7 +241,7 @@ export function CarExtraVsInvesting() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-red) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-red) 25%, transparent)' }}>
-            <Car size={20} className="text-note-red" />
+            <Car size={20} className="text-note-red-ink" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
@@ -266,11 +267,11 @@ export function CarExtraVsInvesting() {
         >
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: winner === 'invest' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            <Trophy size={18} style={{ color: winner === 'invest' ? C.green : C.blue }} />
+            <Trophy size={18} style={{ color: textTone(winner === 'invest' ? C.green : C.blue) }} />
           </div>
           <div className="flex-1">
             <p className="text-base font-bold"
-              style={{ color: winner === 'invest' ? C.green : C.blue, fontFamily: 'var(--font-display)' }}>
+              style={{ color: textTone(winner === 'invest' ? C.green : C.blue), fontFamily: 'var(--font-display)' }}>
               {winner === 'invest'
                 ? `Investing wins by ${formatRand(winnerAmount, 0)} over ${Math.round(termMonths / 12)} years`
                 : `Paying extra wins by ${formatRand(winnerAmount, 0)} over ${Math.round(termMonths / 12)} years`}
@@ -318,7 +319,7 @@ export function CarExtraVsInvesting() {
                 <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                   {r.label}{r.note && <span className="ml-1 text-[10px]" style={{ color: 'var(--ink-subtle)' }}>({r.note})</span>}
                 </span>
-                <span className="text-xs font-semibold" style={{ color: r.color ?? 'var(--ink)' }}>{r.value}</span>
+                <span className="text-xs font-semibold" style={{ color: textTone(r.color ?? 'var(--ink)') }}>{r.value}</span>
               </div>
             ))}
           </div>
@@ -336,7 +337,7 @@ export function CarExtraVsInvesting() {
               ].map((r) => (
                 <div key={r.label} className="flex justify-between items-center">
                   <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>{r.label}</span>
-                  <span className="text-xs font-bold" style={{ color: r.color }}>{r.value}</span>
+                  <span className="text-xs font-bold" style={{ color: textTone(r.color) }}>{r.value}</span>
                 </div>
               ))}
             </div>
@@ -363,7 +364,7 @@ export function CarExtraVsInvesting() {
           {isTFSA && (
             <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
               style={{ background: 'color-mix(in srgb, var(--gain) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)', color: 'var(--ink-muted)' }}>
-              <Info size={13} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
+              <Info size={13} style={{ color: textTone(C.green), flexShrink: 0, marginTop: 1 }} />
               TFSA contributions are after-tax and grow tax-free — no CGT or dividend tax. Subject to R36,000/yr and R500,000 lifetime limits.
             </div>
           )}
@@ -379,7 +380,7 @@ export function CarExtraVsInvesting() {
               <div key={kpi.label} className="glass-card-static p-3 rounded-xl">
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
                   style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-                <p className="text-sm font-bold" style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+                <p className="text-sm font-bold" style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
                 <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
               </div>
             ))}
@@ -467,16 +468,16 @@ export function CarExtraVsInvesting() {
                     background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
                     <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink-muted)' }}>{row.year}</td>
-                    <td className="py-2 px-3" style={{ color: C.blue }}>{formatRand(row.interestSaved, 0)}</td>
-                    <td className="py-2 px-3" style={{ color: C.green }}>{formatRand(row.investValue, 0)}</td>
-                    <td className="py-2 px-3" style={{ color: diff > 0 ? C.green : C.blue }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>{formatRand(row.interestSaved, 0)}</td>
+                    <td className="py-2 px-3" style={{ color: textTone(C.green) }}>{formatRand(row.investValue, 0)}</td>
+                    <td className="py-2 px-3" style={{ color: textTone(diff > 0 ? C.green : C.blue) }}>
                       {diff > 0 ? '+' : ''}{formatRand(diff, 0)}
                     </td>
                     <td className="py-2 px-3">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                         style={{
                           background: row.winner === 'invest' ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
-                          color: row.winner === 'invest' ? C.green : C.blue,
+                          color: textTone(row.winner === 'invest' ? C.green : C.blue),
                         }}>
                         {row.winner === 'invest' ? 'Investing' : 'Pay Extra'}
                       </span>

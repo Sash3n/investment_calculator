@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSavedProperties } from '../hooks/useFirestore';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -27,7 +27,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 160 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? C.blue }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? C.blue) }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -73,7 +73,7 @@ export function StressTest() {
           </div>
           <span
             className="text-xs px-3 py-1.5 rounded-full font-semibold"
-            style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', color: C.orange, border: `1px solid ${alpha(C.orange, 27)}` }}
+            style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', color: textTone(C.orange), border: `1px solid ${alpha(C.orange, 27)}` }}
           >
             Prime: {liveRate.loading ? '…' : `${liveRate.primeRate}%`}
           </span>
@@ -128,7 +128,7 @@ export function StressTest() {
             >
               <AlertTriangle size={18} color={C.red} className="mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold" style={{ color: C.red, fontFamily: 'var(--font-display)' }}>
+                <p className="text-sm font-semibold" style={{ color: textTone(C.red), fontFamily: 'var(--font-display)' }}>
                   Most fragile: {result.mostFragile.name}
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
@@ -184,12 +184,12 @@ export function StressTest() {
                       {STRESS_SCENARIOS.map((s) => {
                         const sc = prop.scenarios[s.key];
                         return (
-                          <td key={s.key} className="py-2 px-2 text-right font-mono whitespace-nowrap" style={{ color: sc.monthlyCashFlow >= 0 ? C.green : C.red, fontWeight: sc.negative ? 600 : 400 }}>
+                          <td key={s.key} className="py-2 px-2 text-right font-mono whitespace-nowrap" style={{ color: textTone(sc.monthlyCashFlow >= 0 ? C.green : C.red), fontWeight: sc.negative ? 600 : 400 }}>
                             {formatRand(sc.monthlyCashFlow, 0)}
                           </td>
                         );
                       })}
-                      <td className="py-2 pl-3 text-right font-semibold whitespace-nowrap" style={{ color: prop.rateHeadroom === null ? C.red : prop.rateHeadroom < 2 ? C.orange : C.green }}>
+                      <td className="py-2 pl-3 text-right font-semibold whitespace-nowrap" style={{ color: textTone(prop.rateHeadroom === null ? C.red : prop.rateHeadroom < 2 ? C.orange : C.green) }}>
                         {prop.breakingPointRate === null ? 'negative now' : `${formatPercent(prop.breakingPointRate, 2)}`}
                         {prop.rateHeadroom !== null && (
                           <span className="block text-[10px] font-normal" style={{ color: 'var(--ink-subtle)' }}>+{formatPercent(prop.rateHeadroom, 2)} headroom</span>
@@ -202,7 +202,7 @@ export function StressTest() {
                     {STRESS_SCENARIOS.map((s) => {
                       const total = result.scenarioTotals[s.key]?.totalMonthlyCashFlow ?? 0;
                       return (
-                        <td key={s.key} className="py-2 px-2 text-right font-mono font-semibold whitespace-nowrap" style={{ color: total >= 0 ? C.green : C.red }}>
+                        <td key={s.key} className="py-2 px-2 text-right font-mono font-semibold whitespace-nowrap" style={{ color: textTone(total >= 0 ? C.green : C.red) }}>
                           {formatRand(total, 0)}
                         </td>
                       );
@@ -231,8 +231,8 @@ export function StressTest() {
                 { title: 'Value −10% scenario', color: C.brown, body: 'A value drop does not change monthly cash flow but erodes equity. Combined with negative cash flow it can leave you "underwater" — owing more than the property is worth — which limits refinancing and selling options.' },
                 { title: 'What to do about it', color: C.green, body: 'For fragile properties, build a cash reserve (3–6 months of shortfall), fix interest rates where possible, reduce the loan with lump sums, or raise rent to market. The worst-case row is your true risk exposure.' },
               ].map((item) => (
-                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: `${alpha(item.color, 3)}`, border: `1px solid ${alpha(item.color, 13)}` }}>
-                  <p className="text-xs font-bold" style={{ color: item.color }}>{item.title}</p>
+                <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: alpha(item.color, 3), border: `1px solid ${alpha(item.color, 13)}` }}>
+                  <p className="text-xs font-bold" style={{ color: textTone(item.color) }}>{item.title}</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.body}</p>
                 </div>
               ))}
@@ -240,9 +240,9 @@ export function StressTest() {
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: C.blue }} />
+            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
-              <Shield size={11} className="inline mr-1" style={{ color: C.blue }} />
+              <Shield size={11} className="inline mr-1" style={{ color: textTone(C.blue) }} />
               Educational estimates only. Cash flow uses your saved inputs and Scenario 1 rent; equity figures approximate the loan balance at purchase. Consult a financial adviser before acting.
             </span>
           </div>

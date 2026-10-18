@@ -5,7 +5,7 @@ import { usePrimeRate } from '../hooks/usePrimeRate';
 import { NAV_CATEGORIES, NAV_BY_PATH } from '../config/nav';
 import { PRESETS, openPresetTarget } from '../config/presets';
 import { useNavPrefs } from '../hooks/useNavPrefs';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 import {
   Building2,
   MapPin,
@@ -322,8 +322,8 @@ export function Home() {
       {/* ── Hero section ───────────────────────────────── */}
       <motion.div variants={cardVariants} className="text-center mb-14">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-note-blue/30 bg-note-blue/8 mb-6">
-          <Zap size={12} className="text-note-blue" />
-          <span className="text-xs font-semibold text-note-blue" style={{ fontFamily: 'var(--font-text)' }}>
+          <Zap size={12} className="text-note-blue-ink" />
+          <span className="text-xs font-semibold text-note-blue-ink" style={{ fontFamily: 'var(--font-text)' }}>
             Built for South African Investors
           </span>
         </div>
@@ -376,9 +376,9 @@ export function Home() {
               <div key={stat.label} className="glass-card-static p-4 text-center">
                 <div
                   className="w-8 h-8 rounded-lg mx-auto mb-3 flex items-center justify-center"
-                  style={{ background: `${alpha(stat.color, 13)}` }}
+                  style={{ background: alpha(stat.color, 13) }}
                 >
-                  <Icon size={16} style={{ color: stat.color }} />
+                  <Icon size={16} style={{ color: textTone(stat.color) }} />
                 </div>
                 <p
                   className="text-lg font-bold text-ink"
@@ -421,9 +421,9 @@ export function Home() {
                   >
                     <span
                       className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${alpha(item.color, 13)}` }}
+                      style={{ background: alpha(item.color, 13) }}
                     >
-                      <Icon size={13} style={{ color: item.color }} />
+                      <Icon size={13} style={{ color: textTone(item.color) }} />
                     </span>
                     {item.shortLabel}
                   </div>
@@ -448,9 +448,9 @@ export function Home() {
                   <div className="flex items-start gap-3 mb-2">
                     <span
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${alpha(preset.color, 13)}` }}
+                      style={{ background: alpha(preset.color, 13) }}
                     >
-                      <Icon size={16} style={{ color: preset.color }} />
+                      <Icon size={16} style={{ color: textTone(preset.color) }} />
                     </span>
                     <div>
                       <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -514,7 +514,7 @@ export function Home() {
                   className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                   style={{
                     background: active ? 'color-mix(in srgb, var(--note-blue) 20%, transparent)' : 'var(--paper-raised)',
-                    color: active ? 'var(--note-blue)' : 'var(--ink-muted)',
+                    color: active ? 'var(--note-blue-ink)' : 'var(--ink-muted)',
                     border: `1px solid ${active ? 'color-mix(in srgb, var(--note-blue) 40%, transparent)' : 'var(--rule)'}`,
                     fontFamily: 'var(--font-text)',
                   }}
@@ -544,13 +544,13 @@ export function Home() {
                         className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ background: card.colorDim }}
                       >
-                        <Icon size={20} style={{ color: card.color }} />
+                        <Icon size={20} style={{ color: textTone(card.color) }} />
                       </div>
                       <span
                         className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full"
                         style={{
-                          background: `${alpha(card.color, 9)}`,
-                          color: card.color,
+                          background: alpha(card.color, 9),
+                          color: textTone(card.color),
                           border: `1px solid ${alpha(card.color, 19)}`,
                           fontFamily: 'var(--font-text)',
                         }}
@@ -560,7 +560,7 @@ export function Home() {
                     </div>
 
                     <h3
-                      className="text-lg font-bold text-ink mb-2 group-hover:text-white transition-colors"
+                      className="text-lg font-bold text-ink mb-2 group-hover:text-note-blue-ink transition-colors"
                       style={{ fontFamily: 'var(--font-display)' }}
                     >
                       {card.title}
@@ -575,13 +575,13 @@ export function Home() {
                     <div className="flex items-center gap-1.5">
                       <span
                         className="text-xs font-semibold transition-colors"
-                        style={{ color: card.color, fontFamily: 'var(--font-text)' }}
+                        style={{ color: textTone(card.color), fontFamily: 'var(--font-text)' }}
                       >
                         Open Calculator
                       </span>
                       <ArrowRight
                         size={13}
-                        style={{ color: card.color }}
+                        style={{ color: textTone(card.color) }}
                         className="transition-transform group-hover:translate-x-1"
                       />
                     </div>
@@ -624,9 +624,9 @@ export function Home() {
             <div key={f.title} className="flex gap-3">
               <div
                 className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: `${alpha(f.color, 9)}` }}
+                style={{ background: alpha(f.color, 9) }}
               >
-                <Icon size={16} style={{ color: f.color }} />
+                <Icon size={16} style={{ color: textTone(f.color) }} />
               </div>
               <div>
                 <p

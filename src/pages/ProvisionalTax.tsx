@@ -11,7 +11,7 @@ import { readShareParam } from '../utils/share';
 import { calcIncomeTax } from '../utils/tax';
 import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -112,8 +112,8 @@ export function ProvisionalTax() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.orange, 13)}` }}>
-            <Receipt size={22} style={{ color: C.orange }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.orange, 13) }}>
+            <Receipt size={22} style={{ color: textTone(C.orange) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Provisional Tax</h1>
@@ -186,8 +186,8 @@ export function ProvisionalTax() {
           </div>
 
           <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-            style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 27)}` }}>
-            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.orange }} />
+            style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
             <div style={{ color: 'var(--ink-muted)' }}>
               <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{paymentLabel} due {paymentDue}.</span>
               {' '}Pay at least 90% of your final liability ({formatRand(result.penaltyThreshold)}) to avoid a 20% penalty on the shortfall.
@@ -217,8 +217,8 @@ export function ProvisionalTax() {
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: C.blue }} />
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               Based on {taxYearLabel} SARS tax tables. Medical aid credit:
               R{TAX_YEARS[taxYear].medCredits.main}/month (main member and first dependant),

@@ -6,7 +6,7 @@ import {
 import { Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -82,7 +82,7 @@ export function EmergencyFund() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-            <Shield size={20} className="text-gain" />
+            <Shield size={20} className="text-gain-ink" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
@@ -111,7 +111,7 @@ export function EmergencyFund() {
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
               style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-base font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
             {'sub' in kpi && kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>}
           </div>
         ))}
@@ -121,7 +121,7 @@ export function EmergencyFund() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
         <div className="flex items-center justify-between text-xs mb-2">
           <span style={{ color: 'var(--ink-muted)' }}>Fund Progress</span>
-          <span style={{ color: pctFunded >= 100 ? C.green : C.orange, fontWeight: 700 }}>
+          <span style={{ color: textTone(pctFunded >= 100 ? C.green : C.orange), fontWeight: 700 }}>
             {pctFunded.toFixed(1)}% funded
           </span>
         </div>
@@ -167,10 +167,10 @@ export function EmergencyFund() {
                 <button key={opt.key} onClick={() => setJobSecurity(opt.key)}
                   className="flex-1 py-2 rounded-xl text-center transition-all"
                   style={{
-                    background: jobSecurity === opt.key ? `${alpha(opt.color, 8)}` : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                    background: jobSecurity === opt.key ? alpha(opt.color, 8) : 'color-mix(in srgb, var(--ink) 4%, transparent)',
                     border: `1px solid ${jobSecurity === opt.key ? alpha(opt.color, 21) : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
-                  <p className="text-xs font-semibold" style={{ color: jobSecurity === opt.key ? opt.color : 'var(--ink-muted)' }}>
+                  <p className="text-xs font-semibold" style={{ color: textTone(jobSecurity === opt.key ? opt.color : 'var(--ink-muted)') }}>
                     {opt.label}
                   </p>
                   <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>rec. {opt.rec}</p>
@@ -188,7 +188,7 @@ export function EmergencyFund() {
                   className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
                     background: targetMonths === m ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
-                    color: targetMonths === m ? C.blue : 'var(--ink-muted)',
+                    color: textTone(targetMonths === m ? C.blue : 'var(--ink-muted)'),
                     border: `1px solid ${targetMonths === m ? 'color-mix(in srgb, var(--note-blue) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                   }}>
                   {m} mo
@@ -218,7 +218,7 @@ export function EmergencyFund() {
                   <div className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: vehicleIdx === i ? C.blue : 'var(--ink-subtle)' }} />
                   <p className="text-xs font-semibold flex-1"
-                    style={{ color: vehicleIdx === i ? C.blue : 'var(--ink-muted)' }}>
+                    style={{ color: textTone(vehicleIdx === i ? C.blue : 'var(--ink-muted)') }}>
                     {v.label}
                   </p>
                 </button>
@@ -236,11 +236,11 @@ export function EmergencyFund() {
               border: `1px solid ${adequacy ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-orange) 20%, transparent)'}`,
             }}>
             {adequacy
-              ? <CheckCircle2 size={16} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
-              : <AlertCircle  size={16} style={{ color: C.orange, flexShrink: 0, marginTop: 1 }} />}
+              ? <CheckCircle2 size={16} style={{ color: textTone(C.green), flexShrink: 0, marginTop: 1 }} />
+              : <AlertCircle  size={16} style={{ color: textTone(C.orange), flexShrink: 0, marginTop: 1 }} />}
             <div>
               <p className="text-sm font-semibold"
-                style={{ color: adequacy ? C.green : C.orange }}>
+                style={{ color: textTone(adequacy ? C.green : C.orange) }}>
                 {adequacy ? 'Target looks adequate' : `Consider increasing target to ${recommendedMonths} months`}
               </p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>

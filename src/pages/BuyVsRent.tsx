@@ -10,7 +10,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost, calcIncomeTax } from '../utils/tax';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 // ── SARS 2026/27 ──────────────────────────────────────────────────────────────
 const CGT_INCLUSION    = 0.40;
@@ -259,7 +259,7 @@ export function BuyVsRent() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-            <Scale size={20} className="text-gain" />
+            <Scale size={20} className="text-gain-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
@@ -274,7 +274,7 @@ export function BuyVsRent() {
             className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
             style={{
               background: buyWins ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
-              color:      buyWins ? C.green : C.blue,
+              color:      textTone(buyWins ? C.green : C.blue),
               border:     `1px solid ${alpha(buyWins ? C.green : C.blue, 27)}`,
             }}
           >
@@ -295,10 +295,10 @@ export function BuyVsRent() {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: buyWins ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            {buyWins ? <Home size={16} style={{ color: C.green }} /> : <Key size={16} style={{ color: C.blue }} />}
+            {buyWins ? <Home size={16} style={{ color: textTone(C.green) }} /> : <Key size={16} style={{ color: textTone(C.blue) }} />}
           </div>
           <div>
-            <p className="text-xs font-bold" style={{ color: buyWins ? C.green : C.blue }}>
+            <p className="text-xs font-bold" style={{ color: textTone(buyWins ? C.green : C.blue) }}>
               {winner} is better over {inp.yearsToCompare} years by {formatRand(margin, 0)}
             </p>
             <p className="text-[11px] mt-0.5" style={{ color: 'var(--ink-muted)' }}>
@@ -314,11 +314,11 @@ export function BuyVsRent() {
         <div className="flex gap-4 flex-shrink-0 text-right">
           <div>
             <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Buy net wealth</p>
-            <p className="text-sm font-bold" style={{ color: C.green }}>{formatRand(last?.netWealthBuy ?? 0, 0)}</p>
+            <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>{formatRand(last?.netWealthBuy ?? 0, 0)}</p>
           </div>
           <div>
             <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Rent net wealth</p>
-            <p className="text-sm font-bold" style={{ color: C.blue }}>{formatRand(last?.netWealthRent ?? 0, 0)}</p>
+            <p className="text-sm font-bold" style={{ color: textTone(C.blue) }}>{formatRand(last?.netWealthRent ?? 0, 0)}</p>
           </div>
         </div>
       </motion.div>
@@ -338,10 +338,10 @@ export function BuyVsRent() {
             { label: 'Total Upfront',    value: totalUpfront,       color: C.red, bold: true },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3"
-              style={{ background: `${alpha(item.color, 5)}`, border: `1px solid ${alpha(item.color, 15)}` }}>
+              style={{ background: alpha(item.color, 5), border: `1px solid ${alpha(item.color, 15)}` }}>
               <p style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
               <p className={`mt-1 font-${item.bold ? 'bold text-base' : 'semibold text-sm'}`}
-                style={{ color: item.color, fontFamily: 'var(--font-display)' }}>
+                style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>
                 {formatRand(item.value, 0)}
               </p>
             </div>
@@ -355,8 +355,8 @@ export function BuyVsRent() {
             {' · '}Monthly rent: <strong style={{ color: 'var(--ink)' }}>{formatRand(inp.monthlyRent, 0)}</strong>
             {' · '}
             {monthlySaving > 0
-              ? <span>Bond costs <strong style={{ color: C.orange }}>{formatRand(monthlySaving, 0)}/mo more</strong> — renter invests this difference</span>
-              : <span>Rent costs <strong style={{ color: C.green }}>{formatRand(Math.abs(monthlySaving), 0)}/mo more</strong> — buyer has more monthly cash flow</span>}
+              ? <span>Bond costs <strong style={{ color: textTone(C.orange) }}>{formatRand(monthlySaving, 0)}/mo more</strong> — renter invests this difference</span>
+              : <span>Rent costs <strong style={{ color: textTone(C.green) }}>{formatRand(Math.abs(monthlySaving), 0)}/mo more</strong> — buyer has more monthly cash flow</span>}
           </span>
         </div>
       </div>
@@ -369,7 +369,7 @@ export function BuyVsRent() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-              <Home size={14} className="text-gain" />
+              <Home size={14} className="text-gain-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -424,7 +424,7 @@ export function BuyVsRent() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-              <Key size={14} className="text-note-blue" />
+              <Key size={14} className="text-note-blue-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -439,7 +439,7 @@ export function BuyVsRent() {
           </div>
           <div className="mt-2 p-3 rounded-xl text-xs"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
-            <p className="font-semibold mb-1" style={{ color: C.blue }}>Renter invests:</p>
+            <p className="font-semibold mb-1" style={{ color: textTone(C.blue) }}>Renter invests:</p>
             <ul className="space-y-1" style={{ color: 'var(--ink-muted)' }}>
               <li>• Deposit + transfer duty + bond reg + initiation fee upfront ({formatRand(totalUpfront, 0)})</li>
               <li>• Monthly saving if bond &gt; rent ({formatRand(Math.max(0, monthlySaving), 0)}/mo)</li>
@@ -452,7 +452,7 @@ export function BuyVsRent() {
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-              <TrendingUp size={14} className="text-note-orange" />
+              <TrendingUp size={14} className="text-note-orange-ink" />
             </div>
             <p className="text-sm font-semibold"
               style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
@@ -476,7 +476,7 @@ export function BuyVsRent() {
                     style={{
                       background: inp.yearsToCompare === y ? 'color-mix(in srgb, var(--note-orange) 20%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
                       border: `1px solid ${inp.yearsToCompare === y ? 'color-mix(in srgb, var(--note-orange) 40%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
-                      color: inp.yearsToCompare === y ? C.orange : 'var(--ink-muted)',
+                      color: textTone(inp.yearsToCompare === y ? C.orange : 'var(--ink-muted)'),
                     }}
                   >
                     {y}yr
@@ -607,29 +607,29 @@ export function BuyVsRent() {
                       ? 'color-mix(in srgb, var(--note-orange) 6%, transparent)'
                       : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: isBreakEven ? C.orange : 'var(--note-blue)' }}>
+                    <td className="py-2 px-3 font-bold" style={{ color: textTone(isBreakEven ? C.orange : 'var(--note-blue)') }}>
                       Y{r.year}{isBreakEven ? ' ⚡' : ''}
                     </td>
                     <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.propertyValue, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.green }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.green) }}>
                       {formatRand(r.equity, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: buyAhead ? C.green : 'var(--ink-muted)' }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: textTone(buyAhead ? C.green : 'var(--ink-muted)') }}>
                       {formatRand(r.netWealthBuy, 0)}
                     </td>
                     <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                       {formatRand(r.monthlyRentYear, 0)}/mo
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.teal }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.teal) }}>
                       {formatRand(r.investPortfolio, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: !buyAhead ? C.blue : 'var(--ink-muted)' }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: textTone(!buyAhead ? C.blue : 'var(--ink-muted)') }}>
                       {formatRand(r.netWealthRent, 0)}
                     </td>
                     <td className="py-2 px-3 font-bold"
-                      style={{ color: buyAhead ? C.green : C.blue }}>
+                      style={{ color: textTone(buyAhead ? C.green : C.blue) }}>
                       {buyAhead ? '+' : ''}{formatRand(r.advantage, 0)}
                       <span className="ml-1 text-[10px] font-normal">
                         {buyAhead ? '(buy)' : '(rent)'}
@@ -649,7 +649,7 @@ export function BuyVsRent() {
       {/* Methodology note */}
       <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
         style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
-        <Info size={14} className="text-note-blue mt-0.5 flex-shrink-0" />
+        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
         <span style={{ color: 'var(--ink-muted)' }}>
           <strong style={{ color: 'var(--ink)' }}>Methodology:</strong> Buyer's sunk costs = mortgage interest + rates + levies + insurance + maintenance (principal repayment builds equity, not counted as a cost). Renter invests the full upfront amount (deposit + transfer duty + bond reg) plus any monthly saving (bond &gt; rent). CGT applied at exit: primary residence gets R3M exclusion; investments get R50k annual exclusion and 40% inclusion rate. Agent commission of 2.5% applied to property sale.
         </span>

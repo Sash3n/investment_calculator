@@ -13,7 +13,7 @@ import { formatRand, formatPercent } from '../utils/format';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { StatCard } from '../components/ui/StatCard';
 import jsPDF from 'jspdf';
-import { seriesColors } from '../utils/color';
+import { seriesColors, textTone } from '../utils/color';
 
 const COLORS = seriesColors(8);
 
@@ -23,7 +23,7 @@ function CustomTooltip({ active, payload, label }: any) {
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: p.color ?? p.fill }}>
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? p.fill) }}>
           {p.name}: {typeof p.value === 'number' ? formatRand(p.value, 0) : p.value}
         </p>
       ))}
@@ -447,7 +447,7 @@ export function PortfolioSummary() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-6 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
-          <Building2 size={28} className="text-gain" />
+          <Building2 size={28} className="text-gain-ink" />
         </div>
         <div>
           <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--ink)' }}>Sign in to view portfolio</h2>
@@ -457,7 +457,7 @@ export function PortfolioSummary() {
         </div>
         <button onClick={signIn}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
-          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
           <LogIn size={16} /> Sign in with Google
         </button>
       </div>
@@ -477,7 +477,7 @@ export function PortfolioSummary() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-6 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}>
-          <MapPin size={28} className="text-gain" />
+          <MapPin size={28} className="text-gain-ink" />
         </div>
         <div>
           <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--ink)' }}>No properties saved yet</h2>
@@ -531,7 +531,7 @@ export function PortfolioSummary() {
         ].map((s) => (
           <div key={s.label}>
             <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>{s.label}</p>
-            <p className="text-sm font-bold" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>{s.value}</p>
+            <p className="text-sm font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -650,19 +650,19 @@ export function PortfolioSummary() {
                     </td>
                     <td className="text-right">{formatRand(r.effectivePurchasePrice, 0)}</td>
                     <td className="text-right">{formatRand(r.monthlyBondRepayment, 0)}</td>
-                    <td className="text-right font-semibold" style={{ color: cf >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
+                    <td className="text-right font-semibold" style={{ color: cf >= 0 ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
                       {formatRand(cf, 0)}
                     </td>
                     <td className="text-right">{formatPercent(r.netYieldS1)}</td>
                     <td className="text-right">{formatPercent(r.roi10YearS1, 1)}</td>
-                    <td className="text-right" style={{ color: equity >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
+                    <td className="text-right" style={{ color: equity >= 0 ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
                       {formatRand(equity, 0)}
                     </td>
                     <td className="text-right">
                       <button
                         onClick={() => navigate('/property-roi', { state: { loadedInputs: prop.inputs, editingId: prop.id } })}
                         className="text-[10px] px-2 py-1 rounded-lg transition-all"
-                        style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
+                        style={{ background: 'color-mix(in srgb, var(--note-blue) 10%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
                       >
                         Open
                       </button>
@@ -675,15 +675,15 @@ export function PortfolioSummary() {
               <tr style={{ borderTop: '2px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
                 <td className="font-bold" style={{ color: 'var(--ink)' }}>Total</td>
                 <td className="text-right font-bold" style={{ color: 'var(--ink)' }}>{formatRand(totals.totalValue, 0)}</td>
-                <td className="text-right font-bold" style={{ color: 'var(--loss)' }}>
+                <td className="text-right font-bold" style={{ color: 'var(--loss-ink)' }}>
                   {formatRand(results.reduce((s,r) => s + r.monthlyBondRepayment, 0), 0)}
                 </td>
-                <td className="text-right font-bold" style={{ color: totals.totalCashFlow >= 0 ? 'var(--gain)' : 'var(--loss)' }}>
+                <td className="text-right font-bold" style={{ color: totals.totalCashFlow >= 0 ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
                   {formatRand(totals.totalCashFlow, 0)}
                 </td>
-                <td className="text-right font-bold" style={{ color: 'var(--note-blue)' }}>{formatPercent(totals.blendedYield)}</td>
+                <td className="text-right font-bold" style={{ color: 'var(--note-blue-ink)' }}>{formatPercent(totals.blendedYield)}</td>
                 <td />
-                <td className="text-right font-bold" style={{ color: 'var(--gain)' }}>{formatRand(totals.totalEquity, 0)}</td>
+                <td className="text-right font-bold" style={{ color: 'var(--gain-ink)' }}>{formatRand(totals.totalEquity, 0)}</td>
                 <td />
               </tr>
             </tfoot>

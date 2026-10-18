@@ -28,7 +28,7 @@ export function ShareButton({ state }: { state: unknown }) {
       style={{
         background: copied ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'var(--paper-raised)',
         border: `1px solid ${copied ? 'color-mix(in srgb, var(--gain) 40%, transparent)' : 'var(--rule)'}`,
-        color: copied ? 'var(--gain)' : 'var(--ink-muted)',
+        color: copied ? 'var(--gain-ink)' : 'var(--ink-muted)',
       }}
       title="Copy a shareable link to this scenario"
     >

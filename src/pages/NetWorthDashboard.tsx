@@ -16,7 +16,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
-import { seriesColors } from '../utils/color';
+import { seriesColors, textTone } from '../utils/color';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -222,7 +222,7 @@ export function NetWorthDashboard() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
-            <PieChart size={20} className="text-note-blue" />
+            <PieChart size={20} className="text-note-blue-ink" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
@@ -252,11 +252,11 @@ export function NetWorthDashboard() {
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
               style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-lg font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-display)' }}>
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>
               {kpi.value}
             </p>
             {kpi.sub && (
-              <p className="text-[10px] mt-0.5" style={{ color: kpi.color }}>{kpi.sub}</p>
+              <p className="text-[10px] mt-0.5" style={{ color: textTone(kpi.color) }}>{kpi.sub}</p>
             )}
           </div>
         ))}
@@ -271,10 +271,10 @@ export function NetWorthDashboard() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-gain" />
-            <p className="text-sm font-bold" style={{ color: C.green, fontFamily: 'var(--font-display)' }}>
+            <p className="text-sm font-bold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
               Assets
             </p>
-            <span className="ml-auto text-xs font-semibold" style={{ color: C.green }}>
+            <span className="ml-auto text-xs font-semibold" style={{ color: textTone(C.green) }}>
               {formatRand(totalAssets, 0)}
             </span>
           </div>
@@ -296,10 +296,10 @@ export function NetWorthDashboard() {
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-loss" />
-            <p className="text-sm font-bold" style={{ color: C.red, fontFamily: 'var(--font-display)' }}>
+            <p className="text-sm font-bold" style={{ color: textTone(C.red), fontFamily: 'var(--font-display)' }}>
               Liabilities
             </p>
-            <span className="ml-auto text-xs font-semibold" style={{ color: C.red }}>
+            <span className="ml-auto text-xs font-semibold" style={{ color: textTone(C.red) }}>
               {formatRand(totalLiab, 0)}
             </span>
           </div>
@@ -367,7 +367,7 @@ export function NetWorthDashboard() {
               onClick={handleSave}
               disabled={saving}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
               <Save size={14} />
               {saving ? 'Saving…' : 'Save Snapshot'}
             </button>
@@ -375,7 +375,7 @@ export function NetWorthDashboard() {
             <button
               onClick={signIn}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: C.blue, border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: textTone(C.blue), border: `1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)` }}>
               <LogIn size={14} />
               Sign in to Save
             </button>
@@ -465,7 +465,7 @@ export function NetWorthDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold"
-                          style={{ color: s.netWorth >= 0 ? C.blue : C.red }}>
+                          style={{ color: textTone(s.netWorth >= 0 ? C.blue : C.red) }}>
                           {formatRand(s.netWorth, 0)}
                         </p>
                         <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
@@ -475,7 +475,7 @@ export function NetWorthDashboard() {
                       <button
                         onClick={() => remove(s.id)}
                         className="p-1.5 rounded-lg transition-all"
-                        style={{ color: C.red, background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
+                        style={{ color: textTone(C.red), background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
                         <Trash2 size={13} />
                       </button>
                     </div>

@@ -24,6 +24,15 @@
   --color-loss: var(--loss);
   --color-warn: var(--warn);
   --color-on-accent: var(--on-accent);
+  --color-note-blue-ink: var(--note-blue-ink);
+  --color-note-orange-ink: var(--note-orange-ink);
+  --color-note-green-ink: var(--note-green-ink);
+  --color-note-brown-ink: var(--note-brown-ink);
+  --color-note-teal-ink: var(--note-teal-ink);
+  --color-note-red-ink: var(--note-red-ink);
+  --color-gain-ink: var(--gain-ink);
+  --color-loss-ink: var(--loss-ink);
+  --color-warn-ink: var(--warn-ink);
   --font-sans: var(--font-text);
   --font-serif: var(--font-display);
 }

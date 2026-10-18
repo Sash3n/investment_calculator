@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, Clock, ChevronRight, Search } from 'lucide-react';
 import { ARTICLES, CATEGORY_META, type ArticleCategory } from '../data/learn';
-import { alpha } from '../utils/color';
+import { alpha, textTone } from '../utils/color';
 
 const ALL = 'all' as const;
 type Filter = ArticleCategory | typeof ALL;
@@ -35,7 +35,7 @@ export function LearnHub() {
       {/* Header */}
       <div className="flex items-start gap-4">
         <div className="p-2.5 rounded-xl flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-          <BookOpen size={22} style={{ color: 'var(--note-blue)' }} />
+          <BookOpen size={22} style={{ color: 'var(--note-blue-ink)' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--ink)' }}>
@@ -70,7 +70,7 @@ export function LearnHub() {
           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
           style={{
             background: filter === ALL ? 'var(--note-blue)' : 'color-mix(in srgb, var(--note-blue) 10%, transparent)',
-            color:      filter === ALL ? 'var(--on-accent)'    : 'var(--note-blue)',
+            color:      filter === ALL ? 'var(--on-accent)'    : 'var(--note-blue-ink)',
           }}
         >
           All ({ARTICLES.length})
@@ -83,8 +83,8 @@ export function LearnHub() {
               onClick={() => setFilter(cat)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
               style={{
-                background: filter === cat ? meta.color : `${alpha(meta.color, 9)}`,
-                color:      filter === cat ? 'var(--on-accent)'     : meta.color,
+                background: filter === cat ? meta.color : alpha(meta.color, 9),
+                color:      textTone(filter === cat ? 'var(--on-accent)'     : meta.color),
               }}
             >
               {meta.emoji} {meta.label} ({count})
@@ -121,7 +121,7 @@ export function LearnHub() {
                   <div className="flex items-center justify-between mb-3">
                     <span
                       className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
-                      style={{ background: `${alpha(meta.color, 9)}`, color: meta.color }}
+                      style={{ background: alpha(meta.color, 9), color: textTone(meta.color) }}
                     >
                       {meta.emoji} {meta.label}
                     </span>
@@ -132,7 +132,7 @@ export function LearnHub() {
                   </div>
 
                   <h2
-                    className="text-sm font-semibold leading-snug mb-2 group-hover:text-note-blue transition-colors"
+                    className="text-sm font-semibold leading-snug mb-2 group-hover:text-note-blue-ink transition-colors"
                     style={{ color: 'var(--ink)' }}
                   >
                     {article.title}
@@ -142,7 +142,7 @@ export function LearnHub() {
                     {article.summary}
                   </p>
 
-                  <div className="flex items-center gap-1 mt-4 text-xs font-semibold" style={{ color: meta.color }}>
+                  <div className="flex items-center gap-1 mt-4 text-xs font-semibold" style={{ color: textTone(meta.color) }}>
                     Read article <ChevronRight size={13} />
                   </div>
                 </Link>

@@ -115,10 +115,10 @@ export function NotFound() {
               >
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)' }}>
-                  <Icon size={14} className="text-note-blue" />
+                  <Icon size={14} className="text-note-blue-ink" />
                 </div>
                 <span
-                  className="text-sm font-medium group-hover:text-note-blue transition-colors"
+                  className="text-sm font-medium group-hover:text-note-blue-ink transition-colors"
                   style={{ color: 'var(--ink)', fontFamily: 'var(--font-text)' }}
                 >
                   {s.label}

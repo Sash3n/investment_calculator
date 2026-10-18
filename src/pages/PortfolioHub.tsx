@@ -19,7 +19,7 @@ import {
   useSavedProperties, useExpenses, useMaintenance, useIncome, usePropertyRecords,
 } from '../hooks/useFirestore';
 import type { PropertyInputs } from '../types';
-import { alpha, seriesColors } from '../utils/color';
+import { alpha, seriesColors, textTone } from '../utils/color';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -64,7 +64,7 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 150 }}>
       <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? 'var(--ink-muted)' }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? 'var(--ink-muted)') }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
@@ -196,7 +196,7 @@ export function PortfolioHub() {
           </div>
           <button onClick={() => setShowAdd((v) => !v)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
             {showAdd ? <X size={15} /> : <Plus size={15} />}
             {showAdd ? 'Cancel' : 'Add property'}
           </button>
@@ -218,7 +218,7 @@ export function PortfolioHub() {
           <div className="flex items-center gap-3">
             <button onClick={handleAdd} disabled={adding || !newName.trim()}
               className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-              style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: C.green, border: `1px solid ${alpha(C.green, 27)}` }}>
+              style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
               {adding ? 'Saving…' : 'Save property'}
             </button>
             <p className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
@@ -254,7 +254,7 @@ export function PortfolioHub() {
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)' }}>
-                  <Building2 size={16} style={{ color: C.blue }} />
+                  <Building2 size={16} style={{ color: textTone(C.blue) }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{p.name}</p>
@@ -262,20 +262,20 @@ export function PortfolioHub() {
                     {formatRandShort(p.purchasePrice)}{p.openJobs > 0 ? ` · ${p.openJobs} open job${p.openJobs === 1 ? '' : 's'}` : ''}
                   </p>
                 </div>
-                <ChevronRight size={15} className="opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: C.blue }} />
+                <ChevronRight size={15} className="opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: textTone(C.blue) }} />
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3 text-center">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Income</p>
-                  <p className="text-xs font-bold" style={{ color: C.green }}>{formatRandShort(p.ytdIncome)}</p>
+                  <p className="text-xs font-bold" style={{ color: textTone(C.green) }}>{formatRandShort(p.ytdIncome)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Expenses</p>
-                  <p className="text-xs font-bold" style={{ color: C.orange }}>{formatRandShort(p.ytdExpenses)}</p>
+                  <p className="text-xs font-bold" style={{ color: textTone(C.orange) }}>{formatRandShort(p.ytdExpenses)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ink-subtle)' }}>Net</p>
-                  <p className="text-xs font-bold" style={{ color: p.net >= 0 ? C.green : C.red }}>{formatRandShort(p.net)}</p>
+                  <p className="text-xs font-bold" style={{ color: textTone(p.net >= 0 ? C.green : C.red) }}>{formatRandShort(p.net)}</p>
                 </div>
               </div>
             </Link>
@@ -331,14 +331,14 @@ export function PortfolioHub() {
             <Link key={r.id} to={`/portfolio-hub/${r.propertyId}`}
               className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-note-orange/6"
               style={{ border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-              <CalendarClock size={15} style={{ color: C.orange }} />
+              <CalendarClock size={15} style={{ color: textTone(C.orange) }} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{r.title}</p>
                 <p className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
                   {propertyName(r.propertyId)} · {r.type}
                 </p>
               </div>
-              <span className="text-xs font-semibold" style={{ color: C.orange }}>
+              <span className="text-xs font-semibold" style={{ color: textTone(C.orange) }}>
                 {r.due.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}
               </span>
             </Link>

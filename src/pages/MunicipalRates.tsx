@@ -11,7 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
-import { alpha, RING_OF_FIVE } from '../utils/color';
+import { alpha, RING_OF_FIVE, textTone } from '../utils/color';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
@@ -286,8 +286,8 @@ export function MunicipalRates() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${alpha(C.green, 13)}` }}>
-            <Building2 size={22} style={{ color: C.green }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.green, 13) }}>
+            <Building2 size={22} style={{ color: textTone(C.green) }} />
           </div>
           <div>
             <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>
@@ -304,9 +304,9 @@ export function MunicipalRates() {
       {/* Tariff year badge */}
       <div
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: `${alpha(C.orange, 7)}`, border: `1px solid ${alpha(C.orange, 20)}` }}
+        style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}
       >
-        <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: C.orange }} />
+        <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: textTone(C.orange) }} />
         <span style={{ color: 'var(--ink-muted)' }}>
           Tariffs are approximate 2025/26 estimates for residential properties.
           {estimated && ` ${city.name} rates are estimated — verify with your municipality.`}
@@ -369,7 +369,7 @@ export function MunicipalRates() {
                 <button
                   onClick={() => setCustomRate(null)}
                   className="text-xs px-2 py-1 rounded"
-                  style={{ background: `${alpha(C.orange, 13)}`, color: C.orange }}
+                  style={{ background: alpha(C.orange, 13), color: textTone(C.orange) }}
                 >
                   Reset
                 </button>
@@ -385,9 +385,9 @@ export function MunicipalRates() {
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.teal, 7)}`, border: `1px solid ${alpha(C.teal, 13)}` }}
+            style={{ background: alpha(C.teal, 7), border: `1px solid ${alpha(C.teal, 13)}` }}
           >
-            <Droplets size={13} style={{ color: C.teal }} />
+            <Droplets size={13} style={{ color: textTone(C.teal) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               Average SA household uses 15–20 kL/month.
               First {city.waterTiers[0].upTo} kL free in {city.shortName}.
@@ -402,9 +402,9 @@ export function MunicipalRates() {
           {/* City rebate & rate reference */}
           <div
             className="p-3 rounded-xl text-xs space-y-1"
-            style={{ background: `${alpha(city.color, 7)}`, border: `1px solid ${alpha(city.color, 20)}` }}
+            style={{ background: alpha(city.color, 7), border: `1px solid ${alpha(city.color, 20)}` }}
           >
-            <div className="font-semibold" style={{ color: city.color }}>{city.name}</div>
+            <div className="font-semibold" style={{ color: textTone(city.color) }}>{city.name}</div>
             <div className="flex justify-between" style={{ color: 'var(--ink-muted)' }}>
               <span>Rate in the rand</span>
               <span style={{ color: 'var(--ink)' }}>{city.rateInRand.toFixed(6)}{city.rateEstimated ? '*' : ''}</span>
@@ -431,7 +431,7 @@ export function MunicipalRates() {
           {rebateType === 'indigent' && (
             <div
               className="p-4 rounded-xl text-sm"
-              style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}
+              style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}
             >
               <span style={{ color: 'var(--ink-muted)' }}>
                 Indigent households registered with the municipality receive a full exemption from property rates and
@@ -456,13 +456,13 @@ export function MunicipalRates() {
             if (saving <= 50 || cheapest.name === city.shortName) return null;
             return (
               <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-                style={{ background: `${alpha(C.green, 7)}`, border: `1px solid ${alpha(C.green, 20)}` }}>
-                <TrendingUp size={15} style={{ color: C.green }} />
+                style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
+                <TrendingUp size={15} style={{ color: textTone(C.green) }} />
                 <span style={{ color: 'var(--ink-muted)' }}>
                   Moving to{' '}
-                  <span style={{ color: C.green, fontWeight: 600 }}>{cheapest.name}</span>
+                  <span style={{ color: textTone(C.green), fontWeight: 600 }}>{cheapest.name}</span>
                   {' '}could save you{' '}
-                  <span style={{ color: C.green, fontWeight: 600 }}>{formatRand(saving)}/month</span>
+                  <span style={{ color: textTone(C.green), fontWeight: 600 }}>{formatRand(saving)}/month</span>
                   {' '}({formatRandShort(saving * 12)}/year) on the same property value.
                 </span>
               </div>
@@ -500,7 +500,7 @@ export function MunicipalRates() {
                 ))}
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-semibold" style={{ color: 'var(--ink)' }}>Total</span>
-                  <span className="font-semibold" style={{ color: C.blue }}>{formatRand(billTotal)}</span>
+                  <span className="font-semibold" style={{ color: textTone(C.blue) }}>{formatRand(billTotal)}</span>
                 </div>
               </div>
             </div>
@@ -610,7 +610,7 @@ export function MunicipalRates() {
                     return (
                       <tr key={row.year}>
                         <td className="py-2 pr-4" style={{
-                          color: i === 0 ? C.blue : 'var(--ink)',
+                          color: textTone(i === 0 ? C.blue : 'var(--ink)'),
                           fontWeight: i === 0 ? 600 : 400,
                           borderBottom: '1px solid var(--rule)',
                         }}>
@@ -623,7 +623,7 @@ export function MunicipalRates() {
                           {formatRandShort(row.annual)}
                         </td>
                         <td className="py-2" style={{
-                          color: i === 0 ? 'var(--ink-muted)' : C.red,
+                          color: textTone(i === 0 ? 'var(--ink-muted)' : C.red),
                           borderBottom: '1px solid var(--rule)',
                         }}>
                           {i === 0 ? '--' : `+${formatRand(increase)}/mo`}
@@ -654,10 +654,10 @@ export function MunicipalRates() {
                   <div
                     key={i}
                     className="flex justify-between items-center p-2 rounded-lg"
-                    style={{ background: `${alpha(C.teal, 7)}`, border: `1px solid ${alpha(C.teal, 13)}` }}
+                    style={{ background: alpha(C.teal, 7), border: `1px solid ${alpha(C.teal, 13)}` }}
                   >
                     <span style={{ color: 'var(--ink-muted)' }}>{rangeLabel}</span>
-                    <span style={{ color: tier.rate === 0 ? C.green : 'var(--ink)', fontWeight: 500 }}>
+                    <span style={{ color: textTone(tier.rate === 0 ? C.green : 'var(--ink)'), fontWeight: 500 }}>
                       {tier.rate === 0 ? 'Free' : `R${tier.rate.toFixed(2)}/kL`}
                     </span>
                   </div>
@@ -671,9 +671,9 @@ export function MunicipalRates() {
 
           <div
             className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${alpha(C.blue, 7)}`, border: `1px solid ${alpha(C.blue, 13)}` }}
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}
           >
-            <Info size={13} style={{ color: C.blue }} />
+            <Info size={13} style={{ color: textTone(C.blue) }} />
             <span style={{ color: 'var(--ink-muted)' }}>
               This tool estimates residential property rates only. It excludes electricity usage charges, body corporate levies,
               and special rating area (SRA) levies. Electricity basic connection charges and VAT on services are not included.
