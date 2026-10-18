@@ -175,6 +175,16 @@ export function loanOfferErrors(i: LoanOfferChecked): FieldErrors<keyof LoanOffe
   };
 }
 
+export function bondExtraInputErrors(i: { loan: number; rate: number; term: number; extra: number; annualLumpSum: number }) {
+  return {
+    loan: positiveError(i.loan, 'Enter what you still owe on the bond.'),
+    rate: rangeError(i.rate, 0, 30, 'a rate', '%'),
+    term: rangeError(i.term, 1, 30, 'a term', ' years'),
+    extra: nonNegativeError(i.extra),
+    annualLumpSum: nonNegativeError(i.annualLumpSum),
+  };
+}
+
 export function affordabilityInputErrors(i: AffordabilityInputs): FieldErrors<keyof AffordabilityInputs> {
   return {
     grossMonthlyIncome: positiveError(i.grossMonthlyIncome, 'Enter your income before tax.'),
