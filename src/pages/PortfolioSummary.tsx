@@ -4,16 +4,16 @@ import {
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell,
 } from 'recharts';
-import { MapPin, LogIn, TrendingUp, Building2, Wallet, BarChart3, FileText } from 'lucide-react';
+import { MapPin, LogIn, Building2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import { calcPropertyROI } from '../utils/roi';
 import { formatRand, formatPercent } from '../utils/format';
 import { SectionHeader } from '../components/ui/SectionHeader';
-import { StatCard } from '../components/ui/StatCard';
 import jsPDF from 'jspdf';
 import { seriesColors, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
 import type { ChartTooltipProps } from '../components/charts/tooltipTypes';
 
 const COLORS = seriesColors(8);
@@ -514,28 +514,22 @@ export function PortfolioSummary() {
         </button>
       </div>
 
-      {/* Aggregate stat cards */}
-      <div className="four-col-stats mb-6">
-        <StatCard label="Portfolio Value"   value={formatRand(totals.totalValue, 0)}       icon={Building2}  color="blue" delay={0} />
-        <StatCard label="Total Equity"      value={formatRand(totals.totalEquity, 0)}       icon={TrendingUp} color="green" delay={0.05} sub={`${formatRand(totals.totalDebt, 0)} debt`} />
-        <StatCard label="Monthly Cash Flow" value={formatRand(totals.totalCashFlow, 0)}     icon={Wallet}     color={totals.totalCashFlow >= 0 ? 'green' : 'red'} delay={0.1} sub={`${totals.positive}/${properties.length} positive`} />
-        <StatCard label="Blended Yield"     value={formatPercent(totals.blendedYield)}      icon={BarChart3}  color="orange" delay={0.15} sub="gross, weighted avg" />
-      </div>
-
-      {/* Summary band */}
-      <div className="glass-card-static p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'Cash Invested',      value: formatRand(totals.totalCashRequired, 0), color: 'var(--ink)' },
-          { label: 'Total Debt',         value: formatRand(totals.totalDebt, 0),         color: 'var(--loss)' },
-          { label: 'Positive CF Props',  value: `${totals.positive} / ${properties.length}`, color: 'var(--gain)' },
-          { label: 'Annual Cash Flow',   value: formatRand(totals.totalCashFlow * 12, 0), color: totals.totalCashFlow >= 0 ? 'var(--gain)' : 'var(--loss)' },
-        ].map((s) => (
-          <div key={s.label}>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>{s.label}</p>
-            <p className="text-sm font-bold" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>{s.value}</p>
-          </div>
-        ))}
-      </div>
+      <ResultPanel
+        className="mb-6"
+        label="Equity across your portfolio"
+        value={formatRand(totals.totalEquity, 0)}
+        summary={<>
+          Your {properties.length} propert{properties.length === 1 ? 'y is' : 'ies are'} worth {formatRand(totals.totalValue, 0)} at purchase, with
+          {' '}{formatRand(totals.totalDebt, 0)} borrowed. Together {properties.length === 1 ? 'it brings' : 'they bring'} in {formatRand(totals.totalCashFlow, 0)} a month after costs and the bond
+          {' '}({totals.positive} of {properties.length} cash-positive), at a gross yield of {formatPercent(totals.blendedYield)}. You put in {formatRand(totals.totalCashRequired, 0)} of your own cash.
+        </>}
+        figures={[
+          { label: 'Value at purchase', value: formatRand(totals.totalValue, 0) },
+          { label: 'Borrowed', value: formatRand(totals.totalDebt, 0) },
+          { label: 'Cash flow each month', value: formatRand(totals.totalCashFlow, 0) },
+          { label: 'Gross yield, weighted', value: formatPercent(totals.blendedYield) },
+        ]}
+      />
 
       {/* Charts row */}
       <div className="grid lg:grid-cols-2 gap-5 mb-6">
