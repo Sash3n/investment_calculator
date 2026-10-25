@@ -9,6 +9,7 @@ import { Flame, Target, Zap, Info, DollarSign } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { alpha, textTone } from '../utils/color';
+import { yearsToFire } from '../utils/fire';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const C = {
@@ -58,28 +59,6 @@ interface FireRow {
 }
 
 // ── Core math ─────────────────────────────────────────────────────────────────
-function yearsToFire(
-  currentSavings:   number,
-  monthlyContrib:   number,
-  annualReturn:     number,
-  fireTarget:       number,
-): number {
-  const r = annualReturn / 100 / 12;
-  let balance = currentSavings;
-
-  if (balance >= fireTarget) return 0;
-  if (r === 0) {
-    if (monthlyContrib <= 0) return Infinity;
-    return (fireTarget - balance) / monthlyContrib / 12;
-  }
-
-  for (let month = 1; month <= 12 * 100; month++) {
-    balance = balance * (1 + r) + monthlyContrib;
-    if (balance >= fireTarget) return month / 12;
-  }
-  return Infinity;
-}
-
 function coastFireBalance(
   fireTarget:         number,
   yearsToRetirement:  number,
@@ -95,10 +74,7 @@ function simulate(inp: Inputs): FireRow[] {
   const r       = inp.annualReturnPercent / 100 / 12;
   const infR    = inp.annualInflationPercent / 100;
 
-  // FIRE targets at different SWRs (today's expenses inflation-adjusted to retirement)
   const yearsToRetirement = inp.targetRetirementAge - inp.currentAge;
-  const retirementExpenses = inp.monthlyExpensesInRetirement * 12
-    * Math.pow(1 + infR, Math.max(0, yearsToRetirement));
 
   let balance = inp.currentSavings;
   const maxYears = Math.max(60, yearsToRetirement + 10);
@@ -115,8 +91,8 @@ function simulate(inp: Inputs): FireRow[] {
     const growth = balance - prevBalance - inp.monthlyContribution * 12;
     const inflationFactor = Math.pow(1 + infR, year);
 
-    // Inflation-adjusted expenses for this year
-    const annualExpenses = retirementExpenses;
+    // Expenses for this year, grown by inflation from today
+    const annualExpenses = inp.monthlyExpensesInRetirement * 12 * inflationFactor;
 
     rows.push({
       year,
@@ -137,12 +113,14 @@ function simulate(inp: Inputs): FireRow[] {
 // ── Contribution impact helper ────────────────────────────────────────────────
 function bumpImpact(
   inp:         Inputs,
-  fireTarget:  number,
+  swr:         number,
   bumps:       number[],
 ): { bump: number; years: number; saving: number }[] {
-  const base = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, fireTarget);
+  const years = (monthly: number) => yearsToFire(inp.currentSavings, monthly, inp.annualReturnPercent,
+    inp.monthlyExpensesInRetirement * 12, inp.annualInflationPercent, swr);
+  const base = years(inp.monthlyContribution);
   return bumps.map((bump) => {
-    const y = yearsToFire(inp.currentSavings, inp.monthlyContribution + bump, inp.annualReturnPercent, fireTarget);
+    const y = years(inp.monthlyContribution + bump);
     return { bump, years: y, saving: isFinite(base) && isFinite(y) ? base - y : 0 };
   });
 }
@@ -174,7 +152,8 @@ export function FireCalculator() {
 
   const target4 = retirementAnnualExp / selectedSwr;
 
-  const yrs4  = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, target4);
+  const yrs4  = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent,
+    inp.monthlyExpensesInRetirement * 12, inp.annualInflationPercent, selectedSwr);
 
   const fireAge4  = inp.currentAge + (isFinite(yrs4)  ? yrs4  : 0);
 
@@ -188,7 +167,7 @@ export function FireCalculator() {
   const onTrack4 = balanceAtRetirement >= target4;
 
   // Contribution bump impact (at selected SWR)
-  const bumps = bumpImpact(inp, target4, [500, 1000, 2000, 5000]);
+  const bumps = bumpImpact(inp, selectedSwr, [500, 1000, 2000, 5000]);
 
   // Chart: cap at retirement age + 5 for main chart
   const chartRows = rows.filter((r) => r.age <= inp.targetRetirementAge + 5);
@@ -360,7 +339,8 @@ export function FireCalculator() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {SWR_OPTIONS.map(({ swr, label, sub }) => {
             const target = retirementAnnualExp / swr;
-            const yrs = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, target);
+            const yrs = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent,
+              inp.monthlyExpensesInRetirement * 12, inp.annualInflationPercent, swr);
             const fireAge = inp.currentAge + (isFinite(yrs) ? yrs : Infinity);
             const achieved = isFinite(yrs);
             const isActive = selectedSwr === swr;
@@ -413,7 +393,7 @@ export function FireCalculator() {
           <Zap size={16} className="text-note-blue-ink" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold mb-0.5" style={{ color: textTone(C.blue) }}>Coast FIRE (4% SWR)</p>
+          <p className="text-xs font-bold mb-0.5" style={{ color: textTone(C.blue) }}>Coast FIRE ({(selectedSwr * 100).toFixed(1)}% SWR)</p>
           <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             {formatRand(coastBalance, 0)}
           </p>
