@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const KEY   = 'fincalc_recent';
 const LIMIT = 3;
@@ -9,16 +9,15 @@ export interface RecentEntry {
 }
 
 export function useRecentCalcs(): RecentEntry[] {
-  const [entries, setEntries] = useState<RecentEntry[]>([]);
-
-  useEffect(() => {
+  // Read once when the component mounts
+  const [entries] = useState<RecentEntry[]>(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setEntries(JSON.parse(raw));
+      return raw ? JSON.parse(raw) : [];
     } catch {
-      // ignore
+      return [];
     }
-  }, []);
+  });
 
   return entries;
 }

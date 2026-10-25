@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -55,21 +55,22 @@ export function Affordability() {
 
   // Seed interest rate from live prime once it loads (only if still at default).
   const [rateTouched, setRateTouched] = useState(false);
-  useEffect(() => {
-    if (!liveRate.loading && !rateTouched) {
-      setInputs((p) => ({ ...p, interestRate: liveRate.primeRate }));
-    }
-  }, [liveRate.loading, liveRate.primeRate, rateTouched]);
+  const [seededRate, setSeededRate] = useState<number | null>(null);
+  if (!liveRate.loading && !rateTouched && seededRate !== liveRate.primeRate) {
+    setSeededRate(liveRate.primeRate);
+    setInputs((p) => ({ ...p, interestRate: liveRate.primeRate }));
+  }
 
   // Load preset/snapshot inputs navigated in via router state (e.g. Home scenario presets)
   const location = useLocation();
   const locationState = location.state as { loadedInputs?: AffordabilityInputs } | null;
-  useEffect(() => {
-    if (locationState?.loadedInputs) {
-      setInputs(locationState.loadedInputs);
-      setRateTouched(true);
-    }
-  }, [locationState]);
+  const loadedInputs = locationState?.loadedInputs;
+  const [appliedLoad, setAppliedLoad] = useState<typeof loadedInputs>(undefined);
+  if (loadedInputs && loadedInputs !== appliedLoad) {
+    setAppliedLoad(loadedInputs);
+    setInputs(loadedInputs);
+    setRateTouched(true);
+  }
 
   const result = useMemo(() => calcAffordability(inputs), [inputs]);
   const errors = affordabilityInputErrors(inputs);

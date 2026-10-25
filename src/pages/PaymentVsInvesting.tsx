@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -91,9 +91,13 @@ export function PaymentVsInvesting() {
 
   const location = useLocation();
   const locationState = location.state as { loadedInputs?: InvestingInputs; entryId?: string } | null;
-  useEffect(() => {
-    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
-  }, [locationState]);
+  // Apply inputs handed over by the router (History, presets) once per hand-over
+  const loadedInputs = locationState?.loadedInputs;
+  const [appliedLoad, setAppliedLoad] = useState<typeof loadedInputs>(undefined);
+  if (loadedInputs && loadedInputs !== appliedLoad) {
+    setAppliedLoad(loadedInputs);
+    setInputs(loadedInputs);
+  }
 
   const result = useMemo(() => calcExtraPaymentVsInvesting(inputs), [inputs]);
   useJourneyValues({ loan: inputs.loanBalance, rate: inputs.interestRate, term: inputs.remainingTermYears, extra: inputs.extraMonthlyAmount });
