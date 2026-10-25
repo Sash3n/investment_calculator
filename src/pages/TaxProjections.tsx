@@ -176,13 +176,13 @@ export function TaxProjections() {
       const otherDeductions = inp.annualRates + inp.annualLevies + inp.annualInsurance + repairs + mgmtFee;
       const totalDeductions = bondInterest + otherDeductions;
 
-      // Taxable rental income (ring-fenced: can't go below 0)
-      const taxableRental = Math.max(0, grossRent - totalDeductions);
+      // Taxable rental income; a loss reduces tax on other income (s20A ring-fencing not modelled)
+      const taxableRental = grossRent - totalDeductions;
 
-      // Marginal tax on rental income
-      const taxWithRental  = calcIncomeTax(inp.otherAnnualIncome + taxableRental, inp.ageGroup);
+      // Extra tax from the rental, negative when a loss saves tax
+      const taxWithRental  = calcIncomeTax(Math.max(0, inp.otherAnnualIncome + taxableRental), inp.ageGroup);
       const taxWithout     = calcIncomeTax(inp.otherAnnualIncome, inp.ageGroup);
-      const rentalTax      = Math.max(0, taxWithRental - taxWithout);
+      const rentalTax      = taxWithRental - taxWithout;
 
       // Net rental cash (pre-principal repayment)
       const netCash = grossRent - totalDeductions - rentalTax;
