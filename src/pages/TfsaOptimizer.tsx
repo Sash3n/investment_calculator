@@ -4,14 +4,16 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { Landmark, Shield, TrendingUp, AlertTriangle, Info } from 'lucide-react';
+import { Landmark, Shield, TrendingUp } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, rangeError } from '../utils/validation';
 
 // ── TFSA 2026 Rules ───────────────────────────────────────────────────────────
 const ANNUAL_LIMIT    = 46_000; // SARS 2026/27 budget — increased from R36,000
@@ -229,6 +231,19 @@ export function TfsaOptimizer() {
     taxDrag: Math.round(r.taxableAnnualTax),
   }));
 
+  const errors = {
+    currentAge: rangeError(inp.currentAge, 0, 100, 'an age', ''),
+    annualContribution: inp.annualContribution < 0
+      ? 'Enter zero or more.'
+      : overContrib ? `The yearly limit is ${formatRand(ANNUAL_LIMIT, 0)}. Anything above it is taxed at 40%, so only the limit is counted.` : undefined,
+    existingBalance: nonNegativeError(inp.existingBalance),
+    existingLifetimeUsed: rangeError(inp.existingLifetimeUsed, 0, LIFETIME_LIMIT, 'an amount', ` (the lifetime limit is ${formatRand(LIFETIME_LIMIT, 0)})`),
+    expectedReturnPercent: rangeError(inp.expectedReturnPercent, -20, 30, 'a return', '%'),
+    otherAnnualIncome: nonNegativeError(inp.otherAnnualIncome),
+  };
+  const blocked = errors.currentAge ?? (inp.annualContribution < 0 ? errors.annualContribution : undefined)
+    ?? errors.existingBalance ?? errors.existingLifetimeUsed ?? errors.expectedReturnPercent ?? errors.otherAnnualIncome;
+
   const YEAR_OPTIONS = [5, 10, 15, 20, 25, 30].map((y) => ({ value: String(y), label: `${y} years` }));
 
   return (
@@ -252,12 +267,6 @@ export function TfsaOptimizer() {
               Tax-Free Savings Account · R46,000/year · R500,000 lifetime · SARS 2026/27
             </p>
           </div>
-          <span
-            className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
-          >
-            Zero tax on growth
-          </span>
         </div>
       </motion.div>
 
@@ -317,34 +326,6 @@ export function TfsaOptimizer() {
         </div>
       </motion.div>
 
-      {/* Over-contribution warning */}
-      {overContrib && (
-        <div
-          className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}
-        >
-          <AlertTriangle size={14} className="text-loss-ink mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--loss-ink)' }}>
-            Your annual contribution exceeds the R46,000 SARS limit. Excess contributions are penalised at
-            <strong> 40%</strong>. The calculator caps contributions at R46,000/year. Do not over-contribute.
-          </span>
-        </div>
-      )}
-
-      {/* Info banner */}
-      <div
-        className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}
-      >
-        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--ink-muted)' }}>
-          <strong style={{ color: 'var(--ink)' }}>How the comparison works:</strong> Both TFSA and Taxable
-          start with the same balance and receive the same annual contributions. TFSA grows completely tax-free.
-          Taxable applies 20% dividend withholding tax (or income tax on interest for cash) annually, plus CGT
-          on disposal at the end of the period.
-        </span>
-      </div>
-
       {/* Inputs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
@@ -361,14 +342,14 @@ export function TfsaOptimizer() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="currentAge" label="Current Age" value={inp.currentAge}
+            <InputField id="currentAge" label="Current Age" value={inp.currentAge} error={errors.currentAge}
               onChange={n((v) => ({ currentAge: v }))} suffix="yrs" />
-            <InputField id="annualContrib" label="Annual Contribution" value={inp.annualContribution}
+            <InputField id="annualContrib" label="Annual Contribution" value={inp.annualContribution} error={errors.annualContribution}
               onChange={n((v) => ({ annualContribution: v }))} prefix="R"
               help="Max R46,000/year (SARS 2026/27)" />
-            <InputField id="existingBalance" label="Existing TFSA Balance" value={inp.existingBalance}
+            <InputField id="existingBalance" label="Existing TFSA Balance" value={inp.existingBalance} error={errors.existingBalance}
               onChange={n((v) => ({ existingBalance: v }))} prefix="R" />
-            <InputField id="lifetimeUsed" label="Lifetime Contributions Used" value={inp.existingLifetimeUsed}
+            <InputField id="lifetimeUsed" label="Lifetime Contributions Used" value={inp.existingLifetimeUsed} error={errors.existingLifetimeUsed}
               onChange={n((v) => ({ existingLifetimeUsed: v }))} prefix="R"
               help="How much you've contributed to date" />
           </div>
@@ -387,9 +368,9 @@ export function TfsaOptimizer() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="expectedReturn" label="Expected Annual Return" value={inp.expectedReturnPercent}
+            <InputField id="expectedReturn" label="Expected Annual Return" value={inp.expectedReturnPercent} error={errors.expectedReturnPercent}
               onChange={n((v) => ({ expectedReturnPercent: v }))} suffix="% p.a." step={0.5} />
-            <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome}
+            <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome} error={errors.otherAnnualIncome}
               onChange={n((v) => ({ otherAnnualIncome: v }))} prefix="R"
               help="Sets your marginal tax rate" />
           </div>
@@ -407,37 +388,23 @@ export function TfsaOptimizer() {
         </div>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="TFSA Final Balance"
-          value={formatRand(tfsaFinal, 0)}
-          sub={`After ${inp.projectionYears} years`}
-          color="green"
-          delay={0}
-        />
-        <StatCard
-          label="Taxable Equivalent"
-          value={formatRand(taxableFinal, 0)}
-          sub="Same contributions, after tax"
-          color="blue"
-          delay={0.05}
-        />
-        <StatCard
-          label="Extra Wealth (TFSA)"
-          value={formatRand(extraWealth, 0)}
-          sub="Tax-free advantage"
-          color={extraWealth >= 0 ? 'green' : 'red'}
-          delay={0.1}
-        />
-        <StatCard
-          label="Tax Drag Avoided"
-          value={formatRand(totalTaxSaved, 0)}
-          sub="Annual taxes not paid"
-          color="orange"
-          delay={0.15}
-        />
-      </div>
+      <ResultPanel
+        label={`Extra in the TFSA after ${inp.projectionYears} years`}
+        value={formatRand(extraWealth, 0)}
+        tone={extraWealth > 0 ? 'gain' : 'default'}
+        blocked={blocked}
+        summary={<>
+          Putting {formatRand(Math.min(inp.annualContribution, ANNUAL_LIMIT), 0)} a year into a TFSA grows to {formatRand(tfsaFinal, 0)},
+          against {formatRand(taxableFinal, 0)} in an ordinary account after tax, because there is no {inp.returnType === 'cash' ? 'tax on interest' : 'dividends tax'} or capital gains tax inside it.
+          {remainingLifetime > 0 && ` At this rate you reach the ${formatRand(LIFETIME_LIMIT, 0)} lifetime limit in about ${yearsToLimit} year${yearsToLimit === 1 ? '' : 's'}.`}
+        </>}
+        figures={[
+          { label: 'TFSA', value: formatRand(tfsaFinal, 0) },
+          { label: 'Ordinary account, after tax', value: formatRand(taxableFinal, 0) },
+          { label: 'Tax avoided along the way', value: formatRand(totalTaxSaved, 0) },
+          { label: 'Lifetime allowance left', value: formatRand(remainingLifetime, 0) },
+        ]}
+      />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -611,10 +578,17 @@ export function TfsaOptimizer() {
         ))}
       </div>
 
-      {/* Disclaimer */}
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Projections are illustrative only. TFSA rules per SARS 2026. Not financial advice — consult a CFP or tax practitioner.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Both accounts start with the same balance and get the same contributions, capped at the R46,000 yearly limit and the R500,000 lifetime limit.</>,
+          <>The return of {inp.expectedReturnPercent}% a year is not guaranteed. {inp.returnType === 'cash'
+            ? 'In the ordinary account all of it is interest, taxed at your marginal rate above the yearly interest exemption.'
+            : `In the ordinary account about ${INCOME_YIELD_SPLIT[inp.returnType] ?? 3}% a year is paid out as dividends, which lose 20% dividends tax before being reinvested.`}</>,
+          <>The ordinary account pays capital gains tax on its growth at the end, after the R50,000 yearly exclusion and 40% inclusion, at your marginal rate.</>,
+          <>Contributions above the yearly limit are taxed at 40% by SARS, so the calculator caps them.</>,
+          <>Fees and inflation are not included.</>,
+        ]}
+      />
     </div>
   );
 }
