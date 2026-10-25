@@ -58,9 +58,9 @@ export function ResultPanel({ label, value, summary, figures, tone = 'default', 
           ))}
         </dl>
       )}
-      <p className="text-xs text-ink-subtle mt-4">
+      <div className="text-xs text-ink-subtle mt-4">
         Estimate only. <DisclaimerLink>Read the disclaimer</DisclaimerLink>
-      </p>
+      </div>
     </section>
   );
 }

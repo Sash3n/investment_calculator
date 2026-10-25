@@ -43,23 +43,22 @@ export function useNavPrefs() {
     };
   }, []);
 
+  // Storage is the shared source of truth; writing outside a state updater keeps the
+  // sync event from updating other components while this one renders.
   const toggleFavourite = useCallback((path: string) => {
-    setFavourites((prev) => {
-      const next = prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path];
-      write(FAV_KEY, next);
-      return next;
-    });
+    const prev = read(FAV_KEY);
+    const next = prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path];
+    setFavourites(next);
+    write(FAV_KEY, next);
   }, []);
 
   const isFavourite = useCallback((path: string) => favourites.includes(path), [favourites]);
 
   const recordVisit = useCallback((path: string) => {
     if (path === '/') return; // don't track the dashboard
-    setRecents((prev) => {
-      const next = [path, ...prev.filter((p) => p !== path)].slice(0, MAX_RECENTS);
-      write(RECENT_KEY, next);
-      return next;
-    });
+    const next = [path, ...read(RECENT_KEY).filter((p) => p !== path)].slice(0, MAX_RECENTS);
+    setRecents(next);
+    write(RECENT_KEY, next);
   }, []);
 
   return { favourites, recents, toggleFavourite, isFavourite, recordVisit };
