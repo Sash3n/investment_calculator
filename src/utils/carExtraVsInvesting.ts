@@ -1,4 +1,4 @@
-import { calcPayment } from './mortgage';
+import { balloonInstalment } from './car';
 
 export interface CarScenario {
   loanAmount: number;
@@ -24,37 +24,39 @@ export function calcCarScenario(
 ): CarScenario {
   const loanAmount    = Math.max(0, vehiclePrice - deposit);
   const balloonAmount = vehiclePrice * (balloonPercent / 100);
-  const financedAmount = Math.max(0, loanAmount - balloonAmount);
-  const termYears = termMonths / 12;
+  const balloonDue = Math.min(balloonAmount, loanAmount);
+  const financedAmount = Math.max(0, loanAmount - balloonDue);
 
-  const standardPayment = calcPayment(financedAmount, interestRate, termYears, 12);
+  // The whole loan carries interest; instalments run it down to the balloon
+  const standardPayment = balloonInstalment(loanAmount, interestRate, termMonths, balloonDue);
   const r = interestRate / 100 / 12;
 
-  // Simulate standard amortisation
-  let bal = financedAmount;
+  // Standard: instalments for the term, then the balloon
+  let bal = loanAmount;
   let intStd = 0;
-  for (let m = 0; m < termMonths && bal > 0.01; m++) {
+  for (let m = 0; m < termMonths && bal - balloonDue > 0.01; m++) {
     const interest = bal * r;
     intStd += interest;
-    const principal = Math.min(standardPayment - interest, bal);
-    bal -= principal;
+    bal -= Math.min(standardPayment - interest, bal - balloonDue);
   }
-  const totalStandard = standardPayment * termMonths + balloonAmount;
+  const totalStandard = standardPayment * termMonths + balloonDue;
   const interestStandard = intStd;
 
-  // Simulate with extra payment
-  bal = financedAmount;
+  // With the extra: pay until the whole loan, balloon included, is cleared
+  bal = loanAmount;
   let intExtra = 0;
   let monthsWithExtra = 0;
+  let paidWithExtra = 0;
   for (let m = 0; m < termMonths && bal > 0.01; m++) {
     const interest = bal * r;
     intExtra += interest;
-    const principal = Math.min(standardPayment + extraPayment - interest, bal);
-    bal -= principal;
+    const payment = Math.min(standardPayment + extraPayment, bal + interest);
+    bal -= payment - interest;
+    paidWithExtra += payment;
     monthsWithExtra++;
-    if (bal <= 0.01) break;
   }
-  const totalWithExtra = (standardPayment + extraPayment) * monthsWithExtra + balloonAmount;
+  // Anything left at the end of the term is the (smaller) balloon
+  const totalWithExtra = paidWithExtra + Math.max(0, bal);
   const interestWithExtra = intExtra;
   const interestSaved = Math.max(0, interestStandard - interestWithExtra);
   const monthsSaved = Math.max(0, termMonths - monthsWithExtra);
@@ -84,9 +86,10 @@ export interface CarYearRow {
  * Pay extra on the car loan vs invest the extra.
  *
  * Both routes spend the same each month (standard instalment plus the extra)
- * for the full term, and the balloon falls due at the end in both. In the
- * pay-extra route, once the financed amount is paid off the whole monthly
- * amount is invested at the expected return. Investments pay CGT on their gain
+ * for the full term. In the pay-extra route the extra clears the whole loan,
+ * balloon included, and then the whole monthly amount is invested at the
+ * expected return. Whatever is still owed at the end (the balloon in the
+ * invest route) counts against that route. Investments pay CGT on their gain
  * unless they are in a TFSA.
  */
 export function buildCarComparison(
@@ -104,8 +107,9 @@ export function buildCarComparison(
   const taxRate = isTFSA ? 0 : cgtRate / 100;
   const afterTax = (value: number, contributed: number) => value - Math.max(0, value - contributed) * taxRate;
 
-  let balStd = scenario.financedAmount;
-  let balExtra = scenario.financedAmount;
+  const balloonDue = scenario.loanAmount - scenario.financedAmount;
+  let balStd = scenario.loanAmount;
+  let balExtra = scenario.loanAmount;
   let intStd = 0;
   let intExtra = 0;
   let portfolioA = 0, contributedA = 0;
@@ -114,10 +118,10 @@ export function buildCarComparison(
 
   for (let m = 1; m <= termMonths; m++) {
     // Standard loan: instalment only
-    if (balStd > 0.01) {
+    if (balStd - balloonDue > 0.01) {
       const interest = balStd * loanR;
       intStd += interest;
-      balStd = Math.max(0, balStd - Math.min(scenario.standardPayment - interest, balStd));
+      balStd = Math.max(balloonDue, balStd - Math.min(scenario.standardPayment - interest, balStd - balloonDue));
     }
 
     // Pay-extra route: instalment plus extra until paid off, then invest the lot

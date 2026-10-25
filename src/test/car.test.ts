@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcCarFinance } from '../utils/car';
+import { calcCarFinance, balloonInstalment } from '../utils/car';
 
 const baseInputs = {
   vehiclePrice: 400_000,
@@ -91,5 +91,33 @@ describe('calcCarFinance', () => {
     const result = calcCarFinance(baseInputs);
     // Should be substantially more than just the repayments
     expect(result.totalCostOfOwnership).toBeGreaterThan(result.totalRepayments);
+  });
+});
+
+describe('balloon finance charges interest on the balloon', () => {
+  it('matches the annuity with a balloon left at the end', () => {
+    // R400 000 at 12% over 60 months with R80 000 left over
+    const r = 0.01;
+    const g = Math.pow(1 + r, 60);
+    const expected = ((400_000 - 80_000 / g) * r) / (1 - 1 / g);
+    expect(balloonInstalment(400_000, 12, 60, 80_000)).toBeCloseTo(expected, 2);
+  });
+  it('is higher than an instalment on the loan less the balloon', () => {
+    const withInterestOnBalloon = balloonInstalment(400_000, 12, 60, 80_000);
+    const loanLessBalloon = balloonInstalment(320_000, 12, 60, 0);
+    // The difference is a month's interest on the balloon
+    expect(withInterestOnBalloon - loanLessBalloon).toBeCloseTo(80_000 * 0.01, 0);
+  });
+  it('runs the schedule down to the balloon', () => {
+    const result = calcCarFinance({ ...baseInputs, balloonPercent: 20 });
+    const last = result.amortization[result.amortization.length - 1];
+    expect(last.closingBalance).toBeCloseTo(result.balloonAmount, 0);
+    expect(result.totalRepayments).toBeCloseTo(result.monthlyInstalment * result.amortization.length + result.balloonAmount, 0);
+  });
+  it('a higher bank minimum finishes early and costs less interest', () => {
+    const normal = calcCarFinance(baseInputs);
+    const withMin = calcCarFinance({ ...baseInputs, minimumInstalment: normal.calculatedInstalment + 2_000 });
+    expect(withMin.amortization.length).toBeLessThan(normal.amortization.length);
+    expect(withMin.totalInterest).toBeLessThan(normal.totalInterest);
   });
 });
