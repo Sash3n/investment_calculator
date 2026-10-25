@@ -308,7 +308,7 @@ export function exportMortgagePDF(
 
   // Build annual rows from monthly amortization
   const amort = result.amortization;
-  let annualRows: { year: number; open: number; payment: number; principal: number; interest: number; close: number }[] = [];
+  const annualRows: { year: number; open: number; payment: number; principal: number; interest: number; close: number }[] = [];
   for (let yr = 1; yr <= inputs.termYears; yr++) {
     const months = amort.filter((r) => Math.ceil(r.period / 12) === yr);
     if (!months.length) break;

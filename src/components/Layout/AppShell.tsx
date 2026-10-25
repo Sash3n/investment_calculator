@@ -103,7 +103,7 @@ export function AppShell() {
   const toggleCategory = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...next]));
       return next;
     });

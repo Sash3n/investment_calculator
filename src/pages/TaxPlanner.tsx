@@ -148,13 +148,16 @@ export function TaxPlanner() {
   const toggleUnitExpand = (id: string) =>
     setExpandedUnitIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   const importFromPortfolio = (p: PropertyInputs & { id: string }) => {
     const roi = calcPropertyROI(p);
+    // Unique id without reading the clock: the next free number for this property
+    let n = 1;
+    while (s13Units.some((u) => u.id === `p-${p.id}-${n}`)) n++;
     const unit: S13Unit = {
-      id: `p-${p.id}-${Date.now()}`,
+      id: `p-${p.id}-${n}`,
       name: p.propertyName || 'Portfolio Unit',
       purchasePrice: Math.round(p.purchasePrice * 0.85),
       monthlyRent: p.rentScenario1,
