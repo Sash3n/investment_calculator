@@ -198,7 +198,8 @@ export function RaPlanner() {
 
   // Full retirement lump sum available
   const totalLumpSum       = savingsPotAtRetire + vestedLumpSum;
-  const lumpSumTax         = calcRetirementLumpSumTax(vestedLumpSum); // only vested lump sum uses this table
+  // At retirement the savings pot and the vested third are taxed together with the lump sum table
+  const lumpSumTax         = calcRetirementLumpSumTax(totalLumpSum);
   const netLumpSum         = totalLumpSum - lumpSumTax;
 
   // Total annuity pot (retirement pot + vested annuity portion)
@@ -263,7 +264,7 @@ export function RaPlanner() {
     const rp = row.retirePot;
     const vp = row.vestedPot;
     const vLump = vp / 3;
-    const lumpSumTaxScen = calcRetirementLumpSumTax(vLump);
+    const lumpSumTaxScen = calcRetirementLumpSumTax(vLump + sp);
     const annuityPot = rp + (vp - vLump);
     const monthlyIncomeScen = (annuityPot * (inp.drawdownRatePercent / 100)) / 12;
     return { age, sp, rp, vp, totalWealth: sp + rp + vp, lumpSumTaxScen, annuityPot, monthlyIncomeScen };
@@ -740,7 +741,7 @@ export function RaPlanner() {
         {[
           {
             title: 'Savings Pot (1/3)',
-            body: 'One-third of all new contributions since 1 Sep 2024. Accessible once per tax year, minimum R2,000. Taxed at your marginal income tax rate — not the lump sum table.',
+            body: 'One-third of all new contributions since 1 Sep 2024. Accessible once per tax year, minimum R2,000. Withdrawals before retirement are taxed at your marginal rate; at retirement whatever is left can be taken as cash, taxed with the retirement lump sum table.',
             color: C.green,
           },
           {
