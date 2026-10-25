@@ -14,16 +14,17 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { StatCard } from '../components/ui/StatCard';
 import jsPDF from 'jspdf';
 import { seriesColors, textTone } from '../utils/color';
+import type { ChartTooltipProps } from '../components/charts/tooltipTypes';
 
 const COLORS = seriesColors(8);
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? p.fill) }}>
+      {payload.map((p) => (
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? p.fill ?? 'var(--ink)') }}>
           {p.name}: {typeof p.value === 'number' ? formatRand(p.value, 0) : p.value}
         </p>
       ))}

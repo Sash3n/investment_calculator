@@ -31,6 +31,7 @@ import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 import { textTone } from '../utils/color';
 import { useJourneyValues } from '../journeys/journeyContext';
+import type { ChartTooltipProps } from '../components/charts/tooltipTypes';
 
 const ROWS_PER_PAGE = 24;
 const VIEW_KEY = 'fincalc-mortgage-view';
@@ -58,26 +59,26 @@ const frequencyOptions = [
   { value: 'biweekly', label: 'Bi-Weekly (26×/year)' },
 ];
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
-          {p.name}: {formatRand(p.value)}
+      {payload.map((p) => (
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? 'var(--ink)') }}>
+          {p.name}: {formatRand(Number(p.value))}
         </p>
       ))}
     </div>
   );
 }
 
-function PieTooltip({ active, payload }: any) {
+function PieTooltip({ active, payload }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs">
-      <p style={{ color: textTone(payload[0].payload.fill) }}>{payload[0].name}</p>
-      <p className="text-ink font-bold">{formatRand(payload[0].value)}</p>
+      <p style={{ color: textTone(payload[0].payload?.fill ?? 'var(--ink)') }}>{payload[0].name}</p>
+      <p className="text-ink font-bold">{formatRand(Number(payload[0].value))}</p>
     </div>
   );
 }
