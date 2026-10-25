@@ -58,7 +58,8 @@ export function calcPortfolioTax(
   const totalTaxableIncome = Math.max(0, otherAnnualIncome + netRentalIncome);
   const taxOnTotal = calcIncomeTax(totalTaxableIncome, ageGroup, taxYear);
   const taxOnOtherIncomeOnly = calcIncomeTax(Math.max(0, otherAnnualIncome), ageGroup, taxYear);
-  const taxAttributableToRental = Math.max(0, taxOnTotal - taxOnOtherIncomeOnly);
+  // Negative when a combined rental loss reduces the tax on other income
+  const taxAttributableToRental = taxOnTotal - taxOnOtherIncomeOnly;
 
   const effectiveTaxRateOnRental = netRentalIncome > 0
     ? (taxAttributableToRental / netRentalIncome) * 100

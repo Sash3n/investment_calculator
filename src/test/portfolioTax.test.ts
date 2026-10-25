@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { calcIncomeTax } from '../utils/tax';
 import { calcPortfolioTax } from '../utils/portfolioTax';
 import type { PortfolioRentalProperty, PortfolioTaxInputs } from '../types';
 
@@ -48,7 +49,10 @@ describe('calcPortfolioTax', () => {
     const r = calcPortfolioTax(inputs([loser]), '2027');
     expect(r.netRentalIncome).toBe(-72_000);
     expect(r.totalTaxableIncome).toBe(600_000 - 72_000);
-    expect(r.taxAttributableToRental).toBe(0);
+    // The loss saves tax on the other income, and that saving shows in the cash flow
+    const saving = calcIncomeTax(600_000, 'under65', '2027') - calcIncomeTax(528_000, 'under65', '2027');
+    expect(r.taxAttributableToRental).toBeCloseTo(-saving, 6);
+    expect(r.afterTaxMonthlyCashFlow).toBeCloseTo((-72_000 + saving) / 12, 6);
   });
 
   it('below 5 qualifying units: no Section 13sex', () => {
