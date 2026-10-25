@@ -4,14 +4,17 @@ import {
   AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { Shield, Wallet, TrendingUp, Info, AlertTriangle, PieChart } from 'lucide-react';
+import { Shield, Wallet, Info, PieChart } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcIncomeTax, getMarginalRate } from '../utils/tax';
 import type { AgeGroup } from '../types';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, rangeError } from '../utils/validation';
 
 // ── SARS 2026/27 Constants (effective 1 March 2026) ───────────────────────────
 const RA_PCT_CAP           = 0.275;           // 27.5% of greater of income or remuneration
@@ -271,8 +274,23 @@ export function RaPlanner() {
   }).filter(Boolean);
 
   const retirementAgeValid = inp.retirementAge >= MIN_RETIRE_AGE;
-  const overContrib        = annualContrib > deductionLimit;
-  const utilizationColor   = raUtilisationPct >= 90 ? C.green : raUtilisationPct >= 50 ? C.orange : C.red;
+  const errors = {
+    currentAge: rangeError(inp.currentAge, 18, 100, 'an age', ''),
+    retirementAge: inp.retirementAge <= inp.currentAge
+      ? 'Enter an age after your current age.'
+      : !retirementAgeValid ? `An RA can only pay out from age ${MIN_RETIRE_AGE}, except for disability or emigration.` : undefined,
+    annualGrossIncome: nonNegativeError(inp.annualGrossIncome),
+    monthlyRAContribution: inp.monthlyRAContribution < 0
+      ? 'Enter zero or more.'
+      : excessContrib > 0 ? `${formatRand(excessContrib, 0)} a year is above what you can deduct this year; it carries forward to later years.` : undefined,
+    expectedReturnPercent: rangeError(inp.expectedReturnPercent, -20, 30, 'a return', '%'),
+    vestedBalance: nonNegativeError(inp.vestedBalance),
+    savingsPotBalance: nonNegativeError(inp.savingsPotBalance),
+    retirementPotBalance: nonNegativeError(inp.retirementPotBalance),
+  };
+  const blocked = errors.currentAge ?? (inp.retirementAge <= inp.currentAge ? errors.retirementAge : undefined)
+    ?? errors.annualGrossIncome ?? (inp.monthlyRAContribution < 0 ? errors.monthlyRAContribution : undefined)
+    ?? errors.expectedReturnPercent ?? errors.vestedBalance ?? errors.savingsPotBalance ?? errors.retirementPotBalance;
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -293,106 +311,6 @@ export function RaPlanner() {
               27.5% deduction · 2-Pot system · SARS 2026/27 · Living annuity modelling
             </p>
           </div>
-          <span className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
-            RA cap R430,000
-          </span>
-        </div>
-      </motion.div>
-
-      {/* Retirement age warning */}
-      {!retirementAgeValid && (
-        <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
-          <AlertTriangle size={14} className="text-loss-ink mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--loss-ink)' }}>
-            The minimum RA retirement age in South Africa is <strong>55</strong>. You cannot access your RA before this age (except for disability or formal tax emigration).
-          </span>
-        </div>
-      )}
-
-      {/* Over-contribution warning */}
-      {overContrib && (
-        <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
-          style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
-          <AlertTriangle size={14} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
-          <span style={{ color: 'var(--note-orange-ink)' }}>
-            Your RA contribution of {formatRand(annualContrib, 0)}/year exceeds your deductible limit of {formatRand(deductionLimit, 0)}/year.
-            The excess of <strong>{formatRand(excessContrib, 0)}</strong> is not deductible now — but it carries forward and is deductible in future tax years, and is tax-free when withdrawn at retirement.
-          </span>
-        </div>
-      )}
-
-      {/* SARS subsidy callout */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="glass-card-static p-5"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
-            <TrendingUp size={15} className="text-gain-ink" />
-          </div>
-          <p className="text-sm font-semibold"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-            SARS Subsidy — How Much the Government Pays
-          </p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>Your contribution</p>
-            <p className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-              {formatRand(inp.monthlyRAContribution, 0)}<span className="text-xs font-normal">/mo</span>
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>SARS pays</p>
-            <p className="text-lg font-bold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>
-              {formatRand(monthlyTaxSaving, 0)}<span className="text-xs font-normal">/mo</span>
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>Your actual cost</p>
-            <p className="text-lg font-bold" style={{ color: textTone(C.blue), fontFamily: 'var(--font-display)' }}>
-              {formatRand(effectiveMonthlyCost, 0)}<span className="text-xs font-normal">/mo</span>
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>SARS subsidy</p>
-            <p className="text-lg font-bold" style={{ color: textTone(C.orange), fontFamily: 'var(--font-display)' }}>
-              {formatPercent(sarsSubsidyPct, 0)}
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
-              {marginalRate.toFixed(0)}% marginal bracket
-            </p>
-          </div>
-        </div>
-
-        {/* RA deduction utilisation bar */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span style={{ color: 'var(--ink-muted)' }}>RA deduction utilisation</span>
-            <span className="font-semibold" style={{ color: textTone(utilizationColor) }}>
-              {formatRand(annualContrib, 0)} / {formatRand(deductionLimit, 0)} ({raUtilisationPct.toFixed(0)}%)
-            </span>
-          </div>
-          <div className="h-2 rounded-full overflow-hidden"
-            style={{ background: 'color-mix(in srgb, var(--ink) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: `linear-gradient(90deg, ${C.blue}, ${utilizationColor})` }}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, raUtilisationPct)}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-            />
-          </div>
-          <p className="text-[10px] mt-1" style={{ color: 'var(--ink-subtle)' }}>
-            Annual deduction cap: R430,000 (27.5% of income, whichever is lower) — SARS 2026/27 Budget
-          </p>
         </div>
       </motion.div>
 
@@ -410,15 +328,15 @@ export function RaPlanner() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="currentAge" label="Current Age" value={inp.currentAge}
+            <InputField id="currentAge" label="Current Age" value={inp.currentAge} error={errors.currentAge}
               onChange={n((v) => ({ currentAge: v }))} suffix="yrs" />
-            <InputField id="retirementAge" label="Retirement Age" value={inp.retirementAge}
+            <InputField id="retirementAge" label="Retirement Age" value={inp.retirementAge} error={errors.retirementAge}
               onChange={n((v) => ({ retirementAge: v }))} suffix="yrs" help="Min age 55" />
-            <InputField id="annualIncome" label="Annual Gross Income" value={inp.annualGrossIncome}
+            <InputField id="annualIncome" label="Annual Gross Income" value={inp.annualGrossIncome} error={errors.annualGrossIncome}
               onChange={n((v) => ({ annualGrossIncome: v }))} prefix="R" />
-            <InputField id="monthlyRA" label="Monthly RA Contribution" value={inp.monthlyRAContribution}
+            <InputField id="monthlyRA" label="Monthly RA Contribution" value={inp.monthlyRAContribution} error={errors.monthlyRAContribution}
               onChange={n((v) => ({ monthlyRAContribution: v }))} prefix="R" />
-            <InputField id="expectedReturn" label="Expected Annual Return" value={inp.expectedReturnPercent}
+            <InputField id="expectedReturn" label="Expected Annual Return" value={inp.expectedReturnPercent} error={errors.expectedReturnPercent}
               onChange={n((v) => ({ expectedReturnPercent: v }))} suffix="% p.a." step={0.5} />
             <SelectField id="ageGroup" label="Age Group (Tax Rebates)" value={inp.ageGroup}
               onChange={(v) => setInp((p) => ({ ...p, ageGroup: v as AgeGroup }))}
@@ -438,13 +356,13 @@ export function RaPlanner() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="vestedBalance" label="Vested Pot (pre-Sep 2024)" value={inp.vestedBalance}
+            <InputField id="vestedBalance" label="Vested Pot (pre-Sep 2024)" value={inp.vestedBalance} error={errors.vestedBalance}
               onChange={n((v) => ({ vestedBalance: v }))} prefix="R"
               help="RA savings before 2-Pot split" />
-            <InputField id="savingsPot" label="Savings Pot Balance" value={inp.savingsPotBalance}
+            <InputField id="savingsPot" label="Savings Pot Balance" value={inp.savingsPotBalance} error={errors.savingsPotBalance}
               onChange={n((v) => ({ savingsPotBalance: v }))} prefix="R"
               help="Accessible from age 55" />
-            <InputField id="retirePot" label="Retirement Pot Balance" value={inp.retirementPotBalance}
+            <InputField id="retirePot" label="Retirement Pot Balance" value={inp.retirementPotBalance} error={errors.retirementPotBalance}
               onChange={n((v) => ({ retirementPotBalance: v }))} prefix="R"
               help="Must be annuitised at retirement" />
             <InputField id="drawdown" label="Living Annuity Drawdown" value={inp.drawdownRatePercent}
@@ -455,16 +373,44 @@ export function RaPlanner() {
         </div>
       </div>
 
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total at Retirement" value={formatRand(totalAtRetirement, 0)}
-          sub={`Age ${inp.retirementAge}`} color="green" delay={0} />
-        <StatCard label="Net Lump Sum" value={formatRand(netLumpSum, 0)}
-          sub={`Savings Pot + Vested 1/3 (after tax)`} color="orange" delay={0.05} />
-        <StatCard label="Monthly Income" value={formatRand(monthlyIncome, 0)}
-          sub={`${inp.drawdownRatePercent}% drawdown · living annuity`} color="blue" delay={0.1} />
-        <StatCard label="Cumulative Tax Saved" value={formatRand(totalCumulativeTax, 0)}
-          sub={`Over ${yearsToRetire} years`} color="green" delay={0.15} />
+      <ResultPanel
+        label={`Monthly income from age ${inp.retirementAge}`}
+        value={formatRand(monthlyIncome, 0)}
+        blocked={blocked}
+        summary={<>
+          Your retirement savings could grow to {formatRand(totalAtRetirement, 0)} by age {inp.retirementAge}. You could take
+          {' '}{formatRand(netLumpSum, 0)} in cash after tax (the savings pot and a third of the vested pot) and draw {inp.drawdownRatePercent}% a year
+          from the rest in a living annuity. Contributing {formatRand(inp.monthlyRAContribution, 0)} a month costs you {formatRand(effectiveMonthlyCost, 0)} after
+          {' '}{formatRand(monthlyTaxSaving, 0)} of tax saved.
+          {canFullyCommute && ` Because the total is under ${formatRand(DE_MINIMIS_THRESHOLD, 0)}, you could take it all as cash.`}
+        </>}
+        figures={[
+          { label: `Total at ${inp.retirementAge}`, value: formatRand(totalAtRetirement, 0) },
+          { label: 'Cash after tax', value: formatRand(netLumpSum, 0) },
+          { label: 'Tax saved each month', value: formatRand(monthlyTaxSaving, 0) },
+          { label: 'Tax saved over the years', value: formatRand(totalCumulativeTax, 0) },
+        ]}
+      />
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <BreakdownList
+          title="Each month"
+          lines={[
+            { label: 'Your contribution', value: inp.monthlyRAContribution },
+            { label: 'Tax saved', value: monthlyTaxSaving, kind: 'less', note: `${marginalRate.toFixed(0)}% marginal rate, ${formatPercent(sarsSubsidyPct, 0)} of the contribution` },
+          ]}
+          total={{ label: 'What it costs you', value: effectiveMonthlyCost, note: `You use ${raUtilisationPct.toFixed(0)}% of the ${formatRand(deductionLimit, 0)} you can deduct this year` }}
+        />
+        <BreakdownList
+          title="At retirement"
+          lines={[
+            { label: 'Savings pot', value: savingsPotAtRetire },
+            { label: 'A third of the vested pot', value: vestedLumpSum },
+            { label: 'Tax on the cash', value: lumpSumTax, kind: 'less', note: 'Retirement lump sum table' },
+            { label: 'Left for a living annuity', display: formatRand(totalAnnuityPot, 0) },
+          ]}
+          total={{ label: 'Cash after tax', value: netLumpSum }}
+        />
       </div>
 
       {/* 2-Pot explainer */}
@@ -765,9 +711,15 @@ export function RaPlanner() {
         ))}
       </div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        SARS 2026/27 tax year · RA deduction cap R430,000 · Retirement lump sum tax-free threshold R550,000 · Living annuity 2.5%–17.5% FSCA · Not financial advice — consult a CFP.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Contributions of {formatRand(annualContrib, 0)} a year and the {inp.expectedReturnPercent}% return stay the same until age {inp.retirementAge}. Returns are not guaranteed.</>,
+          <>Contributions are deductible up to 27.5% of income, capped at {formatRand(RA_CAP_2026_27, 0)} a year (SARS 2026/27). This year you can deduct up to {formatRand(deductionLimit, 0)}; any excess carries forward to later years.</>,
+          <>New contributions are split a third to the savings pot and two thirds to the retirement pot. Savings from before September 2024 stay in the vested pot under the old rules.</>,
+          <>At retirement the savings pot and a third of the vested pot can be taken as cash, taxed with the retirement lump sum table (the first R550,000 tax-free over your lifetime). The rest buys a living annuity.</>,
+          <>A living annuity pays between 2.5% and 17.5% of its value a year. Income tax on the annuity, fees and inflation are not included.</>,
+        ]}
+      />
     </div>
   );
 }
