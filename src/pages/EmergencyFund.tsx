@@ -67,12 +67,13 @@ export function EmergencyFund() {
   // Build-up chart
   const chartData = useMemo(() => {
     const months = Math.min(Math.max(monthsToTarget + 6, 24), 120);
+    const rows: { month: number; balance: number; target: number }[] = [];
     let bal = currentSaved;
-    return Array.from({ length: months + 1 }, (_, i) => {
-      const v = { month: i, balance: Math.round(bal), target: Math.round(target) };
-      if (i < months) bal = bal * (1 + monthlyRate) + monthlySave;
-      return v;
-    });
+    for (let i = 0; i <= months; i++) {
+      rows.push({ month: i, balance: Math.round(bal), target: Math.round(target) });
+      bal = bal * (1 + monthlyRate) + monthlySave;
+    }
+    return rows;
   }, [currentSaved, monthlySave, monthlyRate, target, monthsToTarget]);
 
   const recommendedMonths = jobSecurity === 'stable' ? 3 : jobSecurity === 'moderate' ? 6 : 9;

@@ -222,16 +222,17 @@ export function RaPlanner() {
   let raBalance  = inp.vestedBalance + inp.savingsPotBalance + inp.retirementPotBalance;
   let etfBalance = inp.vestedBalance + inp.savingsPotBalance + inp.retirementPotBalance;
 
-  const comparisonChart = rows.map((row) => {
+  const comparisonChart: { label: string; ra: number; etf: number }[] = [];
+  for (const row of rows) {
     raBalance  = row.totalWealth;
     etfBalance = etfBalance * (1 + growthR) + etfAnnualContrib * (1 + growthR / 2)
                  + (etfBalance * divYield) * (1 - divWHT);
-    return {
+    comparisonChart.push({
       label: `${row.age}`,
       ra:    Math.round(raBalance),
       etf:   Math.round(etfBalance),
-    };
-  });
+    });
+  }
 
   // CGT on ETF at retirement
   const etfFinalBalance = comparisonChart[comparisonChart.length - 1]?.etf ?? 0;
