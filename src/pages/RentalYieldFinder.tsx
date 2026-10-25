@@ -15,7 +15,7 @@ import { useJourneyValues } from '../journeys/journeyContext';
 import { ResultPanel } from '../components/results/ResultPanel';
 import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
 import { StatementRow } from '../components/statement/StatementRow';
-import { rentalYieldInputErrors } from '../utils/validation';
+import { rentalYieldInputErrors, rangeError } from '../utils/validation';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -96,6 +96,7 @@ export function RentalYieldFinder() {
   const [maintenancePct,  setMaintenancePct]  = useState(1.0);
   const [agentFeePct,     setAgentFeePct]     = useState(8.5);
   const [vacancyMonths,   setVacancyMonths]   = useState(1);
+  const [appreciationRate, setAppreciationRate] = useState(7);
 
   const loanAmount = Math.max(0, purchasePrice - deposit) + (capitaliseInitiationFee ? initiationFee : 0);
 
@@ -119,12 +120,15 @@ export function RentalYieldFinder() {
   const annualCashFlow   = effectiveAnnualRent - costs.total * 12;
   const monthlyCashFlow  = annualCashFlow / 12;
   const netYield         = purchasePrice > 0 ? (annualCashFlow / purchasePrice) * 100 : 0;
+  // Net yield in the usual sense: rent less running costs, before the bond
+  const netYieldBeforeBond = purchasePrice > 0 ? ((annualCashFlow + costs.bond * 12) / purchasePrice) * 100 : 0;
   const isCashFlowPositive = monthlyCashFlow >= 0;
 
   const errors = rentalYieldInputErrors({
     purchasePrice, deposit, monthlyRent, bondRate, bondTerm, vacancyMonths, initiationFee,
     levy, rates, insurance, effluent, misc, maintenancePct, agentFeePct,
   });
+  const growthError = rangeError(appreciationRate, -20, 30, 'yearly growth', '%');
   const blocked = errors.purchasePrice ?? errors.deposit ?? errors.monthlyRent ?? errors.bondRate ?? errors.bondTerm ?? errors.vacancyMonths ?? errors.agentFeePct;
 
   useJourneyValues({
@@ -162,15 +166,22 @@ export function RentalYieldFinder() {
     });
   }, [costs, agentFeePct, purchasePrice, breakEvenRentActual]);
 
-  // ROI horizons (capital appreciation)
-  const appreciationRate = 7; // % p.a.
+  // ROI horizons: growth in value, bond paid down, and cash flow so far
   const roiData = useMemo(() => {
+    const r = bondRate / 100 / 12;
+    const balanceAfter = (months: number) => {
+      const n = Math.min(months, bondTerm * 12);
+      if (loanAmount <= 0) return 0;
+      if (r === 0) return Math.max(0, loanAmount - costs.bond * n);
+      const growth = Math.pow(1 + r, n);
+      return Math.max(0, loanAmount * growth - costs.bond * (growth - 1) / r);
+    };
     return Array.from({ length: 11 }, (_, yr) => {
       const propertyValue = purchasePrice * Math.pow(1 + appreciationRate / 100, yr);
       const totalRentReceived = effectiveAnnualRent * yr;
       const totalCostsPaid    = costs.total * 12 * yr;
       const netCashFlow       = totalRentReceived - totalCostsPaid;
-      const equity            = propertyValue - loanAmount;
+      const equity            = propertyValue - balanceAfter(yr * 12);
       return {
         year:     `Yr ${yr}`,
         equity:   Math.round(equity),
@@ -178,7 +189,7 @@ export function RentalYieldFinder() {
         total:    Math.round(equity + netCashFlow),
       };
     });
-  }, [purchasePrice, effectiveAnnualRent, costs, loanAmount]);
+  }, [purchasePrice, effectiveAnnualRent, costs, loanAmount, bondRate, bondTerm, appreciationRate]);
 
   // Payslip-style statement of the same figures (monthly averages over a year)
   const statement: StatementData = {
@@ -214,8 +225,10 @@ export function RentalYieldFinder() {
         heading: 'Returns',
         lines: [
           { label: 'Gross yield', display: formatPercent(grossYield, 2) },
-          { label: 'Net yield (after costs and bond)', display: formatPercent(netYield, 2) },
+          { label: 'Net yield (after costs, before the bond)', display: formatPercent(netYieldBeforeBond, 2) },
+          { label: 'Cash yield (after the bond)', display: formatPercent(netYield, 2) },
           { label: 'Break-even rent', display: `${formatRand(breakEvenRentActual, 0)} a month` },
+          { label: 'Break-even yield', display: formatPercent(breakEvenYield, 2) },
         ],
       },
     ],
@@ -259,7 +272,7 @@ export function RentalYieldFinder() {
           { label: 'Gross yield', value: formatPercent(grossYield, 2) },
           { label: 'Net yield, after the bond', value: formatPercent(netYield, 2) },
           { label: 'Break-even rent', value: formatRand(breakEvenRentActual, 0) },
-          { label: 'Break-even yield', value: formatPercent(breakEvenYield, 2) },
+          { label: 'Net yield, before the bond', value: formatPercent(netYieldBeforeBond, 2) },
         ]}
       />
 
@@ -287,6 +300,9 @@ export function RentalYieldFinder() {
               onChange={(v) => setBondTerm(parseFloat(v) || 0)} suffix="yrs" />
             <InputField id="vac" label="Vacancy (months/yr)" value={vacancyMonths} error={errors.vacancyMonths}
               onChange={(v) => setVacancyMonths(parseFloat(v) || 0)} suffix="mo" step={0.5} />
+            <InputField id="growth" label="Property Growth" value={appreciationRate} error={growthError}
+              onChange={(v) => setAppreciationRate(parseFloat(v) || 0)} suffix="% p.a." step={0.5}
+              help="Used for the 10-year projection only" />
           </div>
 
           {/* Upfront costs breakdown */}
@@ -425,7 +441,7 @@ export function RentalYieldFinder() {
           10-Year Investment Projection
         </p>
         <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
-          Equity growth (7% p.a. appreciation) + cumulative net cash flow
+          Equity ({appreciationRate}% growth a year, less what is still owed on the bond) plus cash flow so far
         </p>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={roiData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
@@ -441,7 +457,7 @@ export function RentalYieldFinder() {
           </LineChart>
         </ResponsiveContainer>
         <p className="text-[10px] mt-2" style={{ color: 'var(--ink-subtle)' }}>
-          * Assumes 7% annual appreciation, current rent held constant. Does not account for bond balance reduction.
+          * Assumes {appreciationRate}% growth a year and rent held at today’s level.
         </p>
       </motion.div>
 
@@ -451,7 +467,7 @@ export function RentalYieldFinder() {
           <>Net yield and cash flow are after every cost and the full bond repayment, capital and interest, so they show what lands in your account rather than the return on the property.</>,
           <>Maintenance is {maintenancePct}% of the price a year. The letting agent charges {agentFeePct}% of the full monthly rent.</>,
           <>Transfer duty uses the SARS table in force since 1 April 2025. Bond registration is an estimate of the Deeds Office and attorney fees, not a quote.</>,
-          <>The 10-year projection assumes the property grows in value by {appreciationRate}% a year, rent stays the same and the bond balance does not come down.</>,
+          <>The 10-year projection assumes the property grows in value by {appreciationRate}% a year and rent stays at today’s level. Equity is the value less what is still owed on the bond.</>,
           <>Not included: income tax on rental profit and the bank’s monthly service fee.</>,
         ]}
       />
