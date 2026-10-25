@@ -111,7 +111,7 @@ export function AirbnbVsRental() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-5">
         {/* Inputs */}
         <div className="space-y-4">
           <div className="glass-card p-5 space-y-4">

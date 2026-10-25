@@ -279,7 +279,7 @@ export function TaxPlanner() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5"
+          className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-5"
         >
           {/* Inputs */}
           <div className="glass-card p-5 space-y-4">
@@ -835,7 +835,7 @@ export function TaxPlanner() {
 
           {/* ── 13quat ─────────────────────────────────────────────────────── */}
           {s13Tab === '13quat' && (
-            <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-5">
               {/* Inputs */}
               <div className="glass-card p-5 space-y-4">
                 <SectionHeader title="Section 13quat — UDZ Allowance" icon={Building2} />
@@ -928,7 +928,7 @@ export function TaxPlanner() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5"
+          className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-5"
         >
           {/* Inputs */}
           <div className="glass-card p-5 space-y-4">

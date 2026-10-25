@@ -119,7 +119,7 @@ export function ExitPlanner() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-5">
         {/* Inputs */}
         <div className="glass-card p-5 space-y-4">
           <SectionHeader title="Property & Holding" icon={DoorOpen} />
