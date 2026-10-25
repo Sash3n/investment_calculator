@@ -4,13 +4,15 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { Sunset, TrendingUp, Info, AlertTriangle, Clock, CheckCircle2, ArrowLeftRight } from 'lucide-react';
+import { Sunset, Info, AlertTriangle, CheckCircle2, ArrowLeftRight } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 import {
   calcRetirementIncomeGoal, calcRetirementAffordability,
   simulateRetirementSavings, findRequiredMonthly,
@@ -142,6 +144,21 @@ export function RetirementIncomeGoal() {
     annualReturnPercent, currentSavings, contributionEscalation, swr, annualInflationPercent,
   ]);
 
+  const errors = {
+    currentAge: rangeError(currentAge, 1, 100, 'an age', ''),
+    retirementAge: retirementNotInFuture ? 'Enter an age after your current age.' : rangeError(retirementAge, 1, 100, 'an age', ''),
+    desiredMonthlyIncome: positiveError(desiredMonthlyIncome, 'Enter the monthly income you want in retirement.'),
+    currentMonthlyIncome: positiveError(currentMonthlyIncome, 'Enter your monthly income.'),
+    savingsRatePercent: rangeError(savingsRatePercent, 0, 100, 'a share', '%'),
+    currentSavings: nonNegativeError(currentSavings),
+    annualReturnPercent: rangeError(annualReturnPercent, -20, 50, 'a return', '%'),
+    annualInflationPercent: rangeError(annualInflationPercent, 0, 20, 'inflation', '%'),
+    contributionEscalation: rangeError(contributionEscalation, 0, 30, 'a yearly increase', '%'),
+  };
+  const blocked = errors.currentAge ?? errors.retirementAge
+    ?? (mode === 'income' ? errors.desiredMonthlyIncome : errors.currentMonthlyIncome ?? errors.savingsRatePercent)
+    ?? errors.currentSavings ?? errors.annualReturnPercent ?? errors.annualInflationPercent ?? errors.contributionEscalation;
+
   const shareState: ShareState = {
     mode, currentAge, retirementAge, desiredMonthlyIncome, currentMonthlyIncome, savingsRatePercent, swr,
     currentSavings, annualReturnPercent, annualInflationPercent, contributionEscalation,
@@ -187,16 +204,6 @@ export function RetirementIncomeGoal() {
         ))}
       </div>
 
-      {retirementNotInFuture && (
-        <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-          style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 27)}` }}>
-          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
-          <span style={{ color: 'var(--ink-muted)' }}>
-            Retirement age must be after your current age — using 1 year for this calculation.
-          </span>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Inputs */}
         <div
@@ -207,20 +214,20 @@ export function RetirementIncomeGoal() {
             Your goal
           </h2>
 
-          <InputField id="rig-age" label="Your current age" value={currentAge}
+          <InputField id="rig-age" label="Your current age" value={currentAge} error={errors.currentAge}
             onChange={(v) => setCurrentAge(Number(v))} suffix="yrs" min={1} max={100} />
 
-          <InputField id="rig-retire-age" label="Target retirement age" value={retirementAge}
+          <InputField id="rig-retire-age" label="Target retirement age" value={retirementAge} error={errors.retirementAge}
             onChange={(v) => setRetirementAge(Number(v))} suffix="yrs" min={1} max={100} />
 
           {mode === 'income' ? (
-            <InputField id="rig-income" label="Desired monthly income (today's R)" value={desiredMonthlyIncome}
+            <InputField id="rig-income" label="Desired monthly income (today's R)" value={desiredMonthlyIncome} error={errors.desiredMonthlyIncome}
               onChange={(v) => setDesiredMonthlyIncome(Number(v))} prefix="R" min={0} />
           ) : (
             <>
-              <InputField id="rig-current-income" label="Your current monthly income (R)" value={currentMonthlyIncome}
+              <InputField id="rig-current-income" label="Your current monthly income (R)" value={currentMonthlyIncome} error={errors.currentMonthlyIncome}
                 onChange={(v) => setCurrentMonthlyIncome(Number(v))} prefix="R" min={0} />
-              <InputField id="rig-savings-rate" label="% of income you can invest monthly" value={savingsRatePercent}
+              <InputField id="rig-savings-rate" label="% of income you can invest monthly" value={savingsRatePercent} error={errors.savingsRatePercent}
                 onChange={(v) => setSavingsRatePercent(Number(v))} suffix="%" min={0} max={100} />
             </>
           )}
@@ -247,94 +254,59 @@ export function RetirementIncomeGoal() {
             </div>
           </div>
 
-          <InputField id="rig-savings" label="Current retirement savings (R)" value={currentSavings}
+          <InputField id="rig-savings" label="Current retirement savings (R)" value={currentSavings} error={errors.currentSavings}
             onChange={(v) => setCurrentSavings(Number(v))} prefix="R" min={0} />
 
-          <InputField id="rig-return" label="Expected annual return" value={annualReturnPercent}
+          <InputField id="rig-return" label="Expected annual return" value={annualReturnPercent} error={errors.annualReturnPercent}
             onChange={(v) => setAnnualReturnPercent(Number(v))} suffix="%" min={0} max={50} />
 
-          <InputField id="rig-inflation" label="Inflation rate" value={annualInflationPercent}
+          <InputField id="rig-inflation" label="Inflation rate" value={annualInflationPercent} error={errors.annualInflationPercent}
             onChange={(v) => setAnnualInflationPercent(Number(v))} suffix="%" min={0} max={20} />
 
-          <InputField id="rig-escalation" label="Annual contribution escalation" value={contributionEscalation}
+          <InputField id="rig-escalation" label="Annual contribution escalation" value={contributionEscalation} error={errors.contributionEscalation}
             onChange={(v) => setContributionEscalation(Number(v))} suffix="%" min={0} max={30}
             help="Increase your monthly contribution each year, e.g. with salary growth" />
 
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
-            <Info size={13} style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              {mode === 'income'
-                ? "We inflate your desired income to retirement-year Rands, convert it to a nest egg using your chosen safe withdrawal rate, then solve for the monthly contribution needed to get there."
-                : 'We grow your monthly contribution to a nest egg at retirement, then convert it back to a monthly income using your chosen safe withdrawal rate.'}
-            </span>
-          </div>
         </div>
 
         {/* Results */}
         <div className="lg:col-span-2 space-y-4">
           {mode === 'income' ? (
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Monthly investment needed" value={formatRand(incomeResult.requiredMonthly)} color="blue" icon={TrendingUp} />
-              <StatCard label="Nest egg needed at retirement" value={formatRandShort(incomeResult.lumpSumTarget)} color="green" icon={Sunset} />
-              <StatCard label="Your contributions" value={formatRandShort(totalContrib)} color="blue" icon={TrendingUp} />
-              <StatCard label="Returns (compounding)" value={formatRandShort(totalReturns)} color="green" icon={TrendingUp} />
-            </div>
+            <ResultPanel
+              label="Invest each month"
+              value={formatRand(incomeResult.requiredMonthly, 0)}
+              blocked={blocked}
+              summary={<>
+                To draw {formatRand(desiredMonthlyIncome, 0)} a month in today’s money from age {retirementAge}, you need
+                {' '}{formatRand(incomeResult.lumpSumTarget, 0)} by then ({formatRand(incomeResult.realLumpSumTarget, 0)} in today’s money).
+                Investing {formatRand(incomeResult.requiredMonthly, 0)} a month for {incomeResult.years} years at {annualReturnPercent}% gets you there.
+                {startLaterEffect > 0 && ` Starting 2 years later would mean ${formatRand(startLaterEffect, 0)} more a month.`}
+              </>}
+              figures={[
+                { label: 'Needed at retirement', value: formatRand(incomeResult.lumpSumTarget, 0) },
+                { label: 'You put in', value: formatRand(totalContrib, 0) },
+                { label: 'Growth', value: formatRand(totalReturns, 0) },
+                { label: 'Lasts until', value: depletionAge !== null ? `Age ${depletionAge}` : `Beyond age ${retirementAge + drawdown.length}` },
+              ]}
+            />
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Achievable income (today's R)" value={formatRand(affordResult.achievableMonthlyIncomeToday)} color="blue" icon={TrendingUp} />
-              <StatCard label="Income replacement" value={`${affordResult.incomeReplacementPct.toFixed(0)}%`} color="orange" icon={Sunset} />
-              <StatCard label="Monthly investment" value={formatRand(affordResult.monthlyContribution)} color="blue" icon={TrendingUp} />
-              <StatCard label="Nest egg at retirement" value={formatRandShort(affordResult.finalBalance)} color="green" icon={Sunset} />
-            </div>
-          )}
-
-          {mode === 'income' ? (
-            <div className="p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
-              <span style={{ color: 'var(--ink-muted)' }}>
-                To draw {formatRand(desiredMonthlyIncome)}/month in today's Rands from age {retirementAge}, you'll need a nest egg of{' '}
-                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRandShort(incomeResult.lumpSumTarget)}</span>
-                {' '}by then ({formatRandShort(incomeResult.realLumpSumTarget)} in today's Rands) — that takes{' '}
-                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRand(incomeResult.requiredMonthly)}/month</span>
-                {' '}invested over the next {incomeResult.years} years at {annualReturnPercent}% p.a.
-              </span>
-            </div>
-          ) : (
-            <div className="p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
-              <span style={{ color: 'var(--ink-muted)' }}>
-                Investing {savingsRatePercent}% of your {formatRand(currentMonthlyIncome)}/month income (
-                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRand(affordResult.monthlyContribution)}/month</span>
-                ) from age {currentAge} to {retirementAge} builds a nest egg of{' '}
-                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRandShort(affordResult.finalBalance)}</span>
-                {' '}— enough to support{' '}
-                <span style={{ color: textTone(C.orange), fontWeight: 600 }}>{formatRand(affordResult.achievableMonthlyIncomeToday)}/month</span>
-                {' '}in today's Rands, {affordResult.incomeReplacementPct.toFixed(0)}% of your current income.
-              </span>
-            </div>
-          )}
-
-          {startLaterEffect > 0 && (
-            <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
-              <Clock size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.red) }} />
-              <span style={{ color: 'var(--ink-muted)' }}>
-                {mode === 'income' ? (
-                  <>
-                    If you wait 2 years to start, you would need{' '}
-                    <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterEffect)} more per month</span>
-                    {' '}to reach the same nest egg.
-                  </>
-                ) : (
-                  <>
-                    If you wait 2 years to start, your achievable income drops by{' '}
-                    <span style={{ color: textTone(C.red), fontWeight: 600 }}>{formatRand(startLaterEffect)}/month</span>
-                    {' '}in today's Rands.
-                  </>
-                )}
-              </span>
-            </div>
+            <ResultPanel
+              label="Income you can afford, in today’s money"
+              value={`${formatRand(affordResult.achievableMonthlyIncomeToday, 0)} a month`}
+              blocked={blocked}
+              summary={<>
+                Investing {savingsRatePercent}% of {formatRand(currentMonthlyIncome, 0)} a month ({formatRand(affordResult.monthlyContribution, 0)}) from age
+                {' '}{currentAge} to {retirementAge} builds {formatRand(affordResult.finalBalance, 0)}, enough for this income at a
+                {' '}{(swr * 100).toFixed(1)}% withdrawal rate. That replaces {affordResult.incomeReplacementPct.toFixed(0)}% of your income today.
+                {startLaterEffect > 0 && ` Starting 2 years later would cut it by ${formatRand(startLaterEffect, 0)} a month.`}
+              </>}
+              figures={[
+                { label: 'Saved by retirement', value: formatRand(affordResult.finalBalance, 0) },
+                { label: 'Invested each month', value: formatRand(affordResult.monthlyContribution, 0) },
+                { label: 'Share of income today', value: `${affordResult.incomeReplacementPct.toFixed(0)}%` },
+                { label: 'Lasts until', value: depletionAge !== null ? `Age ${depletionAge}` : `Beyond age ${retirementAge + drawdown.length}` },
+              ]}
+            />
           )}
 
           {/* Chart */}
@@ -468,6 +440,17 @@ export function RetirementIncomeGoal() {
               retirement age from a savings rate) or Wealth Target Planner (target a Rand lump sum directly).
             </span>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              mode === 'income'
+                ? <>Your income goal is grown by {annualInflationPercent}% inflation to retirement, then divided by the {(swr * 100).toFixed(1)}% withdrawal rate to find the amount needed. The monthly investment is solved to reach it.</>
+                : <>Your monthly investment is grown to retirement, then multiplied by the {(swr * 100).toFixed(1)}% withdrawal rate and brought back to today’s money with {annualInflationPercent}% inflation.</>,
+              <>The return of {annualReturnPercent}% a year stays the same before and after retirement, and is not guaranteed.{contributionEscalation > 0 ? ` Contributions rise by ${contributionEscalation}% a year.` : ''}</>,
+              <>In retirement the withdrawals rise with inflation each year while the rest keeps growing.</>,
+              <>Tax, fees and changes in spending are not included.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>
