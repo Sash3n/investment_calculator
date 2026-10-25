@@ -62,12 +62,9 @@ export function VatCalculator() {
       : amount - amount / (1 + VAT_RATE);
     const exclVat = mode === 'add' ? amount           : amount / (1 + VAT_RATE);
     const inclVat = mode === 'add' ? amount + vatAmount : amount;
-    const monthsTillRegistration =
-      annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD
-        ? Math.ceil(((VAT_REG_THRESHOLD - annualTurnover) / annualTurnover) * 12)
-        : 0;
-    return { vatAmount, exclVat, inclVat, monthsTillRegistration };
-  }, [mode, amount, annualTurnover]);
+    return { vatAmount, exclVat, inclVat };
+  }, [mode, amount]);
+  const shareOfThreshold = (annualTurnover / VAT_REG_THRESHOLD) * 100;
 
   const invoiceTotals = useMemo(() => {
     const taxableExcl = lineItems.filter((l) => l.taxable).reduce((s, l) => s + l.amount, 0);
@@ -96,7 +93,6 @@ export function VatCalculator() {
   const assumptions = [
     <>VAT is 15% of the price before VAT. To take VAT out of a price that includes it, divide by 1.15.</>,
     <>From 1 April 2026 you must register once taxable supplies pass {formatRand(VAT_REG_THRESHOLD, 0)} in any 12 months, and you may register from {formatRand(VAT_VOLUNTARY_THRESHOLD, 0)}.</>,
-    <>The estimate of when you reach the threshold is a rough guide based on the turnover you enter.</>,
     <>On an invoice, mark zero-rated and exempt items as not taxable, such as exports, financial services and residential rent.</>,
   ];
 
@@ -203,13 +199,15 @@ export function VatCalculator() {
                   </span>
                 </div>
               )}
-              {annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD && result.monthsTillRegistration > 0 && (
+              {annualTurnover > 0 && annualTurnover < VAT_REG_THRESHOLD && (
                 <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
                   style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 20)}` }}>
                   <Info size={13} style={{ color: textTone(C.orange) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
-                    At this run rate you will hit the VAT threshold in approximately{' '}
-                    {result.monthsTillRegistration} month{result.monthsTillRegistration !== 1 ? 's' : ''}.
+                    Your turnover is {shareOfThreshold.toFixed(0)}% of the threshold, {formatRand(VAT_REG_THRESHOLD - annualTurnover, 0)} below it.
+                    {annualTurnover >= VAT_VOLUNTARY_THRESHOLD
+                      ? ' You may register voluntarily, and must register once taxable supplies in any 12 months pass the threshold.'
+                      : ' You must register once taxable supplies in any 12 months pass the threshold.'}
                   </span>
                 </div>
               )}
