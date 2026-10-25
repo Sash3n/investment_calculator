@@ -177,7 +177,7 @@ export function RetrenchmentCalc() {
           <div className="p-5 rounded-2xl"
             style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
             <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              Retirement lump sum tax table (2025/26)
+              Retirement lump sum tax table (2026/27, unchanged since 2024)
             </h2>
             <div className="space-y-0 text-xs">
               {[

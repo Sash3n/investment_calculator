@@ -9,7 +9,7 @@ export const UIF_MAX_CREDIT_DAYS = 365;
 /** Credit days paid at the income replacement rate; any after this are paid at 20%. */
 export const UIF_FULL_RATE_DAYS = 238;
 
-/** Retirement lump sum table, applied to severance together with earlier lump sums. */
+/** Retirement lump sum table (SARS, unchanged for 2024/25 to 2026/27), applied to severance together with earlier lump sums. */
 export function calcLumpSumTax(lumpSum: number): number {
   if (lumpSum <= 550_000)   return 0;
   if (lumpSum <= 770_000)   return (lumpSum - 550_000) * 0.18;
