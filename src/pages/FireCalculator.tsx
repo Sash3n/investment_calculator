@@ -159,7 +159,9 @@ export function FireCalculator() {
 
   // Coast FIRE at selected SWR
   const coastBalance = coastFireBalance(target4, yearsToRetirement, inp.annualReturnPercent);
-  const coastReached = rows.find((r) => r.balance >= coastBalance);
+  // Coasting from an age means that balance would grow to the FIRE number by the target age on its own
+  const coastReached = rows.find((r) => r.age <= inp.targetRetirementAge
+    && r.balance * Math.pow(1 + inp.annualReturnPercent / 100, inp.targetRetirementAge - r.age) >= target4);
 
   // Balance at target retirement age
   const retirementRow = rows.find((r) => r.age === inp.targetRetirementAge) ?? rows[yearsToRetirement - 1];
