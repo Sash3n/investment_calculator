@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { LogIn, ShieldCheck } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 /**
  * Route guard for signed-in-only sections. Shows a spinner while auth state

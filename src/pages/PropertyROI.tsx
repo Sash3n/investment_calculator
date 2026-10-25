@@ -14,7 +14,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
 import { exportPropertyPDF } from '../utils/pdf';
 import { formatRand, formatPercent } from '../utils/format';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';

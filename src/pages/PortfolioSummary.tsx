@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { MapPin, LogIn, TrendingUp, Building2, Wallet, BarChart3, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import { calcPropertyROI } from '../utils/roi';
 import { formatRand, formatPercent } from '../utils/format';

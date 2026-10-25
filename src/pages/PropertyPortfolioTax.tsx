@@ -17,7 +17,7 @@ import { formatRand, formatRandShort } from '../utils/format';
 import { calcPortfolioTax, S13SEX_MIN_UNITS } from '../utils/portfolioTax';
 import { calcPropertyROI } from '../utils/roi';
 import { TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import type { AgeGroup, PortfolioRentalProperty } from '../types';
 import { alpha, textTone } from '../utils/color';

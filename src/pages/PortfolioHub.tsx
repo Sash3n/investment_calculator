@@ -14,7 +14,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { StatCard } from '../components/ui/StatCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort } from '../utils/format';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import {
   useSavedProperties, useExpenses, useMaintenance, useIncome, usePropertyRecords,
 } from '../hooks/useFirestore';

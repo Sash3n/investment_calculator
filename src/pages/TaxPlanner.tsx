@@ -23,7 +23,7 @@ import {
 } from '../utils/tax';
 import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import { calcPropertyROI } from '../utils/roi';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import { alpha, seriesColors, textTone } from '../utils/color';
 import type {

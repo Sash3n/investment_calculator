@@ -9,7 +9,7 @@ import {
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcPortfolioStress, STRESS_SCENARIOS } from '../utils/stress';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
