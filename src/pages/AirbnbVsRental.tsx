@@ -74,6 +74,7 @@ export function AirbnbVsRental() {
     { name: 'Cleaning', value: -Math.round(result.str.cleaningCosts) },
     { name: 'Management', value: -Math.round(result.str.managementFees) },
     { name: 'Utilities/Extras', value: -Math.round(result.str.extraCosts) },
+    { name: 'Ownership Costs', value: -Math.round(result.str.ownershipCosts) },
     { name: 'Net Income', value: Math.round(result.str.netOperatingIncome) },
   ];
 
@@ -117,6 +118,7 @@ export function AirbnbVsRental() {
             <SectionHeader title="Property" icon={House} />
             <InputField label="Property Value" id="p-value" value={inputs.propertyValue} error={errors.propertyValue} onChange={set((v) => ({ propertyValue: v }))} prefix="R" help="Used for net yield comparison" />
             <InputField label="Monthly Bond Repayment" id="p-bond" value={inputs.monthlyBondCost} error={errors.monthlyBondCost} onChange={set((v) => ({ monthlyBondCost: v }))} prefix="R" help="Applied to both strategies (0 if owned outright)" />
+            <InputField label="Monthly Ownership Costs" id="l-exp" value={inputs.monthlyLtrExpenses} error={errors.monthlyLtrExpenses} onChange={set((v) => ({ monthlyLtrExpenses: v }))} prefix="R" help="Levies, rates, insurance, maintenance: paid under both strategies" />
           </div>
 
           <div className="glass-card p-5 space-y-4">
@@ -135,7 +137,6 @@ export function AirbnbVsRental() {
             <InputField label="Monthly Rent" id="l-rent" value={inputs.monthlyRent} error={errors.monthlyRent} onChange={set((v) => ({ monthlyRent: v }))} prefix="R" />
             <InputField label="Vacancy" id="l-vac" value={inputs.ltrVacancyPercent} error={errors.ltrVacancyPercent} onChange={set((v) => ({ ltrVacancyPercent: v }))} suffix="%" />
             <InputField label="Letting Agent Fee" id="l-mgmt" value={inputs.ltrManagementPercent} error={errors.ltrManagementPercent} onChange={set((v) => ({ ltrManagementPercent: v }))} suffix="%" help="Typically 7–10% of rent" />
-            <InputField label="Monthly Expenses" id="l-exp" value={inputs.monthlyLtrExpenses} error={errors.monthlyLtrExpenses} onChange={set((v) => ({ monthlyLtrExpenses: v }))} prefix="R" help="Levies, rates, insurance, maintenance" />
           </div>
         </div>
 
@@ -205,7 +206,7 @@ export function AirbnbVsRental() {
                   {[
                     { label: 'Gross Annual Revenue', s: result.str.grossRevenue, l: result.ltr.grossRent },
                     { label: 'Platform / Letting Fees', s: -result.str.platformFees - result.str.managementFees, l: -result.ltr.managementFees },
-                    { label: 'Operating Costs', s: -result.str.cleaningCosts - result.str.extraCosts, l: -result.ltr.expenses },
+                    { label: 'Operating Costs', s: -result.str.cleaningCosts - result.str.extraCosts - result.str.ownershipCosts, l: -result.ltr.expenses },
                     { label: 'Net Operating Income', s: result.str.netOperatingIncome, l: result.ltr.netOperatingIncome, bold: true },
                     { label: 'Net Yield', s: result.str.netYield, l: result.ltr.netYield, pct: true },
                     { label: 'Monthly Cash Flow (after bond)', s: result.str.monthlyCashFlow, l: result.ltr.monthlyCashFlow, bold: true },
@@ -258,7 +259,7 @@ export function AirbnbVsRental() {
               <>Net income is shown before the bond so the two are comparable. Cash flow then takes the same bond repayment of {formatRand(inputs.monthlyBondCost, 0)} a month off both.</>,
               <>The Airbnb is booked for {formatPercent(inputs.occupancyPercent, 0)} of the year at {formatRand(inputs.nightlyRate, 0)} a night, with a cleaning bill every {inputs.avgNightsPerStay} nights. Platform and co-host fees are a share of the booking income.</>,
               <>The lease runs all year, less {formatPercent(inputs.ltrVacancyPercent, 0)} vacancy, and the letting agent takes {formatPercent(inputs.ltrManagementPercent, 0)} of the rent collected.</>,
-              <>Levies, rates, insurance and maintenance are only counted in the lease’s monthly expenses. If you would pay them with an Airbnb too, add them to its utilities and extras.</>,
+              <>Levies, rates, insurance and maintenance ({formatRand(inputs.monthlyLtrExpenses, 0)} a month) are paid under both strategies, so they come off both. Airbnb utilities and extras are on top of that.</>,
               <>Rates and costs stay the same all year. Seasonality, income tax and VAT are not included.</>,
             ]}
           />

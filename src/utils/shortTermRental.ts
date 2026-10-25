@@ -25,7 +25,9 @@ export interface STRvsLTRInputs {
   monthlyRent: number;
   ltrVacancyPercent: number;
   ltrManagementPercent: number;  // letting agent % of rent
-  monthlyLtrExpenses: number;    // levies, rates, insurance, maintenance combined
+  // Ownership costs: levies, rates, insurance, maintenance. The owner pays them under
+  // both strategies; the field keeps its old name so saved and shared inputs still load.
+  monthlyLtrExpenses: number;
 }
 
 export interface STRvsLTRResult {
@@ -37,6 +39,7 @@ export interface STRvsLTRResult {
     cleaningCosts: number;
     managementFees: number;
     extraCosts: number;
+    ownershipCosts: number;
     netOperatingIncome: number;  // annual, before bond
     netYield: number;            // NOI / property value
     monthlyCashFlow: number;     // (NOI/12) − bond
@@ -70,14 +73,15 @@ export function calcSTRvsLTR(inputs: STRvsLTRInputs): STRvsLTRResult {
   const cleaningCosts = numberOfStays * cleaningCostPerStay;
   const strManagementFees = grossRevenue * (strManagementPercent / 100);
   const strExtraCosts = monthlyStrExtraCosts * 12;
-  const strNOI = grossRevenue - platformFees - cleaningCosts - strManagementFees - strExtraCosts;
+  const ownershipCosts = monthlyLtrExpenses * 12;
+  const strNOI = grossRevenue - platformFees - cleaningCosts - strManagementFees - strExtraCosts - ownershipCosts;
   const strNetYield = propertyValue > 0 ? (strNOI / propertyValue) * 100 : 0;
   const strMonthlyCashFlow = strNOI / 12 - monthlyBondCost;
 
   // ── Long-term lease ──────────────────────────────────────────
   const grossRent = monthlyRent * 12 * (1 - ltrVacancyPercent / 100);
   const ltrManagementFees = grossRent * (ltrManagementPercent / 100);
-  const ltrExpenses = monthlyLtrExpenses * 12;
+  const ltrExpenses = ownershipCosts;
   const ltrNOI = grossRent - ltrManagementFees - ltrExpenses;
   const ltrNetYield = propertyValue > 0 ? (ltrNOI / propertyValue) * 100 : 0;
   const ltrMonthlyCashFlow = ltrNOI / 12 - monthlyBondCost;
@@ -94,7 +98,7 @@ export function calcSTRvsLTR(inputs: STRvsLTRInputs): STRvsLTRResult {
     (avgNightsPerStay > 0 ? cleaningCostPerStay / avgNightsPerStay : 0);
   let breakEvenOccupancy: number | null = null;
   if (perNightNet > 0) {
-    const nightsNeeded = (ltrNOI + strExtraCosts) / perNightNet;
+    const nightsNeeded = (ltrNOI + strExtraCosts + ownershipCosts) / perNightNet;
     const occ = (nightsNeeded / 365) * 100;
     breakEvenOccupancy = occ >= 0 && occ <= 100 ? Math.round(occ * 10) / 10 : null;
   }
@@ -108,6 +112,7 @@ export function calcSTRvsLTR(inputs: STRvsLTRInputs): STRvsLTRResult {
       cleaningCosts,
       managementFees: strManagementFees,
       extraCosts: strExtraCosts,
+      ownershipCosts,
       netOperatingIncome: strNOI,
       netYield: strNetYield,
       monthlyCashFlow: strMonthlyCashFlow,
