@@ -159,6 +159,8 @@ export function EducationSavings() {
             : isFunded
               ? `Saving ${formatRand(monthlySave, 0)} a month at ${vehicle.rate}% builds ${formatRand(futureValue, 0)}, which is ${formatRand(futureValue - totalFutureCost, 0)} more than you need.`
               : `Saving ${formatRand(monthlySave, 0)} a month at ${vehicle.rate}% builds ${formatRand(futureValue, 0)}, about ${fundedPercent.toFixed(0)}% of the cost.`}
+          {vehicle.taxFree && monthlySave * 12 > vehicle.limit && ` That is more than the TFSA limit of ${formatRand(vehicle.limit, 0)} a year, so the extra would need another account (going over costs 40% tax on the excess).`}
+          {vehicle.taxFree && currentSaved + monthlySave * monthsToStudy > vehicle.cap && ` Your contributions would pass the TFSA lifetime limit of ${formatRand(vehicle.cap, 0)}.`}
         </>}
         figures={[
           { label: 'Total cost', value: formatRand(totalFutureCost, 0) },
