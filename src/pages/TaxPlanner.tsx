@@ -5,13 +5,12 @@ import {
   PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid,
 } from 'recharts';
 import {
-  Receipt, Building2, TrendingUp, Info, AlertCircle,
-  CheckCircle2, XCircle, ChevronDown, ChevronUp, FileText,
+  Receipt, Building2, TrendingUp, Info,
+  ChevronDown, ChevronUp,
   Plus, Trash2, BookOpen, X,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { formatRand, formatPercent, formatRandShort } from '../utils/format';
@@ -26,6 +25,9 @@ import { calcPropertyROI } from '../utils/roi';
 import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import { alpha, seriesColors, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, rangeError } from '../utils/validation';
 import type {
   RentalTaxInputs,
   Section13quatInputs,
@@ -289,52 +291,44 @@ export function TaxPlanner() {
             <SectionHeader title="Rental Income & Deductions" icon={Receipt} />
             <InfoBadge text="Enter annual figures. Deductions must be directly related to producing rental income (SARS Section 25)." />
 
-            <InputField label="Monthly Gross Rent" id="r-rent" value={rental.monthlyGrossRent} onChange={nr((v) => ({ monthlyGrossRent: v }))} prefix="R" />
-            <InputField label="Annual Other Income (Salary etc.)" id="r-other" value={rental.otherAnnualIncome} onChange={nr((v) => ({ otherAnnualIncome: v }))} prefix="R" help="Used to determine your tax bracket" />
+            <InputField label="Monthly Gross Rent" id="r-rent" value={rental.monthlyGrossRent} error={nonNegativeError(rental.monthlyGrossRent)} onChange={nr((v) => ({ monthlyGrossRent: v }))} prefix="R" />
+            <InputField label="Annual Other Income (Salary etc.)" id="r-other" value={rental.otherAnnualIncome} error={nonNegativeError(rental.otherAnnualIncome)} onChange={nr((v) => ({ otherAnnualIncome: v }))} prefix="R" help="Used to determine your tax bracket" />
             <SelectField label="Age Group" id="r-age" value={rental.ageGroup} onChange={(v) => setRental((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} help="Determines rebate applied" />
 
             <div className="border-t pt-4" style={{ borderColor: 'var(--rule)' }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--ink-muted)' }}>Allowable Deductions</p>
               <div className="space-y-3">
-                <InputField label="Annual Bond Interest Paid" id="r-interest" value={rental.annualBondInterest} onChange={nr((v) => ({ annualBondInterest: v }))} prefix="R" help="Interest only — not capital repayment" />
-                <InputField label="Annual Rates & Municipal Taxes" id="r-rates" value={rental.annualRates} onChange={nr((v) => ({ annualRates: v }))} prefix="R" />
-                <InputField label="Annual Levies / Body Corporate" id="r-levies" value={rental.annualLevies} onChange={nr((v) => ({ annualLevies: v }))} prefix="R" />
-                <InputField label="Annual Insurance" id="r-ins" value={rental.annualInsurance} onChange={nr((v) => ({ annualInsurance: v }))} prefix="R" />
-                <InputField label="Annual Repairs & Maintenance" id="r-repairs" value={rental.annualRepairs} onChange={nr((v) => ({ annualRepairs: v }))} prefix="R" help="Repairs only — not capital improvements" />
-                <InputField label="Management Fee" id="r-mgmt" value={rental.managementFeePercent} onChange={nr((v) => ({ managementFeePercent: v }))} suffix="%" help="% of gross annual rent" />
-                <InputField label="Annual Advertising Costs" id="r-adv" value={rental.annualAdvertising} onChange={nr((v) => ({ annualAdvertising: v }))} prefix="R" />
-                <InputField label="Other Annual Deductions" id="r-other-ded" value={rental.otherDeductions} onChange={nr((v) => ({ otherDeductions: v }))} prefix="R" />
+                <InputField label="Annual Bond Interest Paid" id="r-interest" value={rental.annualBondInterest} error={nonNegativeError(rental.annualBondInterest)} onChange={nr((v) => ({ annualBondInterest: v }))} prefix="R" help="Interest only — not capital repayment" />
+                <InputField label="Annual Rates & Municipal Taxes" id="r-rates" value={rental.annualRates} error={nonNegativeError(rental.annualRates)} onChange={nr((v) => ({ annualRates: v }))} prefix="R" />
+                <InputField label="Annual Levies / Body Corporate" id="r-levies" value={rental.annualLevies} error={nonNegativeError(rental.annualLevies)} onChange={nr((v) => ({ annualLevies: v }))} prefix="R" />
+                <InputField label="Annual Insurance" id="r-ins" value={rental.annualInsurance} error={nonNegativeError(rental.annualInsurance)} onChange={nr((v) => ({ annualInsurance: v }))} prefix="R" />
+                <InputField label="Annual Repairs & Maintenance" id="r-repairs" value={rental.annualRepairs} error={nonNegativeError(rental.annualRepairs)} onChange={nr((v) => ({ annualRepairs: v }))} prefix="R" help="Repairs only — not capital improvements" />
+                <InputField label="Management Fee" id="r-mgmt" value={rental.managementFeePercent} error={rangeError(rental.managementFeePercent, 0, 50, 'a fee', '%')} onChange={nr((v) => ({ managementFeePercent: v }))} suffix="%" help="% of gross annual rent" />
+                <InputField label="Annual Advertising Costs" id="r-adv" value={rental.annualAdvertising} error={nonNegativeError(rental.annualAdvertising)} onChange={nr((v) => ({ annualAdvertising: v }))} prefix="R" />
+                <InputField label="Other Annual Deductions" id="r-other-ded" value={rental.otherDeductions} error={nonNegativeError(rental.otherDeductions)} onChange={nr((v) => ({ otherDeductions: v }))} prefix="R" />
               </div>
             </div>
           </div>
 
           {/* Results */}
           <div className="space-y-5">
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <StatCard label="Annual Gross Rent" value={formatRandShort(rentalResult.annualGrossRent)} sub="Before deductions" icon={Receipt} color="blue" delay={0} />
-              <StatCard label="Total Deductions" value={formatRandShort(rentalResult.totalDeductions)} sub="Allowable expenses" icon={FileText} color="orange" delay={0.05} />
-              <StatCard label="Taxable Rental Income" value={formatRandShort(rentalResult.taxableRentalIncome)} sub={rentalResult.bracketLabel} icon={TrendingUp} color="green" delay={0.1} />
-              <StatCard label="Tax on Rental" value={formatRandShort(rentalResult.taxAttributableToRental)} sub={`Effective ${formatPercent(rentalResult.effectiveTaxRateOnRental, 1)}`} icon={AlertCircle} color="red" delay={0.15} />
-            </div>
-
-            {/* Summary banner */}
-            <div
-              className="glass-card-static p-4 rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-4"
-              style={{ border: `1px solid ${alpha(C.green, 20)}`, background: 'color-mix(in srgb, var(--gain) 5%, transparent)' }}
-            >
-              {[
-                { label: 'After-Tax Monthly Cash Flow', value: formatRand(rentalResult.afterTaxMonthlyRentalCashFlow), color: C.green },
-                { label: 'Marginal Rate', value: formatPercent(rentalResult.marginalRate, 0), color: C.orange },
-                { label: 'Effective Tax on Rental', value: formatPercent(rentalResult.effectiveTaxRateOnRental, 1), color: C.red },
-                { label: 'Total Taxable Income', value: formatRandShort(rentalResult.totalTaxableIncome), color: C.blue },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.label}</p>
-                  <p className="text-base font-bold" style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>{item.value}</p>
-                </div>
-              ))}
-            </div>
+            <ResultPanel
+              label={rentalResult.taxAttributableToRental >= 0 ? 'Tax on your rental income' : 'Tax saved by the rental loss'}
+              value={`${formatRand(Math.abs(rentalResult.taxAttributableToRental), 0)} a year`}
+              tone={rentalResult.taxAttributableToRental > 0 ? 'default' : 'gain'}
+              summary={<>
+                {rentalResult.taxableRentalIncome >= 0
+                  ? `Rent of ${formatRand(rentalResult.annualGrossRent, 0)} a year less ${formatRand(rentalResult.totalDeductions, 0)} of deductions leaves ${formatRand(rentalResult.taxableRentalIncome, 0)} of taxable profit, taxed at up to ${formatPercent(rentalResult.marginalRate, 0)} on top of your other income.`
+                  : `Deductions of ${formatRand(rentalResult.totalDeductions, 0)} are more than the ${formatRand(rentalResult.annualGrossRent, 0)} of rent, so the ${formatRand(-rentalResult.taxableRentalIncome, 0)} loss reduces the tax on your other income.`}
+                {' '}After tax that leaves {formatRand(rentalResult.afterTaxMonthlyRentalCashFlow, 0)} a month.
+              </>}
+              figures={[
+                { label: 'Rent a year', value: formatRand(rentalResult.annualGrossRent, 0) },
+                { label: 'Deductions', value: formatRand(rentalResult.totalDeductions, 0) },
+                { label: 'Taxable profit', value: formatRand(rentalResult.taxableRentalIncome, 0) },
+                { label: 'After tax, each month', value: formatRand(rentalResult.afterTaxMonthlyRentalCashFlow, 0) },
+              ]}
+            />
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -443,8 +437,8 @@ export function TaxPlanner() {
                 <div className="glass-card p-5 space-y-4">
                   <SectionHeader title="Section 13sex" icon={Building2} />
                   <InfoBadge text="Own 5+ new, unused residential units rented out. Deduct 5% of building cost (excl. land) for 20 years. Low-cost housing (≤R350K): 10% for 10 years." />
-                  <InputField label="Annual Taxable Income (other income)" id="s-income" value={s13Income} onChange={v => setS13Income(parseFloat(v) || 0)} prefix="R" help="Your income before S13 deduction is applied (e.g. salary)" />
-                  <InputField label="Monthly RA Contribution" id="s-ra" value={s13RA} onChange={v => setS13RA(parseFloat(v) || 0)} prefix="R" help={`Stacks with Section 13 allowance — further reduces taxable income (27.5% of income, max ${formatRandShort(TAX_YEARS[taxYear].retirement.cap)} p.a.)`} />
+                  <InputField label="Annual Taxable Income (other income)" id="s-income" value={s13Income} error={nonNegativeError(s13Income)} onChange={v => setS13Income(parseFloat(v) || 0)} prefix="R" help="Your income before S13 deduction is applied (e.g. salary)" />
+                  <InputField label="Monthly RA Contribution" id="s-ra" value={s13RA} error={nonNegativeError(s13RA)} onChange={v => setS13RA(parseFloat(v) || 0)} prefix="R" help={`Stacks with Section 13 allowance — further reduces taxable income (27.5% of income, max ${formatRandShort(TAX_YEARS[taxYear].retirement.cap)} p.a.)`} />
                   <SelectField label="Age Group" id="s-age" value={s13AgeGroup} onChange={v => setS13AgeGroup(v as AgeGroup)} options={AGE_OPTIONS} />
                 </div>
 
@@ -553,8 +547,8 @@ export function TaxPlanner() {
                       {expanded && (
                         <div className="px-3 pb-3 space-y-3 pt-3" style={{ borderTop: '1px solid var(--rule)' }}>
                           <div className="grid grid-cols-2 gap-3">
-                            <InputField label="Price (excl. land)" id={`u-price-${unit.id}`} value={unit.purchasePrice} onChange={v => updateUnit(unit.id, { purchasePrice: parseFloat(v) || 0 })} prefix="R" help="Building cost only — exclude land value" />
-                            <InputField label="Monthly Rent" id={`u-rent-${unit.id}`} value={unit.monthlyRent} onChange={v => updateUnit(unit.id, { monthlyRent: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Price (excl. land)" id={`u-price-${unit.id}`} value={unit.purchasePrice} error={nonNegativeError(unit.purchasePrice)} onChange={v => updateUnit(unit.id, { purchasePrice: parseFloat(v) || 0 })} prefix="R" help="Building cost only — exclude land value" />
+                            <InputField label="Monthly Rent" id={`u-rent-${unit.id}`} value={unit.monthlyRent} error={nonNegativeError(unit.monthlyRent)} onChange={v => updateUnit(unit.id, { monthlyRent: parseFloat(v) || 0 })} prefix="R" />
                           </div>
                           <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
                             <input
@@ -570,12 +564,12 @@ export function TaxPlanner() {
                           </div>
                           <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Monthly Expenses</p>
                           <div className="grid grid-cols-2 gap-2">
-                            <InputField label="Bond Repayment" id={`u-bond-${unit.id}`} value={unit.monthlyBondRepayment} onChange={v => updateUnit(unit.id, { monthlyBondRepayment: parseFloat(v) || 0 })} prefix="R" />
-                            <InputField label="Levies" id={`u-lev-${unit.id}`} value={unit.monthlyLevies} onChange={v => updateUnit(unit.id, { monthlyLevies: parseFloat(v) || 0 })} prefix="R" />
-                            <InputField label="Rates" id={`u-rates-${unit.id}`} value={unit.monthlyRates} onChange={v => updateUnit(unit.id, { monthlyRates: parseFloat(v) || 0 })} prefix="R" />
-                            <InputField label="Insurance" id={`u-ins-${unit.id}`} value={unit.monthlyInsurance} onChange={v => updateUnit(unit.id, { monthlyInsurance: parseFloat(v) || 0 })} prefix="R" />
-                            <InputField label="Mgmt Fee" id={`u-mgmt-${unit.id}`} value={unit.managementFeePercent} onChange={v => updateUnit(unit.id, { managementFeePercent: parseFloat(v) || 0 })} suffix="%" />
-                            <InputField label="Vacancy" id={`u-vac-${unit.id}`} value={unit.vacancyRate} onChange={v => updateUnit(unit.id, { vacancyRate: parseFloat(v) || 0 })} suffix="%" />
+                            <InputField label="Bond Repayment" id={`u-bond-${unit.id}`} value={unit.monthlyBondRepayment} error={nonNegativeError(unit.monthlyBondRepayment)} onChange={v => updateUnit(unit.id, { monthlyBondRepayment: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Levies" id={`u-lev-${unit.id}`} value={unit.monthlyLevies} error={nonNegativeError(unit.monthlyLevies)} onChange={v => updateUnit(unit.id, { monthlyLevies: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Rates" id={`u-rates-${unit.id}`} value={unit.monthlyRates} error={nonNegativeError(unit.monthlyRates)} onChange={v => updateUnit(unit.id, { monthlyRates: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Insurance" id={`u-ins-${unit.id}`} value={unit.monthlyInsurance} error={nonNegativeError(unit.monthlyInsurance)} onChange={v => updateUnit(unit.id, { monthlyInsurance: parseFloat(v) || 0 })} prefix="R" />
+                            <InputField label="Mgmt Fee" id={`u-mgmt-${unit.id}`} value={unit.managementFeePercent} error={rangeError(unit.managementFeePercent, 0, 50, 'a fee', '%')} onChange={v => updateUnit(unit.id, { managementFeePercent: parseFloat(v) || 0 })} suffix="%" />
+                            <InputField label="Vacancy" id={`u-vac-${unit.id}`} value={unit.vacancyRate} error={rangeError(unit.vacancyRate, 0, 100, 'a vacancy', '%')} onChange={v => updateUnit(unit.id, { vacancyRate: parseFloat(v) || 0 })} suffix="%" />
                           </div>
                         </div>
                       )}
@@ -592,38 +586,27 @@ export function TaxPlanner() {
 
               {/* RIGHT — Results */}
               <div className="space-y-5">
-                {/* Qualification banner */}
-                <div
-                  className="flex items-center gap-3 p-4 rounded-xl"
-                  style={{
-                    background: s13sexResult.qualifies ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--loss) 8%, transparent)',
-                    border: `1px solid ${alpha(s13sexResult.qualifies ? C.green : C.red, 27)}`,
-                  }}
-                >
-                  {s13sexResult.qualifies ? <CheckCircle2 size={20} color={C.green} /> : <XCircle size={20} color={C.red} />}
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: textTone(s13sexResult.qualifies ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
-                      {s13sexResult.qualifies ? 'Qualifies for Section 13sex' : 'Does Not Yet Qualify'}
-                    </p>
-                    {!s13sexResult.qualifies && <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>{s13sexResult.reason}</p>}
-                    {s13sexResult.qualifies && (
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                        {s13sexResult.numberOfUnits} units · {(s13sexResult.deductionRate * 100).toFixed(1)}% eff. rate · up to {s13sexResult.deductionPeriodYears}-year period
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <ResultPanel
+                  label={s13sexResult.qualifies ? 'Section 13sex tax saving each year' : 'Section 13sex'}
+                  value={s13sexResult.qualifies ? formatRand(s13sexResult.annualTaxSaving, 0) : 'Not yet'}
+                  tone={s13sexResult.qualifies ? 'gain' : 'default'}
+                  summary={s13sexResult.qualifies
+                    ? <>
+                        Your {s13sexResult.numberOfUnits} units cost {formatRand(s13sexResult.totalCostExclLand, 0)} excluding land, so you can deduct
+                        {' '}{formatRand(s13sexResult.annualDeduction, 0)} a year for up to {s13sexResult.deductionPeriodYears} years. That saves
+                        {' '}{formatRand(s13sexResult.annualTaxSaving, 0)} a year{s13sexResult.raTaxSaving > 0 ? `, or ${formatRand(s13sexResult.combinedAnnualTaxSaving, 0)} with your retirement annuity` : ''}.
+                      </>
+                    : <>{s13sexResult.reason}</>}
+                  figures={s13sexResult.qualifies ? [
+                    { label: 'Deduction a year', value: formatRand(s13sexResult.annualDeduction, 0) },
+                    { label: 'With your annuity', value: formatRand(s13sexResult.combinedAnnualTaxSaving, 0) },
+                    { label: `Saved over ${s13sexResult.deductionPeriodYears} years`, value: formatRand(s13sexResult.totalTaxSavingOverPeriod, 0) },
+                    { label: 'Tax on your next rand', value: formatPercent(s13sexResult.marginalRate, 0) },
+                  ] : undefined}
+                />
 
                 {s13sexResult.qualifies && (
                   <>
-                    {/* Stat cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      <StatCard label="Total Building Cost" value={formatRandShort(s13sexResult.totalCostExclLand)} sub="Excl. land" icon={Building2} color="blue" delay={0} />
-                      <StatCard label="Annual S13 Deduction" value={formatRandShort(s13sexResult.annualDeduction)} sub="From taxable income" icon={Receipt} color="orange" delay={0.05} />
-                      <StatCard label="Annual Tax Saving" value={formatRandShort(s13sexResult.annualTaxSaving)} sub={`${formatPercent(s13sexResult.marginalRate, 0)} marginal bracket`} icon={TrendingUp} color="green" delay={0.1} />
-                      <StatCard label="S13 + RA Combined" value={formatRandShort(s13sexResult.combinedAnnualTaxSaving)} sub="Total annual saving" icon={CheckCircle2} color="green" delay={0.15} />
-                    </div>
-
                     {/* Tax Impact Summary */}
                     <div className="glass-card-static p-5">
                       <p className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Tax Impact Summary</p>
@@ -844,7 +827,7 @@ export function TaxPlanner() {
                 <SectionHeader title="Section 13quat — UDZ Allowance" icon={Building2} />
                 <InfoBadge text="Accelerated depreciation for buildings in designated Urban Development Zones. Extended to 31 March 2030. Applicable in Joburg, Cape Town, Tshwane, Durban, and others." />
 
-                <InputField label="Building / Renovation Cost" id="q-cost" value={s13quat.buildingCost} onChange={nq((v) => ({ buildingCost: v }))} prefix="R" />
+                <InputField label="Building / Renovation Cost" id="q-cost" value={s13quat.buildingCost} error={nonNegativeError(s13quat.buildingCost)} onChange={nq((v) => ({ buildingCost: v }))} prefix="R" />
                 <SelectField
                   label="Building Category"
                   id="q-type"
@@ -857,7 +840,7 @@ export function TaxPlanner() {
                   ]}
                   help="Determines the depreciation schedule"
                 />
-                <InputField label="Annual Taxable Income" id="q-income" value={s13quat.annualTaxableIncome} onChange={nq((v) => ({ annualTaxableIncome: v }))} prefix="R" help="Before this allowance is applied" />
+                <InputField label="Annual Taxable Income" id="q-income" value={s13quat.annualTaxableIncome} error={nonNegativeError(s13quat.annualTaxableIncome)} onChange={nq((v) => ({ annualTaxableIncome: v }))} prefix="R" help="Before this allowance is applied" />
                 <SelectField label="Age Group" id="q-age" value={s13quat.ageGroup} onChange={(v) => setS13quat((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
 
                 <div className="p-3 rounded-xl text-xs space-y-1" style={{ background: 'color-mix(in srgb, var(--note-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 20%, transparent)' }}>
@@ -870,12 +853,21 @@ export function TaxPlanner() {
 
               {/* Results */}
               <div className="space-y-5">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  <StatCard label="Year 1 Deduction" value={formatRandShort(s13quatResult.year1Deduction)} sub="First year allowance" icon={Building2} color="orange" delay={0} />
-                  <StatCard label="Year 1 Tax Saving" value={formatRandShort(s13quatResult.year1TaxSaving)} sub="Immediate benefit" icon={TrendingUp} color="green" delay={0.05} />
-                  <StatCard label="Total Tax Saving" value={formatRandShort(s13quatResult.totalTaxSaving)} sub="Over full period" icon={CheckCircle2} color="blue" delay={0.1} />
-                  <StatCard label="Depreciation Years" value={`${s13quatResult.schedule.length} yrs`} sub="Full writeoff period" icon={Receipt} color="blue" delay={0.15} />
-                </div>
+                <ResultPanel
+                  label="Tax saved over the write-off period"
+                  value={formatRand(s13quatResult.totalTaxSaving, 0)}
+                  tone="gain"
+                  summary={<>
+                    Spending {formatRand(s13quat.buildingCost, 0)} on an urban development zone building lets you deduct
+                    {' '}{formatRand(s13quatResult.year1Deduction, 0)} in the first year, saving {formatRand(s13quatResult.year1TaxSaving, 0)} straight away,
+                    and the rest over {s13quatResult.schedule.length} years.
+                  </>}
+                  figures={[
+                    { label: 'First-year deduction', value: formatRand(s13quatResult.year1Deduction, 0) },
+                    { label: 'First-year tax saving', value: formatRand(s13quatResult.year1TaxSaving, 0) },
+                    { label: 'Write-off period', value: `${s13quatResult.schedule.length} years` },
+                  ]}
+                />
 
                 {/* Chart */}
                 <div className="glass-card-static p-5">
@@ -952,14 +944,14 @@ export function TaxPlanner() {
 
             <div className="border-t pt-3 space-y-3" style={{ borderColor: 'var(--rule)' }}>
               <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Acquisition</p>
-              <InputField label="Original Purchase Price" id="c-buy" value={cgt.purchasePrice} onChange={nc((v) => ({ purchasePrice: v }))} prefix="R" />
-              <InputField label="Acquisition Costs" id="c-acq" value={cgt.acquisitionCosts} onChange={nc((v) => ({ acquisitionCosts: v }))} prefix="R" help="Transfer duty, bond registration, legal fees, renovations" />
+              <InputField label="Original Purchase Price" id="c-buy" value={cgt.purchasePrice} error={nonNegativeError(cgt.purchasePrice)} onChange={nc((v) => ({ purchasePrice: v }))} prefix="R" />
+              <InputField label="Acquisition Costs" id="c-acq" value={cgt.acquisitionCosts} error={nonNegativeError(cgt.acquisitionCosts)} onChange={nc((v) => ({ acquisitionCosts: v }))} prefix="R" help="Transfer duty, bond registration, legal fees, renovations" />
             </div>
 
             <div className="border-t pt-3 space-y-3" style={{ borderColor: 'var(--rule)' }}>
               <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Disposal</p>
-              <InputField label="Sale Price" id="c-sell" value={cgt.salePrice} onChange={nc((v) => ({ salePrice: v }))} prefix="R" />
-              <InputField label="Sale Costs" id="c-sellcost" value={cgt.saleCostsPercent} onChange={nc((v) => ({ saleCostsPercent: v }))} suffix="%" help="Agent commission (typically 2.5–5%)" />
+              <InputField label="Sale Price" id="c-sell" value={cgt.salePrice} error={nonNegativeError(cgt.salePrice)} onChange={nc((v) => ({ salePrice: v }))} prefix="R" />
+              <InputField label="Sale Costs" id="c-sellcost" value={cgt.saleCostsPercent} error={rangeError(cgt.saleCostsPercent, 0, 20, 'sale costs', '%')} onChange={nc((v) => ({ saleCostsPercent: v }))} suffix="%" help="Agent commission (typically 2.5–5%)" />
             </div>
 
             <div className="border-t pt-3 space-y-3" style={{ borderColor: 'var(--rule)' }}>
@@ -987,41 +979,30 @@ export function TaxPlanner() {
                   Joint ownership (50/50 — splits {formatRandShort(TAX_YEARS[taxYear].cgt.primaryResidenceExclusion)} exclusion, half each)
                 </label>
               </div>
-              <InputField label="Other Annual Taxable Income" id="c-income" value={cgt.otherAnnualTaxableIncome} onChange={nc((v) => ({ otherAnnualTaxableIncome: v }))} prefix="R" help="Salary etc. — CGT inclusion adds on top" />
+              <InputField label="Other Annual Taxable Income" id="c-income" value={cgt.otherAnnualTaxableIncome} error={nonNegativeError(cgt.otherAnnualTaxableIncome)} onChange={nc((v) => ({ otherAnnualTaxableIncome: v }))} prefix="R" help="Salary etc. — CGT inclusion adds on top" />
               <SelectField label="Age Group" id="c-age" value={cgt.ageGroup} onChange={(v) => setCgt((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
             </div>
           </div>
 
           {/* Results */}
           <div className="space-y-5">
-            {/* Winner banner */}
-            <div
-              className="p-4 rounded-xl flex items-center gap-4"
-              style={{
-                background: cgtResult.cgtPayable === 0 ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--loss) 8%, transparent)',
-                border: `1px solid ${alpha(cgtResult.cgtPayable === 0 ? C.green : C.red, 27)}`,
-              }}
-            >
-              {cgtResult.cgtPayable === 0
-                ? <CheckCircle2 size={24} color={C.green} />
-                : <AlertCircle size={24} color={C.red} />}
-              <div>
-                <p className="font-semibold" style={{ color: textTone(cgtResult.cgtPayable === 0 ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
-                  {cgtResult.cgtPayable === 0 ? 'No CGT Payable' : `CGT Due: ${formatRand(cgtResult.cgtPayable)}`}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                  {cgtResult.bracketLabel} · Effective CGT rate: {formatPercent(cgtResult.effectiveCGTRate, 1)} on total gain
-                </p>
-              </div>
-            </div>
-
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <StatCard label="Gross Capital Gain" value={formatRandShort(cgtResult.grossCapitalGain)} sub="Before exclusions" icon={TrendingUp} color="green" delay={0} />
-              <StatCard label="Exclusions Applied" value={formatRandShort(cgtResult.primaryResidenceExclusion + cgtResult.annualExclusion)} sub="Primary res + annual" icon={CheckCircle2} color="blue" delay={0.05} />
-              <StatCard label="CGT Payable" value={formatRandShort(cgtResult.cgtPayable)} sub={`Effective ${formatPercent(cgtResult.effectiveCGTRate, 1)}`} icon={Receipt} color="red" delay={0.1} />
-              <StatCard label="Net Proceeds After CGT" value={formatRandShort(cgtResult.netProceedsAfterCGT)} sub="After sale costs + CGT" icon={TrendingUp} color="green" delay={0.15} />
-            </div>
+            <ResultPanel
+              label="Capital gains tax on the sale"
+              value={formatRand(cgtResult.cgtPayable, 0)}
+              tone={cgtResult.cgtPayable === 0 ? 'gain' : 'default'}
+              summary={<>
+                The gain is {formatRand(cgtResult.grossCapitalGain, 0)} after costs. {formatRand(cgtResult.primaryResidenceExclusion + cgtResult.annualExclusion, 0)} of it is excluded
+                {cgtResult.primaryResidenceExclusion > 0 ? ' (primary residence and yearly exclusions)' : ' (the yearly exclusion)'}, 40% of the rest is added to your income
+                {cgtResult.cgtPayable > 0 ? `, and the tax is ${formatPercent(cgtResult.effectiveCGTRate, 1)} of the whole gain.` : ', and no tax is due.'}
+                {' '}You keep {formatRand(cgtResult.netProceedsAfterCGT, 0)} after sale costs and tax.
+              </>}
+              figures={[
+                { label: 'Gain after costs', value: formatRand(cgtResult.grossCapitalGain, 0) },
+                { label: 'Excluded', value: formatRand(cgtResult.primaryResidenceExclusion + cgtResult.annualExclusion, 0) },
+                { label: 'Tax as a share of the gain', value: formatPercent(cgtResult.effectiveCGTRate, 1) },
+                { label: 'You keep', value: formatRand(cgtResult.netProceedsAfterCGT, 0) },
+              ]}
+            />
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -1122,6 +1103,16 @@ export function TaxPlanner() {
           </div>
         </motion.div>
       )}
+
+      <AssumptionsDrawer
+        items={[
+          <>Income tax uses the SARS tables for the selected tax year. Rental profit, or a loss, is added to your other income; ring-fencing under section 20A is not modelled.</>,
+          <>Section 13sex needs at least five new-and-unused residential units, let out, and allows 5% of the building cost (excluding land) a year for 20 years, or 10% for 10 years for low-cost housing. Allowances are added back to income (recouped) when you sell.</>,
+          <>Section 13quat applies to buildings in an urban development zone: 20% in the first year and 8% a year after that for a new building, or 20% a year over five years for an improvement.</>,
+          <>Capital gains tax uses the R50,000 yearly exclusion, the R3 million primary residence exclusion where it applies, and 40% inclusion at your marginal rate.</>,
+          <>These are estimates, not tax advice. Confirm with a registered tax practitioner.</>,
+        ]}
+      />
     </div>
   );
 }
