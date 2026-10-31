@@ -231,7 +231,7 @@ export function calc13sex(inputs: Section13sexInputs, taxYear: TaxYearId = DEFAU
   const totalCostExclLand = units.reduce((s, u) => s + u.purchasePrice, 0);
   const maxPeriod = Math.max(...units.map(u => u.isLowCostHousing ? 10 : 20));
 
-  // RA deduction: 27.5% of taxable income, max R350k p.a.
+  // RA deduction: 27.5% of taxable income, up to the tax year's annual cap
   const { retirement } = TAX_YEARS[taxYear];
   const raAnnual = raMonthlyContrib * 12;
   const raCap = Math.min(annualTaxableIncome * retirement.rate, retirement.cap);
@@ -369,7 +369,7 @@ export function calcPAYE(inputs: PAYEInputs, taxYear: TaxYearId = DEFAULT_TAX_YE
 
   const grossAnnual = grossMonthly * 12;
 
-  // RA deduction: 27.5% of greater of remuneration or taxable income, max R350,000 p.a.
+  // RA deduction: 27.5% of greater of remuneration or taxable income, up to the tax year's annual cap
   const raAnnual    = raMonthlyContrib * 12;
   const raCap       = Math.min(grossAnnual * retirement.rate, retirement.cap);
   const raDeduction = Math.min(raAnnual, raCap);

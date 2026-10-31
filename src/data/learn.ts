@@ -71,7 +71,7 @@ This is the cost of delay: every year you wait, you need to contribute more to h
         heading: 'Practical SA context',
         body: `The JSE All Share has returned roughly 11-13% per annum over the last 30 years (nominal, before inflation). At 11% nominal and 5.5% inflation, your real return is about 5.2% — which is still enough to double your purchasing power roughly every 14 years.
 
-TFSA accounts let you earn these compound returns completely tax-free (no income tax on interest, no dividends tax, no CGT). Maximising your TFSA contribution (R36 000/year as of 2025/26, lifetime cap R500 000) is usually the first stop for long-term SA investors.`,
+TFSA accounts let you earn these compound returns completely tax-free (no income tax on interest, no dividends tax, no CGT). Maximising your TFSA contribution (R46 000/year from the 2026/27 tax year, lifetime cap R500 000) is usually the first stop for long-term SA investors.`,
       },
     ],
   },
@@ -112,9 +112,9 @@ The rand has depreciated roughly 5-7% per year against the dollar over the last 
       },
       {
         heading: 'TFSA vs RA for ETF investing',
-        body: `TFSA: No tax on growth or withdrawals. Flexible — withdraw any time. R36 000/year contribution limit, R500 000 lifetime cap.
+        body: `TFSA: No tax on growth or withdrawals. Flexible — withdraw any time. R46 000/year contribution limit (from March 2026), R500 000 lifetime cap.
 
-RA: Contributions are tax-deductible (up to 27.5% of income, max R350 000/year). Growth is tax-free inside the fund. But you can't access funds before age 55, and at retirement two-thirds must be used to purchase an annuity.
+RA: Contributions are tax-deductible (up to 27.5% of income, max R430 000/year from 2026/27). Growth is tax-free inside the fund. But you can't access funds before age 55, and at retirement two-thirds must be used to purchase an annuity.
 
 For most people under 45: max the TFSA first (tax-free, flexible), then use an RA for the deduction benefit once the TFSA is maxed.`,
       },
@@ -137,10 +137,10 @@ TFSA (Tax-Free Savings Account):
 • Contributions are from after-tax money (no upfront deduction).
 • All growth — interest, dividends, capital gains — is permanently tax-free.
 • Withdraw at any time, no penalties.
-• Contribution limit: R36 000/year, R500 000 lifetime.
+• Contribution limit: R46 000/year (from March 2026), R500 000 lifetime.
 
 Retirement Annuity (RA):
-• Contributions are tax-deductible up to 27.5% of taxable income (max R350 000/year) — you save tax now.
+• Contributions are tax-deductible up to 27.5% of taxable income (max R430 000/year from 2026/27) — you save tax now.
 • Growth inside the fund is tax-free.
 • Can't withdraw before age 55 (with limited exceptions).
 • At retirement: one-third can be taken as a lump sum (partly tax-free), two-thirds must buy an annuity.`,
@@ -161,7 +161,7 @@ Also, the TFSA's R500 000 lifetime cap means you should start early: the sooner 
       {
         heading: 'A practical rule of thumb',
         body: `1. Emergency fund first (3-6 months expenses in a money market account).
-2. Max TFSA (R36 000/year) — prioritise this before 30.
+2. Max TFSA (R46 000/year) — prioritise this before 30.
 3. If marginal rate is ≥ 31%: contribute to RA up to the point where your taxable income drops to the next bracket.
 4. Any remaining savings: discretionary unit trusts or ETFs (JSE-listed for rand-denominated offshore exposure).`,
       },
@@ -253,9 +253,9 @@ This is why the "tax threshold" — the income below which you owe no tax — is
         heading: 'UIF and other deductions',
         body: `UIF (Unemployment Insurance Fund): 1% of gross salary, capped at a monthly remuneration ceiling of R17 712 — meaning max UIF contribution is R177.12/month. Your employer matches this contribution.
 
-Medical Aid Credits: reduce your tax liability by a fixed amount per month (R364 for the main member, R246 for each additional adult dependant, and R246 for the first two child dependants as of 2025/26). These come off your tax bill directly, not just your taxable income.
+Medical Aid Credits: reduce your tax liability by a fixed amount per month (for 2026/27: R376 each for the main member and the first dependant, and R254 for each additional dependant). These come off your tax bill directly, not just your taxable income.
 
-Retirement fund contributions: up to 27.5% of the greater of remuneration or taxable income (max R350 000/year) are deductible, reducing the gross income on which your PAYE is calculated.`,
+Retirement fund contributions: up to 27.5% of the greater of remuneration or taxable income (max R430 000/year from 2026/27) are deductible, reducing the gross income on which your PAYE is calculated.`,
       },
     ],
   },
@@ -274,13 +274,13 @@ Retirement fund contributions: up to 27.5% of the greater of remuneration or tax
 
 Assets subject to CGT: shares, unit trusts, ETFs (held outside a TFSA/RA), investment property, business assets, cryptocurrency, and most other capital assets.
 
-Assets exempt from CGT: your primary residence (up to R2 million gain per person, R3 million per person for properties owned jointly or post 1 Oct 2001 base), personal use assets, payouts from life policies, and assets inside a TFSA or RA.`,
+Assets exempt from CGT: your primary residence (the first R3 million of the gain from 1 March 2026; R2 million before that), personal use assets, payouts from life policies, and assets inside a TFSA or RA.`,
       },
       {
         heading: 'How CGT is calculated',
         body: `Step 1: Calculate the gross capital gain = proceeds minus base cost (what you paid, plus costs of acquisition and disposal).
 
-Step 2: Subtract the annual exclusion: R40 000 for individuals (2025/26). This resets every year and cannot be carried forward.
+Step 2: Subtract the annual exclusion: R50 000 for individuals from 2026/27 (R40 000 before). This resets every year and cannot be carried forward.
 
 Step 3: Apply the inclusion rate: 40% for individuals. So only 40% of the net gain is added to your taxable income.
 
@@ -291,7 +291,7 @@ Effective maximum CGT rate = 45% (top marginal rate) × 40% (inclusion) = 18% of
       },
       {
         heading: 'The primary residence exclusion',
-        body: `If you sell your primary residence (the home you ordinarily live in), the first R2 million of the gain is excluded entirely. A couple who both qualify and jointly own the property can exclude up to R3 million of a combined gain (R2M for the first spouse, R1M for the second — the rules are complex, get professional advice for large gains).
+        body: `If you sell your primary residence (the home you ordinarily live in), the first R3 million of the gain is excluded entirely (R2 million for disposals before 1 March 2026). If you own the home jointly, the exclusion is shared in proportion to each owner's share, so get professional advice for large gains.
 
 If you've used part of your home to earn income (home office, Airbnb), a proportional part of the gain loses the exclusion.`,
       },

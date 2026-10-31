@@ -451,8 +451,8 @@ export function PaymentVsInvesting() {
               SA Tax Note
             </p>
             <p className="text-xs text-ink-muted leading-relaxed" style={{ fontFamily: 'var(--font-text)' }}>
-              Capital Gains Tax (CGT) in South Africa applies only to gains above the R40,000 annual exclusion.
-              The calculation uses a {inputs.cgtRate}% effective CGT rate (40% inclusion × marginal rate).
+              Capital Gains Tax (CGT) in South Africa applies only to gains above the annual exclusion (R50,000 from 2026/27).
+              To stay conservative, this calculation ignores the exclusion and taxes the whole gain at a {inputs.cgtRate}% effective CGT rate (40% inclusion × marginal rate).
               Bond interest savings are effectively a tax-free, guaranteed return equal to your interest rate.
               ETF returns shown are average historical returns — actual returns may vary.
               Consult a qualified financial advisor before making investment decisions.

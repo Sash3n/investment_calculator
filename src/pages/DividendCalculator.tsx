@@ -381,7 +381,7 @@ export function DividendCalculator() {
                 {' '}This plan keeps an extra <strong style={{ color: 'var(--ink)' }}>{formatRand(tfsaSaving, 0)}</strong> over {inp.years} years vs a taxable account.
               </p>
               <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
-                Remember TFSA limits: R36,000/year and R500,000 lifetime in contributions.
+                Remember TFSA limits: R46,000/year (from March 2026) and R500,000 lifetime in contributions.
               </p>
             </div>
           )}

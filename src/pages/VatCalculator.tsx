@@ -16,7 +16,10 @@ const C = {
 };
 
 const VAT_RATE          = 0.15;
-const VAT_REG_THRESHOLD = 1_000_000;
+// SARS Budget 2026: compulsory registration above R2.3m of taxable supplies in
+// 12 months (was R1m), voluntary above R120 000 (was R50 000), from 1 April 2026.
+const VAT_REG_THRESHOLD = 2_300_000;
+const VAT_VOLUNTARY_THRESHOLD = 120_000;
 
 interface LineItem {
   id:          number;
@@ -179,7 +182,7 @@ export function VatCalculator() {
                   style={{ background: alpha(C.red, 7), border: `1px solid ${alpha(C.red, 20)}` }}>
                   <Receipt size={13} style={{ color: textTone(C.red) }} />
                   <span style={{ color: 'var(--ink-muted)' }}>
-                    Your turnover exceeds R1,000,000 — you must register for VAT within 21 business days.
+                    Your turnover exceeds {formatRand(VAT_REG_THRESHOLD, 0)}, so you must register for VAT within 21 business days.
                   </span>
                 </div>
               )}
@@ -208,8 +211,8 @@ export function VatCalculator() {
                 <div className="space-y-0 text-xs">
                   {[
                     ['VAT rate',                         '15%'],
-                    ['Mandatory registration threshold', 'R1,000,000 / 12 months'],
-                    ['Voluntary registration threshold', 'R50,000 / 12 months'],
+                    ['Mandatory registration threshold', `${formatRand(VAT_REG_THRESHOLD, 0)} / 12 months`],
+                    ['Voluntary registration threshold', `${formatRand(VAT_VOLUNTARY_THRESHOLD, 0)} / 12 months`],
                     ['VAT return periods',               'Monthly or bi-monthly'],
                     ['Penalty for late registration',    '10% of VAT owed'],
                   ].map(([label, val]) => (
