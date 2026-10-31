@@ -4,14 +4,16 @@ import {
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
-import { TrendingUp, Receipt, Building2, Info } from 'lucide-react';
+import { TrendingUp, Receipt, Building2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
-import { alpha, textTone } from '../utils/color';
+import { textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const CGT_ANNUAL_EXCLUSION = 50_000;
@@ -176,13 +178,13 @@ export function TaxProjections() {
       const otherDeductions = inp.annualRates + inp.annualLevies + inp.annualInsurance + repairs + mgmtFee;
       const totalDeductions = bondInterest + otherDeductions;
 
-      // Taxable rental income (ring-fenced: can't go below 0)
-      const taxableRental = Math.max(0, grossRent - totalDeductions);
+      // Taxable rental income; a loss reduces tax on other income (s20A ring-fencing not modelled)
+      const taxableRental = grossRent - totalDeductions;
 
-      // Marginal tax on rental income
-      const taxWithRental  = calcIncomeTax(inp.otherAnnualIncome + taxableRental, inp.ageGroup);
+      // Extra tax from the rental, negative when a loss saves tax
+      const taxWithRental  = calcIncomeTax(Math.max(0, inp.otherAnnualIncome + taxableRental), inp.ageGroup);
       const taxWithout     = calcIncomeTax(inp.otherAnnualIncome, inp.ageGroup);
-      const rentalTax      = Math.max(0, taxWithRental - taxWithout);
+      const rentalTax      = taxWithRental - taxWithout;
 
       // Net rental cash (pre-principal repayment)
       const netCash = grossRent - totalDeductions - rentalTax;
@@ -224,12 +226,25 @@ export function TaxProjections() {
   const totalNetCash    = last?.cumulativeNetCash  ?? 0;
   const breakEvenYear   = rows.find((r) => r.cumulativeNetCash >= 0)?.year ?? null;
 
-  // Best exit year = highest (netProceedsAtExit + cumulativeNetCash - purchasePrice)
-  const bestExit = rows.reduce((best, r) => {
-    const totalReturn = r.netProceedsAtExit + r.cumulativeNetCash - inp.purchasePrice;
-    const bestReturn  = best.netProceedsAtExit + best.cumulativeNetCash - inp.purchasePrice;
-    return totalReturn > bestReturn ? r : best;
-  }, rows[0]);
+  const errors = {
+    purchasePrice: positiveError(inp.purchasePrice, 'Enter the price of the property.'),
+    loanAmount: inp.loanAmount < 0
+      ? 'Enter zero or more.'
+      : inp.loanAmount > inp.purchasePrice ? 'The loan can\u2019t be more than the price.' : undefined,
+    interestRatePercent: rangeError(inp.interestRatePercent, 0, 30, 'a rate', '%'),
+    loanTermYears: rangeError(inp.loanTermYears, 1, 30, 'a term', ' years'),
+    annualPropertyGrowthPercent: rangeError(inp.annualPropertyGrowthPercent, -20, 30, 'yearly growth', '%'),
+    saleCostsPercent: rangeError(inp.saleCostsPercent, 0, 20, 'sale costs', '%'),
+    monthlyRentYear1: positiveError(inp.monthlyRentYear1, 'Enter the monthly rent.'),
+    annualRentEscalationPercent: rangeError(inp.annualRentEscalationPercent, -20, 30, 'a yearly increase', '%'),
+    annualRates: nonNegativeError(inp.annualRates),
+    annualLevies: nonNegativeError(inp.annualLevies),
+    annualInsurance: nonNegativeError(inp.annualInsurance),
+    annualRepairsPercent: rangeError(inp.annualRepairsPercent, 0, 10, 'repairs', '%'),
+    managementFeePercent: rangeError(inp.managementFeePercent, 0, 50, 'a fee', '%'),
+    otherAnnualIncome: nonNegativeError(inp.otherAnnualIncome),
+  };
+  const blocked = Object.values(errors).find(Boolean);
 
   // ── Chart data ─────────────────────────────────────────────────────────────
   const annualChartData = rows.map((r) => ({
@@ -267,26 +282,8 @@ export function TaxProjections() {
               Multi-year rental tax forecast · SARS 2026 brackets · CGT at each exit point
             </p>
           </div>
-          <span
-            className="ml-auto text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
-          >
-            2026 Tax Year
-          </span>
         </div>
       </motion.div>
-
-      {/* Info banner */}
-      <div
-        className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}
-      >
-        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--ink-muted)' }}>
-          Shows how your rental tax liability changes year-by-year as rent escalates and bond interest deductions decrease —
-          plus CGT if you sold at each year. <strong style={{ color: 'var(--ink)' }}>Net Rental Profit</strong> = Gross Rent − All Deductible Costs − Tax (principal repayment excluded — it builds equity).
-        </span>
-      </div>
 
       {/* Inputs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -303,17 +300,17 @@ export function TaxProjections() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="purchasePrice" label="Purchase Price" value={inp.purchasePrice}
+            <InputField id="purchasePrice" label="Purchase Price" value={inp.purchasePrice} error={errors.purchasePrice}
               onChange={n((v) => ({ purchasePrice: v }))} prefix="R" />
-            <InputField id="loanAmount" label="Loan Amount" value={inp.loanAmount}
+            <InputField id="loanAmount" label="Loan Amount" value={inp.loanAmount} error={errors.loanAmount}
               onChange={n((v) => ({ loanAmount: v }))} prefix="R" />
-            <InputField id="interestRate" label="Interest Rate" value={inp.interestRatePercent}
+            <InputField id="interestRate" label="Interest Rate" value={inp.interestRatePercent} error={errors.interestRatePercent}
               onChange={n((v) => ({ interestRatePercent: v }))} suffix="%" step={0.25} />
-            <InputField id="loanTerm" label="Loan Term" value={inp.loanTermYears}
+            <InputField id="loanTerm" label="Loan Term" value={inp.loanTermYears} error={errors.loanTermYears}
               onChange={n((v) => ({ loanTermYears: v }))} suffix="yrs" />
-            <InputField id="propertyGrowth" label="Property Growth" value={inp.annualPropertyGrowthPercent}
+            <InputField id="propertyGrowth" label="Property Growth" value={inp.annualPropertyGrowthPercent} error={errors.annualPropertyGrowthPercent}
               onChange={n((v) => ({ annualPropertyGrowthPercent: v }))} suffix="% p.a." step={0.5} />
-            <InputField id="saleCosts" label="Sale Costs" value={inp.saleCostsPercent}
+            <InputField id="saleCosts" label="Sale Costs" value={inp.saleCostsPercent} error={errors.saleCostsPercent}
               onChange={n((v) => ({ saleCostsPercent: v }))} suffix="%" step={0.5} />
           </div>
         </div>
@@ -330,21 +327,21 @@ export function TaxProjections() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="monthlyRent" label="Monthly Rent (Yr 1)" value={inp.monthlyRentYear1}
+            <InputField id="monthlyRent" label="Monthly Rent (Yr 1)" value={inp.monthlyRentYear1} error={errors.monthlyRentYear1}
               onChange={n((v) => ({ monthlyRentYear1: v }))} prefix="R" />
-            <InputField id="rentEscalation" label="Rent Escalation" value={inp.annualRentEscalationPercent}
+            <InputField id="rentEscalation" label="Rent Escalation" value={inp.annualRentEscalationPercent} error={errors.annualRentEscalationPercent}
               onChange={n((v) => ({ annualRentEscalationPercent: v }))} suffix="% p.a." step={0.5} />
-            <InputField id="annualRates" label="Annual Rates" value={inp.annualRates}
+            <InputField id="annualRates" label="Annual Rates" value={inp.annualRates} error={errors.annualRates}
               onChange={n((v) => ({ annualRates: v }))} prefix="R" />
-            <InputField id="annualLevies" label="Annual Levies" value={inp.annualLevies}
+            <InputField id="annualLevies" label="Annual Levies" value={inp.annualLevies} error={errors.annualLevies}
               onChange={n((v) => ({ annualLevies: v }))} prefix="R" />
-            <InputField id="annualInsurance" label="Annual Insurance" value={inp.annualInsurance}
+            <InputField id="annualInsurance" label="Annual Insurance" value={inp.annualInsurance} error={errors.annualInsurance}
               onChange={n((v) => ({ annualInsurance: v }))} prefix="R" />
-            <InputField id="repairsPercent" label="Repairs (% of value)" value={inp.annualRepairsPercent}
+            <InputField id="repairsPercent" label="Repairs (% of value)" value={inp.annualRepairsPercent} error={errors.annualRepairsPercent}
               onChange={n((v) => ({ annualRepairsPercent: v }))} suffix="%" step={0.25} />
-            <InputField id="mgmtFee" label="Management Fee" value={inp.managementFeePercent}
+            <InputField id="mgmtFee" label="Management Fee" value={inp.managementFeePercent} error={errors.managementFeePercent}
               onChange={n((v) => ({ managementFeePercent: v }))} suffix="%" step={0.5} />
-            <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome}
+            <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome} error={errors.otherAnnualIncome}
               onChange={n((v) => ({ otherAnnualIncome: v }))} prefix="R" />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -358,70 +355,24 @@ export function TaxProjections() {
         </div>
       </div>
 
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Total Rental Tax"
-          value={formatRand(totalRentalTax, 0)}
-          sub={`Over ${inp.projectionYears} years`}
-          color="red"
-          delay={0}
-        />
-        <StatCard
-          label="Net Rental Profit"
-          value={formatRand(totalNetCash, 0)}
-          sub="After tax &amp; deductions"
-          color={totalNetCash >= 0 ? 'green' : 'red'}
-          delay={0.05}
-        />
-        <StatCard
-          label="CGT at Exit"
-          value={formatRand(last?.cgtAtExit ?? 0, 0)}
-          sub={`Year ${inp.projectionYears} sale`}
-          color="orange"
-          delay={0.1}
-        />
-        <StatCard
-          label={breakEvenYear ? `Break-even Year ${breakEvenYear}` : 'No break-even'}
-          value={breakEvenYear ? `Year ${breakEvenYear}` : '—'}
-          sub="Cumulative net cash ≥ 0"
-          color="blue"
-          delay={0.15}
-        />
-      </div>
-
-      {/* Best exit callout */}
-      {bestExit && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap"
-          style={{ background: 'color-mix(in srgb, var(--gain) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}
-        >
-          <div>
-            <p className="text-xs font-semibold mb-0.5" style={{ color: textTone(C.green) }}>
-              Optimal Exit: Year {bestExit.year}
-            </p>
-            <p className="text-[11px]" style={{ color: 'var(--ink-muted)' }}>
-              Highest combined return (net sale proceeds + cumulative rental profit − purchase price)
-            </p>
-          </div>
-          <div className="flex items-center gap-6 flex-shrink-0">
-            <div className="text-right">
-              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Net Proceeds</p>
-              <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
-                {formatRand(bestExit.netProceedsAtExit, 0)}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Total Return</p>
-              <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
-                {formatRand(bestExit.netProceedsAtExit + bestExit.cumulativeNetCash - inp.purchasePrice, 0)}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      <ResultPanel
+        label={`Rental profit after tax over ${inp.projectionYears} years`}
+        value={formatRand(totalNetCash, 0)}
+        tone={totalNetCash >= 0 ? 'gain' : 'loss'}
+        blocked={blocked}
+        summary={<>
+          Over {inp.projectionYears} years the rental {totalNetCash >= 0 ? `brings in ${formatRand(totalNetCash, 0)} more than it costs` : `costs ${formatRand(-totalNetCash, 0)} more than it brings in`}, after running costs, bond interest and
+          {' '}{totalRentalTax >= 0 ? `${formatRand(totalRentalTax, 0)} of tax` : `a tax saving of ${formatRand(-totalRentalTax, 0)} from the losses`}.
+          {last && ` Selling in year ${last.year} for ${formatRand(last.propertyValue, 0)} would cost ${formatRand(last.cgtAtExit, 0)} in capital gains tax and leave ${formatRand(last.netProceedsAtExit, 0)} before repaying the bond.`}
+          {breakEvenYear ? ` The running total turns positive in year ${breakEvenYear}.` : ''}
+        </>}
+        figures={[
+          { label: totalRentalTax >= 0 ? 'Tax on the rent' : 'Tax saved by losses', value: formatRand(Math.abs(totalRentalTax), 0) },
+          { label: `Capital gains tax in year ${inp.projectionYears}`, value: formatRand(last?.cgtAtExit ?? 0, 0) },
+          { label: 'Sale after costs and tax', value: formatRand(last?.netProceedsAtExit ?? 0, 0) },
+          { label: 'Running total positive', value: breakEvenYear ? `Year ${breakEvenYear}` : 'Not in this period' },
+        ]}
+      />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -562,16 +513,13 @@ export function TaxProjections() {
             <tbody>
               {rows.map((r, i) => {
                 const totalReturn = r.netProceedsAtExit + r.cumulativeNetCash - inp.purchasePrice;
-                const isOptimal   = bestExit?.year === r.year;
                 return (
                   <tr key={r.year} style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
-                    background: isOptimal
-                      ? 'color-mix(in srgb, var(--gain) 6%, transparent)'
-                      : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
+                    background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: textTone(isOptimal ? C.green : 'var(--note-blue)') }}>
-                      Y{r.year}{isOptimal ? ' ★' : ''}
+                    <td className="py-2 px-3 font-bold" style={{ color: textTone('var(--note-blue)') }}>
+                      Y{r.year}
                     </td>
                     <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.propertyValue, 0)}
@@ -601,10 +549,15 @@ export function TaxProjections() {
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Projections are illustrative estimates only. Tax rates based on SARS 2026 tax year. Not financial advice — consult a registered tax practitioner before making decisions.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Rent starts at {formatRand(inp.monthlyRentYear1, 0)} a month and rises {inp.annualRentEscalationPercent}% a year. Rates, levies and insurance stay the same; repairs are {inp.annualRepairsPercent}% of the price a year and the agent takes {inp.managementFeePercent}% of the rent.</>,
+          <>Bond interest is deductible and falls as the bond is repaid. Repaying the capital is not a cost: it builds your equity.</>,
+          <>Rental profit is taxed at your marginal rate on top of {formatRand(inp.otherAnnualIncome, 0)} other income (SARS 2026/27 tables). A loss reduces the tax on your other income; ring-fencing under section 20A is not modelled.</>,
+          <>Capital gains tax on a sale uses the R50,000 yearly exclusion and 40% inclusion. The property grows {inp.annualPropertyGrowthPercent}% a year and selling costs {inp.saleCostsPercent}% of the price.</>,
+          <>Sale figures are before repaying the bond. Inflation is not included.</>,
+        ]}
+      />
     </div>
   );
 }

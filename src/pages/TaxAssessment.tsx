@@ -5,12 +5,11 @@ import {
 } from 'recharts';
 import {
   FileText, Wallet, HeartPulse, Receipt, Info,
-  CheckCircle2, AlertCircle, TrendingUp, Search, Plus, Trash2, ArrowDown, BookOpen,
+  TrendingUp, Search, Plus, Trash2, ArrowDown, BookOpen,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
@@ -22,6 +21,10 @@ import {
 } from '../data/sarsCodes';
 import type { TaxAssessmentInputs, AgeGroup } from '../types';
 import { alpha, SERIES, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { StatementRow } from '../components/statement/StatementRow';
+import { nonNegativeError } from '../utils/validation';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -94,19 +97,11 @@ function RandTooltip({ active, payload }: { active?: boolean; payload?: { value:
   );
 }
 
-function BreakdownRow({ label, value, bold, color, negative }: {
+function BreakdownRow({ label, value, bold, negative }: {
   label: string; value: number; bold?: boolean; color?: string; negative?: boolean;
 }) {
-  return (
-    <div className="flex items-center justify-between py-1.5 text-sm" style={{
-      borderBottom: bold ? 'none' : '1px dashed var(--rule)',
-    }}>
-      <span style={{ color: textTone(color ?? 'var(--ink-muted)'), fontWeight: bold ? 700 : 400 }}>{label}</span>
-      <span style={{ color: textTone(color ?? (bold ? 'var(--ink)' : 'var(--ink-muted)')), fontWeight: bold ? 700 : 500 }}>
-        {negative && value > 0 ? '− ' : ''}{formatRand(Math.abs(value), 0)}
-      </span>
-    </div>
-  );
+  const row = <StatementRow line={{ label, value: Math.abs(value), kind: negative ? 'less' : undefined }} strong={bold} />;
+  return bold ? <div className="border-t border-rule mt-1 pt-1">{row}</div> : row;
 }
 
 /** TaxTim-style "enter your IRP5 by source code" panel. */
@@ -268,6 +263,21 @@ export function TaxAssessment() {
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
 
   const yearLabel = TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label ?? taxYear;
+  const errors = {
+    annualSalary: nonNegativeError(inputs.annualSalary),
+    travelAllowance: nonNegativeError(inputs.travelAllowance),
+    otherIncome: nonNegativeError(inputs.otherIncome),
+    interestIncome: nonNegativeError(inputs.interestIncome),
+    localDividends: nonNegativeError(inputs.localDividends),
+    capitalGain: nonNegativeError(inputs.capitalGain),
+    raContributions: nonNegativeError(inputs.raContributions),
+    donations: nonNegativeError(inputs.donations),
+    medAidContributions: nonNegativeError(inputs.medAidContributions),
+    medicalOutOfPocket: nonNegativeError(inputs.medicalOutOfPocket),
+    payeWithheld: nonNegativeError(inputs.payeWithheld),
+    provisionalPaid: nonNegativeError(inputs.provisionalPaid),
+  };
+  const blocked = Object.values(errors).find(Boolean);
   const refund = result.refundOrOwing >= 0;
 
   const pieData = [
@@ -322,37 +332,37 @@ export function TaxAssessment() {
             <SectionHeader title="Income" icon={Wallet} />
             <SelectField label="Age Group" id="ta-age" value={inputs.ageGroup}
               onChange={(v) => setInputs((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
-            <InputField label="Employment Income (annual)" id="ta-salary" value={inputs.annualSalary}
+            <InputField label="Employment Income (annual)" id="ta-salary" value={inputs.annualSalary} error={errors.annualSalary}
               onChange={n((v) => ({ annualSalary: v }))} prefix="R" help="Gross salary per your IRP5, excluding travel allowance" />
-            <InputField label="Travel Allowance (annual)" id="ta-travel" value={inputs.travelAllowance}
+            <InputField label="Travel Allowance (annual)" id="ta-travel" value={inputs.travelAllowance} error={errors.travelAllowance}
               onChange={n((v) => ({ travelAllowance: v }))} prefix="R" />
             {inputs.travelAllowance > 0 && (
               <SelectField label="Travel Allowance Taxable Portion" id="ta-travelrate" value={inputs.travelInclusionRate}
                 onChange={(v) => setInputs((p) => ({ ...p, travelInclusionRate: parseFloat(v) }))} options={TRAVEL_OPTIONS}
                 help="Keep a logbook to claim against the allowance on assessment" />
             )}
-            <InputField label="Freelance / Other Income" id="ta-other" value={inputs.otherIncome}
+            <InputField label="Freelance / Other Income" id="ta-other" value={inputs.otherIncome} error={errors.otherIncome}
               onChange={n((v) => ({ otherIncome: v }))} prefix="R" />
             <InputField label="Net Rental Profit / Loss" id="ta-rental" value={inputs.netRentalIncome}
               onChange={(val) => setInputs((p) => ({ ...p, netRentalIncome: parseFloat(val) || 0 }))} prefix="R"
               help="Rent received less deductible expenses. Negative = loss (SARS may ring-fence under s20A)" />
-            <InputField label="Local Interest Earned" id="ta-interest" value={inputs.interestIncome}
+            <InputField label="Local Interest Earned" id="ta-interest" value={inputs.interestIncome} error={errors.interestIncome}
               onChange={n((v) => ({ interestIncome: v }))} prefix="R"
               help={`First ${formatRand(inputs.ageGroup === 'under65' ? 23_800 : 34_500, 0)} exempt for your age group`} />
-            <InputField label="Local Dividends" id="ta-div" value={inputs.localDividends}
+            <InputField label="Local Dividends" id="ta-div" value={inputs.localDividends} error={errors.localDividends}
               onChange={n((v) => ({ localDividends: v }))} prefix="R"
               help="Taxed at 20% dividends withholding tax at source, not in this assessment" />
-            <InputField label="Capital Gain This Year" id="ta-cg" value={inputs.capitalGain}
+            <InputField label="Capital Gain This Year" id="ta-cg" value={inputs.capitalGain} error={errors.capitalGain}
               onChange={n((v) => ({ capitalGain: v }))} prefix="R"
               help="Total gain on disposals, after the primary residence exclusion if applicable" />
           </div>
 
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Deductions" icon={Receipt} />
-            <InputField label="Retirement Contributions (annual)" id="ta-ra" value={inputs.raContributions}
+            <InputField label="Retirement Contributions (annual)" id="ta-ra" value={inputs.raContributions} error={errors.raContributions}
               onChange={n((v) => ({ raContributions: v }))} prefix="R"
               help={`RA, pension and provident fund. Deductible up to 27.5% of income, max ${taxYear === '2027' ? 'R430,000' : 'R350,000'}`} />
-            <InputField label="S18A Donations" id="ta-don" value={inputs.donations}
+            <InputField label="S18A Donations" id="ta-don" value={inputs.donations} error={errors.donations}
               onChange={n((v) => ({ donations: v }))} prefix="R" help="Donations with S18A certificates, capped at 10% of taxable income" />
           </div>
 
@@ -362,9 +372,9 @@ export function TaxAssessment() {
               onChange={(v) => setInputs((p) => ({ ...p, medAidDependants: parseInt(v, 10) }))} options={MED_DEP_OPTIONS} />
             {inputs.medAidDependants >= 0 && (
               <>
-                <InputField label="Medical Aid Contributions (annual)" id="ta-medcontrib" value={inputs.medAidContributions}
+                <InputField label="Medical Aid Contributions (annual)" id="ta-medcontrib" value={inputs.medAidContributions} error={errors.medAidContributions}
                   onChange={n((v) => ({ medAidContributions: v }))} prefix="R" />
-                <InputField label="Out-of-Pocket Medical Expenses" id="ta-medoop" value={inputs.medicalOutOfPocket}
+                <InputField label="Out-of-Pocket Medical Expenses" id="ta-medoop" value={inputs.medicalOutOfPocket} error={errors.medicalOutOfPocket}
                   onChange={n((v) => ({ medicalOutOfPocket: v }))} prefix="R" help="Qualifying expenses not covered by your scheme" />
               </>
             )}
@@ -380,47 +390,40 @@ export function TaxAssessment() {
 
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Tax Already Paid" icon={FileText} />
-            <InputField label="PAYE Withheld (per IRP5)" id="ta-paye" value={inputs.payeWithheld}
+            <InputField label="PAYE Withheld (per IRP5)" id="ta-paye" value={inputs.payeWithheld} error={errors.payeWithheld}
               onChange={n((v) => ({ payeWithheld: v }))} prefix="R" />
-            <InputField label="Provisional Tax Paid" id="ta-prov" value={inputs.provisionalPaid}
+            <InputField label="Provisional Tax Paid" id="ta-prov" value={inputs.provisionalPaid} error={errors.provisionalPaid}
               onChange={n((v) => ({ provisionalPaid: v }))} prefix="R" />
           </div>
         </div>
 
         {/* ── Results ── */}
         <div className="space-y-5">
-          {/* Hero: refund or owing */}
-          <div className="p-5 rounded-2xl flex items-center gap-4" style={{
-            background: refund ? 'color-mix(in srgb, var(--gain) 10%, transparent)' : 'color-mix(in srgb, var(--loss) 10%, transparent)',
-            border: `1px solid ${alpha(refund ? C.green : C.red, 33)}`,
-          }}>
-            {refund
-              ? <CheckCircle2 size={34} style={{ color: textTone(C.green) }} />
-              : <AlertCircle size={34} style={{ color: textTone(C.red) }} />}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>
-                {refund ? 'Estimated refund due to you' : 'Estimated amount owing to SARS'}
-              </p>
-              <p className="text-3xl font-bold" style={{ color: textTone(refund ? C.green : C.red), fontFamily: 'var(--font-display)' }}>
-                {formatRand(Math.abs(result.refundOrOwing), 0)}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
-                Tax for the year {formatRand(result.netTaxPayable, 0)} vs {formatRand(result.totalTaxPaid, 0)} already paid
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="Taxable Income"  value={formatRand(result.taxableIncome, 0)}  color="blue"  icon={Wallet} />
-            <StatCard label="Tax for the Year" value={formatRand(result.netTaxPayable, 0)} color="orange"   icon={Receipt} />
-            <StatCard label="Effective Rate"  value={`${result.effectiveRate.toFixed(1)}%`} color="green" icon={TrendingUp} />
-            <StatCard label="Marginal Rate"   value={`${result.marginalRate.toFixed(0)}%`}  color="red"     icon={TrendingUp} />
-          </div>
+          <ResultPanel
+            label={refund ? 'Refund due to you' : 'Owing to SARS'}
+            value={formatRand(Math.abs(result.refundOrOwing), 0)}
+            tone={refund ? 'gain' : 'loss'}
+            blocked={blocked}
+            summary={<>
+              Tax for the {yearLabel} year comes to {formatRand(result.netTaxPayable, 0)} on taxable income of {formatRand(result.taxableIncome, 0)}.
+              {' '}{result.totalTaxPaid > 0
+                ? (refund
+                  ? `${formatRand(result.totalTaxPaid, 0)} has already been paid through PAYE and provisional tax, so SARS owes you about ${formatRand(result.refundOrOwing, 0)}.`
+                  : `${formatRand(result.totalTaxPaid, 0)} has already been paid through PAYE and provisional tax, so you owe about ${formatRand(-result.refundOrOwing, 0)} more.`)
+                : 'Nothing has been paid yet through PAYE or provisional tax, so all of it is still owing.'}
+            </>}
+            figures={[
+              { label: 'Taxable income', value: formatRand(result.taxableIncome, 0) },
+              { label: 'Tax for the year', value: formatRand(result.netTaxPayable, 0) },
+              { label: 'Effective rate', value: `${result.effectiveRate.toFixed(1)}%` },
+              { label: 'Tax on your next rand', value: `${result.marginalRate.toFixed(0)}%` },
+            ]}
+          />
 
           {/* Build-up */}
           <div className="glass-card p-5">
             <SectionHeader title="How Your Assessment Is Built Up" icon={FileText} />
-            <div className="mt-3">
+            <dl className="mt-3 text-sm">
               <BreakdownRow label="Employment income (incl. taxable travel)" value={result.employmentIncome} />
               {inputs.otherIncome > 0 && <BreakdownRow label="Freelance / other income" value={inputs.otherIncome} />}
               {inputs.netRentalIncome !== 0 && (
@@ -461,7 +464,7 @@ export function TaxAssessment() {
               <BreakdownRow label="Less PAYE and provisional tax paid" value={result.totalTaxPaid} color={C.green} negative />
               <BreakdownRow label={refund ? 'Refund due' : 'Owing to SARS'} value={Math.abs(result.refundOrOwing)}
                 bold color={refund ? C.green : C.red} />
-            </div>
+            </dl>
           </div>
 
           {/* Income composition */}
@@ -494,14 +497,15 @@ export function TaxAssessment() {
             </div>
           )}
 
-          <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-            <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              Estimate based on the {yearLabel} SARS tables. Not a SARS filing and not tax advice.
-              Excludes foreign income, s20A rental loss ring-fencing, retirement lump sums and
-              assessed-loss carryovers. Verify with eFiling or a registered tax practitioner.
-            </span>
-          </div>
+          <AssumptionsDrawer
+            items={[
+              <>Tax uses the SARS tables for the {yearLabel} year, with the rebate for your age group and the medical scheme credits.</>,
+              <>Interest is tax-free up to the yearly exemption for your age. Local dividends are taxed at 20% before you are paid, so they are not part of taxable income.</>,
+              <>Capital gains use the R50,000 yearly exclusion and 40% inclusion. Retirement contributions are deductible up to 27.5% of income and the yearly cap; S18A donations up to 10% of taxable income.</>,
+              <>A rental loss reduces tax on your other income. Ring-fencing under section 20A, foreign income, retirement lump sums and assessed losses carried forward are not included.</>,
+              <>This is an estimate, not a SARS filing. Check it against eFiling or with a registered tax practitioner.</>,
+            ]}
+          />
         </div>
       </div>
     </div>

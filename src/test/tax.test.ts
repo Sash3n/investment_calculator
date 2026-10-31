@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcIncomeTax, getMarginalRate, calcPAYE, calcTransferDuty } from '../utils/tax';
+import { calcIncomeTax, getMarginalRate, calcPAYE, calcTransferDuty, calcRentalIncomeTax } from '../utils/tax';
 import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 
 describe('calcIncomeTax (SARS 2026 brackets)', () => {
@@ -183,5 +183,18 @@ describe('calcTransferDuty reference values', () => {
 
   it('2027: R2,000,000 property = 13,614 + 6% above 1,663,800', () => {
     expect(calcTransferDuty(2_000_000, '2027')).toBe(Math.round(13_614 + 0.06 * (2_000_000 - 1_663_801)));
+  });
+});
+
+describe('calcRentalIncomeTax with a loss', () => {
+  it('lets the loss reduce tax on other income', () => {
+    const r = calcRentalIncomeTax({
+      monthlyGrossRent: 5_000, annualBondInterest: 90_000, annualRates: 12_000, annualLevies: 0,
+      annualInsurance: 6_000, annualRepairs: 0, managementFeePercent: 0, annualAdvertising: 0,
+      otherDeductions: 0, otherAnnualIncome: 600_000, ageGroup: 'under65',
+    });
+    expect(r.taxableRentalIncome).toBe(60_000 - 108_000);
+    expect(r.taxAttributableToRental).toBeLessThan(0);
+    expect(r.afterTaxMonthlyRentalCashFlow * 12).toBeCloseTo(-48_000 - r.taxAttributableToRental, 6);
   });
 });

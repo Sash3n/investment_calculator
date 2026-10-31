@@ -130,12 +130,14 @@ export function calcRentalIncomeTax(inputs: RentalTaxInputs, taxYear: TaxYearId 
   ].filter((d) => d.value > 0);
 
   const totalDeductions = deductionsBreakdown.reduce((s, d) => s + d.value, 0);
-  const taxableRentalIncome = Math.max(0, annualGrossRent - totalDeductions);
-  const totalTaxableIncome = otherAnnualIncome + taxableRentalIncome;
+  // A rental loss offsets other income (s20A ring-fencing not modelled)
+  const taxableRentalIncome = annualGrossRent - totalDeductions;
+  const totalTaxableIncome = Math.max(0, otherAnnualIncome + taxableRentalIncome);
 
   const taxOnTotalIncome = calcIncomeTax(totalTaxableIncome, ageGroup, taxYear);
   const taxOnOtherIncomeOnly = calcIncomeTax(otherAnnualIncome, ageGroup, taxYear);
-  const taxAttributableToRental = Math.max(0, taxOnTotalIncome - taxOnOtherIncomeOnly);
+  // Negative when a loss reduces the tax on other income
+  const taxAttributableToRental = taxOnTotalIncome - taxOnOtherIncomeOnly;
 
   const effectiveTaxRateOnRental =
     taxableRentalIncome > 0 ? (taxAttributableToRental / taxableRentalIncome) * 100 : 0;

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useId, useRef } from 'react';
 import { X } from 'lucide-react';
 
 /** Full disclaimer text, shown in a dialog from the footer and the header note. */
@@ -29,6 +29,8 @@ function DisclaimerText() {
 /** A button that opens the full disclaimer in a modal dialog. */
 export function DisclaimerLink({ children = 'Full disclaimer', className }: { children?: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Each link has its own dialog, so the title id must be unique on the page
+  const titleId = useId();
   return (
     <>
       <button
@@ -40,13 +42,13 @@ export function DisclaimerLink({ children = 'Full disclaimer', className }: { ch
       </button>
       <dialog
         ref={ref}
-        aria-labelledby="disclaimer-title"
+        aria-labelledby={titleId}
         className="disclaimer-dialog"
         onClick={(e) => { if (e.target === ref.current) ref.current?.close(); }}
       >
         <div className="p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
-            <h2 id="disclaimer-title" className="text-lg font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+            <h2 id={titleId} className="text-lg font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
               Disclaimer
             </h2>
             <button

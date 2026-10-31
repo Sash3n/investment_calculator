@@ -4,12 +4,11 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts';
 import {
-  Building2, Plus, Trash2, ChevronDown, ChevronUp, Info,
-  CheckCircle2, XCircle, Receipt, TrendingUp, Wallet, CloudDownload,
+  Building2, Plus, Trash2, ChevronDown, ChevronUp,
+  Receipt, Wallet, CloudDownload,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { TaxYearSelect } from '../components/ui/TaxYearSelect';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -21,6 +20,9 @@ import { useAuth } from '../context/useAuth';
 import { useSavedProperties } from '../hooks/useFirestore';
 import type { AgeGroup, PortfolioRentalProperty } from '../types';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, rangeError } from '../utils/validation';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -120,7 +122,7 @@ export function PropertyPortfolioTax() {
   };
 
   const yearLabel = TAX_YEAR_OPTIONS.find((o) => o.id === taxYear)?.label ?? taxYear;
-  const unitsShort = S13SEX_MIN_UNITS - result.s13QualifyingUnits;
+  const unitsShort = Math.max(0, S13SEX_MIN_UNITS - result.s13QualifyingUnits);
 
   const barData = result.perProperty.map((p) => ({
     name: p.name.length > 14 ? `${p.name.slice(0, 13)}…` : p.name,
@@ -150,11 +152,11 @@ export function PropertyPortfolioTax() {
           {/* Taxpayer */}
           <div className="glass-card p-5 space-y-4">
             <SectionHeader title="Taxpayer" icon={Wallet} />
-            <InputField label="Other Annual Taxable Income" id="ppt-other" value={otherIncome}
+            <InputField label="Other Annual Taxable Income" id="ppt-other" value={otherIncome} error={nonNegativeError(otherIncome)}
               onChange={(v) => setOtherIncome(parseFloat(v) || 0)} prefix="R" help="Salary and other income before rentals" />
             <SelectField label="Age Group" id="ppt-age" value={ageGroup}
               onChange={(v) => setAgeGroup(v as AgeGroup)} options={AGE_OPTIONS} />
-            <InputField label="Monthly RA Contribution" id="ppt-ra" value={raMonthly}
+            <InputField label="Monthly RA Contribution" id="ppt-ra" value={raMonthly} error={nonNegativeError(raMonthly)}
               onChange={(v) => setRaMonthly(parseFloat(v) || 0)} prefix="R"
               help="Shown stacked with Section 13sex in the comparison" />
           </div>
@@ -222,24 +224,24 @@ export function PropertyPortfolioTax() {
                       <InputField label="Name" id={`${p.id}-name`} type="text" value={p.name}
                         onChange={(v) => update(p.id, { name: v })} />
                       <div className="grid grid-cols-2 gap-3">
-                        <InputField label="Monthly Rent" id={`${p.id}-rent`} value={p.monthlyRent}
+                        <InputField label="Monthly Rent" id={`${p.id}-rent`} value={p.monthlyRent} error={nonNegativeError(p.monthlyRent)}
                           onChange={(v) => update(p.id, { monthlyRent: parseFloat(v) || 0 })} prefix="R" />
-                        <InputField label="Vacancy" id={`${p.id}-vac`} value={p.vacancyRate}
+                        <InputField label="Vacancy" id={`${p.id}-vac`} value={p.vacancyRate} error={rangeError(p.vacancyRate, 0, 100, 'a vacancy', '%')}
                           onChange={(v) => update(p.id, { vacancyRate: parseFloat(v) || 0 })} suffix="%" />
-                        <InputField label="Bond Interest (annual)" id={`${p.id}-int`} value={p.annualBondInterest}
+                        <InputField label="Bond Interest (annual)" id={`${p.id}-int`} value={p.annualBondInterest} error={nonNegativeError(p.annualBondInterest)}
                           onChange={(v) => update(p.id, { annualBondInterest: parseFloat(v) || 0 })} prefix="R" />
-                        <InputField label="Rates (annual)" id={`${p.id}-rates`} value={p.annualRates}
+                        <InputField label="Rates (annual)" id={`${p.id}-rates`} value={p.annualRates} error={nonNegativeError(p.annualRates)}
                           onChange={(v) => update(p.id, { annualRates: parseFloat(v) || 0 })} prefix="R" />
-                        <InputField label="Levies (annual)" id={`${p.id}-lev`} value={p.annualLevies}
+                        <InputField label="Levies (annual)" id={`${p.id}-lev`} value={p.annualLevies} error={nonNegativeError(p.annualLevies)}
                           onChange={(v) => update(p.id, { annualLevies: parseFloat(v) || 0 })} prefix="R" />
-                        <InputField label="Insurance (annual)" id={`${p.id}-ins`} value={p.annualInsurance}
+                        <InputField label="Insurance (annual)" id={`${p.id}-ins`} value={p.annualInsurance} error={nonNegativeError(p.annualInsurance)}
                           onChange={(v) => update(p.id, { annualInsurance: parseFloat(v) || 0 })} prefix="R" />
-                        <InputField label="Repairs (annual)" id={`${p.id}-rep`} value={p.annualRepairs}
+                        <InputField label="Repairs (annual)" id={`${p.id}-rep`} value={p.annualRepairs} error={nonNegativeError(p.annualRepairs)}
                           onChange={(v) => update(p.id, { annualRepairs: parseFloat(v) || 0 })} prefix="R" />
-                        <InputField label="Mgmt Fee" id={`${p.id}-mgmt`} value={p.managementFeePercent}
+                        <InputField label="Mgmt Fee" id={`${p.id}-mgmt`} value={p.managementFeePercent} error={rangeError(p.managementFeePercent, 0, 50, 'a fee', '%')}
                           onChange={(v) => update(p.id, { managementFeePercent: parseFloat(v) || 0 })} suffix="%" />
                       </div>
-                      <InputField label="Other Deductions (annual)" id={`${p.id}-oth`} value={p.otherAnnualDeductions}
+                      <InputField label="Other Deductions (annual)" id={`${p.id}-oth`} value={p.otherAnnualDeductions} error={nonNegativeError(p.otherAnnualDeductions)}
                         onChange={(v) => update(p.id, { otherAnnualDeductions: parseFloat(v) || 0 })} prefix="R"
                         help="Advertising, accounting, garden services, etc." />
                       <div className="pt-1 space-y-2" style={{ borderTop: '1px dashed var(--rule)' }}>
@@ -256,7 +258,7 @@ export function PropertyPortfolioTax() {
                         </div>
                         {p.isNewUnused && (
                           <>
-                            <InputField label="Building Cost (excl. land)" id={`${p.id}-cost`} value={p.purchasePrice}
+                            <InputField label="Building Cost (excl. land)" id={`${p.id}-cost`} value={p.purchasePrice} error={nonNegativeError(p.purchasePrice)}
                               onChange={(v) => update(p.id, { purchasePrice: parseFloat(v) || 0 })} prefix="R" />
                             <div className="flex items-center gap-3">
                               <input type="checkbox" id={`${p.id}-low`} checked={p.isLowCostHousing}
@@ -284,44 +286,25 @@ export function PropertyPortfolioTax() {
 
         {/* ── Results ── */}
         <div className="space-y-5">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="Net Rental Income" value={formatRand(result.netRentalIncome, 0)}
-              color={result.netRentalIncome >= 0 ? 'green' : 'red'} icon={Building2} />
-            <StatCard label="Tax on Rentals" value={formatRand(result.taxAttributableToRental, 0)} color="orange" icon={Receipt} />
-            <StatCard label="After-Tax Cash Flow" value={`${formatRand(result.afterTaxMonthlyCashFlow, 0)}/mo`}
-              color={result.afterTaxMonthlyCashFlow >= 0 ? 'green' : 'red'} icon={TrendingUp} />
-            <StatCard label="Marginal Rate" value={`${result.marginalRate.toFixed(0)}%`} color="blue" icon={TrendingUp} />
-          </div>
-
-          {/* Section 13sex status banner */}
-          <div className="p-4 rounded-xl flex items-start gap-3" style={{
-            background: result.s13Qualifies ? 'color-mix(in srgb, var(--gain) 10%, transparent)' : 'color-mix(in srgb, var(--note-orange) 8%, transparent)',
-            border: `1px solid ${alpha(result.s13Qualifies ? C.green : C.orange, 27)}`,
-          }}>
-            {result.s13Qualifies
-              ? <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.green) }} />
-              : <XCircle size={18} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />}
-            <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>
-              {result.s13Qualifies ? (
-                <>
-                  <span className="font-semibold" style={{ color: textTone(C.green) }}>
-                    Section 13sex unlocked with {result.s13QualifyingUnits} qualifying units.
-                  </span>{' '}
-                  You can deduct {formatRand(result.s13?.annualDeduction ?? 0, 0)} per year
-                  ({formatRand(result.s13AnnualTaxSaving, 0)} year-1 tax saving) for up to {result.s13?.deductionPeriodYears} years.
-                </>
-              ) : (
-                <>
-                  <span className="font-semibold" style={{ color: textTone(C.orange) }}>
-                    {result.s13QualifyingUnits} of {S13SEX_MIN_UNITS} qualifying units
-                  </span>{' '}
-                  — buy {unitsShort} more new-and-unused residential {unitsShort === 1 ? 'unit' : 'units'} to unlock the
-                  Section 13sex depreciation allowance (5% of building cost per year for 20 years, 10% for low-cost housing).
-                  Mark qualifying properties with the "new and unused" checkbox.
-                </>
-              )}
-            </div>
-          </div>
+          <ResultPanel
+            label="Rental cash flow after tax"
+            value={`${formatRand(result.afterTaxMonthlyCashFlow, 0)} a month`}
+            tone={result.afterTaxMonthlyCashFlow >= 0 ? 'gain' : 'loss'}
+            summary={<>
+              {result.netRentalIncome >= 0
+                ? `Across ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} you make ${formatRand(result.netRentalIncome, 0)} a year after deductions, which adds ${formatRand(result.taxAttributableToRental, 0)} to your tax.`
+                : `Across ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} you make a loss of ${formatRand(-result.netRentalIncome, 0)} a year, which cuts the tax on your other income by ${formatRand(-result.taxAttributableToRental, 0)}.`}
+              {' '}{result.s13Qualifies
+                ? `With ${result.s13QualifyingUnits} new units you also qualify for Section 13sex: ${formatRand(result.s13?.annualDeduction ?? 0, 0)} a year off your taxable income, saving about ${formatRand(result.s13AnnualTaxSaving, 0)} in the first year.`
+                : `${result.s13QualifyingUnits} of ${S13SEX_MIN_UNITS} units are new and unused; ${unitsShort} more would unlock the Section 13sex allowance.`}
+            </>}
+            figures={[
+              { label: 'Net rental income a year', value: formatRand(result.netRentalIncome, 0) },
+              { label: result.taxAttributableToRental >= 0 ? 'Extra tax' : 'Tax saved', value: formatRand(Math.abs(result.taxAttributableToRental), 0) },
+              { label: 'Section 13sex units', value: `${result.s13QualifyingUnits} of ${S13SEX_MIN_UNITS}` },
+              { label: 'Tax on your next rand', value: `${result.marginalRate.toFixed(0)}%` },
+            ]}
+          />
 
           {/* Per-property profit chart */}
           {barData.length > 0 && (
@@ -401,15 +384,15 @@ export function PropertyPortfolioTax() {
             </div>
           )}
 
-          <div className="flex items-start gap-3 p-4 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
-            <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              Section 13sex requires at least {S13SEX_MIN_UNITS} new-and-unused residential units owned by the same
-              taxpayer, all used to produce rental income; the allowance applies to building cost excluding land.
-              Rental losses may be ring-fenced under s20A. Based on {yearLabel} SARS tables. Not tax advice —
-              confirm with a registered tax practitioner.
-            </span>
-          </div>
+          <AssumptionsDrawer
+            items={[
+              <>Each property’s rent, less vacancy, is reduced by bond interest, rates, levies, insurance, repairs, the agent’s fee and other deductions. Repaying the bond’s capital is not deductible.</>,
+              <>The combined profit or loss is added to {formatRand(otherIncome, 0)} of other income and taxed with the SARS tables for {yearLabel}. A loss reduces the tax on your other income; ring-fencing under section 20A is not modelled.</>,
+              <>Section 13sex needs at least {S13SEX_MIN_UNITS} new-and-unused residential units owned by the same taxpayer and let out. It allows 5% of the building cost (excluding land) a year for 20 years, or 10% for 10 years for low-cost housing.</>,
+              <>Imported properties estimate the first year’s bond interest as 80% of the repayment. Enter your actual interest certificate figure if you have it.</>,
+              <>This is an estimate, not tax advice. Confirm with a registered tax practitioner.</>,
+            ]}
+          />
         </div>
       </div>
     </div>

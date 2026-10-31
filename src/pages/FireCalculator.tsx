@@ -5,10 +5,15 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   Legend, ReferenceLine,
 } from 'recharts';
-import { Flame, Target, Zap, Info, DollarSign } from 'lucide-react';
+import { Flame, DollarSign } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { formatRand, formatRandShort } from '../utils/format';
-import { alpha, textTone } from '../utils/color';
+import { formatRand, formatRandShort, formatMonths } from '../utils/format';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
+import { CPI_REFERENCE } from '../config/referenceRates';
+import { textTone } from '../utils/color';
+import { yearsToFire } from '../utils/fire';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const C = {
@@ -58,28 +63,6 @@ interface FireRow {
 }
 
 // ── Core math ─────────────────────────────────────────────────────────────────
-function yearsToFire(
-  currentSavings:   number,
-  monthlyContrib:   number,
-  annualReturn:     number,
-  fireTarget:       number,
-): number {
-  const r = annualReturn / 100 / 12;
-  let balance = currentSavings;
-
-  if (balance >= fireTarget) return 0;
-  if (r === 0) {
-    if (monthlyContrib <= 0) return Infinity;
-    return (fireTarget - balance) / monthlyContrib / 12;
-  }
-
-  for (let month = 1; month <= 12 * 100; month++) {
-    balance = balance * (1 + r) + monthlyContrib;
-    if (balance >= fireTarget) return month / 12;
-  }
-  return Infinity;
-}
-
 function coastFireBalance(
   fireTarget:         number,
   yearsToRetirement:  number,
@@ -95,10 +78,7 @@ function simulate(inp: Inputs): FireRow[] {
   const r       = inp.annualReturnPercent / 100 / 12;
   const infR    = inp.annualInflationPercent / 100;
 
-  // FIRE targets at different SWRs (today's expenses inflation-adjusted to retirement)
   const yearsToRetirement = inp.targetRetirementAge - inp.currentAge;
-  const retirementExpenses = inp.monthlyExpensesInRetirement * 12
-    * Math.pow(1 + infR, Math.max(0, yearsToRetirement));
 
   let balance = inp.currentSavings;
   const maxYears = Math.max(60, yearsToRetirement + 10);
@@ -115,8 +95,8 @@ function simulate(inp: Inputs): FireRow[] {
     const growth = balance - prevBalance - inp.monthlyContribution * 12;
     const inflationFactor = Math.pow(1 + infR, year);
 
-    // Inflation-adjusted expenses for this year
-    const annualExpenses = retirementExpenses;
+    // Expenses for this year, grown by inflation from today
+    const annualExpenses = inp.monthlyExpensesInRetirement * 12 * inflationFactor;
 
     rows.push({
       year,
@@ -137,12 +117,14 @@ function simulate(inp: Inputs): FireRow[] {
 // ── Contribution impact helper ────────────────────────────────────────────────
 function bumpImpact(
   inp:         Inputs,
-  fireTarget:  number,
+  swr:         number,
   bumps:       number[],
 ): { bump: number; years: number; saving: number }[] {
-  const base = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, fireTarget);
+  const years = (monthly: number) => yearsToFire(inp.currentSavings, monthly, inp.annualReturnPercent,
+    inp.monthlyExpensesInRetirement * 12, inp.annualInflationPercent, swr);
+  const base = years(inp.monthlyContribution);
   return bumps.map((bump) => {
-    const y = yearsToFire(inp.currentSavings, inp.monthlyContribution + bump, inp.annualReturnPercent, fireTarget);
+    const y = years(inp.monthlyContribution + bump);
     return { bump, years: y, saving: isFinite(base) && isFinite(y) ? base - y : 0 };
   });
 }
@@ -174,13 +156,16 @@ export function FireCalculator() {
 
   const target4 = retirementAnnualExp / selectedSwr;
 
-  const yrs4  = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, target4);
+  const yrs4  = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent,
+    inp.monthlyExpensesInRetirement * 12, inp.annualInflationPercent, selectedSwr);
 
   const fireAge4  = inp.currentAge + (isFinite(yrs4)  ? yrs4  : 0);
 
   // Coast FIRE at selected SWR
   const coastBalance = coastFireBalance(target4, yearsToRetirement, inp.annualReturnPercent);
-  const coastReached = rows.find((r) => r.balance >= coastBalance);
+  // Coasting from an age means that balance would grow to the FIRE number by the target age on its own
+  const coastReached = rows.find((r) => r.age <= inp.targetRetirementAge
+    && r.balance * Math.pow(1 + inp.annualReturnPercent / 100, inp.targetRetirementAge - r.age) >= target4);
 
   // Balance at target retirement age
   const retirementRow = rows.find((r) => r.age === inp.targetRetirementAge) ?? rows[yearsToRetirement - 1];
@@ -188,7 +173,7 @@ export function FireCalculator() {
   const onTrack4 = balanceAtRetirement >= target4;
 
   // Contribution bump impact (at selected SWR)
-  const bumps = bumpImpact(inp, target4, [500, 1000, 2000, 5000]);
+  const bumps = bumpImpact(inp, selectedSwr, [500, 1000, 2000, 5000]);
 
   // Chart: cap at retirement age + 5 for main chart
   const chartRows = rows.filter((r) => r.age <= inp.targetRetirementAge + 5);
@@ -209,6 +194,20 @@ export function FireCalculator() {
 
   // Annual breakdown for table
   const tableRows = rows.filter((r) => r.age <= Math.max(inp.targetRetirementAge + 1, inp.currentAge + 40));
+
+  const errors = {
+    currentAge: rangeError(inp.currentAge, 0, 100, 'an age', ''),
+    targetRetirementAge: inp.targetRetirementAge <= inp.currentAge
+      ? 'Enter an age after your current age.'
+      : rangeError(inp.targetRetirementAge, 1, 100, 'an age', ''),
+    currentSavings: nonNegativeError(inp.currentSavings),
+    monthlyContribution: nonNegativeError(inp.monthlyContribution),
+    monthlyExpensesInRetirement: positiveError(inp.monthlyExpensesInRetirement, 'Enter what you expect to spend each month in retirement.'),
+    annualReturnPercent: rangeError(inp.annualReturnPercent, -20, 30, 'a return', '%'),
+    annualInflationPercent: rangeError(inp.annualInflationPercent, 0, 30, 'inflation', '%'),
+  };
+  const blocked = errors.currentAge ?? errors.targetRetirementAge ?? errors.currentSavings ?? errors.monthlyContribution
+    ?? errors.monthlyExpensesInRetirement ?? errors.annualReturnPercent ?? errors.annualInflationPercent;
 
   const isFireYear4 = (age: number) => Math.abs(age - fireAge4) < 0.6;
   const isCoastYear = (age: number) => coastReached?.age === age;
@@ -234,53 +233,29 @@ export function FireCalculator() {
               Financial Independence, Retire Early · SA-adjusted · 3–4% safe withdrawal rates
             </p>
           </div>
-          <span
-            className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'color-mix(in srgb, var(--loss) 10%, transparent)', color: textTone(C.red), border: `1px solid ${alpha(C.red, 27)}` }}
-          >
-            {isFinite(yrs4) ? `FIRE in ${yrs4.toFixed(1)} yrs` : 'Adjust inputs'}
-          </span>
         </div>
       </motion.div>
 
-      {/* On-track banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-xl p-4 flex items-center gap-4 flex-wrap"
-        style={{
-          background: onTrack4 ? 'color-mix(in srgb, var(--gain) 7%, transparent)' : 'color-mix(in srgb, var(--loss) 7%, transparent)',
-          border: `1px solid ${onTrack4 ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--loss) 20%, transparent)'}`,
-        }}
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: onTrack4 ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--loss) 15%, transparent)' }}
-          >
-            <Target size={16} style={{ color: textTone(onTrack4 ? C.green : C.red) }} />
-          </div>
-          <div>
-            <p className="text-xs font-bold" style={{ color: textTone(onTrack4 ? C.green : C.red) }}>
-              {onTrack4
-                ? `On track — you'll hit your FIRE number by age ${inp.targetRetirementAge}`
-                : `Behind target — at age ${inp.targetRetirementAge} you'll have ${formatRand(balanceAtRetirement, 0)} vs target ${formatRand(target4, 0)}`}
-            </p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-              Based on {(selectedSwr * 100).toFixed(1)}% SWR · {inp.monthlyExpensesInRetirement > 0
-                ? `R${(inp.monthlyExpensesInRetirement / 1000).toFixed(0)}k/month retirement expenses (today's money)`
-                : 'Enter monthly expenses in retirement'}
-            </p>
-          </div>
-        </div>
-        {onTrack4 && (
-          <div className="text-right flex-shrink-0">
-            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Surplus at retirement</p>
-            <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
-              {formatRand(balanceAtRetirement - target4, 0)}
-            </p>
-          </div>
-        )}
-      </motion.div>
+      <ResultPanel
+        label="Financially independent at"
+        value={isFinite(yrs4) ? `Age ${Math.ceil(fireAge4)}` : 'Not yet'}
+        blocked={blocked}
+        summary={<>
+          {isFinite(yrs4)
+            ? `Saving ${formatRand(inp.monthlyContribution, 0)} a month at ${inp.annualReturnPercent}%, your investments cover ${formatRand(inp.monthlyExpensesInRetirement, 0)} a month in today’s money at a ${(selectedSwr * 100).toFixed(1)}% withdrawal rate in about ${yrs4.toFixed(1)} years.`
+            : 'At these figures your investments never reach the FIRE number. Save more, spend less in retirement or allow a higher withdrawal rate.'}
+          {' '}{onTrack4
+            ? `By age ${inp.targetRetirementAge} you would have ${formatRand(balanceAtRetirement - target4, 0)} more than you need.`
+            : `By age ${inp.targetRetirementAge} you would have ${formatRand(balanceAtRetirement, 0)}, ${formatRand(target4 - balanceAtRetirement, 0)} short of the ${formatRand(target4, 0)} needed then.`}
+          {coastReached && ` From age ${coastReached.age} your investments could grow to the target without more contributions.`}
+        </>}
+        figures={[
+          { label: `FIRE number at age ${inp.targetRetirementAge}`, value: formatRand(target4, 0) },
+          { label: `You would have at ${inp.targetRetirementAge}`, value: formatRand(balanceAtRetirement, 0) },
+          { label: 'Coast FIRE balance today', value: formatRand(coastBalance, 0) },
+          { label: 'Years to go', value: isFinite(yrs4) ? formatMonths(Math.round(yrs4 * 12)) : 'Not reached' },
+        ]}
+      />
 
       {/* Inputs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -298,14 +273,14 @@ export function FireCalculator() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="currentAge" label="Current Age" value={inp.currentAge}
+            <InputField id="currentAge" label="Current Age" value={inp.currentAge} error={errors.currentAge}
               onChange={n((v) => ({ currentAge: v }))} suffix="yrs" />
-            <InputField id="retireAge" label="Target FIRE Age" value={inp.targetRetirementAge}
+            <InputField id="retireAge" label="Target FIRE Age" value={inp.targetRetirementAge} error={errors.targetRetirementAge}
               onChange={n((v) => ({ targetRetirementAge: v }))} suffix="yrs" />
-            <InputField id="currentSavings" label="Current Savings / Investments" value={inp.currentSavings}
+            <InputField id="currentSavings" label="Current Savings / Investments" value={inp.currentSavings} error={errors.currentSavings}
               onChange={n((v) => ({ currentSavings: v }))} prefix="R"
               help="RA + TFSA + ETFs + savings" />
-            <InputField id="monthlyContrib" label="Monthly Contribution" value={inp.monthlyContribution}
+            <InputField id="monthlyContrib" label="Monthly Contribution" value={inp.monthlyContribution} error={errors.monthlyContribution}
               onChange={n((v) => ({ monthlyContribution: v }))} prefix="R"
               help="Total saved/invested per month" />
           </div>
@@ -324,26 +299,14 @@ export function FireCalculator() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="monthlyExp" label="Monthly Expenses in Retirement" value={inp.monthlyExpensesInRetirement}
+            <InputField id="monthlyExp" label="Monthly Expenses in Retirement" value={inp.monthlyExpensesInRetirement} error={errors.monthlyExpensesInRetirement}
               onChange={n((v) => ({ monthlyExpensesInRetirement: v }))} prefix="R"
               help="Today's money — inflation applied automatically" />
-            <InputField id="annualReturn" label="Expected Annual Return" value={inp.annualReturnPercent}
+            <InputField id="annualReturn" label="Expected Annual Return" value={inp.annualReturnPercent} error={errors.annualReturnPercent}
               onChange={n((v) => ({ annualReturnPercent: v }))} suffix="% p.a." step={0.5} />
-            <InputField id="inflation" label="Annual Inflation" value={inp.annualInflationPercent}
+            <InputField id="inflation" label="Annual Inflation" value={inp.annualInflationPercent} error={errors.annualInflationPercent}
               onChange={n((v) => ({ annualInflationPercent: v }))} suffix="% p.a." step={0.5}
-              help="SA CPI average ~5.5%" />
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
-                Years to FIRE target
-              </p>
-              <p className="text-xl font-bold" style={{ color: textTone(C.orange), fontFamily: 'var(--font-display)' }}>
-                {yearsToRetirement} yrs
-                <span className="text-xs font-normal ml-1" style={{ color: 'var(--ink-subtle)' }}>
-                  (age {inp.targetRetirementAge})
-                </span>
-              </p>
-            </div>
+              help={`Stats SA headline CPI: ${CPI_REFERENCE.value}% (${CPI_REFERENCE.period})`} />
           </div>
         </div>
       </div>
@@ -360,7 +323,8 @@ export function FireCalculator() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {SWR_OPTIONS.map(({ swr, label, sub }) => {
             const target = retirementAnnualExp / swr;
-            const yrs = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent, target);
+            const yrs = yearsToFire(inp.currentSavings, inp.monthlyContribution, inp.annualReturnPercent,
+              inp.monthlyExpensesInRetirement * 12, inp.annualInflationPercent, swr);
             const fireAge = inp.currentAge + (isFinite(yrs) ? yrs : Infinity);
             const achieved = isFinite(yrs);
             const isActive = selectedSwr === swr;
@@ -400,40 +364,6 @@ export function FireCalculator() {
               </motion.div>
             );
           })}
-        </div>
-      </div>
-
-      {/* Coast FIRE callout */}
-      <div
-        className="rounded-xl p-4 flex items-start gap-4 flex-wrap"
-        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
-      >
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-          <Zap size={16} className="text-note-blue-ink" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold mb-0.5" style={{ color: textTone(C.blue) }}>Coast FIRE (4% SWR)</p>
-          <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-            {formatRand(coastBalance, 0)}
-          </p>
-          <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
-            If your portfolio reaches this balance today, it will compound on its own to your FIRE number by
-            age {inp.targetRetirementAge} — without any further contributions.{' '}
-            {coastReached
-              ? <span style={{ color: textTone(C.green) }}>You'll reach Coast FIRE at age {coastReached.age}.</span>
-              : <span style={{ color: textTone(C.orange) }}>You haven't reached Coast FIRE yet at current trajectory.</span>}
-          </p>
-        </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
-            {inp.currentSavings >= coastBalance ? 'Already coasting!' : 'Gap to Coast FIRE'}
-          </p>
-          <p className="text-sm font-bold" style={{ color: textTone(inp.currentSavings >= coastBalance ? C.green : C.orange) }}>
-            {inp.currentSavings >= coastBalance
-              ? 'Achieved'
-              : formatRand(coastBalance - inp.currentSavings, 0)}
-          </p>
         </div>
       </div>
 
@@ -527,21 +457,6 @@ export function FireCalculator() {
         </div>
       </div>
 
-      {/* Inflation-adjusted real value note */}
-      <div
-        className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'color-mix(in srgb, var(--note-orange) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 18%, transparent)' }}
-      >
-        <Info size={14} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--ink-muted)' }}>
-          <strong style={{ color: 'var(--ink)' }}>SA inflation note:</strong> At {inp.annualInflationPercent}% p.a., your retirement expenses of{' '}
-          <strong style={{ color: textTone(C.orange) }}>{formatRand(inp.monthlyExpensesInRetirement * 12, 0)}/year</strong> (today's money)
-          will be <strong style={{ color: textTone(C.red) }}>{formatRand(retirementAnnualExp, 0)}/year</strong> in{' '}
-          {yearsToRetirement} years. The FIRE targets above are based on that inflated figure — so your portfolio needs
-          to be larger than a simple 25× today's expenses would suggest.
-        </span>
-      </div>
-
       {/* Year-by-year table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
@@ -625,10 +540,15 @@ export function FireCalculator() {
         </p>
       </div>
 
-      {/* Disclaimer */}
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Projections are illustrative only. Returns are not guaranteed. FIRE calculations assume consistent contributions and returns — actual results will vary. Not financial advice — consult a CFP.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Your contribution of {formatRand(inp.monthlyContribution, 0)} a month and the {inp.annualReturnPercent}% return stay the same. Returns are not guaranteed.</>,
+          <>Retirement spending of {formatRand(inp.monthlyExpensesInRetirement * 12, 0)} a year in today’s money grows by {inp.annualInflationPercent}% inflation, to {formatRand(retirementAnnualExp, 0)} a year by age {inp.targetRetirementAge}.</>,
+          <>The FIRE number is that year’s spending divided by the withdrawal rate. A {(selectedSwr * 100).toFixed(1)}% rate means drawing that share of the portfolio each year; lower rates are safer over long retirements.</>,
+          <>Coast FIRE is the balance today that would grow to the FIRE number by age {inp.targetRetirementAge} with no more contributions.</>,
+          <>Tax, fees and changes in spending are not included.</>,
+        ]}
+      />
     </div>
   );
 }

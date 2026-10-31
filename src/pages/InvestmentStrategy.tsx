@@ -11,11 +11,14 @@ import {
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { formatRand, formatPercent, formatRandShort } from '../utils/format';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 import {
   calcInvestmentStrategy,
   exportStrategyToExcel,
@@ -245,6 +248,19 @@ export function InvestmentStrategy() {
   const upd = (key: keyof InvestmentStrategyInputs) => (val: string) =>
     setInputs((p) => ({ ...p, [key]: parseFloat(val) || 0 }));
 
+  const errors = {
+    monthlyPrimaryGross: positiveError(inputs.monthlyPrimaryGross, 'Enter your monthly salary before tax.'),
+    monthlySecondaryGross: nonNegativeError(inputs.monthlySecondaryGross),
+    age: rangeError(inputs.age, 18, 80, 'an age', ''),
+    monthlyRA: nonNegativeError(inputs.monthlyRA),
+    monthlyTFSA: nonNegativeError(inputs.monthlyTFSA),
+    tfsaLifetimeContributed: rangeError(inputs.tfsaLifetimeContributed, 0, 500_000, 'an amount', ' (the lifetime limit)'),
+    monthlySeparate: nonNegativeError(inputs.monthlySeparate),
+    annualGrowthRate: rangeError(inputs.annualGrowthRate, -20, 30, 'a return', '%'),
+    horizonYears: rangeError(inputs.horizonYears, 1, 60, 'a number of years', ''),
+  };
+  const blocked = Object.values(errors).find(Boolean);
+
   // RA slider bounds
   const raMax = Math.max(result.raMonthlyLimit, inputs.monthlyRA + 1);
 
@@ -299,12 +315,12 @@ export function InvestmentStrategy() {
                 onChange={(v) => setInputs((p) => ({ ...p, taxYear: v as TaxYear }))}
                 options={TAX_YEAR_OPTIONS}
               />
-              <InputField label="Primary Monthly Gross Salary" id="is-primary" value={inputs.monthlyPrimaryGross} onChange={upd('monthlyPrimaryGross')} prefix="R" />
-              <InputField label="Secondary / Part-time Monthly Income" id="is-secondary" value={inputs.monthlySecondaryGross} onChange={upd('monthlySecondaryGross')} prefix="R" help="Optional — defaults to R0" />
+              <InputField label="Primary Monthly Gross Salary" id="is-primary" value={inputs.monthlyPrimaryGross} error={errors.monthlyPrimaryGross} onChange={upd('monthlyPrimaryGross')} prefix="R" />
+              <InputField label="Secondary / Part-time Monthly Income" id="is-secondary" value={inputs.monthlySecondaryGross} error={errors.monthlySecondaryGross} onChange={upd('monthlySecondaryGross')} prefix="R" help="Optional — defaults to R0" />
               {result.hasSecondaryIncome && (
                 <WarnBadge text="Multiple income sources: each employer withholds PAYE independently, but SARS combines your total income at assessment. You may have a tax shortfall or refund at year-end." />
               )}
-              <InputField label="Your Age" id="is-age" value={inputs.age} onChange={upd('age')} suffix="years" min={18} max={85} help={`Tax group: ${ageToGroup(inputs.age) === 'under65' ? 'Under 65' : ageToGroup(inputs.age) === '65to74' ? '65–74' : '75+'}`} />
+              <InputField label="Your Age" id="is-age" value={inputs.age} error={errors.age} onChange={upd('age')} suffix="years" min={18} max={85} help={`Tax group: ${ageToGroup(inputs.age) === 'under65' ? 'Under 65' : ageToGroup(inputs.age) === '65to74' ? '65–74' : '75+'}`} />
             </div>
           </div>
 
@@ -318,6 +334,7 @@ export function InvestmentStrategy() {
                 label="Monthly RA Contribution"
                 id="is-ra"
                 value={inputs.monthlyRA}
+                error={errors.monthlyRA}
                 onChange={upd('monthlyRA')}
                 prefix="R"
                 help={`27.5% limit: ${formatRand(result.raMonthlyLimit, 0)}/month · Annual cap: ${formatRand(result.raAnnualCap, 0)}`}
@@ -369,6 +386,7 @@ export function InvestmentStrategy() {
                 label="Monthly TFSA Contribution"
                 id="is-tfsa"
                 value={inputs.monthlyTFSA}
+                error={errors.monthlyTFSA}
                 onChange={upd('monthlyTFSA')}
                 prefix="R"
                 help={`2026 limit: R3,833/month (R46,000/year). Lifetime cap: R500,000. Excess taxed at 40%.`}
@@ -388,6 +406,7 @@ export function InvestmentStrategy() {
                 label="TFSA Lifetime Contributed So Far"
                 id="is-tfsa-life"
                 value={inputs.tfsaLifetimeContributed}
+                error={errors.tfsaLifetimeContributed}
                 onChange={upd('tfsaLifetimeContributed')}
                 prefix="R"
                 help={`Remaining lifetime allowance: ${formatRand(result.tfsaLifetimeRemaining, 0)}`}
@@ -417,9 +436,9 @@ export function InvestmentStrategy() {
           <div>
             <SectionHeader title="Other Investments & Projection" icon={TrendingUp} />
             <div className="space-y-3 mt-3">
-              <InputField label="Monthly Separate / Flexible Investment" id="is-sep" value={inputs.monthlySeparate} onChange={upd('monthlySeparate')} prefix="R" help="Unit trusts, ETFs, stocks — not tax-sheltered" />
-              <InputField label="Annual Growth Rate Assumption" id="is-growth" value={inputs.annualGrowthRate} onChange={upd('annualGrowthRate')} suffix="% p.a." min={5} max={20} help="JSE All Share avg ~10%, S&P 500 ETF ~15–18%" />
-              <InputField label="Investment Horizon" id="is-horizon" value={inputs.horizonYears} onChange={upd('horizonYears')} suffix="years" min={5} max={40} />
+              <InputField label="Monthly Separate / Flexible Investment" id="is-sep" value={inputs.monthlySeparate} error={errors.monthlySeparate} onChange={upd('monthlySeparate')} prefix="R" help="Unit trusts, ETFs, stocks — not tax-sheltered" />
+              <InputField label="Annual Growth Rate Assumption" id="is-growth" value={inputs.annualGrowthRate} error={errors.annualGrowthRate} onChange={upd('annualGrowthRate')} suffix="% p.a." min={5} max={20} help="JSE All Share avg ~10%, S&P 500 ETF ~15–18%" />
+              <InputField label="Investment Horizon" id="is-horizon" value={inputs.horizonYears} error={errors.horizonYears} onChange={upd('horizonYears')} suffix="years" min={5} max={40} />
             </div>
           </div>
 
@@ -436,67 +455,35 @@ export function InvestmentStrategy() {
         {/* ── Live Dashboard ────────────────────────────────────────────────── */}
         <div className="space-y-4">
 
-          {/* Stat cards row 1 */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Total Monthly Gross" value={formatRand(result.totalMonthlyGross, 0)} sub={formatRand(result.totalAnnualGross, 0) + '/yr'} icon={Wallet} color="blue" delay={0} />
-            <StatCard label="Taxable Income" value={formatRand(result.taxableIncome, 0)} sub="After RA deduction (annual)" icon={Shield} color="orange" delay={0.05} />
-            <StatCard label="Monthly PAYE" value={formatRand(result.monthlyPAYE, 0)} sub={`Without RA: ${formatRand(result.monthlyPAYEWithoutRA, 0)}`} icon={TrendingUp} color="red" delay={0.1} />
-            <StatCard label="Monthly Tax Saving" value={formatRand(result.monthlyTaxSaving, 0)} sub={`SARS pays ${result.sarsSubsidyPct.toFixed(0)}% of RA`} icon={CheckCircle2} color="green" delay={0.15} />
-          </div>
+          <ResultPanel
+            label="Take-home pay each month"
+            value={formatRand(result.takeHome, 0)}
+            blocked={blocked}
+            summary={<>
+              From {formatRand(result.totalMonthlyGross, 0)} a month before tax, PAYE takes {formatRand(result.monthlyPAYE, 0)} and
+              {' '}{formatRand(inputs.monthlyRA, 0)} goes to your retirement annuity, which cuts your PAYE by {formatRand(result.monthlyTaxSaving, 0)}
+              {result.sarsSubsidyPct > 0 ? ` (${result.sarsSubsidyPct.toFixed(0)}% of the contribution)` : ''}. After investing
+              {' '}{formatRand(result.totalInvested, 0)} a month in total, you have {formatRand(result.spendable, 0)} to spend.
+            </>}
+            figures={[
+              { label: 'Invested each month', value: formatRand(result.totalInvested, 0) },
+              { label: 'Share of income invested', value: `${result.investPct.toFixed(1)}%` },
+              { label: 'Tax saved each month', value: formatRand(result.monthlyTaxSaving, 0) },
+              { label: 'Left to spend', value: formatRand(result.spendable, 0) },
+            ]}
+          />
 
-          {/* Tax saving highlight */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="glass-card-static p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-            style={{ borderLeft: `3px solid ${C.green}`, background: alpha(C.green, 3) }}
-          >
-            {[
-              { label: 'Effective RA Cost', value: formatRand(result.effectiveRAMonthlyCost), sub: 'RA minus tax saving', color: C.green },
-              { label: 'Net Take-Home', value: formatRand(result.takeHome), sub: 'After RA + PAYE', color: 'var(--ink)' },
-              { label: 'Total Invested', value: formatRand(result.totalInvested), sub: `${result.investPct.toFixed(1)}% of income`, color: C.blue },
-              { label: 'Spendable Cash', value: formatRand(result.spendable), sub: 'After all investments', color: result.spendable < 5_000 ? C.red : C.green },
-            ].map((item) => (
-              <div key={item.label}>
-                <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>{item.label}</p>
-                <p className="text-base font-bold" style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>{item.value}</p>
-                <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>{item.sub}</p>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Tax breakdown detail */}
-          <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-              Your Tax Breakdown — {inputs.taxYear}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0">
-              {[
-                { label: 'Total Annual Gross',         value: result.totalAnnualGross },
-                { label: '27.5% RA Deduction Limit',   value: result.raMonthlyLimit * 12 },
-                { label: 'Allowable RA Deduction',     value: -result.allowableRA },
-                { label: 'Taxable Income (Annual)',     value: result.taxableIncome, bold: true },
-                { label: 'Tax (with RA)',               value: -result.monthlyPAYE * 12 },
-                { label: 'Tax (without RA)',            value: -result.monthlyPAYEWithoutRA * 12 },
-                { label: 'Annual Tax Saving',           value: result.monthlyTaxSaving * 12, bold: true, green: true },
-                { label: 'SARS Subsidy on RA',         value: result.sarsSubsidyPct, pct: true },
-              ].map((row, i) => (
-                <div key={i} className="flex justify-between py-1.5 text-xs" style={{ borderBottom: '1px solid var(--rule)' }}>
-                  <span style={{ color: 'var(--ink-muted)' }}>{row.label}</span>
-                  <span
-                    className="font-mono"
-                    style={{
-                      color: textTone(row.green ? C.green : row.value < 0 ? C.red : row.bold ? 'var(--ink)' : 'var(--ink-muted)'),
-                      fontWeight: row.bold ? 600 : 400,
-                    }}
-                  >
-                    {row.pct ? `${result.sarsSubsidyPct.toFixed(1)}%` : formatRand(row.value, 0)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <BreakdownList
+            title={`Your tax for the ${inputs.taxYear} year`}
+            lines={[
+              { label: 'Income before tax', value: result.totalAnnualGross },
+              { label: 'Retirement annuity deduction', value: result.allowableRA, kind: 'less', note: `Up to ${formatRand(result.raMonthlyLimit * 12, 0)} a year can be deducted` },
+              { label: 'Taxable income', display: formatRand(result.taxableIncome, 0) },
+              { label: 'Tax without the annuity', display: formatRand(result.monthlyPAYEWithoutRA * 12, 0) },
+              { label: 'Tax with the annuity', display: formatRand(result.monthlyPAYE * 12, 0) },
+            ]}
+            total={{ label: 'Tax saved by the annuity', value: result.monthlyTaxSaving * 12 }}
+          />
 
           {/* Warnings */}
           {result.warnings.length > 0 && (
@@ -713,6 +700,15 @@ export function InvestmentStrategy() {
           </div>
         </div>
       </motion.div>
+
+      <AssumptionsDrawer
+        items={[
+          <>PAYE uses the SARS tables for the {inputs.taxYear} year, on your combined salary. Retirement annuity contributions are deductible up to 27.5% of income and the yearly cap.</>,
+          <>A tax-free savings account takes up to R46,000 a year and R500,000 in a lifetime; growth inside it is not taxed.</>,
+          <>The projections grow every investment at {inputs.annualGrowthRate}% a year for {inputs.horizonYears} years. Returns are not guaranteed, and tax on the separate investments, fees and inflation are not included.</>,
+          <>The three strategies split the same budget differently between the annuity, the TFSA and separate investing; the recommendation is a guide, not advice.</>,
+        ]}
+      />
 
       {/* ── Export ───────────────────────────────────────────────────────────── */}
       <div className="flex justify-end">
