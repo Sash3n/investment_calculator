@@ -6,7 +6,9 @@ import {
 } from 'recharts';
 import { Home, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { formatRand, formatRandShort } from '../utils/format';
+import { formatRand, formatRandShort, formatPercent } from '../utils/format';
+import { Statement } from '../components/statement/Statement';
+import type { StatementData, StatementLine } from '../components/statement/statementText';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
 import { alpha, textTone } from '../utils/color';
 
@@ -161,6 +163,48 @@ export function RentalYieldFinder() {
       };
     });
   }, [purchasePrice, effectiveAnnualRent, costs, loanAmount]);
+
+  // Payslip-style statement of the same figures (monthly averages over a year)
+  const statement: StatementData = {
+    title: 'Monthly rental statement',
+    subtitle: `${formatRand(purchasePrice, 0)} property let at ${formatRand(monthlyRent, 0)} a month`,
+    sections: [
+      {
+        heading: 'Income',
+        lines: [
+          { label: 'Rent', value: monthlyRent },
+          { label: `Vacancy (${vacancyMonths} month${vacancyMonths === 1 ? '' : 's'} a year)`, value: (monthlyRent * vacancyMonths) / 12, kind: 'less' },
+        ],
+        subtotal: { label: 'Rent received', value: effectiveAnnualRent / 12 },
+      },
+      {
+        heading: 'Costs',
+        lines: ([
+          { label: 'Bond repayment', value: costs.bond, kind: 'less', note: `${formatRand(loanAmount, 0)} at ${bondRate}% over ${bondTerm} years` },
+          { label: 'Levy', value: costs.levy, kind: 'less' },
+          { label: 'Rates and taxes', value: costs.rates, kind: 'less' },
+          { label: 'Insurance', value: costs.insurance, kind: 'less' },
+          { label: `Maintenance (${maintenancePct}% of the price a year)`, value: costs.maintenance, kind: 'less' },
+          { label: `Letting agent (${agentFeePct}% of rent)`, value: costs.agentFee, kind: 'less' },
+          costs.effluent > 0 ? { label: 'Effluent', value: costs.effluent, kind: 'less' } : null,
+          costs.misc > 0 ? { label: 'Other costs', value: costs.misc, kind: 'less' } : null,
+        ] as (StatementLine | null)[]).filter((l): l is StatementLine => l !== null),
+        subtotal: { label: 'Total costs', value: costs.total, kind: 'less' },
+      },
+    ],
+    total: { label: 'Monthly cash flow', value: monthlyCashFlow },
+    after: [
+      {
+        heading: 'Returns',
+        lines: [
+          { label: 'Gross yield', display: formatPercent(grossYield, 2) },
+          { label: 'Net yield (after costs and bond)', display: formatPercent(netYield, 2) },
+          { label: 'Break-even rent', display: `${formatRand(breakEvenRentActual, 0)} a month` },
+        ],
+      },
+    ],
+    footnote: 'Monthly averages over a year. Estimate only, not financial advice.',
+  };
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -322,6 +366,9 @@ export function RentalYieldFinder() {
           </div>
         </div>
       </motion.div>
+
+      {/* Statement */}
+      <Statement data={statement} />
 
       {/* Cost breakdown */}
       <motion.div
