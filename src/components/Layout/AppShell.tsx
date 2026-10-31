@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
   Menu, X, ChevronRight, ChevronDown, BarChart3, Sun, Moon,
@@ -103,7 +103,7 @@ export function AppShell() {
   const toggleCategory = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...next]));
       return next;
     });
@@ -120,9 +120,11 @@ export function AppShell() {
     });
 
   // Close sidebar on route change (mobile)
-  useEffect(() => {
+  const [shownPath, setShownPath] = useState(location.pathname);
+  if (location.pathname !== shownPath) {
+    setShownPath(location.pathname);
     setSidebarOpen(false);
-  }, [location.pathname]);
+  }
 
   // Close sidebar on escape
   useEffect(() => {

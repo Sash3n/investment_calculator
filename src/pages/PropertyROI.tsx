@@ -14,7 +14,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { calcPropertyROI } from '../utils/roi';
 import { exportPropertyPDF } from '../utils/pdf';
 import { formatRand, formatPercent } from '../utils/format';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useSavedProperties, useHistory } from '../hooks/useFirestore';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { PropertyInputs } from '../types';
@@ -24,6 +24,7 @@ import { useJourneyValues } from '../journeys/journeyContext';
 import { ResultPanel } from '../components/results/ResultPanel';
 import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
 import { propertyInputErrors } from '../utils/validation';
+import type { ChartTooltipProps } from '../components/charts/tooltipTypes';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -38,26 +39,26 @@ const COST_COLORS = seriesColors(8);
 
 const DEFAULT_INPUTS = DEFAULT_PROPERTY_INPUTS;
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
-          {p.name}: {formatRand(p.value)}
+      {payload.map((p) => (
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? 'var(--ink)') }}>
+          {p.name}: {formatRand(Number(p.value))}
         </p>
       ))}
     </div>
   );
 }
 
-function PieTooltip({ active, payload }: any) {
+function PieTooltip({ active, payload }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs">
-      <p style={{ color: textTone(payload[0].payload.fill) }}>{payload[0].name}</p>
-      <p className="text-ink font-bold">{formatRand(payload[0].value)}</p>
+      <p style={{ color: textTone(payload[0].payload?.fill ?? 'var(--ink)') }}>{payload[0].name}</p>
+      <p className="text-ink font-bold">{formatRand(Number(payload[0].value))}</p>
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
   query, orderBy, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { seriesColors, textTone } from '../utils/color';

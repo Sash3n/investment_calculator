@@ -39,7 +39,7 @@ export function lineValue(line: StatementLine): string {
 const WIDTH = 56;
 
 function row(label: string, value: string): string {
-  const plainValue = value.replace(/ /g, ' ');
+  const plainValue = value.split(String.fromCharCode(160)).join(' ');
   const dots = Math.max(2, WIDTH - label.length - plainValue.length - 2);
   return `${label} ${'.'.repeat(dots)} ${plainValue}`;
 }

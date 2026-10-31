@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -232,9 +232,13 @@ export function InvestmentStrategy() {
 
   const location = useLocation();
   const locationState = location.state as { loadedInputs?: InvestmentStrategyInputs; entryId?: string } | null;
-  useEffect(() => {
-    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
-  }, [locationState]);
+  // Apply inputs handed over by the router (History, presets) once per hand-over
+  const loadedInputs = locationState?.loadedInputs;
+  const [appliedLoad, setAppliedLoad] = useState<typeof loadedInputs>(undefined);
+  if (loadedInputs && loadedInputs !== appliedLoad) {
+    setAppliedLoad(loadedInputs);
+    setInputs(loadedInputs);
+  }
 
   const result = useMemo(() => calcInvestmentStrategy(inputs), [inputs]);
 

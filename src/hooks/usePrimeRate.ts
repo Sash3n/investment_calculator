@@ -44,20 +44,16 @@ function setCache(data: PrimeRateState) {
 }
 
 export function usePrimeRate(): PrimeRateState {
-  const [state, setState] = useState<PrimeRateState>({
-    primeRate: FALLBACK_PRIME,
-    repoRate:  FALLBACK_REPO,
-    asOf:      SARB_FALLBACK.asOf,
-    loading:   true,
-    fallback:  true,
+  // A rate cached this session is used straight away
+  const [state, setState] = useState<PrimeRateState>(() => {
+    const cached = getCached();
+    return cached
+      ? { ...cached, loading: false }
+      : { primeRate: FALLBACK_PRIME, repoRate: FALLBACK_REPO, asOf: SARB_FALLBACK.asOf, loading: true, fallback: true };
   });
 
   useEffect(() => {
-    const cached = getCached();
-    if (cached) {
-      setState({ ...cached, loading: false });
-      return;
-    }
+    if (getCached()) return;
 
     const controller = new AbortController();
 

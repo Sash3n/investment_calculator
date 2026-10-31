@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -31,6 +31,7 @@ import { usePrimeRate } from '../hooks/usePrimeRate';
 import type { MortgageInputs } from '../types';
 import { textTone } from '../utils/color';
 import { useJourneyValues } from '../journeys/journeyContext';
+import type { ChartTooltipProps } from '../components/charts/tooltipTypes';
 
 const ROWS_PER_PAGE = 24;
 const VIEW_KEY = 'fincalc-mortgage-view';
@@ -58,26 +59,26 @@ const frequencyOptions = [
   { value: 'biweekly', label: 'Bi-Weekly (26×/year)' },
 ];
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
-          {p.name}: {formatRand(p.value)}
+      {payload.map((p) => (
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? 'var(--ink)') }}>
+          {p.name}: {formatRand(Number(p.value))}
         </p>
       ))}
     </div>
   );
 }
 
-function PieTooltip({ active, payload }: any) {
+function PieTooltip({ active, payload }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs">
-      <p style={{ color: textTone(payload[0].payload.fill) }}>{payload[0].name}</p>
-      <p className="text-ink font-bold">{formatRand(payload[0].value)}</p>
+      <p style={{ color: textTone(payload[0].payload?.fill ?? 'var(--ink)') }}>{payload[0].name}</p>
+      <p className="text-ink font-bold">{formatRand(Number(payload[0].value))}</p>
     </div>
   );
 }
@@ -112,9 +113,13 @@ export function MortgageCalculator() {
   // Load snapshot navigated from History page
   const location = useLocation();
   const locationState = location.state as { loadedInputs?: MortgageInputs; entryId?: string } | null;
-  useEffect(() => {
-    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
-  }, [locationState]);
+  // Apply inputs handed over by the router (History, presets) once per hand-over
+  const loadedInputs = locationState?.loadedInputs;
+  const [appliedLoad, setAppliedLoad] = useState<typeof loadedInputs>(undefined);
+  if (loadedInputs && loadedInputs !== appliedLoad) {
+    setAppliedLoad(loadedInputs);
+    setInputs(loadedInputs);
+  }
 
   const liveRate = usePrimeRate();
 
@@ -698,28 +703,30 @@ export function MortgageCalculator() {
 
       {/* ── Amortization Table ────────────────────────── */}
       <div className="glass-card-static mt-6">
-        <button
-          className="w-full flex items-center justify-between p-5 text-left"
-          onClick={() => setTableOpen((v) => !v)}
-        >
-          <div>
-            <p className="text-sm font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
-              Amortization Schedule
-            </p>
-            <p className="text-xs text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>
-              {activeTable.length} periods · {totalTablePages} pages
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5"
-              onClick={(e) => { e.stopPropagation(); exportToExcel(); }}
-            >
-              <Download size={13} /> Export Excel
-            </button>
+        {/* The export button sits beside the toggle, not inside it */}
+        <div className="flex items-center gap-3 p-5">
+          <button
+            className="flex-1 flex items-center justify-between gap-3 text-left"
+            onClick={() => setTableOpen((v) => !v)}
+            aria-expanded={tableOpen}
+          >
+            <div>
+              <p className="text-sm font-semibold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
+                Amortization Schedule
+              </p>
+              <p className="text-xs text-ink-subtle mt-0.5" style={{ fontFamily: 'var(--font-text)' }}>
+                {activeTable.length} periods · {totalTablePages} pages
+              </p>
+            </div>
             {tableOpen ? <ChevronUp size={18} className="text-ink-muted" /> : <ChevronDown size={18} className="text-ink-muted" />}
-          </div>
-        </button>
+          </button>
+          <button
+            className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5"
+            onClick={exportToExcel}
+          >
+            <Download size={13} /> Export Excel
+          </button>
+        </div>
 
         {tableOpen && (
           <div className="px-5 pb-5">

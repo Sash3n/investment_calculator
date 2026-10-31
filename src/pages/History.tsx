@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { History as HistoryIcon, Trash2, LogIn, Building2, Car, TrendingUp, Receipt, Wallet, Home, ExternalLink, GitCompare, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useHistory, type CalcType } from '../hooks/useFirestore';
 import { alpha, textTone } from '../utils/color';
 

@@ -56,7 +56,7 @@ function amortize(
   for (let m = 1; m <= termMonths; m++) {
     if (balance <= 0) break;
     const interest     = balance * r;
-    let   principalPmt = Math.min(pmt - interest + safeExtra, balance);
+    const principalPmt = Math.min(pmt - interest + safeExtra, balance);
     balance -= principalPmt;
     totalInterest += interest;
 

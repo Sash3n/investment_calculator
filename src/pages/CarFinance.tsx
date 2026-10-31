@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -22,6 +22,7 @@ import { carInputErrors } from '../utils/validation';
 import { usePrimeRate, FALLBACK_PRIME } from '../hooks/usePrimeRate';
 import type { CarInputs } from '../types';
 import { textTone } from '../utils/color';
+import type { ChartTooltipProps } from '../components/charts/tooltipTypes';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -45,14 +46,14 @@ const DEFAULT_INPUTS: CarInputs = {
   monthlyMaintenance: 800,
 };
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs min-w-[160px]">
       <p className="text-ink-muted mb-2 font-semibold">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} className="mb-1" style={{ color: textTone(p.color) }}>
-          {p.name}: {formatRand(p.value)}
+      {payload.map((p) => (
+        <p key={p.name} className="mb-1" style={{ color: textTone(p.color ?? 'var(--ink)') }}>
+          {p.name}: {formatRand(Number(p.value))}
         </p>
       ))}
     </div>
@@ -73,9 +74,13 @@ export function CarFinance() {
 
   const location = useLocation();
   const locationState = location.state as { loadedInputs?: CarInputs; entryId?: string } | null;
-  useEffect(() => {
-    if (locationState?.loadedInputs) setInputs(locationState.loadedInputs);
-  }, [locationState]);
+  // Apply inputs handed over by the router (History, presets) once per hand-over
+  const loadedInputs = locationState?.loadedInputs;
+  const [appliedLoad, setAppliedLoad] = useState<typeof loadedInputs>(undefined);
+  if (loadedInputs && loadedInputs !== appliedLoad) {
+    setAppliedLoad(loadedInputs);
+    setInputs(loadedInputs);
+  }
 
   const result = useMemo(() => calcCarFinance(inputs), [inputs]);
 

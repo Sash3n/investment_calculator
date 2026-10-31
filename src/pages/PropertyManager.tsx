@@ -15,7 +15,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort } from '../utils/format';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { alpha, textTone } from '../utils/color';
 import {
   useSavedProperties, useExpenses, useMaintenance, useIncome, usePropertyRecords,

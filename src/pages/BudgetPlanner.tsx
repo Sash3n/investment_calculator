@@ -14,7 +14,7 @@ import {
   addDoc, query, orderBy, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { formatRand, formatRandShort } from '../utils/format';
 import { alpha, SERIES, tokenColor, textTone } from '../utils/color';
 import { ResultPanel } from '../components/results/ResultPanel';
@@ -109,28 +109,39 @@ function monthsInQuarter(ym: string) {
 
 // ─── Firestore hooks ───────────────────────────────────────────────────────────
 
+/** The user's tags, seeding the defaults on first use. Null when offline. */
+async function fetchTags(uid: string): Promise<BudgetTag[] | null> {
+  try {
+    const snap = await getDocs(query(collection(db, 'users', uid, 'budget_tags'), orderBy('name')));
+    if (!snap.empty) {
+      return snap.docs.map((d) => { const t = { id: d.id, ...d.data() } as BudgetTag; return { ...t, color: tokenColor(t.color) }; });
+    }
+    const seeded: BudgetTag[] = [];
+    for (const t of DEFAULT_TAGS) {
+      const ref = await addDoc(collection(db, 'users', uid, 'budget_tags'), { ...t, createdAt: serverTimestamp() });
+      seeded.push({ ...t, id: ref.id });
+    }
+    return seeded;
+  } catch {
+    return null;
+  }
+}
+
 function useBudgetTags(uid: string | null) {
   const [tags, setTags] = useState<BudgetTag[]>([]);
 
-  const load = useCallback(async () => {
+  useEffect(() => {
     if (!uid) return;
-    try {
-      const snap = await getDocs(query(collection(db, 'users', uid, 'budget_tags'), orderBy('name')));
-      if (snap.empty) {
-        // Seed defaults on first use
-        const seeded: BudgetTag[] = [];
-        for (const t of DEFAULT_TAGS) {
-          const ref = await addDoc(collection(db, 'users', uid, 'budget_tags'), { ...t, createdAt: serverTimestamp() });
-          seeded.push({ ...t, id: ref.id });
-        }
-        setTags(seeded);
-      } else {
-        setTags(snap.docs.map((d) => { const t = { id: d.id, ...d.data() } as BudgetTag; return { ...t, color: tokenColor(t.color) }; }));
-      }
-    } catch { /* offline — keep empty */ }
+    let cancelled = false;
+    fetchTags(uid).then((loaded) => { if (!cancelled && loaded) setTags(loaded); });
+    return () => { cancelled = true; };
   }, [uid]);
 
-  useEffect(() => { load(); }, [load]);
+  const load = useCallback(async () => {
+    if (!uid) return;
+    const loaded = await fetchTags(uid);
+    if (loaded) setTags(loaded);
+  }, [uid]);
 
   const addTag = async (name: string, color: string, type: BudgetTag['type']) => {
     if (!uid) return;
@@ -153,16 +164,12 @@ function useBudgetTags(uid: string | null) {
   return { tags, addTag, removeTag, renameTag, reload: load };
 }
 
-function useTransactions(uid: string | null) {
-  const [all, setAll] = useState<Transaction[]>([]);
-
-  const load = useCallback(async () => {
-    if (!uid) return;
-    try {
-      const snap = await getDocs(
-        query(collection(db, 'users', uid, 'budget_transactions'), orderBy('date', 'desc'))
-      );
-      setAll(snap.docs.map((d) => ({
+async function fetchTransactions(uid: string): Promise<Transaction[] | null> {
+  try {
+    const snap = await getDocs(
+      query(collection(db, 'users', uid, 'budget_transactions'), orderBy('date', 'desc'))
+    );
+    return snap.docs.map((d) => ({
         id:          d.id,
         description: d.data().description,
         amount:      d.data().amount,
@@ -173,11 +180,21 @@ function useTransactions(uid: string | null) {
         yearMonth:   d.data().yearMonth,
         date:        d.data().date,
         createdAt:   d.data().createdAt?.toDate() ?? new Date(),
-      })));
-    } catch { /* offline */ }
-  }, [uid]);
+      }));
+  } catch {
+    return null;
+  }
+}
 
-  useEffect(() => { load(); }, [load]);
+function useTransactions(uid: string | null) {
+  const [all, setAll] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    if (!uid) return;
+    let cancelled = false;
+    fetchTransactions(uid).then((loaded) => { if (!cancelled && loaded) setAll(loaded); });
+    return () => { cancelled = true; };
+  }, [uid]);
 
   const addTx = async (tx: Omit<Transaction, 'id' | 'createdAt'>) => {
     if (!uid) return;

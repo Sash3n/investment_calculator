@@ -75,20 +75,23 @@ export function CommandPalette() {
     };
   }, []);
 
-  // Reset state when opening
-  useEffect(() => {
+  // Start fresh each time it opens
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setQuery('');
       setActive(0);
-      // Focus after paint
-      requestAnimationFrame(() => inputRef.current?.focus());
     }
+  }
+
+  // Focus the search box after paint
+  useEffect(() => {
+    if (open) requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
 
-  // Clamp active index when results change
-  useEffect(() => {
-    setActive((a) => Math.min(a, Math.max(0, results.length - 1)));
-  }, [results.length]);
+  // The highlighted row, kept within the current results
+  const activeIdx = Math.min(active, Math.max(0, results.length - 1));
 
   const go = (item: NavItem) => {
     navigate(item.path);
@@ -99,13 +102,13 @@ export function CommandPalette() {
     if (e.key === 'Escape') { setOpen(false); return; }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActive((a) => Math.min(a + 1, results.length - 1));
+      setActive(Math.min(activeIdx + 1, results.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActive((a) => Math.max(a - 1, 0));
+      setActive(Math.max(activeIdx - 1, 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      const sel = results[active];
+      const sel = results[activeIdx];
       if (sel) go(sel.item);
     }
   };
@@ -113,9 +116,9 @@ export function CommandPalette() {
   // Keep active row in view
   useEffect(() => {
     if (!open) return;
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${active}"]`);
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${activeIdx}"]`);
     el?.scrollIntoView({ block: 'nearest' });
-  }, [active, open]);
+  }, [activeIdx, open]);
 
   return (
     <>
@@ -174,7 +177,7 @@ export function CommandPalette() {
               ) : (
                 results.map(({ item, category }, idx) => {
                   const Icon = item.icon;
-                  const isActive = idx === active;
+                  const isActive = idx === activeIdx;
                   return (
                     <button
                       key={item.path}

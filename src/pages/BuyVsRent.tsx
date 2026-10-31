@@ -116,14 +116,12 @@ function simulate(inp: Inputs): YearRow[] {
     // Track loan balance for this year
     let localBalance = loanBalance;
     let annualInterest = 0;
-    let annualPrincipal = 0;
     const rMonthly = inp.interestRatePercent / 100 / 12;
     for (let m = 0; m < 12; m++) {
       if (localBalance <= 0) break;
       const interest  = localBalance * rMonthly;
       const principal = Math.min(monthlyPmt - interest, localBalance);
       annualInterest  += interest;
-      annualPrincipal += principal;
       localBalance    -= principal;
     }
     loanBalance = Math.max(0, localBalance);

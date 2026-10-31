@@ -101,7 +101,6 @@ function simulate(inp: Inputs): YearRow[] {
   let tfsaBalance    = inp.existingBalance;
   let taxableBalance = inp.existingBalance;  // same starting point for comparison
   let lifetimeUsed   = inp.existingLifetimeUsed;
-  let cumulativeTax  = 0;
   let taxableContrib = 0; // track total contributions to taxable account
 
   for (let year = 1; year <= inp.projectionYears; year++) {
@@ -143,7 +142,6 @@ function simulate(inp: Inputs): YearRow[] {
     taxableBalance = taxableBalance * (1 + growthR) + dividendIncome - annualTax;
 
     const taxableGrowth = taxableBalance - prevTaxable - allowedContrib;
-    cumulativeTax      += annualTax;
 
     rows.push({
       year,
