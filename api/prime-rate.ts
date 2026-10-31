@@ -28,6 +28,12 @@ function isSaneRate(v: unknown): v is number {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Only GET and HEAD are cached by the CDN; anything else would reach SARB on every call.
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   // Cache on Vercel CDN for 6 hours, allow stale for 12 hours while revalidating.
   // The client fetches same-origin, so no CORS header is needed at all.
   res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=43200');
