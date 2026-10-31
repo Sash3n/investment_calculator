@@ -85,3 +85,15 @@ export function tooltipRand(value: number | string): string {
 export function tooltipPercent(value: number | string): string {
   return formatPercent(typeof value === 'string' ? parseFloat(value) : value);
 }
+
+/** A number of months as "3 years 2 months", "1 year" or "5 months". */
+export function formatMonths(months: number): string {
+  const whole = Math.max(0, Math.round(months));
+  const y = Math.floor(whole / 12);
+  const m = whole % 12;
+  const parts = [
+    y > 0 ? `${y} year${y === 1 ? '' : 's'}` : '',
+    m > 0 ? `${m} month${m === 1 ? '' : 's'}` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' ') : '0 months';
+}
