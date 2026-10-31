@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { TrendingDown, AlertCircle } from 'lucide-react';
+import { TrendingDown } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { positiveError, rangeError } from '../utils/validation';
+import { CPI_REFERENCE } from '../config/referenceRates';
 
 const C = {
   blue:  'var(--note-blue)',
@@ -44,7 +48,6 @@ export function InflationCalc() {
   const purchasingPower = amount / Math.pow(1 + inflationRate / 100, years);
   const requiredSavings = amount * Math.pow(1 + inflationRate / 100, years);
   const realReturn      = ((1 + investReturn / 100) / (1 + inflationRate / 100) - 1) * 100;
-  const savingsGap      = Math.max(0, requiredSavings - futureNominal);
 
   // Monthly savings needed to maintain purchasing power
   const r = investReturn / 100 / 12;
@@ -63,6 +66,13 @@ export function InflationCalc() {
       inflationGoal: Math.round(amount * Math.pow(1 + inflationRate / 100, yr)),
     }));
   }, [amount, inflationRate, investReturn, years]);
+
+  const errors = {
+    amount: positiveError(amount, 'Enter an amount.'),
+    inflationRate: rangeError(inflationRate, 0.1, 30, 'inflation', '%'),
+    investReturn: rangeError(investReturn, -20, 40, 'a return', '%'),
+  };
+  const blocked = errors.amount ?? errors.inflationRate ?? errors.investReturn;
 
   const applyPreset = (idx: number) => {
     setPresetIdx(idx);
@@ -91,31 +101,6 @@ export function InflationCalc() {
         </div>
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: `${years}-Year Purchasing Power`, value: formatRand(purchasingPower, 0),
-            sub: `Today's ${formatRand(amount, 0)} buys only this much in ${years} yrs`, color: C.red },
-          { label: 'If Invested',  value: formatRand(futureNominal, 0),
-            sub: `At ${investReturn}% p.a.`, color: C.green },
-          { label: 'Real Return',  value: `${realReturn.toFixed(2)}%`,
-            sub: 'After inflation',
-            color: realReturn > 0 ? C.green : C.red },
-          { label: 'Savings Gap', value: savingsGap > 0 ? formatRand(savingsGap, 0) : 'None',
-            sub: savingsGap > 0 ? 'Invest more to beat inflation' : 'Investments beat inflation',
-            color: savingsGap > 0 ? C.orange : C.green },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-            <p className="text-base font-bold leading-tight"
-              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>{kpi.value}</p>
-            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
-          </div>
-        ))}
-      </motion.div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Inputs */}
@@ -124,11 +109,11 @@ export function InflationCalc() {
           <p className="text-sm font-bold"
             style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Settings</p>
 
-          <InputField id="amount" label="Today's Amount / Goal" value={amount}
+          <InputField id="amount" label="Today's Amount / Goal" value={amount} error={errors.amount}
             onChange={(v) => setAmount(parseFloat(v) || 0)} prefix="R" />
-          <InputField id="ir" label="Inflation Rate" value={inflationRate}
+          <InputField id="ir" label="Inflation Rate" value={inflationRate} error={errors.inflationRate}
             onChange={(v) => setInflationRate(parseFloat(v) || 0)} suffix="% p.a." step={0.5} />
-          <InputField id="ret" label="Investment Return" value={investReturn}
+          <InputField id="ret" label="Investment Return" value={investReturn} error={errors.investReturn}
             onChange={(v) => setInvestReturn(parseFloat(v) || 0)} suffix="% p.a." step={0.5} />
           <InputField id="yrs" label="Time Horizon" value={years}
             onChange={(v) => setYears(Math.min(50, Math.max(1, parseInt(v) || 1)))} suffix="years" />
@@ -152,53 +137,26 @@ export function InflationCalc() {
           </div>
         </motion.div>
 
-        {/* Insight boxes */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.09 }}
-          className="space-y-3">
-
-          <div className="glass-card-static p-4 space-y-2">
-            <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-              The Purchasing Power Story
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
-              {formatRand(amount, 0)} today will only buy the equivalent of{' '}
-              <strong style={{ color: textTone(C.red) }}>{formatRand(purchasingPower, 0)}</strong> worth of goods in {years} years at {inflationRate}% inflation.
-              That's a <strong style={{ color: textTone(C.red) }}>{(((amount - purchasingPower) / amount) * 100).toFixed(0)}%</strong> loss of purchasing power.
-            </p>
-          </div>
-
-          <div className="glass-card-static p-4 space-y-2">
-            <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-              To Maintain Purchasing Power
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
-              You need <strong style={{ color: textTone(C.blue) }}>{formatRand(requiredSavings, 0)}</strong> in {years} years to buy what {formatRand(amount, 0)} buys today.
-              Investing <strong style={{ color: textTone(C.green) }}>{formatRand(monthlyNeeded, 0)}/mo</strong> at {investReturn}% gets you there.
-            </p>
-          </div>
-
-          {realReturn < 2 && (
-            <div className="p-4 rounded-xl flex items-start gap-2"
-              style={{ background: 'color-mix(in srgb, var(--loss) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 20%, transparent)' }}>
-              <AlertCircle size={14} style={{ color: textTone(C.red), flexShrink: 0, marginTop: 1 }} />
-              <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-                {realReturn < 0
-                  ? `Your investment return (${investReturn}%) is below inflation (${inflationRate}%). You are losing real wealth.`
-                  : `Real return of ${realReturn.toFixed(1)}% is very low. Consider higher-return assets like JSE ETFs.`}
-              </p>
-            </div>
-          )}
-
-          <div className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-2"
-              style={{ color: 'var(--ink-subtle)' }}>Rule of 72</p>
-            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-              At {inflationRate}% inflation, prices <strong style={{ color: textTone(C.orange) }}>double</strong> every{' '}
-              <strong style={{ color: textTone(C.orange) }}>{(72 / inflationRate).toFixed(1)} years</strong>.
-              Your investment doubles every <strong style={{ color: textTone(C.green) }}>{(72 / investReturn).toFixed(1)} years</strong> at {investReturn}%.
-            </p>
-          </div>
-        </motion.div>
+        <ResultPanel
+          className="self-start"
+          label={`What ${formatRand(amount, 0)} buys in ${years} years`}
+          value={formatRand(purchasingPower, 0)}
+          blocked={blocked}
+          summary={<>
+            At {inflationRate}% inflation, prices double about every {(72 / inflationRate).toFixed(0)} years, so
+            today’s {formatRand(amount, 0)} buys {((1 - purchasingPower / amount) * 100).toFixed(0)}% less in {years} years.
+            To keep up you would need {formatRand(requiredSavings, 0)} by then. Invested at {investReturn}%, it grows to {formatRand(futureNominal, 0)}
+            {realReturn >= 0
+              ? `, a real return of ${realReturn.toFixed(1)}% a year after inflation.`
+              : `. That return is below inflation, so the money loses value every year.`}
+          </>}
+          figures={[
+            { label: 'Needed to keep up', value: formatRand(requiredSavings, 0) },
+            { label: `Invested at ${investReturn}%`, value: formatRand(futureNominal, 0) },
+            { label: 'Real return', value: `${realReturn.toFixed(1)}%` },
+            { label: 'Saving from zero', value: `${formatRand(monthlyNeeded, 0)}/mo` },
+          ]}
+        />
       </div>
 
       {/* Chart */}
@@ -235,9 +193,15 @@ export function InflationCalc() {
         </ResponsiveContainer>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        SA CPI 5-year average ≈ 5.5%. JSE All Share 20-year average ≈ 13–15% nominal. Past performance ≠ future results. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Inflation of {inflationRate}% and the return of {investReturn}% stay the same every year. Neither is guaranteed.</>,
+          <>For reference, {CPI_REFERENCE.source.publisher} put headline inflation at {CPI_REFERENCE.value}% for {CPI_REFERENCE.period}. The presets are round numbers for comparing scenarios.</>,
+          <>“Saving from zero” is the monthly amount that grows to {formatRand(requiredSavings, 0)} in {years} years at {investReturn}%, if you start with nothing.</>,
+          <>Prices doubling is worked out with the rule of 72: 72 divided by the inflation rate.</>,
+          <>Tax and fees are not included.</>,
+        ]}
+      />
     </div>
   );
 }

@@ -17,6 +17,9 @@ import { useAuth } from '../context/AuthContext';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { seriesColors, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError } from '../utils/validation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -180,6 +183,12 @@ export function NetWorthDashboard() {
   );
   const netWorth = totalAssets - totalLiab;
   const debtRatio = totalAssets > 0 ? (totalLiab / totalAssets) * 100 : 0;
+  const debtBand = debtRatio < 40 ? 'healthy' : debtRatio < 70 ? 'moderate' : 'high';
+  const lastSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
+  const changeSinceLast = lastSnapshot ? netWorth - lastSnapshot.netWorth : 0;
+  const blocked = [...Object.values(assets), ...Object.values(liabilities)].some((v) => v < 0)
+    ? 'Amounts can\u2019t be negative. Enter what you owe under liabilities.'
+    : undefined;
 
   // Bar chart data: assets vs liabilities breakdown
   const barData = [
@@ -236,31 +245,23 @@ export function NetWorthDashboard() {
         </div>
       </motion.div>
 
-      {/* Summary KPIs */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-      >
-        {[
-          { label: 'Total Assets',     value: formatRand(totalAssets, 0),  color: C.green, sub: '' },
-          { label: 'Total Liabilities', value: formatRand(totalLiab, 0),   color: C.red,     sub: '' },
-          { label: 'Net Worth',         value: formatRand(netWorth, 0),    color: netWorth >= 0 ? C.blue : C.red, sub: '' },
-          { label: 'Debt-to-Asset',     value: `${debtRatio.toFixed(1)}%`, color: debtRatio < 40 ? C.green : debtRatio < 70 ? C.orange : C.red,
-            sub: debtRatio < 40 ? 'Healthy' : debtRatio < 70 ? 'Moderate' : 'High' },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass-card-static p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
-            <p className="text-lg font-bold leading-tight"
-              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>
-              {kpi.value}
-            </p>
-            {kpi.sub && (
-              <p className="text-[10px] mt-0.5" style={{ color: textTone(kpi.color) }}>{kpi.sub}</p>
-            )}
-          </div>
-        ))}
-      </motion.div>
+      <ResultPanel
+        label="Net worth"
+        value={formatRand(netWorth, 0)}
+        tone={netWorth >= 0 ? 'default' : 'loss'}
+        blocked={blocked}
+        summary={<>
+          You own {formatRand(totalAssets, 0)} and owe {formatRand(totalLiab, 0)}.
+          {totalAssets > 0 && ` Your debts come to ${debtRatio.toFixed(0)}% of what you own, which is ${debtBand}.`}
+          {lastSnapshot && ` That is ${formatRand(Math.abs(changeSinceLast), 0)} ${changeSinceLast >= 0 ? 'more' : 'less'} than your last snapshot${lastSnapshot.label ? ` (${lastSnapshot.label})` : ''}.`}
+        </>}
+        figures={[
+          { label: 'What you own', value: formatRand(totalAssets, 0) },
+          { label: 'What you owe', value: formatRand(totalLiab, 0) },
+          { label: 'Debt to assets', value: `${debtRatio.toFixed(0)}%` },
+          { label: 'Since last snapshot', value: lastSnapshot ? `${changeSinceLast >= 0 ? '+' : '−'}${formatRand(Math.abs(changeSinceLast), 0)}` : 'None saved' },
+        ]}
+      />
 
       {/* Inputs: Assets + Liabilities */}
       <motion.div
@@ -285,6 +286,7 @@ export function NetWorthDashboard() {
                 id={`asset-${f.key}`}
                 label={f.label}
                 value={assets[f.key]}
+                error={nonNegativeError(assets[f.key])}
                 onChange={(v) => setAssets((a) => ({ ...a, [f.key]: parseFloat(v) || 0 }))}
                 prefix="R"
               />
@@ -310,6 +312,7 @@ export function NetWorthDashboard() {
                 id={`liab-${f.key}`}
                 label={f.label}
                 value={liabilities[f.key]}
+                error={nonNegativeError(liabilities[f.key])}
                 onChange={(v) => setLiab((l) => ({ ...l, [f.key]: parseFloat(v) || 0 }))}
                 prefix="R"
               />
@@ -356,6 +359,7 @@ export function NetWorthDashboard() {
         </p>
         <div className="flex gap-3 flex-wrap">
           <input
+            aria-label="Snapshot name"
             className="flex-1 min-w-[160px] px-3 py-2 rounded-xl text-sm bg-transparent border outline-none"
             style={{ borderColor: 'color-mix(in srgb, var(--ink) 12%, transparent)', color: 'var(--ink)' }}
             placeholder={`e.g. ${new Date().toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}`}
@@ -487,9 +491,13 @@ export function NetWorthDashboard() {
         </motion.div>
       )}
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Snapshots stored securely in your account. Not financial advice.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>Net worth is everything you own less everything you owe, at the values you enter. Use what each thing would sell for today.</>,
+          <>Debt to assets of under 40% is shown as healthy, 40% to 70% as moderate and above that as high. These are rough guides, not rules.</>,
+          <>Snapshots are saved to your account so you can see the trend over time.</>,
+        ]}
+      />
     </div>
   );
 }
