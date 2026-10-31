@@ -4,67 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
   Menu, X, ChevronRight, ChevronDown, BarChart3, Sun, Moon,
-  AlertTriangle, LogIn, LogOut, Star, Clock,
+  Info, LogIn, LogOut, Star, Clock,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, PAGE_TITLES, type NavItem } from '../../config/nav';
 import { CommandPalette } from '../CommandPalette';
+import { DisclaimerFooter, DisclaimerLink } from '../Disclaimer';
 import { useNavPrefs } from '../../hooks/useNavPrefs';
 import { alpha, textTone } from '../../utils/color';
-
-function DisclaimerBanner() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const accepted = localStorage.getItem('fincalc-disclaimer');
-    if (!accepted) setVisible(true);
-  }, []);
-
-  const accept = () => {
-    localStorage.setItem('fincalc-disclaimer', '1');
-    setVisible(false);
-  };
-
-  if (!visible) return null;
-
-  return (
-    <div
-      className="fixed bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl rounded-2xl p-4 shadow-2xl"
-      style={{
-        background: 'color-mix(in srgb, var(--paper-raised) 97%, transparent)',
-        border: '1px solid color-mix(in srgb, var(--note-orange) 35%, transparent)',
-        backdropFilter: 'blur(20px)',
-      }}
-    >
-      <div className="flex gap-3">
-        <AlertTriangle size={18} className="text-note-orange-ink flex-shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-note-orange-ink mb-1">Educational Purposes Only</p>
-          <p className="text-[11px] leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
-            FinCalc ZA provides general financial illustrations for educational purposes only.
-            All calculations are estimates and <strong style={{ color: 'var(--ink)' }}>do not constitute financial, tax, investment, or legal advice</strong>.
-            Consult a <strong style={{ color: 'var(--ink)' }}>certified financial planner (CFP)</strong> or SARS-registered tax practitioner
-            before making any financial decisions. Figures are based on publicly available SARS information and may not reflect the latest rates.
-          </p>
-          <p className="text-[11px] leading-relaxed mt-2" style={{ color: 'var(--ink-muted)' }}>
-            <strong style={{ color: 'var(--ink)' }}>Your data:</strong> calculations run in your browser and are not
-            sent anywhere by default. If you sign in with Google, saved properties and your last 50 calculations
-            (which may include figures you enter, such as incomes and property values) are stored in your private
-            cloud account until you delete them — removable at any time via Calculation History and your portfolio.
-            FinCalc ZA runs no analytics or tracking scripts.
-          </p>
-        </div>
-        <button
-          onClick={accept}
-          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-          style={{ background: 'color-mix(in srgb, var(--note-orange) 15%, transparent)', color: 'var(--note-orange-ink)', border: '1px solid color-mix(in srgb, var(--note-orange) 30%, transparent)' }}
-        >
-          I understand
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /** Single sidebar nav row, with a pin/favourite toggle on hover. */
 function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourite: boolean; onToggleFav: (path: string) => void }) {
@@ -112,6 +59,8 @@ function SidebarLink({ item, favourite, onToggleFav }: { item: NavItem; favourit
 
 const COLLAPSE_KEY = 'fincalc-nav-collapsed';
 const THEME_KEY = 'fincalc-color-theme';
+/** Routes that show no estimates, so they get no "Estimate only" marker. */
+const NOT_CALCULATORS = new Set(['/', '/history', '/learn', '/portfolio-hub', '/sars-codes']);
 
 export function AppShell() {
   const liveRate = usePrimeRate();
@@ -127,6 +76,7 @@ export function AppShell() {
   const { user, signIn, signOut } = useAuth();
   const location = useLocation();
   const pageTitle = PAGE_TITLES[location.pathname] ?? 'FinCalc ZA';
+  const isCalculator = !!NAV_BY_PATH[location.pathname] && !NOT_CALCULATORS.has(location.pathname);
 
   const { favourites, recents, toggleFavourite, isFavourite, recordVisit } = useNavPrefs();
   const favItems = favourites.map((p) => NAV_BY_PATH[p]).filter(Boolean);
@@ -183,7 +133,6 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--paper)' }}>
-      <DisclaimerBanner />
       {/* ── Mobile overlay ─────────────────────────────── */}
       {sidebarOpen && (
         <div
@@ -302,28 +251,13 @@ export function AppShell() {
             <span className="text-note-orange-ink font-semibold">
               {liveRate.loading ? '…' : `${liveRate.primeRate}%`}
             </span>
-            {!liveRate.loading && !liveRate.fallback && liveRate.asOf && (
+            {!liveRate.loading && liveRate.asOf && (
               <span className="text-ink-subtle"> · {new Date(liveRate.asOf).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
             )}
           </p>
           <p className="text-[10px]" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>
             All values in South African Rand
           </p>
-          <div className="mt-2 p-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--note-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 15%, transparent)' }}>
-            <p className="text-[10px] leading-relaxed font-medium" style={{ color: 'var(--note-orange-ink)', fontFamily: 'var(--font-text)' }}>
-              ⚠ Educational use only
-            </p>
-            <p className="text-[9px] leading-relaxed mt-0.5" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>
-              Not financial advice. Consult a CFP before investing.
-            </p>
-            <button
-              className="text-[9px] mt-1 underline"
-              style={{ color: 'var(--ink-subtle)' }}
-              onClick={() => { localStorage.removeItem('fincalc-disclaimer'); window.location.reload(); }}
-            >
-              View full disclaimer
-            </button>
-          </div>
         </div>
       </aside>
 
@@ -354,6 +288,12 @@ export function AppShell() {
           <h1 className="text-base font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             {pageTitle}
           </h1>
+          {isCalculator && (
+            <DisclaimerLink className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border border-rule text-ink-subtle hover:text-ink hover:border-rule-strong transition-colors">
+              <Info size={11} aria-hidden />
+              Estimate only
+            </DisclaimerLink>
+          )}
 
           <div className="ml-auto flex items-center gap-3">
             <CommandPalette />
@@ -413,6 +353,7 @@ export function AppShell() {
         {/* Page content */}
         <main className="flex-1 overflow-auto pb-20 lg:pb-6">
           <Outlet />
+          <DisclaimerFooter />
         </main>
       </div>
 
@@ -443,7 +384,7 @@ export function AppShell() {
                 className="flex flex-col items-center justify-center py-2.5 gap-1 text-[10px] font-medium transition-all duration-200 flex-shrink-0"
                 style={({ isActive }) => ({
                   fontFamily: 'var(--font-text)',
-                  color: isActive ? 'var(--note-blue)' : 'var(--ink-subtle)',
+                  color: isActive ? 'var(--note-blue-ink)' : 'var(--ink-subtle)',
                   minWidth: '64px',
                   paddingLeft: '8px',
                   paddingRight: '8px',
