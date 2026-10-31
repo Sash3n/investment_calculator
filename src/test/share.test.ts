@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { encodeState, decodeState } from '../utils/share';
+import { afterEach, describe, it, expect } from 'vitest';
+import { encodeState, decodeState, readShareParam } from '../utils/share';
 
 const enc = (obj: unknown) => encodeState(obj);
 
@@ -70,5 +70,45 @@ describe('decodeState sanitisation', () => {
   it('drops constructor and prototype keys too', () => {
     const raw = btoa(encodeURIComponent('{"constructor":{"x":1},"prototype":{"y":2},"rate":11.5}'));
     expect(decodeState(raw)).toEqual({ rate: 11.5 });
+  });
+});
+
+describe('share link limits', () => {
+  it('drops periods long enough to freeze a calculation loop', () => {
+    const decoded = decodeState<Record<string, unknown>>(enc({
+      years: 1e12, term: 1e9, termMonths: 5000, projectionYears: 2000, yearsToCompare: 9999,
+      currentAge: 1e6, saleYears: [5, 1e12], loan: 1e12, monthly: 5000, percentage: 5000,
+    }));
+    expect(decoded).toEqual({ saleYears: [5], loan: 1e12, monthly: 5000, percentage: 5000 });
+  });
+
+  it('keeps normal periods', () => {
+    const state = { years: 40, term: 30, termMonths: 72, currentAge: 35 };
+    expect(decodeState(enc(state))).toEqual(state);
+  });
+});
+
+describe('readShareParam', () => {
+  const open = (state: unknown) => window.history.replaceState(null, '', `/?s=${encodeURIComponent(enc(state))}`);
+  afterEach(() => window.history.replaceState(null, '', '/'));
+
+  it('returns null without a link', () => {
+    expect(readShareParam()).toBeNull();
+  });
+
+  it('drops nested objects, which no page can use', () => {
+    open({ loan: { x: 1 }, rate: 11 });
+    expect(readShareParam()).toEqual({ rate: 11 });
+  });
+
+  it('keeps only values of the expected type when given defaults', () => {
+    open({ saleYears: 0, price: 'abc', rate: 11, label: 'mine' });
+    const defaults = { saleYears: [1, 5], price: 100, rate: 9 };
+    expect(readShareParam(defaults)).toEqual({ rate: 11, label: 'mine' });
+  });
+
+  it('keeps a valid array', () => {
+    open({ saleYears: [3, 7] });
+    expect(readShareParam({ saleYears: [1] })).toEqual({ saleYears: [3, 7] });
   });
 });
