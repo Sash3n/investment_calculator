@@ -4,7 +4,6 @@ import { AppShell } from './components/Layout/AppShell';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
-import { ErrorPage } from './pages/ErrorPage';
 
 // ── Lazy-loaded calculator pages (route-based code splitting) ────────────────
 // Pages use named exports, so each import is mapped to a default export for lazy().
@@ -67,7 +66,7 @@ function PageFallback() {
 function App() {
   return (
     <Routes>
-      <Route element={<AppShell />} errorElement={<ErrorPage />}>
+      <Route element={<AppShell />}>
         <Route path="/" element={<Home />} />
         <Route
           path="*"

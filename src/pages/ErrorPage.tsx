@@ -1,11 +1,9 @@
 import { motion } from 'framer-motion';
-import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
+import { isRouteErrorResponse, Link } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { alpha, textTone } from '../utils/color';
 
-export function ErrorPage() {
-  const error = useRouteError();
-
+export function ErrorPage({ error }: { error: unknown }) {
   let status = 500;
   let title = 'Something went wrong';
   let message = 'An unexpected error occurred. Please try refreshing the page.';
@@ -22,15 +20,13 @@ export function ErrorPage() {
       title = 'Server error';
       message = 'Something went wrong on our end. Please try again later.';
     }
-  } else if (error instanceof Error) {
-    message = error.message;
   }
 
   const statusColor =
     status >= 500 ? 'var(--loss)' : status === 403 ? 'var(--note-orange)' : 'var(--note-blue)';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+    <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 text-center relative overflow-hidden"
       style={{ background: 'var(--color-bg, var(--paper))' }}>
 
       {/* Glow */}
