@@ -140,6 +140,69 @@ export function calcExtraPaymentVsInvesting(inputs: InvestingInputs): InvestingR
 }
 
 /**
+ * Expected return at which both routes end level: below it, paying into the bond
+ * comes out ahead; above it, investing does. Returns 0 if investing is ahead at any
+ * return, or null if it never catches up within `maxReturn` (or there is nothing to compare).
+ */
+export function findBreakEvenReturn(inputs: InvestingInputs, maxReturn = 40): number | null {
+  if (inputs.extraMonthlyAmount <= 0 || inputs.loanBalance <= 0) return null;
+  const gap = (r: number) => calcExtraPaymentVsInvesting({ ...inputs, expectedReturn: r }).netBenefitB;
+  let lo = 0;
+  let hi = maxReturn;
+  if (gap(lo) > 0) return 0;
+  if (gap(hi) <= 0) return null;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (gap(mid) > 0) hi = mid;
+    else lo = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/** Everything the Versus view shows, taken straight from the calculator's result. */
+export interface VersusModel {
+  extra: number;
+  standardPayment: number;
+  comparisonDate: Date;
+  bond: { total: number; interestSaved: number; payoffDate: Date; monthsEarly: number; investsMonthly: number; rate: number };
+  invest: { total: number; beforeTax: number; cgt: number; payoffDate: Date; rate: number };
+  winner: 'bond' | 'investing';
+  margin: number;
+  breakEven: number | null;
+}
+
+export function buildVersusModel(
+  inputs: InvestingInputs,
+  result: InvestingResult = calcExtraPaymentVsInvesting(inputs),
+  breakEven: number | null = findBreakEvenReturn(inputs),
+): VersusModel {
+  const standardPayment = calcStandardPayment(inputs.loanBalance, inputs.interestRate, inputs.remainingTermYears);
+  return {
+    extra: inputs.extraMonthlyAmount,
+    standardPayment,
+    comparisonDate: result.standardPayoffDate,
+    bond: {
+      total: result.bondRouteValue,
+      interestSaved: result.interestSaved,
+      payoffDate: result.newPayoffDate,
+      monthsEarly: result.monthsSaved,
+      investsMonthly: standardPayment + inputs.extraMonthlyAmount,
+      rate: inputs.interestRate,
+    },
+    invest: {
+      total: result.afterTaxPortfolioValue,
+      beforeTax: result.portfolioValueAtPayoff,
+      cgt: result.portfolioValueAtPayoff - result.afterTaxPortfolioValue,
+      payoffDate: result.standardPayoffDate,
+      rate: inputs.expectedReturn,
+    },
+    winner: result.winner,
+    margin: result.winnerAmount,
+    breakEven,
+  };
+}
+
+/**
  * Standard payment for display in the component
  */
 export function calcStandardPayment(
