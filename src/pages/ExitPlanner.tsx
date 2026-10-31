@@ -4,11 +4,10 @@ import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell,
 } from 'recharts';
 import {
-  DoorOpen, TrendingUp, Info, BookOpen, Trophy, AlertTriangle, Receipt, RotateCcw,
+  DoorOpen, BookOpen, RotateCcw,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { ShareButton } from '../components/ui/ShareButton';
 import { usePersistentState } from '../hooks/usePersistentState';
@@ -17,6 +16,10 @@ import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcExitPlanner, type ExitPlannerInputs } from '../utils/exitPlanner';
 import type { AgeGroup } from '../types';
 import { alpha, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -67,6 +70,18 @@ export function ExitPlanner() {
   const set = (fn: (v: number) => Partial<ExitPlannerInputs>) => (val: string) =>
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
 
+  const best = result.bestYear;
+  const errors = {
+    purchasePrice: positiveError(inputs.purchasePrice, 'Enter what you paid for the property.'),
+    buildingCostExclLand: inputs.buildingCostExclLand < 0
+      ? 'Enter zero or more.'
+      : inputs.buildingCostExclLand > inputs.purchasePrice ? 'The building cost can\u2019t be more than the purchase price.' : undefined,
+    annualAppreciation: rangeError(inputs.annualAppreciation, -20, 30, 'yearly growth', '%'),
+    saleCostsPercent: rangeError(inputs.saleCostsPercent, 0, 20, 'sale costs', '%'),
+    otherAnnualTaxableIncome: nonNegativeError(inputs.otherAnnualTaxableIncome),
+  };
+  const blocked = errors.purchasePrice ?? errors.buildingCostExclLand ?? errors.annualAppreciation ?? errors.saleCostsPercent ?? errors.otherAnnualTaxableIncome;
+
   const chartData = result.years.map((y) => ({
     year: y.year,
     netProceeds: Math.round(y.netProceedsAfterTax),
@@ -107,13 +122,8 @@ export function ExitPlanner() {
         {/* Inputs */}
         <div className="glass-card p-5 space-y-4">
           <SectionHeader title="Property & Holding" icon={DoorOpen} />
-          <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--note-brown) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-brown) 20%, transparent)' }}>
-            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.brown) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>Models an investment property (no primary-residence exclusion). Recoupment claws back S13 allowances as income on sale.</span>
-          </div>
-
-          <InputField label="Original Purchase Price" id="e-price" value={inputs.purchasePrice} onChange={set((v) => ({ purchasePrice: v }))} prefix="R" help="Total acquisition cost" />
-          <InputField label="Building Cost (excl. land)" id="e-building" value={inputs.buildingCostExclLand} onChange={set((v) => ({ buildingCostExclLand: v }))} prefix="R" help="Portion qualifying for Section 13sex allowances" />
+          <InputField label="Original Purchase Price" id="e-price" value={inputs.purchasePrice} error={errors.purchasePrice} onChange={set((v) => ({ purchasePrice: v }))} prefix="R" help="Total acquisition cost" />
+          <InputField label="Building Cost (excl. land)" id="e-building" value={inputs.buildingCostExclLand} error={errors.buildingCostExclLand} onChange={set((v) => ({ buildingCostExclLand: v }))} prefix="R" help="Portion qualifying for Section 13sex allowances" />
 
           <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
             <input type="checkbox" id="e-claim" checked={inputs.claimingS13} onChange={(e) => setInputs((p) => ({ ...p, claimingS13: e.target.checked }))} className="w-4 h-4 accent-note-brown" />
@@ -124,62 +134,43 @@ export function ExitPlanner() {
             <label htmlFor="e-lowcost" className="text-sm cursor-pointer" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>Low-cost housing (10% / 10 years)</label>
           </div>
 
-          <InputField label="Annual Appreciation" id="e-appr" value={inputs.annualAppreciation} onChange={set((v) => ({ annualAppreciation: v }))} suffix="%" help="SA long-term average ≈ 6–8% p.a." />
-          <InputField label="Sale Costs" id="e-salecost" value={inputs.saleCostsPercent} onChange={set((v) => ({ saleCostsPercent: v }))} suffix="%" help="Agent commission (typically 5–7.5% incl. VAT)" />
-          <InputField label="Other Annual Taxable Income" id="e-income" value={inputs.otherAnnualTaxableIncome} onChange={set((v) => ({ otherAnnualTaxableIncome: v }))} prefix="R" help="Determines marginal rate for recoupment & CGT" />
+          <InputField label="Annual Appreciation" id="e-appr" value={inputs.annualAppreciation} error={errors.annualAppreciation} onChange={set((v) => ({ annualAppreciation: v }))} suffix="%" help="SA long-term average ≈ 6–8% p.a." />
+          <InputField label="Sale Costs" id="e-salecost" value={inputs.saleCostsPercent} error={errors.saleCostsPercent} onChange={set((v) => ({ saleCostsPercent: v }))} suffix="%" help="Agent commission (typically 5–7.5% incl. VAT)" />
+          <InputField label="Other Annual Taxable Income" id="e-income" value={inputs.otherAnnualTaxableIncome} error={errors.otherAnnualTaxableIncome} onChange={set((v) => ({ otherAnnualTaxableIncome: v }))} prefix="R" help="Determines marginal rate for recoupment & CGT" />
           <SelectField label="Age Group" id="e-age" value={inputs.ageGroup} onChange={(v) => setInputs((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
         </div>
 
         {/* Results */}
         <div className="space-y-5">
-          {/* Best-year banners */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {result.bestYear && (
-              <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: `1px solid ${alpha(C.green, 27)}` }}>
-                <Trophy size={20} color={C.green} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: textTone(C.green), fontFamily: 'var(--font-display)' }}>Most cash: sell in year {result.bestYear.year}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>Net {formatRand(result.bestYear.netProceedsAfterTax, 0)} after tax & sale costs.</p>
-                </div>
-              </div>
-            )}
-            {result.bestLifetimeYear && inputs.claimingS13 && (
-              <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: `1px solid ${alpha(C.blue, 27)}` }}>
-                <TrendingUp size={20} color={C.blue} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: textTone(C.blue), fontFamily: 'var(--font-display)' }}>Best tax position: year {result.bestLifetimeYear.year}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>S13 savings minus exit tax = {formatRand(result.bestLifetimeYear.netLifetimeTaxPosition, 0)}.</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <ResultPanel
+            label="Most cash if you sell in"
+            value={best ? `Year ${best.year}` : '—'}
+            blocked={blocked}
+            summary={best ? <>
+              Selling in year {best.year} leaves {formatRand(best.netProceedsAfterTax, 0)} after {formatRand(best.totalExitTax, 0)} of tax and {formatRand(best.saleCosts, 0)} of sale costs.
+              {inputs.claimingS13 && result.bestLifetimeYear && ` Counting the tax the allowances saved while you held it, year ${result.bestLifetimeYear.year} gives the best overall tax position.`}
+              {inputs.claimingS13 && result.annualDeduction > 0 && ` Every rand of Section 13sex allowance you claim (${formatRand(result.annualDeduction, 0)} a year) is added back to your income when you sell.`}
+            </> : 'Add a sale year to compare.'}
+            figures={best ? [
+              { label: 'Net after tax', value: formatRand(best.netProceedsAfterTax, 0) },
+              { label: 'Tax on exit', value: formatRand(best.totalExitTax, 0) },
+              { label: 'Tax as a share of the gain', value: formatPercent(best.effectiveExitTaxRate, 1) },
+              { label: 'Best tax position', value: inputs.claimingS13 && result.bestLifetimeYear ? `Year ${result.bestLifetimeYear.year}` : 'Not claiming' },
+            ] : undefined}
+          />
 
-          {/* Recoupment warning */}
-          {inputs.claimingS13 && result.annualDeduction > 0 && (
-            <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'color-mix(in srgb, var(--note-orange) 7%, transparent)', border: `1px solid ${alpha(C.orange, 20)}` }}>
-              <AlertTriangle size={18} color={C.orange} className="mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: textTone(C.orange), fontFamily: 'var(--font-display)' }}>The recoupment trap</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-                  You deduct {formatRand(result.annualDeduction, 0)}/year ({formatPercent(result.rate * 100, 0)} of building cost) for up to {result.period} years. On sale, every rand claimed is added back to your income and taxed at your marginal rate — so selling soon after claiming allowances can hand much of the benefit back to SARS.
-                </p>
-              </div>
-            </div>
+          {best && (
+            <BreakdownList
+              title={`If you sell in year ${best.year}`}
+              lines={[
+                { label: 'Sale price', value: best.saleValue, note: `${formatPercent(inputs.annualAppreciation, 0)} growth a year` },
+                { label: `Sale costs (${formatPercent(inputs.saleCostsPercent, 1)})`, value: best.saleCosts, kind: 'less' },
+                { label: 'Tax on recouped allowances', value: best.recoupmentTax, kind: 'less', note: best.recoupment > 0 ? `${formatRand(best.recoupment, 0)} added back to income` : undefined },
+                { label: 'Capital gains tax', value: best.cgtTax, kind: 'less', note: `On a gain of ${formatRand(best.capitalGain, 0)}` },
+              ]}
+              total={{ label: 'Net after tax', value: best.netProceedsAfterTax }}
+            />
           )}
-
-          {/* Stat cards (10-year reference) */}
-          {(() => {
-            const ref = result.years.find((y) => y.year === 10) ?? result.years[0];
-            if (!ref) return null;
-            return (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <StatCard label="Sale Value (yr 10)" value={formatRandShort(ref.saleValue)} sub={`${formatPercent(inputs.annualAppreciation, 0)} p.a. growth`} icon={TrendingUp} color="green" delay={0} />
-                <StatCard label="Recoupment Tax (yr 10)" value={formatRandShort(ref.recoupmentTax)} sub="S13 clawback" icon={Receipt} color="orange" delay={0.05} />
-                <StatCard label="CGT (yr 10)" value={formatRandShort(ref.cgtTax)} sub="On appreciation" icon={Receipt} color="red" delay={0.1} />
-                <StatCard label="Net After Tax (yr 10)" value={formatRandShort(ref.netProceedsAfterTax)} sub={`Exit tax ${formatPercent(ref.effectiveExitTaxRate, 1)} of gain`} icon={DoorOpen} color="blue" delay={0.15} />
-              </div>
-            );
-          })()}
 
           {/* Chart */}
           <div className="glass-card-static p-5">
@@ -188,7 +179,7 @@ export function ExitPlanner() {
               <ComposedChart data={chartData} margin={{ left: 8, right: 16, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--rule)" />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} label={{ value: 'Year sold', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--ink-subtle)' }} />
-                <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `R${(v / 1_000_000).toFixed(1)}M`} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
                 <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<RandTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
                 <Bar dataKey="netProceeds" name="Net Proceeds After Tax" radius={[3, 3, 0, 0]} fill={C.green}>
@@ -255,6 +246,18 @@ export function ExitPlanner() {
               ))}
             </div>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>This is an investment property, so there is no primary residence exclusion. Any bond on it is not included.</>,
+              <>The property grows by {formatPercent(inputs.annualAppreciation, 1)} a year, and selling costs {formatPercent(inputs.saleCostsPercent, 1)} of the sale price.</>,
+              inputs.claimingS13
+                ? <>Section 13sex allowances of {formatPercent(result.rate * 100, 0)} of the building cost are claimed each year for up to {result.period} years. When you sell, what was claimed is added back to your income and taxed at your marginal rate.</>
+                : <>No Section 13sex allowances are claimed, so nothing is recouped on sale.</>,
+              <>Capital gains tax uses the R50,000 yearly exclusion and 40% inclusion, at your marginal rate on top of {formatRand(inputs.otherAnnualTaxableIncome, 0)} other income and any recoupment.</>,
+              <>“Most cash” compares rand amounts in different years without adjusting for inflation, so a longer hold usually shows more.</>,
+            ]}
+          />
         </div>
       </div>
     </div>

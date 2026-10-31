@@ -5,20 +5,23 @@ import {
   AreaChart, Area, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Download, Trophy, Zap } from 'lucide-react';
+import { TrendingUp, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import clsx from 'clsx';
 
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcExtraPaymentVsInvesting, calcStandardPayment, findBreakEvenReturn, buildVersusModel } from '../utils/investing';
 import { VersusView } from '../components/versus/VersusView';
-import { formatRand, formatPercent, formatYears, formatDate } from '../utils/format';
+import { formatRand, formatYears, formatDate } from '../utils/format';
 import type { InvestingInputs } from '../types';
 import { textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { positiveError, rangeError } from '../utils/validation';
 import { useJourneyValues } from '../journeys/journeyContext';
 
 const CHART_COLORS = {
@@ -179,9 +182,17 @@ export function PaymentVsInvesting() {
     XLSX.writeFile(wb, 'FinCalcZA_ExtraVsInvesting.xlsx');
   };
 
-  const winnerLabel = result.winner === 'investing'
-    ? `Investing Wins by ${formatRand(result.winnerAmount)}`
-    : `Extra Payments Win by ${formatRand(result.winnerAmount)}`;
+  const errors = {
+    loanBalance: positiveError(inputs.loanBalance, 'Enter what you still owe on the bond.'),
+    interestRate: rangeError(inputs.interestRate, 0, 30, 'a rate', '%'),
+    remainingTermYears: rangeError(inputs.remainingTermYears, 1, 30, 'a term', ' years'),
+    extraMonthlyAmount: positiveError(inputs.extraMonthlyAmount, 'Enter the amount you could pay extra or invest each month.'),
+    expectedReturn: rangeError(inputs.expectedReturn, -20, 30, 'a return', '%'),
+    cgtRate: rangeError(inputs.cgtRate, 0, 45, 'a tax rate', '%'),
+    inflationRate: rangeError(inputs.inflationRate, 0, 30, 'inflation', '%'),
+  };
+  const blocked = errors.loanBalance ?? errors.interestRate ?? errors.remainingTermYears ?? errors.extraMonthlyAmount
+    ?? errors.expectedReturn ?? errors.cgtRate;
 
   return (
     <motion.div
@@ -209,13 +220,13 @@ export function PaymentVsInvesting() {
              style={{ fontFamily: 'var(--font-text)' }}>
             Bond Details
           </p>
-          <InputField label="Current Loan Balance" id="bal" value={inputs.loanBalance}
+          <InputField label="Current Loan Balance" id="bal" value={inputs.loanBalance} error={errors.loanBalance}
             onChange={(v) => set('loanBalance', v)} prefix="R" step={10000} />
-          <InputField label="Interest Rate" id="ir" value={inputs.interestRate}
+          <InputField label="Interest Rate" id="ir" value={inputs.interestRate} error={errors.interestRate}
             onChange={(v) => set('interestRate', v)} suffix="%" step={0.25} />
-          <InputField label="Remaining Term" id="term" value={inputs.remainingTermYears}
+          <InputField label="Remaining Term" id="term" value={inputs.remainingTermYears} error={errors.remainingTermYears}
             onChange={(v) => set('remainingTermYears', v)} suffix="years" min={1} max={30} step={1} />
-          <InputField label="Extra Monthly Amount" id="extra" value={inputs.extraMonthlyAmount}
+          <InputField label="Extra Monthly Amount" id="extra" value={inputs.extraMonthlyAmount} error={errors.extraMonthlyAmount}
             onChange={(v) => set('extraMonthlyAmount', v)} prefix="R" step={500}
             help={`Standard payment: ${formatRand(standardPayment)}/mo`} />
 
@@ -229,14 +240,14 @@ export function PaymentVsInvesting() {
                 value={inputs.investmentVehicle}
                 onChange={handleVehicleChange}
                 options={investmentVehicleOptions} />
-              <InputField label="Expected Annual Return" id="ret" value={inputs.expectedReturn}
+              <InputField label="Expected Annual Return" id="ret" value={inputs.expectedReturn} error={errors.expectedReturn}
                 onChange={(v) => set('expectedReturn', v)} suffix="% p.a."
                 disabled={!isCustomReturn}
                 help={isCustomReturn ? undefined : 'Set by selected ETF'} />
-              <InputField label="CGT Rate" id="cgt" value={inputs.cgtRate}
+              <InputField label="CGT Rate" id="cgt" value={inputs.cgtRate} error={errors.cgtRate}
                 onChange={(v) => set('cgtRate', v)} suffix="%"
                 help="SA: 40% inclusion × marginal rate. Default 18% assumes 45% tax bracket." />
-              <InputField label="Inflation Rate" id="inf" value={inputs.inflationRate}
+              <InputField label="Inflation Rate" id="inf" value={inputs.inflationRate} error={errors.inflationRate}
                 onChange={(v) => set('inflationRate', v)} suffix="% p.a."
                 help="SA average CPI: ~5% p.a." />
             </div>
@@ -268,98 +279,44 @@ export function PaymentVsInvesting() {
             ))}
           </div>
 
-          {view === 'versus' ? (
+          {blocked ? (
+            <ResultPanel label="Pay the bond or invest" value="" summary="" blocked={blocked} />
+          ) : view === 'versus' ? (
             <VersusView model={versusModel} cgtRate={inputs.cgtRate} onReturnChange={handleReturnChange} />
           ) : (<>
-          {/* Winner badge */}
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="glass-card-static p-5 text-center"
-          >
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Trophy size={20} className={result.winner === 'investing' ? 'text-gain-ink' : 'text-note-blue-ink'} />
-              <span
-                className={clsx('winner-badge text-base', result.winner === 'investing' ? 'investing' : 'bond')}
-              >
-                {winnerLabel}
-              </span>
-            </div>
-            <p className="text-xs text-ink-muted max-w-sm mx-auto" style={{ fontFamily: 'var(--font-text)' }}>
-              {result.winner === 'investing'
-                ? `Investing ${formatRand(inputs.extraMonthlyAmount, 0)}/month at ${inputs.expectedReturn}% a year leaves you better off by ${formatDate(result.standardPayoffDate)} than paying it into the bond and investing the freed-up instalment once the bond is paid off.`
-                : `Paying an extra ${formatRand(inputs.extraMonthlyAmount, 0)}/month into your bond at ${inputs.interestRate}%, then investing the instalment once it is paid off, leaves you better off by ${formatDate(result.standardPayoffDate)} than investing the extra now.`}
-            </p>
-          </motion.div>
+          <ResultPanel
+            label={`${result.winner === 'investing' ? 'Investing' : 'Paying the bond'} comes out ahead by`}
+            value={formatRand(result.winnerAmount, 0)}
+            summary={result.winner === 'investing'
+              ? `Investing ${formatRand(inputs.extraMonthlyAmount, 0)} a month at ${inputs.expectedReturn}% a year leaves you better off by ${formatDate(result.standardPayoffDate)} than paying it into the bond and investing the freed-up instalment once the bond is paid off.`
+              : `Paying an extra ${formatRand(inputs.extraMonthlyAmount, 0)} a month into your bond at ${inputs.interestRate}%, then investing the instalment once it is paid off, leaves you better off by ${formatDate(result.standardPayoffDate)} than investing the extra now.`}
+            figures={[
+              { label: 'A: bond route, invested', value: formatRand(result.bondRouteValue, 0) },
+              { label: 'B: invested, after tax', value: formatRand(result.afterTaxPortfolioValue, 0) },
+              { label: 'Interest saved in A', value: formatRand(result.interestSaved, 0) },
+              { label: 'Bond paid off in A', value: formatDate(result.newPayoffDate) },
+            ]}
+          />
 
-          {/* A vs B columns */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Column A */}
-            <div className="glass-card-static p-5 border-l-[3px] border-l-note-blue">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-note-blue/15 flex items-center justify-center">
-                  <span className="text-xs font-bold text-note-blue-ink" style={{ fontFamily: 'var(--font-display)' }}>A</span>
-                </div>
-                <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
-                  Extra to Bond
-                </p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { label: 'Interest Saved', value: formatRand(result.interestSaved), color: 'var(--gain)' },
-                  { label: 'Months Saved', value: formatYears(result.monthsSaved), color: 'var(--note-blue)' },
-                  { label: 'New Payoff Date', value: formatDate(result.newPayoffDate), color: 'var(--ink)' },
-                  { label: 'Then invested (after tax)', value: formatRand(result.bondRouteValue), color: 'var(--note-blue)' },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
-                      {s.label}
-                    </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
-                      {s.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Column B */}
-            <div className="glass-card-static p-5 border-l-[3px] border-l-gain">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-gain/15 flex items-center justify-center">
-                  <span className="text-xs font-bold text-gain-ink" style={{ fontFamily: 'var(--font-display)' }}>B</span>
-                </div>
-                <p className="text-sm font-bold text-ink" style={{ fontFamily: 'var(--font-display)' }}>
-                  Invest Instead
-                </p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { label: 'Portfolio at Payoff', value: formatRand(result.portfolioValueAtPayoff), color: 'var(--gain)' },
-                  { label: 'After-Tax Value', value: formatRand(result.afterTaxPortfolioValue), color: 'var(--gain)' },
-                  { label: 'vs Scenario A', value: formatRand(result.netBenefitB), color: result.netBenefitB >= 0 ? 'var(--gain)' : 'var(--loss)' },
-                  { label: 'Payoff Date (B)', value: formatDate(result.standardPayoffDate), color: 'var(--ink)' },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
-                      {s.label}
-                    </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: textTone(s.color), fontFamily: 'var(--font-display)' }}>
-                      {s.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Stat overview */}
-          <div className="four-col-stats">
-            <StatCard label="Bond Interest Rate" value={formatPercent(inputs.interestRate)} color="blue" delay={0} />
-            <StatCard label="ETF Return" value={formatPercent(inputs.expectedReturn)} color="green" delay={0.05} />
-            <StatCard label="Extra/Month" value={formatRand(inputs.extraMonthlyAmount)} color="orange" delay={0.1} />
-            <StatCard label="CGT Rate" value={formatPercent(inputs.cgtRate)} color="red" delay={0.15} />
+          <div className="grid gap-5 xl:grid-cols-2">
+            <BreakdownList
+              title="A: extra into the bond"
+              lines={[
+                { label: 'Interest saved', value: result.interestSaved },
+                { label: 'Paid off sooner by', display: formatYears(result.monthsSaved) },
+                { label: 'New payoff date', display: formatDate(result.newPayoffDate) },
+              ]}
+              total={{ label: 'Then invested, after tax', value: result.bondRouteValue }}
+            />
+            <BreakdownList
+              title="B: invest instead"
+              lines={[
+                { label: 'Portfolio at payoff', value: result.portfolioValueAtPayoff },
+                { label: 'Tax on the gains', value: result.portfolioValueAtPayoff - result.afterTaxPortfolioValue, kind: 'less' },
+                { label: 'Bond paid off', display: formatDate(result.standardPayoffDate) },
+              ]}
+              total={{ label: 'Portfolio after tax', value: result.afterTaxPortfolioValue }}
+            />
           </div>
 
           {/* Area chart: interest saved vs portfolio value */}
@@ -416,6 +373,15 @@ export function PaymentVsInvesting() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>Both routes spend the same each month until your original payoff date. In A, once the bond is paid off, the full instalment plus the extra is invested at the same return.</>,
+              <>The bond rate stays at {inputs.interestRate}%. Paying the bond saves that interest for certain and tax-free; the {inputs.expectedReturn}% return is an assumption, not a forecast.</>,
+              <>Tax of {inputs.cgtRate}% is taken off the whole investment gain at the end. To stay cautious, the R50,000 yearly capital gains exclusion is ignored.</>,
+              <>Fees and dividend tax are not included.</>,
+            ]}
+          />
           </>)}
         </div>
       </div>
@@ -478,23 +444,6 @@ export function PaymentVsInvesting() {
           </table>
         </div>
 
-        {/* SA Tax disclosure */}
-        <div className="mt-5 p-4 bg-note-orange/6 border border-note-orange/15 rounded-xl flex items-start gap-3">
-          <Zap size={14} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-note-orange-ink mb-1" style={{ fontFamily: 'var(--font-display)' }}>
-              SA Tax Note
-            </p>
-            <p className="text-xs text-ink-muted leading-relaxed" style={{ fontFamily: 'var(--font-text)' }}>
-              Capital Gains Tax (CGT) in South Africa applies only to gains above the annual exclusion (R50,000 from 2026/27).
-              To stay conservative, this calculation ignores the exclusion and taxes the whole gain at a {inputs.cgtRate}% effective CGT rate (40% inclusion × marginal rate).
-              Both routes spend the same amount each month until your original payoff date. In A, once the bond is paid off, the full instalment plus the extra is invested at the same return, so the comparison is what each route leaves you with on that date.
-              Bond interest savings are effectively a tax-free, guaranteed return equal to your interest rate.
-              ETF returns shown are average historical returns — actual returns may vary.
-              Consult a qualified financial advisor before making investment decisions.
-            </p>
-          </div>
-        </div>
       </div>
       )}
     </motion.div>

@@ -257,7 +257,7 @@ export function InputField({
           className={clsx(
             'input-dark',
             error && 'input-error',
-            disabled && 'opacity-50 cursor-not-allowed'
+            disabled && 'bg-paper-sunk text-ink-muted cursor-not-allowed'
           )}
           style={{
             fontFamily: 'var(--font-text)',
