@@ -79,6 +79,12 @@ export function AppShell() {
   const { user, signIn, signOut } = useAuth();
   const location = useLocation();
   const pageTitle = PAGE_TITLES[location.pathname] ?? 'FinCalc ZA';
+
+  // Each page gets its own browser title for tabs, history and screen readers
+  useEffect(() => {
+    const known = location.pathname !== '/' && PAGE_TITLES[location.pathname];
+    document.title = known ? `${known} | FinCalc ZA` : 'FinCalc ZA: money calculators for South Africans';
+  }, [location.pathname]);
   const isCalculator = !!NAV_BY_PATH[location.pathname] && !NOT_CALCULATORS.has(location.pathname);
 
   const { favourites, recents, toggleFavourite, isFavourite, recordVisit } = useNavPrefs();
@@ -259,6 +265,9 @@ export function AppShell() {
             {!liveRate.loading && liveRate.asOf && (
               <span className="text-ink-subtle"> · {new Date(liveRate.asOf).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
             )}
+          </p>
+          <p className="text-[10px]" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>
+            FinCalc ZA v{__APP_VERSION__}
           </p>
           <p className="text-[10px]" style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}>
             All values in South African Rand
