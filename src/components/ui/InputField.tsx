@@ -23,6 +23,8 @@ interface InputFieldProps {
    * The label stays available to screen readers but is not shown.
    */
   inline?: boolean;
+  /** Validation message; marks the field invalid and is read out with it */
+  error?: string;
 }
 
 /** Insert spaces as thousands separators into a sanitized numeric string. */
@@ -77,6 +79,7 @@ export function InputField({
   disabled = false,
   group,
   inline = false,
+  error,
 }: InputFieldProps) {
   const isNumeric = type === 'number';
   const shouldGroup = isNumeric && (group ?? prefix === 'R');
@@ -186,6 +189,7 @@ export function InputField({
   };
 
   const displayValue = isNumeric ? display : String(value);
+  const describedBy = [help ? `${id}-help` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined;
 
   if (inline) {
     return (
@@ -205,12 +209,14 @@ export function InputField({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
-          aria-describedby={help ? `${id}-help` : undefined}
-          className="sentence-input"
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
+          className={clsx('sentence-input', error && 'sentence-input-error')}
           style={{ width: `${Math.max(displayValue.length, 2) + 0.5}ch` }}
         />
         {suffix && <span aria-hidden className="ml-0.5">{suffix}</span>}
         {help && <span id={`${id}-help`} className="sr-only">{help}</span>}
+        {error && <span id={`${id}-error`} className="sr-only">{error}</span>}
       </span>
     );
   }
@@ -246,8 +252,11 @@ export function InputField({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
           className={clsx(
             'input-dark',
+            error && 'input-error',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
           style={{
@@ -267,10 +276,16 @@ export function InputField({
       </div>
       {help && (
         <p
+          id={`${id}-help`}
           className="text-xs leading-relaxed"
           style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}
         >
           {help}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-error`} className="text-xs font-medium text-loss-ink" aria-live="polite">
+          {error}
         </p>
       )}
     </div>

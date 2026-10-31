@@ -4,13 +4,16 @@ import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, ReferenceLine,
 } from 'recharts';
-import { Home, Key, TrendingUp, Info, Scale } from 'lucide-react';
+import { Home, Key, TrendingUp, Scale } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
-import { StatCard } from '../components/ui/StatCard';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { buyVsRentInputErrors } from '../utils/validation';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcPayment } from '../utils/mortgage';
 import { calcTransferDuty, calcBondRegistrationCost, calcIncomeTax } from '../utils/tax';
-import { alpha, textTone } from '../utils/color';
+import { textTone } from '../utils/color';
 
 // ── SARS 2026/27 ──────────────────────────────────────────────────────────────
 const CGT_INCLUSION    = 0.40;
@@ -232,8 +235,15 @@ export function BuyVsRent() {
 
   // Winner at end
   const buyWins  = (last?.advantage ?? 0) >= 0;
-  const winner   = buyWins ? 'Buying' : 'Renting + Investing';
   const margin   = Math.abs(last?.advantage ?? 0);
+
+  const errors  = buyVsRentInputErrors(inp);
+  const blocked = errors.purchasePrice ?? errors.depositPercent ?? errors.interestRatePercent ?? errors.loanTermYears ?? errors.monthlyRent;
+  const breakEvenText = buyWins
+    ? (breakEvenYear ?? 1) <= 1 ? 'Buying is ahead from the first year.' : `Buying pulls ahead in year ${breakEvenYear}.`
+    : breakEvenYear
+      ? `Buying is ahead for a time from year ${breakEvenYear}, but renting is ahead again by year ${inp.yearsToCompare}.`
+      : `Renting stays ahead for all ${inp.yearsToCompare} years.`;
 
   // Chart data
   const chartData = rows.map((r) => ({
@@ -270,96 +280,49 @@ export function BuyVsRent() {
               True cost comparison · Net wealth at exit · Break-even year · SARS 2026/27 CGT
             </p>
           </div>
-          <span
-            className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{
-              background: buyWins ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--note-blue) 12%, transparent)',
-              color:      textTone(buyWins ? C.green : C.blue),
-              border:     `1px solid ${alpha(buyWins ? C.green : C.blue, 27)}`,
-            }}
-          >
-            {winner} wins by {formatRandShort(margin)}
-          </span>
         </div>
       </motion.div>
 
-      {/* Winner callout */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-xl p-4 flex items-center gap-4 flex-wrap"
-        style={{
-          background: buyWins ? 'color-mix(in srgb, var(--gain) 7%, transparent)' : 'color-mix(in srgb, var(--note-blue) 7%, transparent)',
-          border: `1px solid ${buyWins ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--note-blue) 20%, transparent)'}`,
-        }}
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: buyWins ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
-            {buyWins ? <Home size={16} style={{ color: textTone(C.green) }} /> : <Key size={16} style={{ color: textTone(C.blue) }} />}
-          </div>
-          <div>
-            <p className="text-xs font-bold" style={{ color: textTone(buyWins ? C.green : C.blue) }}>
-              {winner} is better over {inp.yearsToCompare} years by {formatRand(margin, 0)}
-            </p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--ink-muted)' }}>
-              {breakEvenYear
-                ? `Buying breaks even vs renting in Year ${breakEvenYear} (age-based on your inputs)`
-                : buyWins
-                  ? 'Buying is ahead from the start'
-                  : `Renting + investing stays ahead throughout the ${inp.yearsToCompare}-year period`}
-              {' · '}Net wealth = equity/portfolio after CGT minus all sunk costs
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-4 flex-shrink-0 text-right">
-          <div>
-            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Buy net wealth</p>
-            <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>{formatRand(last?.netWealthBuy ?? 0, 0)}</p>
-          </div>
-          <div>
-            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Rent net wealth</p>
-            <p className="text-sm font-bold" style={{ color: textTone(C.blue) }}>{formatRand(last?.netWealthRent ?? 0, 0)}</p>
-          </div>
-        </div>
-      </motion.div>
+      <ResultPanel
+        label={blocked ? 'Buying or renting' : `After ${inp.yearsToCompare} years, ${buyWins ? 'buying' : 'renting'} comes out ahead by`}
+        value={formatRand(margin, 0)}
+        blocked={blocked}
+        summary={<>
+          If you {buyWins ? 'buy' : 'rent and invest the difference'}, you would have about {formatRandShort(margin)} more
+          after {inp.yearsToCompare} years than if you {buyWins ? 'rent and invest the difference' : 'buy'}. {breakEvenText}
+        </>}
+        figures={[
+          { label: 'Net wealth if you buy', value: formatRand(last?.netWealthBuy ?? 0, 0) },
+          { label: 'Net wealth if you rent', value: formatRand(last?.netWealthRent ?? 0, 0) },
+          { label: 'Bond repayment', value: `${formatRand(monthlyPmt, 0)}/mo` },
+          { label: 'Rent in year one', value: `${formatRand(inp.monthlyRent, 0)}/mo` },
+        ]}
+      />
 
-      {/* Upfront cost summary */}
-      <div className="glass-card-static p-5">
-        <p className="text-sm font-semibold mb-3"
-          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
-          Buying — Upfront Cash Required
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
-          {[
-            { label: 'Deposit',          value: deposit,           color: C.blue },
-            { label: 'Transfer Duty',    value: transferDuty,       color: C.orange  },
-            { label: 'Bond Registration',value: bondReg,            color: C.orange  },
-            { label: 'Initiation Fee',   value: initiationFeeCash,  color: C.orange  },
-            { label: 'Total Upfront',    value: totalUpfront,       color: C.red, bold: true },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl p-3"
-              style={{ background: alpha(item.color, 5), border: `1px solid ${alpha(item.color, 15)}` }}>
-              <p style={{ color: 'var(--ink-subtle)' }}>{item.label}</p>
-              <p className={`mt-1 font-${item.bold ? 'bold text-base' : 'semibold text-sm'}`}
-                style={{ color: textTone(item.color), fontFamily: 'var(--font-display)' }}>
-                {formatRand(item.value, 0)}
-              </p>
-            </div>
-          ))}
+      {!blocked && (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <BreakdownList
+            title="Cash on transfer day if you buy"
+            lines={[
+              { label: `Deposit (${inp.depositPercent}%)`, value: deposit },
+              { label: 'Transfer duty', value: transferDuty },
+              { label: 'Bond registration', value: bondReg },
+              { label: 'Initiation fee', value: initiationFeeCash, note: inp.initiationFeeCapitalised ? 'Added to the bond instead' : undefined },
+            ]}
+            total={{ label: 'Total cash needed', value: totalUpfront, note: 'If you rent, this is invested instead' }}
+          />
+          <BreakdownList
+            title="Each month in year one"
+            lines={[
+              { label: 'Bond repayment', value: monthlyPmt },
+              { label: 'Rent', value: inp.monthlyRent, kind: 'less' },
+            ]}
+            total={monthlySaving > 0
+              ? { label: 'Bond costs more by', value: monthlySaving, note: 'If you rent, this is invested each month' }
+              : { label: 'Rent costs more by', value: Math.abs(monthlySaving), note: 'Nothing extra is invested while rent costs more' }}
+          />
         </div>
-        <div className="mt-3 flex items-center gap-2 text-xs p-2 rounded-lg"
-          style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)' }}>
-          <Info size={12} className="text-ink-subtle flex-shrink-0" />
-          <span style={{ color: 'var(--ink-subtle)' }}>
-            Monthly bond repayment: <strong style={{ color: 'var(--ink)' }}>{formatRand(monthlyPmt, 0)}</strong>
-            {' · '}Monthly rent: <strong style={{ color: 'var(--ink)' }}>{formatRand(inp.monthlyRent, 0)}</strong>
-            {' · '}
-            {monthlySaving > 0
-              ? <span>Bond costs <strong style={{ color: textTone(C.orange) }}>{formatRand(monthlySaving, 0)}/mo more</strong> — renter invests this difference</span>
-              : <span>Rent costs <strong style={{ color: textTone(C.green) }}>{formatRand(Math.abs(monthlySaving), 0)}/mo more</strong> — buyer has more monthly cash flow</span>}
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Inputs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -377,29 +340,29 @@ export function BuyVsRent() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <InputField id="purchasePrice" label="Purchase Price" value={inp.purchasePrice}
+            <InputField id="purchasePrice" label="Purchase Price" value={inp.purchasePrice} error={errors.purchasePrice}
               onChange={n((v) => ({ purchasePrice: v }))} prefix="R" />
-            <InputField id="deposit" label="Deposit" value={inp.depositPercent}
+            <InputField id="deposit" label="Deposit" value={inp.depositPercent} error={errors.depositPercent}
               onChange={n((v) => ({ depositPercent: v }))} suffix="%" step={1} />
-            <InputField id="rate" label="Interest Rate" value={inp.interestRatePercent}
+            <InputField id="rate" label="Interest Rate" value={inp.interestRatePercent} error={errors.interestRatePercent}
               onChange={n((v) => ({ interestRatePercent: v }))} suffix="%" step={0.25} />
-            <InputField id="term" label="Loan Term" value={inp.loanTermYears}
+            <InputField id="term" label="Loan Term" value={inp.loanTermYears} error={errors.loanTermYears}
               onChange={n((v) => ({ loanTermYears: v }))} suffix="yrs" />
-            <InputField id="rates" label="Monthly Rates" value={inp.monthlyRates}
+            <InputField id="rates" label="Monthly Rates" value={inp.monthlyRates} error={errors.monthlyRates}
               onChange={n((v) => ({ monthlyRates: v }))} prefix="R" />
-            <InputField id="levies" label="Monthly Levies" value={inp.monthlyLevies}
+            <InputField id="levies" label="Monthly Levies" value={inp.monthlyLevies} error={errors.monthlyLevies}
               onChange={n((v) => ({ monthlyLevies: v }))} prefix="R" />
-            <InputField id="insurance" label="Monthly Insurance" value={inp.monthlyInsurance}
+            <InputField id="insurance" label="Monthly Insurance" value={inp.monthlyInsurance} error={errors.monthlyInsurance}
               onChange={n((v) => ({ monthlyInsurance: v }))} prefix="R" />
-            <InputField id="maintenance" label="Maintenance" value={inp.maintenancePercent}
+            <InputField id="maintenance" label="Maintenance" value={inp.maintenancePercent} error={errors.maintenancePercent}
               onChange={n((v) => ({ maintenancePercent: v }))} suffix="% p.a."
               help="% of property value" step={0.25} />
-            <InputField id="propGrowth" label="Property Growth" value={inp.propertyGrowthPercent}
+            <InputField id="propGrowth" label="Property Growth" value={inp.propertyGrowthPercent} error={errors.propertyGrowthPercent}
               onChange={n((v) => ({ propertyGrowthPercent: v }))} suffix="% p.a." step={0.5} />
-            <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome}
+            <InputField id="otherIncome" label="Other Annual Income" value={inp.otherAnnualIncome} error={errors.otherAnnualIncome}
               onChange={n((v) => ({ otherAnnualIncome: v }))} prefix="R"
               help="Sets CGT marginal rate" />
-            <InputField id="initiationFee" label="Initiation Fee" value={inp.initiationFee}
+            <InputField id="initiationFee" label="Initiation Fee" value={inp.initiationFee} error={errors.initiationFee}
               onChange={n((v) => ({ initiationFee: v }))} prefix="R"
               help="Bank-charged bond initiation fee" />
           </div>
@@ -432,9 +395,9 @@ export function BuyVsRent() {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-3">
-            <InputField id="monthlyRent" label="Monthly Rent" value={inp.monthlyRent}
+            <InputField id="monthlyRent" label="Monthly Rent" value={inp.monthlyRent} error={errors.monthlyRent}
               onChange={n((v) => ({ monthlyRent: v }))} prefix="R" />
-            <InputField id="rentEsc" label="Annual Rent Escalation" value={inp.annualRentEscalation}
+            <InputField id="rentEsc" label="Annual Rent Escalation" value={inp.annualRentEscalation} error={errors.annualRentEscalation}
               onChange={n((v) => ({ annualRentEscalation: v }))} suffix="%" step={0.5} />
           </div>
           <div className="mt-2 p-3 rounded-xl text-xs"
@@ -460,7 +423,7 @@ export function BuyVsRent() {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-3">
-            <InputField id="investReturn" label="Investment Return (Renter)" value={inp.investmentReturnPercent}
+            <InputField id="investReturn" label="Investment Return (Renter)" value={inp.investmentReturnPercent} error={errors.investmentReturnPercent}
               onChange={n((v) => ({ investmentReturnPercent: v }))} suffix="% p.a." step={0.5}
               help="ETF / unit trust return assumption" />
             <div className="flex flex-col gap-1.5">
@@ -486,28 +449,6 @@ export function BuyVsRent() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Buy Net Wealth" value={formatRand(last?.netWealthBuy ?? 0, 0)}
-          sub={`After CGT + sale costs · Y${inp.yearsToCompare}`} color="green" delay={0} />
-        <StatCard label="Rent Net Wealth" value={formatRand(last?.netWealthRent ?? 0, 0)}
-          sub="Portfolio after CGT · same period" color="blue" delay={0.05} />
-        <StatCard
-          label={buyWins ? 'Buy Advantage' : 'Rent Advantage'}
-          value={formatRand(margin, 0)}
-          sub={`${winner} wins at year ${inp.yearsToCompare}`}
-          color={buyWins ? 'green' : 'blue'}
-          delay={0.1}
-        />
-        <StatCard
-          label="Break-even Year"
-          value={breakEvenYear ? `Year ${breakEvenYear}` : buyWins ? 'From start' : 'Never'}
-          sub="When buying overtakes renting"
-          color="orange"
-          delay={0.15}
-        />
       </div>
 
       {/* Charts */}
@@ -646,18 +587,16 @@ export function BuyVsRent() {
         </p>
       </div>
 
-      {/* Methodology note */}
-      <div className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}>
-        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--ink-muted)' }}>
-          <strong style={{ color: 'var(--ink)' }}>Methodology:</strong> Buyer's sunk costs = mortgage interest + rates + levies + insurance + maintenance (principal repayment builds equity, not counted as a cost). Renter invests the full upfront amount (deposit + transfer duty + bond reg) plus any monthly saving (bond &gt; rent). CGT applied at exit: primary residence gets R3M exclusion; investments get R50k annual exclusion and 40% inclusion rate. Agent commission of 2.5% applied to property sale.
-        </span>
-      </div>
-
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
-        Projections are illustrative only. CGT based on SARS 2026/27. Returns are not guaranteed. Not financial advice — consult a CFP.
-      </p>
+      <AssumptionsDrawer
+        items={[
+          <>The interest rate stays at {inp.interestRatePercent}% for the whole {inp.loanTermYears}-year bond, the home grows in value by {inp.propertyGrowthPercent}% a year and rent goes up by {inp.annualRentEscalation}% a year.</>,
+          <>The renter invests the cash a buyer would spend on transfer day, plus the difference in any month the bond costs more than the rent, and earns {inp.investmentReturnPercent}% a year. Returns are not guaranteed.</>,
+          <>The buyer’s costs are interest, rates, levies, insurance and maintenance ({inp.maintenancePercent}% of the home’s value a year). Repaying the bond builds equity, so it is not counted as a cost.</>,
+          <>Net wealth is what each side has after selling up in year {inp.yearsToCompare}, less the money spent along the way that does not come back. The sale of the home pays 2.5% agent’s commission.</>,
+          <>Capital gains tax uses the SARS 2026/27 rules: a R50,000 yearly exclusion and 40% inclusion{inp.isPrimaryResidence ? ', and the first R3 million of gain on a primary residence is tax-free' : ''}. Your other income of {formatRand(inp.otherAnnualIncome, 0)} a year sets the tax rate.</>,
+          <>Not included: tax on dividends and interest along the way, moving costs and inflation. All figures are in future rands.</>,
+        ]}
+      />
     </div>
   );
 }

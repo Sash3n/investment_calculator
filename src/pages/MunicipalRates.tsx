@@ -4,14 +4,17 @@ import {
   PieChart, Pie, Cell, Tooltip as ReTooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
-import { Building2, Info, AlertTriangle, TrendingUp, Droplets } from 'lucide-react';
+import { Building2, AlertTriangle, Droplets } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { ShareButton } from '../components/ui/ShareButton';
 import { formatRand, formatRandShort } from '../utils/format';
 import { readShareParam } from '../utils/share';
 import { alpha, RING_OF_FIVE, textTone } from '../utils/color';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { municipalInputErrors } from '../utils/validation';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
@@ -196,9 +199,9 @@ function calcBill(
   };
 }
 
-// Rates, water, sewerage, refuse, basic: a rotation of RING_OF_FIVE that keeps water teal
+// Rates, water, sewerage, refuse, basic: a rotation of RING_OF_FIVE that keeps water teal.
+// Each slice keeps its own colour when others drop out.
 const [BASIC_C, RATES_C, WATER_C, SEWER_C, REFUSE_C] = RING_OF_FIVE;
-const DONUT_COLORS = [RATES_C, WATER_C, SEWER_C, REFUSE_C, BASIC_C];
 
 // ── Share state ────────────────────────────────────────────────────────────────
 interface ShareState {
@@ -276,6 +279,12 @@ export function MunicipalRates() {
 
   const estimated = city.rateEstimated;
 
+  const errors  = municipalInputErrors({ propValue, waterKl, electricityBasic, escalation, rateInRand: activeRate });
+  const blocked = errors.propValue ?? errors.waterKl ?? errors.rateInRand;
+  const cheapest = comparisonData.reduce((min, c) => c.total < min.total ? c : min, comparisonData[0]);
+  const movingSaving = cheapest.name === city.shortName ? 0 : billTotal - cheapest.total;
+  const services = bill.sewerage + bill.refuse + bill.basic;
+
   return (
     <motion.div
       className="space-y-6 pb-16"
@@ -324,7 +333,7 @@ export function MunicipalRates() {
             Property details
           </h2>
 
-          <InputField id="mr-val" label="Municipal property value (R)" value={propValue}
+          <InputField id="mr-val" label="Municipal property value (R)" value={propValue} error={errors.propValue}
             onChange={(v) => setPropValue(Number(v))} prefix="R" min={0} />
 
           <SelectField id="mr-city" label="Municipality" value={cityId} onChange={(v) => { setCityId(v); setCustomRate(null); }}
@@ -342,18 +351,21 @@ export function MunicipalRates() {
             ]}
           />
 
-          <InputField id="mr-water" label="Monthly water usage (kL)" value={waterKl}
+          <InputField id="mr-water" label="Monthly water usage (kL)" value={waterKl} error={errors.waterKl}
             onChange={(v) => setWaterKl(Number(v))} suffix="kL" min={0} max={100} />
 
           <hr style={{ borderColor: 'var(--rule)' }} />
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--ink-muted)' }}>
+            <label htmlFor="mr-rate" className="block text-xs font-medium mb-1" style={{ color: 'var(--ink-muted)' }}>
               Rate in the rand (override)
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="mr-rate"
                 type="number"
+                aria-invalid={errors.rateInRand ? true : undefined}
+                aria-describedby={errors.rateInRand ? "mr-rate-error" : undefined}
                 step={0.000001}
                 min={0}
                 value={customRate !== null ? customRate : city.rateInRand}
@@ -378,9 +390,10 @@ export function MunicipalRates() {
             <p className="text-[10px] mt-1" style={{ color: 'var(--ink-muted)' }}>
               Default: {city.rateInRand.toFixed(6)} — edit if your notice of assessment differs.
             </p>
+            {errors.rateInRand && <p id="mr-rate-error" className="text-xs font-medium text-loss-ink mt-1" aria-live="polite">{errors.rateInRand}</p>}
           </div>
 
-          <InputField id="mr-elec" label="Electricity basic charge (monthly)" value={electricityBasic}
+          <InputField id="mr-elec" label="Electricity basic charge (monthly)" value={electricityBasic} error={errors.electricityBasic}
             onChange={(v) => setElectricityBasic(Number(v))} prefix="R" min={0} />
 
           <div
@@ -396,7 +409,7 @@ export function MunicipalRates() {
 
           <hr style={{ borderColor: 'var(--rule)' }} />
 
-          <InputField id="mr-esc" label="Annual tariff escalation (for projection)" value={escalation}
+          <InputField id="mr-esc" label="Annual tariff escalation (for projection)" value={escalation} error={errors.escalation}
             onChange={(v) => setEscalation(Number(v))} suffix="%" min={0} max={25} />
 
           {/* City rebate & rate reference */}
@@ -427,83 +440,38 @@ export function MunicipalRates() {
 
         {/* Results */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Indigent notice */}
-          {rebateType === 'indigent' && (
-            <div
-              className="p-4 rounded-xl text-sm"
-              style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}
-            >
-              <span style={{ color: 'var(--ink-muted)' }}>
-                Indigent households registered with the municipality receive a full exemption from property rates and
-                a free basic allocation of water, electricity, sewerage and refuse removal.
-                Eligibility criteria vary per municipality.
-              </span>
-            </div>
-          )}
-
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Monthly total"  value={formatRand(billTotal)}           color="blue"  icon={Building2} />
-            <StatCard label="Annual total"   value={formatRandShort(billTotal * 12)} color="green" icon={TrendingUp} />
-            <StatCard label="Monthly rates"  value={formatRand(bill.rates)}          color="blue"  icon={Building2} />
-            <StatCard label="Monthly water"  value={formatRand(bill.water)}          color="green" icon={Droplets} />
-          </div>
-
-          {/* Move-city callout */}
-          {(() => {
-            const cheapest = comparisonData.reduce((min, c) => c.total < min.total ? c : min, comparisonData[0]);
-            const saving   = billTotal - cheapest.total;
-            if (saving <= 50 || cheapest.name === city.shortName) return null;
-            return (
-              <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-                style={{ background: alpha(C.green, 7), border: `1px solid ${alpha(C.green, 20)}` }}>
-                <TrendingUp size={15} style={{ color: textTone(C.green) }} />
-                <span style={{ color: 'var(--ink-muted)' }}>
-                  Moving to{' '}
-                  <span style={{ color: textTone(C.green), fontWeight: 600 }}>{cheapest.name}</span>
-                  {' '}could save you{' '}
-                  <span style={{ color: textTone(C.green), fontWeight: 600 }}>{formatRand(saving)}/month</span>
-                  {' '}({formatRandShort(saving * 12)}/year) on the same property value.
-                </span>
-              </div>
-            );
-          })()}
+          <ResultPanel
+            label={`Monthly bill in ${city.shortName}`}
+            value={formatRand(billTotal, 0)}
+            blocked={blocked}
+            summary={rebateType === 'indigent'
+              ? 'Registered indigent households pay no property rates and get a free basic allocation of water, electricity, sewerage and refuse removal. Who qualifies differs by municipality.'
+              : <>
+                  Property rates are {formatRand(bill.rates, 0)} of that, charged on {formatRand(bill.rateableValue, 0)} after the first {formatRand(city.rebateStd, 0)} of the value is excluded.
+                  {movingSaving > 50 && ` The same property would cost about ${formatRand(movingSaving, 0)} a month less in ${cheapest.name}.`}
+                </>}
+            figures={[
+              { label: 'Each year', value: formatRand(billTotal * 12, 0) },
+              { label: 'Property rates', value: formatRand(bill.rates, 0) },
+              { label: 'Water', value: formatRand(bill.water, 0) },
+              { label: 'Sewerage, refuse, basic', value: formatRand(services, 0) },
+            ]}
+          />
 
           {/* Bill breakdown + Donut */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Breakdown table */}
-            <div
-              className="p-5 rounded-2xl"
-              style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
-            >
-              <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>Monthly breakdown</h2>
-              <div className="space-y-0 text-sm">
-                {[
-                  { label: 'Property rates',        value: bill.rates,        color: RATES_C },
-                  { label: 'Water',                 value: bill.water,        color: WATER_C },
-                  { label: 'Sewerage',              value: bill.sewerage,     color: SEWER_C },
-                  { label: 'Refuse removal',        value: bill.refuse,       color: REFUSE_C },
-                  { label: 'Basic services',        value: bill.basic,        color: BASIC_C },
-                  ...(electricityBasic > 0 ? [{ label: 'Electricity basic', value: electricityBasic, color: 'var(--ink-subtle)' }] : []),
-                ].map(({ label, value, color }) => (
-                  <div
-                    key={label}
-                    className="flex justify-between items-center py-2"
-                    style={{ borderBottom: '1px solid var(--rule)' }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-                      <span style={{ color: 'var(--ink-muted)' }}>{label}</span>
-                    </div>
-                    <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{formatRand(value)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center pt-2">
-                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>Total</span>
-                  <span className="font-semibold" style={{ color: textTone(C.blue) }}>{formatRand(billTotal)}</span>
-                </div>
-              </div>
-            </div>
+            <BreakdownList
+              title="Monthly breakdown"
+              lines={[
+                { label: 'Property rates', value: bill.rates },
+                { label: 'Water', value: bill.water, note: `${waterKl} kL, excluding VAT` },
+                { label: 'Sewerage', value: bill.sewerage },
+                { label: 'Refuse removal', value: bill.refuse },
+                { label: 'Basic services', value: bill.basic },
+                ...(electricityBasic > 0 ? [{ label: 'Electricity basic charge', value: electricityBasic }] : []),
+              ]}
+              total={{ label: 'Total each month', value: billTotal }}
+            />
 
             {/* Donut chart */}
             <div
@@ -522,8 +490,8 @@ export function MunicipalRates() {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {donutData.map((entry, i) => (
-                      <Cell key={entry.name} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                    {donutData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
                   <ReTooltip
@@ -533,9 +501,9 @@ export function MunicipalRates() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                {donutData.map((d, i) => (
+                {donutData.map((d) => (
                   <div key={d.name} className="flex items-center gap-1 text-xs">
-                    <span className="w-2 h-2 rounded-full" style={{ background: DONUT_COLORS[i] }} />
+                    <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
                     <span style={{ color: 'var(--ink-muted)' }}>{d.name}</span>
                   </div>
                 ))}
@@ -669,17 +637,15 @@ export function MunicipalRates() {
             </p>
           </div>
 
-          <div
-            className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}
-          >
-            <Info size={13} style={{ color: textTone(C.blue) }} />
-            <span style={{ color: 'var(--ink-muted)' }}>
-              This tool estimates residential property rates only. It excludes electricity usage charges, body corporate levies,
-              and special rating area (SRA) levies. Electricity basic connection charges and VAT on services are not included.
-              Always verify your bill against your official municipal statement.
-            </span>
-          </div>
+          <AssumptionsDrawer
+            items={[
+              <>Tariffs are the {city.tariffYear} residential figures{estimated ? `, and the ${city.shortName} rate in the rand is estimated` : ''}. Municipalities set new tariffs every July, so compare with your latest municipal account.</>,
+              <>Rates are the municipal value less the first {formatRand(city.rebateStd, 0)} the city excludes, times the rate in the rand{rebateType === 'pensioner' ? `, less the ${city.rebatePct}% pensioner rebate` : ''}.</>,
+              <>Water uses the city’s stepped tariff for {waterKl} kL a month, excluding VAT. Sewerage, refuse and basic services are flat monthly amounts.</>,
+              <>The 5-year projection grows the whole bill by {escalation}% a year.</>,
+              <>Not included: electricity you use, VAT on services, body corporate levies and special rating area levies.</>,
+            ]}
+          />
         </div>
       </div>
     </motion.div>

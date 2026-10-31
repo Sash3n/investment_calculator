@@ -6,17 +6,20 @@ import {
   PieChart, Pie, Legend,
 } from 'recharts';
 import {
-  Wallet, Home as HomeIcon, TrendingDown, CheckCircle2, XCircle, Info, BookOpen, Receipt, Coins,
+  Wallet, TrendingDown, CheckCircle2, XCircle, Info, BookOpen,
 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
-import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { formatRand, formatRandShort, formatPercent } from '../utils/format';
 import { calcAffordability, type AffordabilityInputs } from '../utils/affordability';
 import { usePrimeRate } from '../hooks/usePrimeRate';
 import { alpha, seriesColors, textTone } from '../utils/color';
 import { useJourneyValues } from '../journeys/journeyContext';
+import { ResultPanel } from '../components/results/ResultPanel';
+import { BreakdownList } from '../components/results/BreakdownList';
+import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
+import { affordabilityInputErrors } from '../utils/validation';
 
 const C = {
   blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
@@ -69,6 +72,8 @@ export function Affordability() {
   }, [locationState]);
 
   const result = useMemo(() => calcAffordability(inputs), [inputs]);
+  const errors = affordabilityInputErrors(inputs);
+  const affordBlocked = !!(errors.grossMonthlyIncome || errors.interestRate || errors.instalmentRatio || errors.dtiRatio);
 
   // Hand the price (the one you want, or the most you qualify for) to the next journey step
   useJourneyValues({
@@ -119,33 +124,47 @@ export function Affordability() {
             <span style={{ color: 'var(--ink-muted)' }}>Use gross (before-tax) income. Banks assess affordability on gross salary, then verify net via bank statements.</span>
           </div>
 
-          <InputField label="Gross Monthly Income" id="a-income" value={inputs.grossMonthlyIncome} onChange={set((v) => ({ grossMonthlyIncome: v }))} prefix="R" help="Total before tax — include all regular income" />
-          <InputField label="Existing Monthly Debt" id="a-debt" value={inputs.existingMonthlyDebt} onChange={set((v) => ({ existingMonthlyDebt: v }))} prefix="R" help="Car, credit cards, personal & student loans" />
-          <InputField label="Deposit Available" id="a-deposit" value={inputs.depositAvailable} onChange={set((v) => ({ depositAvailable: v }))} prefix="R" help="Cash you can put down upfront" />
-          <InputField label="Interest Rate" id="a-rate" value={inputs.interestRate} onChange={(val) => { setRateTouched(true); setInputs((p) => ({ ...p, interestRate: parseFloat(val) || 0 })); }} suffix="%" help="Defaults to live prime — banks may offer prime ± a margin" />
+          <InputField label="Gross Monthly Income" id="a-income" value={inputs.grossMonthlyIncome} error={errors.grossMonthlyIncome} onChange={set((v) => ({ grossMonthlyIncome: v }))} prefix="R" help="Total before tax — include all regular income" />
+          <InputField label="Existing Monthly Debt" id="a-debt" value={inputs.existingMonthlyDebt} error={errors.existingMonthlyDebt} onChange={set((v) => ({ existingMonthlyDebt: v }))} prefix="R" help="Car, credit cards, personal & student loans" />
+          <InputField label="Deposit Available" id="a-deposit" value={inputs.depositAvailable} error={errors.depositAvailable} onChange={set((v) => ({ depositAvailable: v }))} prefix="R" help="Cash you can put down upfront" />
+          <InputField label="Interest Rate" id="a-rate" value={inputs.interestRate} error={errors.interestRate} onChange={(val) => { setRateTouched(true); setInputs((p) => ({ ...p, interestRate: parseFloat(val) || 0 })); }} suffix="%" help="Defaults to live prime — banks may offer prime ± a margin" />
           <SelectField label="Bond Term" id="a-term" value={inputs.termYears} onChange={(v) => setInputs((p) => ({ ...p, termYears: parseInt(v) }))} options={[{ value: 20, label: '20 years' }, { value: 25, label: '25 years' }, { value: 30, label: '30 years' }]} />
 
           <div className="border-t pt-4 space-y-3" style={{ borderColor: 'var(--rule)' }}>
             <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Affordability Rules</p>
-            <InputField label="Instalment-to-Income Limit" id="a-inst" value={inputs.instalmentRatio} onChange={set((v) => ({ instalmentRatio: v }))} suffix="%" help="Bond repayment as % of gross income (banks use ~30%)" />
-            <InputField label="Total Debt-to-Income Limit" id="a-dti" value={inputs.dtiRatio} onChange={set((v) => ({ dtiRatio: v }))} suffix="%" help="All debt repayments as % of gross (NCA ~36%)" />
-            <InputField label="Stress Test Rate Increase" id="a-stress" value={inputs.stressDelta} onChange={set((v) => ({ stressDelta: v }))} suffix="%" help="Tests affordability if rates rise" />
+            <InputField label="Instalment-to-Income Limit" id="a-inst" value={inputs.instalmentRatio} error={errors.instalmentRatio} onChange={set((v) => ({ instalmentRatio: v }))} suffix="%" help="Bond repayment as % of gross income (banks use ~30%)" />
+            <InputField label="Total Debt-to-Income Limit" id="a-dti" value={inputs.dtiRatio} error={errors.dtiRatio} onChange={set((v) => ({ dtiRatio: v }))} suffix="%" help="All debt repayments as % of gross (NCA ~36%)" />
+            <InputField label="Stress Test Rate Increase" id="a-stress" value={inputs.stressDelta} error={errors.stressDelta} onChange={set((v) => ({ stressDelta: v }))} suffix="%" help="Tests affordability if rates rise" />
           </div>
 
           <div className="border-t pt-4" style={{ borderColor: 'var(--rule)' }}>
-            <InputField label="Target Property Price (optional)" id="a-target" value={inputs.desiredPropertyPrice} onChange={set((v) => ({ desiredPropertyPrice: v }))} prefix="R" help="Check if you qualify for a specific home" />
+            <InputField label="Target Property Price (optional)" id="a-target" value={inputs.desiredPropertyPrice} error={errors.desiredPropertyPrice} onChange={set((v) => ({ desiredPropertyPrice: v }))} prefix="R" help="Check if you qualify for a specific home" />
           </div>
         </div>
 
         {/* Results */}
         <div className="space-y-5">
-          {/* Headline cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="Max Bond Repayment" value={formatRandShort(result.maxInstalment)} sub={`Limited by ${result.limitedBy === 'dti' ? 'total debt' : 'income'}`} icon={Wallet} color="blue" delay={0} />
-            <StatCard label="Max Home Loan" value={formatRandShort(result.maxLoan)} sub={`Over ${inputs.termYears} years`} icon={HomeIcon} color="green" delay={0.05} />
-            <StatCard label="Max Property Price" value={formatRandShort(result.maxPropertyPrice)} sub="Loan + your deposit" icon={Coins} color="orange" delay={0.1} />
-            <StatCard label="Cash Needed" value={formatRandShort(result.totalCashRequired)} sub="Deposit + duty + bond costs" icon={Receipt} color="red" delay={0.15} />
-          </div>
+          <ResultPanel
+            label="Homes up to"
+            value={formatRand(result.maxPropertyPrice, 0)}
+            blocked={affordBlocked ? 'Fix the highlighted inputs to see what you could afford.' : undefined}
+            summary={
+              <>
+                On {formatRand(inputs.grossMonthlyIncome, 0)} a month before tax
+                {inputs.existingMonthlyDebt > 0 && <>, with {formatRand(inputs.existingMonthlyDebt, 0)} going to other debt</>}, banks would
+                allow a bond repayment of about {formatRand(result.maxInstalment, 0)} a month. At {inputs.interestRate}% over {inputs.termYears} years
+                that is a loan of {formatRand(result.maxLoan, 0)}, so with your {formatRand(inputs.depositAvailable, 0)} deposit you could
+                look at homes up to {formatRand(result.maxPropertyPrice, 0)}.
+                {result.limitedBy === 'dti' && <> Your other debt is what sets the limit.</>}
+              </>
+            }
+            figures={[
+              { label: 'Most you could repay', value: `${formatRand(result.maxInstalment, 0)} a month` },
+              { label: 'Most you could borrow', value: formatRand(result.maxLoan, 0) },
+              { label: 'Cash on transfer day', value: formatRand(result.totalCashRequired, 0) },
+              { label: `If rates rise ${inputs.stressDelta}%`, value: formatRand(result.stressMaxPropertyPrice, 0) },
+            ]}
+          />
 
           {/* Target assessment */}
           {result.desired && (
@@ -214,30 +233,28 @@ export function Affordability() {
             </div>
           </div>
 
-          {/* Breakdown table */}
-          <div className="glass-card-static p-5">
-            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>Qualification Breakdown</p>
-            <table className="w-full text-xs">
-              <tbody>
-                {[
-                  { label: 'Gross Monthly Income', value: inputs.grossMonthlyIncome, bold: false },
-                  { label: `Instalment Allowance (${formatPercent(inputs.instalmentRatio, 0)} of income)`, value: (inputs.instalmentRatio / 100) * inputs.grossMonthlyIncome, bold: false },
-                  { label: `Debt Allowance (${formatPercent(inputs.dtiRatio, 0)} − existing debt)`, value: Math.max(0, (inputs.dtiRatio / 100) * inputs.grossMonthlyIncome - inputs.existingMonthlyDebt), bold: false },
-                  { label: 'Max Bond Repayment (lower of the two)', value: result.maxInstalment, bold: true },
-                  { label: 'Maximum Home Loan', value: result.maxLoan, bold: true },
-                  { label: '+ Your Deposit', value: inputs.depositAvailable, bold: false },
-                  { label: 'Maximum Property Price', value: result.maxPropertyPrice, bold: true },
-                  { label: 'Transfer Duty (on max price)', value: result.transferDuty, bold: false },
-                  { label: 'Bond Registration Costs', value: result.bondRegistration, bold: false },
-                  { label: 'Total Cash Required', value: result.totalCashRequired, bold: true },
-                ].map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--rule)' }}>
-                    <td className="py-2 pr-4" style={{ color: row.bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: row.bold ? 600 : 400 }}>{row.label}</td>
-                    <td className="py-2 text-right font-mono" style={{ color: row.bold ? 'var(--ink)' : 'var(--ink-muted)', fontWeight: row.bold ? 600 : 400 }}>{formatRand(row.value)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-5 xl:grid-cols-2">
+            <BreakdownList
+              title="How the limit is worked out"
+              lines={[
+                { label: 'Income before tax', value: inputs.grossMonthlyIncome },
+                { label: `Repayment limit (${inputs.instalmentRatio}% of income)`, value: (inputs.instalmentRatio / 100) * inputs.grossMonthlyIncome },
+                { label: `Debt limit (${inputs.dtiRatio}% less other debt)`, value: Math.max(0, (inputs.dtiRatio / 100) * inputs.grossMonthlyIncome - inputs.existingMonthlyDebt) },
+                { label: 'Bond repayment allowed', value: result.maxInstalment, note: 'The lower of the two limits' },
+                { label: 'Loan that repayment covers', value: result.maxLoan },
+                { label: 'Your deposit', value: inputs.depositAvailable },
+              ]}
+              total={{ label: 'Homes up to', value: result.maxPropertyPrice }}
+            />
+            <BreakdownList
+              title="Cash on transfer day"
+              lines={[
+                { label: 'Deposit', value: inputs.depositAvailable },
+                { label: 'Transfer duty', value: result.transferDuty },
+                { label: 'Bond registration', value: result.bondRegistration },
+              ]}
+              total={{ label: 'Total cash needed', value: result.totalCashRequired }}
+            />
           </div>
 
           {/* Education */}
@@ -252,7 +269,7 @@ export function Affordability() {
                 { title: 'Debt-to-income (NCA)', color: C.orange, body: 'The National Credit Act requires lenders to check that all your debt repayments combined stay affordable — commonly ~36% of gross income. Existing car and credit card debt directly reduce what\'s left for a bond.' },
                 { title: 'Why the stress test', color: C.red, body: 'Rates change over a 20-year bond. Qualifying at today\'s rate but being unable to afford repayments after a 2% hike is a real risk — banks increasingly factor this in, and so should you.' },
                 { title: 'Deposit matters', color: C.green, body: 'A bigger deposit lowers the loan, reduces your repayment, and can earn a better interest rate. It also covers transfer duty and bond costs, which are NOT included in your home loan and must be paid in cash.' },
-                { title: 'Transfer duty', color: C.teal, body: 'SARS charges transfer duty on property above R1.1m on a sliding scale. On a R1.8m home that\'s about R21,000. Budget for it plus bond registration and conveyancing — typically 3–5% of the price in total upfront costs.' },
+                { title: 'Transfer duty', color: C.teal, body: 'SARS charges transfer duty on property above R1.21m (since 1 April 2025) on a sliding scale. On a R1.8m home that\'s about R21,800. Budget for it plus bond registration and conveyancing — typically 3–5% of the price in total upfront costs.' },
                 { title: 'Improve your chances', color: C.brown, body: 'Pay down existing debt, save a larger deposit, fix errors on your credit report, and avoid new credit before applying. A clean record and lower DTI can unlock a bigger bond and a better rate.' },
               ].map((item) => (
                 <div key={item.title} className="p-4 rounded-xl space-y-2" style={{ background: alpha(item.color, 3), border: `1px solid ${alpha(item.color, 13)}` }}>
@@ -262,6 +279,15 @@ export function Affordability() {
               ))}
             </div>
           </div>
+
+          <AssumptionsDrawer
+            items={[
+              <>The repayment and debt limits are common rules of thumb ({inputs.instalmentRatio}% and {inputs.dtiRatio}% of income before tax). Each bank uses its own checks, including your credit record and monthly expenses.</>,
+              <>The interest rate stays at {inputs.interestRate}% for the whole {inputs.termYears} years.</>,
+              <>Transfer duty uses the SARS table in force since 1 April 2025. Bond registration is an estimate of the Deeds Office and attorney fees, not a quote.</>,
+              <>Not included: the bank’s initiation and monthly service fees, insurance, rates and levies.</>,
+            ]}
+          />
         </div>
       </div>
     </div>
