@@ -1,12 +1,20 @@
 import type { CarAmortizationRow, CarInputs, CarResult } from '../types';
-import { calcPayment } from './mortgage';
+
+/** Monthly instalment that runs a loan down to a balloon left over after n months. */
+export function balloonInstalment(loan: number, annualRatePct: number, months: number, balloon: number): number {
+  if (months <= 0) return 0;
+  const r = annualRatePct / 100 / 12;
+  if (r === 0) return Math.max(0, loan - balloon) / months;
+  const growth = Math.pow(1 + r, months);
+  return Math.max(0, ((loan - balloon / growth) * r) / (1 - 1 / growth));
+}
 
 /**
  * Calculate car finance details including depreciation and total cost of ownership.
  *
  * SA balloon payment: a percentage of the purchase price deferred to the end.
- * Monthly instalment is calculated on (financed amount - balloon) over term,
- * then balloon becomes a lump sum due at maturity.
+ * The whole loan carries interest; the instalments run it down to the balloon,
+ * which is then due as a lump sum at the end of the term.
  */
 export function calcCarFinance(inputs: CarInputs): CarResult {
   const {
@@ -30,7 +38,8 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
   const financedAmount = Math.max(0, loanAmount - balloonAmount);
 
   const termYears = termMonths / 12;
-  const calculatedInstalment = calcPayment(financedAmount, interestRate, termYears, 12);
+  // Amount repaid through instalments (loan less balloon); the balloon itself still earns interest
+  const calculatedInstalment = balloonInstalment(loanAmount, interestRate, termMonths, Math.min(balloonAmount, loanAmount));
 
   // Use the higher of our calculated payment or the bank's quoted minimum.
   // When the bank minimum is higher, the surplus goes to principal — pays off faster.
@@ -38,9 +47,46 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
   const monthlyInstalment = Math.max(calculatedInstalment, minFloor);
   const instalmentOverride = minFloor > calculatedInstalment && minFloor > 0;
 
-  // Total repayments = instalments + balloon at end
-  const totalInstalments = monthlyInstalment * termMonths;
-  const totalRepayments = totalInstalments + balloonAmount;
+  const monthlyRate = interestRate / 100 / 12;
+  const balloonDue = Math.min(balloonAmount, loanAmount);
+
+  // ── Amortisation down to the balloon ─────────────────────
+  function buildAmortization(basePayment: number, extra: number): CarAmortizationRow[] {
+    const rows: CarAmortizationRow[] = [];
+    let bal = loanAmount;
+    let cumInt = 0;
+    let period = 1;
+    while (bal - balloonDue > 0.005 && period <= termMonths) {
+      const intCharge = bal * monthlyRate;
+      const totalPayment = Math.min(basePayment + extra, bal + intCharge - balloonDue);
+      const prinPaid = totalPayment - intCharge;
+      cumInt += intCharge;
+      const closing = Math.max(balloonDue, bal - prinPaid);
+      rows.push({
+        period,
+        openingBalance: bal,
+        payment: totalPayment,
+        principal: prinPaid,
+        interest: intCharge,
+        closingBalance: closing,
+        cumulativeInterest: cumInt,
+      });
+      bal = closing;
+      period++;
+    }
+    return rows;
+  }
+
+  const amortization = buildAmortization(monthlyInstalment, 0);
+  const amortizationWithExtras = extraMonthlyPayment > 0
+    ? buildAmortization(monthlyInstalment, extraMonthlyPayment)
+    : amortization;
+
+  // Total repayments = instalments + the balloon (or what is left) at the end
+  const lastRow = amortization[amortization.length - 1];
+  const remainingAtEnd = lastRow ? lastRow.closingBalance : loanAmount;
+  const totalInstalments = amortization.reduce((sum, row) => sum + row.payment, 0);
+  const totalRepayments = totalInstalments + remainingAtEnd;
   const totalInterest = Math.max(0, totalRepayments - loanAmount);
 
   // ── Total cost of ownership over term ────────────────────
@@ -63,18 +109,11 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
   const depreciation: CarResult['depreciation'] = [];
   let currentValue = vehiclePrice;
 
-  // Monthly loan balance calculation
-  const monthlyRate = interestRate / 100 / 12;
+  // Loan balance after a month's payment; the balloon is settled at the end of the term
   const loanBalanceAtMonth = (month: number): number => {
-    if (financedAmount <= 0) return balloonAmount;
-    if (monthlyRate === 0) {
-      return Math.max(balloonAmount, financedAmount - monthlyInstalment * month + balloonAmount);
-    }
-    // Standard remaining balance formula
-    const remaining = financedAmount *
-      (Math.pow(1 + monthlyRate, termMonths) - Math.pow(1 + monthlyRate, month)) /
-      (Math.pow(1 + monthlyRate, termMonths) - 1);
-    return Math.max(0, remaining + (month >= termMonths ? 0 : balloonAmount));
+    if (month >= termMonths) return 0;
+    if (month <= 0) return loanAmount;
+    return amortization[month - 1]?.closingBalance ?? balloonDue;
   };
 
   for (let y = 0; y <= depYears; y++) {
@@ -109,65 +148,16 @@ export function calcCarFinance(inputs: CarInputs): CarResult {
     if (bal > val) underwaterMonths++;
   }
 
-  // ── Extra payment amortization ───────────────────────────
-  let extraBal = financedAmount;
-  let totalInterestWithExtra = 0;
-  let actualTermMonths = termMonths;
-
-  if (extraMonthlyPayment > 0 && financedAmount > 0 && monthlyRate > 0) {
-    extraBal = financedAmount;
-    actualTermMonths = 0;
-    while (extraBal > 0.01 && actualTermMonths < termMonths) {
-      const intCharge = extraBal * monthlyRate;
-      const payment = Math.min(monthlyInstalment + extraMonthlyPayment, extraBal + intCharge);
-      const prinPaid = payment - intCharge;
-      totalInterestWithExtra += intCharge;
-      extraBal = Math.max(0, extraBal - prinPaid);
-      actualTermMonths++;
-    }
-  } else {
-    totalInterestWithExtra = totalInterest;
-    actualTermMonths = termMonths;
-  }
-
-  // With balloon: balloon is still due at the actual payoff point, interest on balloon portion saved = difference
-  const totalPaidWithExtra = monthlyInstalment * actualTermMonths
-    + extraMonthlyPayment * actualTermMonths
-    + balloonAmount;
+  // ── Extra payments: the balance reaches the balloon sooner, and the balloon is settled then ──
+  const extraLast = amortizationWithExtras[amortizationWithExtras.length - 1];
+  const actualTermMonths = extraMonthlyPayment > 0 ? amortizationWithExtras.length : termMonths;
+  const totalInterestWithExtra = extraMonthlyPayment > 0
+    ? (extraLast?.cumulativeInterest ?? 0)
+    : totalInterest;
+  const totalPaidWithExtra = amortizationWithExtras.reduce((sum, row) => sum + row.payment, 0)
+    + (extraLast ? extraLast.closingBalance : loanAmount);
   const interestSaved = Math.max(0, totalInterest - totalInterestWithExtra);
   const monthsSaved = termMonths - actualTermMonths;
-
-  // ── Full amortization schedules ──────────────────────────
-  function buildAmortization(basePayment: number, extra: number): CarAmortizationRow[] {
-    const rows: CarAmortizationRow[] = [];
-    let bal = financedAmount;
-    let cumInt = 0;
-    let period = 1;
-    while (bal > 0.005 && period <= termMonths) {
-      const intCharge = bal * monthlyRate;
-      const totalPayment = Math.min(basePayment + extra, bal + intCharge);
-      const prinPaid = totalPayment - intCharge;
-      cumInt += intCharge;
-      const closing = Math.max(0, bal - prinPaid);
-      rows.push({
-        period,
-        openingBalance: bal,
-        payment: totalPayment,
-        principal: prinPaid,
-        interest: intCharge,
-        closingBalance: closing,
-        cumulativeInterest: cumInt,
-      });
-      bal = closing;
-      period++;
-    }
-    return rows;
-  }
-
-  const amortization = buildAmortization(monthlyInstalment, 0);
-  const amortizationWithExtras = extraMonthlyPayment > 0
-    ? buildAmortization(monthlyInstalment, extraMonthlyPayment)
-    : amortization;
 
   // ── Finance vs Cash comparison ───────────────────────────
   // Cash purchase: invest the monthly instalment at 10% p.a.

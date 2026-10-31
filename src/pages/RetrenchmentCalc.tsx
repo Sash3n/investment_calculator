@@ -9,46 +9,12 @@ import { ResultPanel } from '../components/results/ResultPanel';
 import { BreakdownList } from '../components/results/BreakdownList';
 import { AssumptionsDrawer } from '../components/results/AssumptionsDrawer';
 import { nonNegativeError, positiveError, rangeError } from '../utils/validation';
-
-// Retirement lump sum tax table 2025/26
-function calcLumpSumTax(lumpSum: number): number {
-  if (lumpSum <= 550_000)   return 0;
-  if (lumpSum <= 770_000)   return (lumpSum - 550_000) * 0.18;
-  if (lumpSum <= 1_155_000) return 39_600 + (lumpSum - 770_000) * 0.27;
-  return 143_550 + (lumpSum - 1_155_000) * 0.36;
-}
-
-// SA UIF benefit: sliding scale based on daily remuneration
-// Max benefit = 58% of daily income, capped at R17,712/month (2024 ceiling)
-function calcUIF(monthlySalary: number, yearsService: number): { monthlyBenefit: number; weeksEntitled: number } {
-  const UIF_INCOME_CAP = 17_712;
-  const cappedMonthly  = Math.min(monthlySalary, UIF_INCOME_CAP);
-  const dailyIncome    = cappedMonthly / 21.67;
-
-  // IRR (income replacement rate) slides from 38% to 58%
-  const irrPct = dailyIncome <= 0 ? 0.58 : Math.max(0.38, 0.58 - (dailyIncome / 1000) * 0.02);
-  const dailyBenefit   = dailyIncome * irrPct;
-  const monthlyBenefit = dailyBenefit * 21.67;
-
-  // 1 credit day per 4 calendar days worked, max 238 credit days (34 weeks)
-  const daysWorked    = yearsService * 365;
-  const creditDays    = Math.floor(daysWorked / 4);
-  const weeksEntitled = Math.min(34, Math.floor(creditDays / 7));
-
-  return { monthlyBenefit: Math.round(monthlyBenefit), weeksEntitled };
-}
-
-// Notice pay: BCEA Section 37
-function calcNoticePay(yearsService: number, weeklySalary: number): number {
-  if (yearsService < 1)  return weeklySalary;       // 1 week
-  if (yearsService < 5)  return weeklySalary * 2;   // 2 weeks
-  return weeklySalary * 4;                           // 4 weeks (5+ years)
-}
+import { calcLumpSumTax, calcUIF, noticeWeeks, UIF_INCOME_CAP } from '../utils/retrenchment';
+import { calcIncomeTax } from '../utils/tax';
 
 function noticeLabel(yearsService: number): string {
-  if (yearsService < 1) return '1 week notice pay';
-  if (yearsService < 5) return '2 weeks notice pay';
-  return '4 weeks notice pay';
+  const w = noticeWeeks(yearsService);
+  return `${w} week${w === 1 ? '' : 's'} notice pay`;
 }
 
 interface ShareState {
@@ -80,13 +46,14 @@ export function RetrenchmentCalc() {
     const tax           = Math.max(0, calcLumpSumTax(combinedLump) - calcLumpSumTax(priorLumpsums));
     const netSeverance  = severancePay - tax;
 
-    // Notice pay (not taxed via lump sum table — normal PAYE, estimate at ~25% effective)
-    const noticePay     = calcNoticePay(yearsService, weekly);
-    const netNoticePay  = noticePay * 0.75;
-
-    // Leave payout (normal PAYE, same estimate)
+    // Notice pay and leave are taxed as normal pay, on top of a year's salary
+    const noticePay     = noticeWeeks(yearsService) * weekly;
     const leavePayout   = leaveDays * dailyRate;
-    const netLeavePayout = leavePayout * 0.75;
+    const annualPay     = weekly * 52;
+    const extraTax      = (extra: number) => Math.max(0, calcIncomeTax(annualPay + extra, 'under65') - calcIncomeTax(annualPay, 'under65'));
+    const noticeTax     = extraTax(noticePay);
+    const netNoticePay  = noticePay - noticeTax;
+    const netLeavePayout = leavePayout - (extraTax(noticePay + leavePayout) - noticeTax);
 
     // UIF
     const uif = calcUIF(monthlySalary, yearsService);
@@ -98,7 +65,7 @@ export function RetrenchmentCalc() {
     const monthsRunway = monthlyExpenses > 0 ? totalNet / monthlyExpenses : 0;
 
     // UIF runway adds on top
-    const uifMonths = uif.weeksEntitled / 4.33;
+    const uifMonths = uif.months;
 
     return {
       severancePay, tax, netSeverance,
@@ -190,9 +157,9 @@ export function RetrenchmentCalc() {
                 { label: 'Severance pay', value: result.severancePay, note: `${Math.floor(yearsService)} weeks at ${formatRand(result.dailyRate * 5, 0)} a week` },
                 { label: 'Tax on severance', value: result.tax, kind: 'less', note: 'Retirement lump sum table' },
                 { label: noticeLabel(yearsService), value: result.noticePay },
-                { label: 'Tax on notice pay', value: result.noticePay - result.netNoticePay, kind: 'less', note: 'Estimated at 25%' },
+                { label: 'Tax on notice pay', value: result.noticePay - result.netNoticePay, kind: 'less', note: 'As extra pay on a year of salary' },
                 { label: `Leave payout (${leaveDays} days)`, value: result.leavePayout },
-                { label: 'Tax on leave payout', value: result.leavePayout - result.netLeavePayout, kind: 'less', note: 'Estimated at 25%' },
+                { label: 'Tax on leave payout', value: result.leavePayout - result.netLeavePayout, kind: 'less', note: 'As extra pay on a year of salary' },
               ]}
               total={{ label: 'Total after tax', value: result.totalNet }}
             />
@@ -202,7 +169,7 @@ export function RetrenchmentCalc() {
                 { label: 'Paid each month', value: result.uif.monthlyBenefit },
                 { label: 'Weeks you can claim', display: `${result.uif.weeksEntitled} weeks` },
               ]}
-              total={{ label: 'Total UIF', value: result.uif.monthlyBenefit * result.uifMonths }}
+              total={{ label: 'Total UIF', value: result.uif.totalBenefit }}
             />
           </div>
 
@@ -210,7 +177,7 @@ export function RetrenchmentCalc() {
           <div className="p-5 rounded-2xl"
             style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
             <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              Retirement lump sum tax table (2025/26)
+              Retirement lump sum tax table (2026/27, unchanged since 2024)
             </h2>
             <div className="space-y-0 text-xs">
               {[
@@ -234,8 +201,9 @@ export function RetrenchmentCalc() {
           <AssumptionsDrawer
             items={[
               <>Severance is 1 week’s pay for each completed year of service, the minimum in the Basic Conditions of Employment Act. Your contract or a retrenchment agreement may give more.</>,
-              <>Severance is taxed with the retirement lump sum table, together with any lump sums you received before. Notice pay and leave are taxed as normal pay; here that is an estimate of 25%.</>,
-              <>UIF pays a share of your pay, on pay up to R17,712 a month, for up to 34 weeks depending on how long you contributed. Claim within 6 months of leaving work.</>,
+              <>Severance is taxed with the retirement lump sum table, together with any lump sums you received before. Notice pay and leave are taxed as normal pay, worked out as extra income on top of a year of your salary with the SARS tables.</>,
+              <>Notice pay is the minimum in section 37 of the Basic Conditions of Employment Act: 1 week up to six months of service, 2 weeks up to a year, and 4 weeks after that.</>,
+              <>UIF pays {result.uif.replacementRate.toFixed(0)}% of your daily pay (on pay up to {formatRand(UIF_INCOME_CAP, 0)} a month), with one credit day for every four days worked, up to 365 days. Days after the first 238 are paid at 20%. Claim within 6 months of leaving work.</>,
               <>Runway divides the payout after tax by your monthly costs, then adds the months UIF pays. Interest and inflation are not included.</>,
             ]}
           />

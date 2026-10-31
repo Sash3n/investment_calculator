@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell,
@@ -67,10 +67,11 @@ export function ExitPlanner() {
   }, [setInputs]);
 
   const result = useMemo(() => calcExitPlanner(inputs), [inputs]);
+  const [saleYear, setSaleYear] = useState(10);
   const set = (fn: (v: number) => Partial<ExitPlannerInputs>) => (val: string) =>
     setInputs((p) => ({ ...p, ...fn(parseFloat(val) || 0) }));
 
-  const best = result.bestYear;
+  const best = result.years.find((y) => y.year === saleYear) ?? result.years[result.years.length - 1] ?? null;
   const errors = {
     purchasePrice: positiveError(inputs.purchasePrice, 'Enter what you paid for the property.'),
     buildingCostExclLand: inputs.buildingCostExclLand < 0
@@ -118,7 +119,7 @@ export function ExitPlanner() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-5">
         {/* Inputs */}
         <div className="glass-card p-5 space-y-4">
           <SectionHeader title="Property & Holding" icon={DoorOpen} />
@@ -137,22 +138,24 @@ export function ExitPlanner() {
           <InputField label="Annual Appreciation" id="e-appr" value={inputs.annualAppreciation} error={errors.annualAppreciation} onChange={set((v) => ({ annualAppreciation: v }))} suffix="%" help="SA long-term average ≈ 6–8% p.a." />
           <InputField label="Sale Costs" id="e-salecost" value={inputs.saleCostsPercent} error={errors.saleCostsPercent} onChange={set((v) => ({ saleCostsPercent: v }))} suffix="%" help="Agent commission (typically 5–7.5% incl. VAT)" />
           <InputField label="Other Annual Taxable Income" id="e-income" value={inputs.otherAnnualTaxableIncome} error={errors.otherAnnualTaxableIncome} onChange={set((v) => ({ otherAnnualTaxableIncome: v }))} prefix="R" help="Determines marginal rate for recoupment & CGT" />
+          <SelectField label="Year You Sell" id="e-saleyear" value={String(saleYear)} onChange={(v) => setSaleYear(Number(v))}
+            options={result.years.map((y) => ({ value: String(y.year), label: `Year ${y.year}` }))} />
           <SelectField label="Age Group" id="e-age" value={inputs.ageGroup} onChange={(v) => setInputs((p) => ({ ...p, ageGroup: v as AgeGroup }))} options={AGE_OPTIONS} />
         </div>
 
         {/* Results */}
         <div className="space-y-5">
           <ResultPanel
-            label="Most cash if you sell in"
-            value={best ? `Year ${best.year}` : '—'}
+            label={best ? `Net after tax if you sell in year ${best.year}` : 'Net after tax'}
+            value={best ? formatRand(best.netProceedsAfterTax, 0) : '—'}
             blocked={blocked}
             summary={best ? <>
-              Selling in year {best.year} leaves {formatRand(best.netProceedsAfterTax, 0)} after {formatRand(best.totalExitTax, 0)} of tax and {formatRand(best.saleCosts, 0)} of sale costs.
+              A sale for {formatRand(best.saleValue, 0)} pays {formatRand(best.totalExitTax, 0)} in tax and {formatRand(best.saleCosts, 0)} in sale costs, {formatPercent(best.effectiveExitTaxRate, 1)} of the gain going to tax.
               {inputs.claimingS13 && result.bestLifetimeYear && ` Counting the tax the allowances saved while you held it, year ${result.bestLifetimeYear.year} gives the best overall tax position.`}
               {inputs.claimingS13 && result.annualDeduction > 0 && ` Every rand of Section 13sex allowance you claim (${formatRand(result.annualDeduction, 0)} a year) is added back to your income when you sell.`}
             </> : 'Add a sale year to compare.'}
             figures={best ? [
-              { label: 'Net after tax', value: formatRand(best.netProceedsAfterTax, 0) },
+              { label: 'Sale price', value: formatRand(best.saleValue, 0) },
               { label: 'Tax on exit', value: formatRand(best.totalExitTax, 0) },
               { label: 'Tax as a share of the gain', value: formatPercent(best.effectiveExitTaxRate, 1) },
               { label: 'Best tax position', value: inputs.claimingS13 && result.bestLifetimeYear ? `Year ${result.bestLifetimeYear.year}` : 'Not claiming' },
@@ -207,7 +210,7 @@ export function ExitPlanner() {
                 </thead>
                 <tbody>
                   {result.years.map((y) => (
-                    <tr key={y.year} style={{ borderBottom: '1px solid var(--rule)', background: y.year === result.bestYear?.year ? 'color-mix(in srgb, var(--gain) 5%, transparent)' : undefined }}>
+                    <tr key={y.year} style={{ borderBottom: '1px solid var(--rule)', background: y.year === best?.year ? 'color-mix(in srgb, var(--gain) 5%, transparent)' : undefined }}>
                       <td className="py-2 px-2" style={{ color: 'var(--ink)' }}>{y.year}</td>
                       <td className="py-2 px-2 text-right" style={{ color: 'var(--ink-muted)' }}>{formatRand(y.saleValue, 0)}</td>
                       <td className="py-2 px-2 text-right" style={{ color: textTone(C.orange) }}>{formatRand(y.recoupmentTax, 0)}</td>
@@ -235,7 +238,7 @@ export function ExitPlanner() {
                 { title: 'Recoupment (s8(4)(a))', color: C.orange, body: 'When you sell, the Section 13sex allowances you previously deducted are "recouped" — added back to your taxable income in the year of sale and taxed at your marginal rate. The deduction was a deferral, not a permanent escape.' },
                 { title: 'Capital Gains Tax', color: C.red, body: 'CGT applies to the genuine appreciation above your original cost. For individuals: R50,000 annual exclusion, 40% inclusion rate, then taxed at your marginal rate — a maximum effective 18%. Investment property gets no primary-residence exclusion.' },
                 { title: 'Net lifetime tax position', color: C.blue, body: 'This is the S13 income-tax you saved while holding, minus the tax you pay on exit. A positive number means the strategy still came out ahead after recoupment; selling too early can turn it negative.' },
-                { title: 'Why timing matters', color: C.green, body: 'Appreciation compounds while recoupment is capped at what you actually claimed. Holding longer grows the asset and dilutes the proportional tax bite — but ties up capital. The "most cash" and "best tax" years can differ.' },
+                { title: 'Why timing matters', color: C.green, body: 'Appreciation compounds while recoupment is capped at what you actually claimed. Holding longer grows the asset and dilutes the proportional tax bite — but ties up capital. A bigger payout later is not automatically better: money received sooner can be invested elsewhere.' },
                 { title: 'Bracket bunching', color: C.brown, body: 'Recoupment and CGT both land in a single tax year and can push you into a higher bracket. Spreading disposals across tax years, or selling in a low-income year (e.g. after retirement), can materially cut the bill.' },
                 { title: 'Get advice', color: C.teal, body: 'This is a simplified educational model. Real recoupment caps, base-cost adjustments, and your full tax picture need a SARS-registered practitioner. Use this to spot the trade-offs, not to file a return.' },
               ].map((item) => (
@@ -255,7 +258,7 @@ export function ExitPlanner() {
                 ? <>Section 13sex allowances of {formatPercent(result.rate * 100, 0)} of the building cost are claimed each year for up to {result.period} years. When you sell, what was claimed is added back to your income and taxed at your marginal rate.</>
                 : <>No Section 13sex allowances are claimed, so nothing is recouped on sale.</>,
               <>Capital gains tax uses the R50,000 yearly exclusion and 40% inclusion, at your marginal rate on top of {formatRand(inputs.otherAnnualTaxableIncome, 0)} other income and any recoupment.</>,
-              <>“Most cash” compares rand amounts in different years without adjusting for inflation, so a longer hold usually shows more.</>,
+              <>Payouts in different years are in the rand of that year. A later sale usually shows more, but money received sooner could earn a return elsewhere, so compare them with what else you would do with the money.</>,
             ]}
           />
         </div>

@@ -84,20 +84,9 @@ export function CarFinance() {
   const balanceValueData = useMemo(() => {
     const months = inputs.termMonths;
     const depRates = [0.15, 0.12, 0.10, 0.10, 0.10, 0.10];
-    const monthlyRate = inputs.interestRate / 100 / 12;
-
-    // Pre-compute extra-payment balance per month
-    const extraBalByMonth: number[] = [result.financedAmount];
-    if (inputs.extraMonthlyPayment > 0 && result.financedAmount > 0 && monthlyRate > 0) {
-      let bal = result.financedAmount;
-      for (let m = 1; m <= months; m++) {
-        if (bal <= 0) { extraBalByMonth.push(0); continue; }
-        const intCharge = bal * monthlyRate;
-        const payment = Math.min(result.monthlyInstalment + inputs.extraMonthlyPayment, bal + intCharge);
-        bal = Math.max(0, bal - (payment - intCharge));
-        extraBalByMonth.push(bal);
-      }
-    }
+    // Balance after each month's payment, from the schedules; the balloon is settled at the end
+    const balanceAt = (rows: typeof result.amortization, month: number) =>
+      month <= 0 ? result.loanAmount : month >= months ? 0 : (rows[month - 1]?.closingBalance ?? 0);
 
     const step = Math.max(1, Math.ceil(months / 12));
     return Array.from({ length: Math.ceil(months / step) + 1 }, (_, i) => {
@@ -113,21 +102,14 @@ export function CarFinance() {
         value *= (1 - depRates[fullYears] * partial);
       }
 
-      let loanBal = result.financedAmount;
-      if (month > 0 && result.financedAmount > 0 && monthlyRate > 0) {
-        loanBal = result.financedAmount *
-          (Math.pow(1 + monthlyRate, months) - Math.pow(1 + monthlyRate, month)) /
-          (Math.pow(1 + monthlyRate, months) - 1);
-        if (month >= months) loanBal = 0;
-      }
-
       const row: Record<string, unknown> = {
         month: `M${month}`,
         'Car Value': Math.round(Math.max(0, value)),
-        'Loan Balance': Math.round(Math.max(0, Math.min(loanBal + (month < months ? result.balloonAmount : 0), result.loanAmount))),
+        'Loan Balance': Math.round(balanceAt(result.amortization, month)),
       };
       if (inputs.extraMonthlyPayment > 0) {
-        row['Balance (Extra)'] = Math.round(extraBalByMonth[Math.min(month, extraBalByMonth.length - 1)] ?? 0);
+        const extraRows = result.amortizationWithExtras;
+        row['Balance (Extra)'] = Math.round(month > extraRows.length ? 0 : balanceAt(extraRows, month));
       }
       return row;
     });
@@ -488,7 +470,7 @@ export function CarFinance() {
           <AssumptionsDrawer
             items={[
               <>The rate stays at {inputs.interestRate}% for the whole {inputs.termMonths} months, and interest is worked out monthly.</>,
-              <>A balloon is a lump sum of {inputs.balloonPercent}% of the price, paid at the end. Here the monthly instalment is worked out on the loan less the balloon.</>,
+              <>A balloon is a lump sum of {inputs.balloonPercent}% of the price, paid at the end. Interest is charged on the whole loan, balloon included, until it is paid.</>,
               <>The car loses 15% of its value in the first year, 12% in the second and 10% a year after that. Real values depend on the make, model and mileage.</>,
               <>The cash comparison assumes money not spent on the car would earn 10% a year if invested. Returns are not guaranteed.</>,
               <>Not included: the bank’s initiation fee, licence and registration, tracking, tyres and credit life cover.</>,
