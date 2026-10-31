@@ -58,7 +58,7 @@ export function DividendCalculator() {
 
   // Hydrate from a shared ?s= link on first load
   useEffect(() => {
-    const shared = readShareParam<Inputs>();
+    const shared = readShareParam<Inputs>(DEFAULT_INPUTS);
     if (shared) setInp((prev) => ({ ...prev, ...shared }));
   }, [setInp]);
 

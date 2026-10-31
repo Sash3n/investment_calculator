@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
+import { ErrorBoundary } from '../ErrorBoundary';
 import { useAuth } from '../../context/useAuth';
 import { usePrimeRate } from '../../hooks/usePrimeRate';
 import {
@@ -358,7 +359,9 @@ export function AppShell() {
         <main className="flex-1 overflow-auto pb-20 lg:pb-6">
           <JourneyProvider>
             <JourneyBar />
-            <Outlet />
+            <ErrorBoundary key={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </JourneyProvider>
           <DisclaimerFooter />
         </main>

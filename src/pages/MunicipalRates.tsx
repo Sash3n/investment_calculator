@@ -56,40 +56,48 @@ interface Municipality {
   basicService:  number;   // R/month (admin / basic service levy)
   waterTiers:    WaterTier[];
   tariffYear:    string;
+  /** True when the tariffs are not confirmed from the council's published schedule. */
   rateEstimated: boolean;
 }
 
 const MUNICIPALITIES: Municipality[] = [
   {
     id: 'coj', name: 'City of Johannesburg', shortName: 'Joburg', color: C.blue,
-    rateInRand: 0.009545, rebateStd: 300_000, rebatePct: 30,
-    refuse: 285, sewerage: 255, basicService: 120,
-    tariffYear: '2025/26', rateEstimated: false,
+    // Approved tariffs 2026/27. Refuse is the R1m to R1.5m band, sewerage a 300 to 1000 m² erf,
+    // basic the water demand management levy. Pensioner rebate is the 50% income band.
+    rateInRand: 0.009889, rebateStd: 300_000, rebatePct: 50,
+    refuse: 347, sewerage: 774, basicService: 108,
+    tariffYear: '2026/27', rateEstimated: false,
     waterTiers: [
-      { upTo: 6,        rate: 0     },
-      { upTo: 10,       rate: 12.84 },
-      { upTo: 15,       rate: 19.26 },
-      { upTo: 20,       rate: 22.79 },
-      { upTo: 30,       rate: 28.96 },
-      { upTo: Infinity, rate: 36.40 },
+      { upTo: 6,        rate: 0      },
+      { upTo: 10,       rate: 33.57  },
+      { upTo: 15,       rate: 35.04  },
+      { upTo: 20,       rate: 49.13  },
+      { upTo: 30,       rate: 67.91  },
+      { upTo: 40,       rate: 74.26  },
+      { upTo: 50,       rate: 93.69  },
+      { upTo: Infinity, rate: 100.40 },
     ],
   },
   {
     id: 'coct', name: 'City of Cape Town', shortName: 'Cape Town', color: C.teal,
-    rateInRand: 0.007055, rebateStd: 450_000, rebatePct: 50,
-    refuse: 265, sewerage: 325, basicService: 100,
-    tariffYear: '2025/26', rateEstimated: false,
+    // Approved budget 2026/27, level water wise, excl. VAT. The R605 000 reduction applies to a
+    // primary residence under R8m. Sewerage is the 20 mm fixed charge plus sanitation on 10.5 kL,
+    // basic the 20 mm water fixed charge.
+    rateInRand: 0.007010, rebateStd: 605_000, rebatePct: 50,
+    refuse: 185, sewerage: 300, basicService: 90,
+    tariffYear: '2026/27', rateEstimated: false,
     waterTiers: [
-      { upTo: 6,        rate: 0     },
-      { upTo: 10.5,     rate: 14.92 },
-      { upTo: 35,       rate: 22.68 },
-      { upTo: 50,       rate: 31.66 },
-      { upTo: Infinity, rate: 47.64 },
+      { upTo: 6,        rate: 21.78 },
+      { upTo: 10.5,     rate: 29.93 },
+      { upTo: 35,       rate: 47.48 },
+      { upTo: Infinity, rate: 95.63 },
     ],
   },
   {
     id: 'cot', name: 'City of Tshwane', shortName: 'Tshwane', color: C.green,
-    rateInRand: 0.009100, rebateStd: 200_000, rebatePct: 25,
+    // Rate: indicative 0.010117 plus the announced 5%. Everything here is an estimate.
+    rateInRand: 0.010620, rebateStd: 200_000, rebatePct: 25,
     refuse: 225, sewerage: 205, basicService: 95,
     tariffYear: '2025/26', rateEstimated: true,
     waterTiers: [
@@ -103,7 +111,9 @@ const MUNICIPALITIES: Municipality[] = [
   },
   {
     id: 'emm', name: 'Ekurhuleni Metro', shortName: 'Ekurhuleni', color: C.orange,
-    rateInRand: 0.009800, rebateStd: 250_000, rebatePct: 25,
+    // Rate and R150 000 reduction from the draft 2026/27 determination; council later trimmed
+    // the increase from 2% to 1.5%.
+    rateInRand: 0.011950, rebateStd: 150_000, rebatePct: 25,
     refuse: 245, sewerage: 225, basicService: 90,
     tariffYear: '2025/26', rateEstimated: true,
     waterTiers: [
@@ -117,7 +127,8 @@ const MUNICIPALITIES: Municipality[] = [
   },
   {
     id: 'ethekwini', name: 'eThekwini (Durban)', shortName: 'Durban', color: C.brown,
-    rateInRand: 0.010850, rebateStd: 200_000, rebatePct: 20,
+    // Rate from the final 2026/27 tariff tables (1.4660 cents in the rand). Other figures are estimates.
+    rateInRand: 0.014660, rebateStd: 200_000, rebatePct: 20,
     refuse: 205, sewerage: 235, basicService: 85,
     tariffYear: '2025/26', rateEstimated: true,
     waterTiers: [
@@ -143,7 +154,8 @@ const MUNICIPALITIES: Municipality[] = [
   },
   {
     id: 'bcc', name: 'Buffalo City (East London)', shortName: 'Buffalo City', color: C.slate,
-    rateInRand: 0.011000, rebateStd: 150_000, rebatePct: 20,
+    // Rate implied by the draft 2026/27 business tariff at the published 2.5 ratio. An estimate.
+    rateInRand: 0.015420, rebateStd: 150_000, rebatePct: 20,
     refuse: 175, sewerage: 185, basicService: 75,
     tariffYear: '2025/26', rateEstimated: true,
     waterTiers: [
@@ -257,7 +269,7 @@ export function MunicipalRates() {
     MUNICIPALITIES.map((m) => {
       const mEff = m.id === cityId ? cityWithCustomRate : m;
       const b = calcBill(mEff, propValue, rebateType, waterKl);
-      return { name: m.shortName, total: Math.round(b.total + electricityBasic), rates: Math.round(b.rates), color: m.color };
+      return { name: m.shortName, total: Math.round(b.total + electricityBasic), rates: Math.round(b.rates), color: m.color, estimated: m.rateEstimated };
     }),
   [cityId, cityWithCustomRate, propValue, rebateType, waterKl, electricityBasic]);
 
@@ -281,7 +293,9 @@ export function MunicipalRates() {
 
   const errors  = municipalInputErrors({ propValue, waterKl, electricityBasic, escalation, rateInRand: activeRate });
   const blocked = errors.propValue ?? errors.waterKl ?? errors.rateInRand;
-  const cheapest = comparisonData.reduce((min, c) => c.total < min.total ? c : min, comparisonData[0]);
+  // Only cities with confirmed tariffs can be called cheaper; estimates would win by being out of date.
+  const confirmed = comparisonData.filter((c) => !c.estimated);
+  const cheapest = confirmed.reduce((min, c) => c.total < min.total ? c : min, confirmed[0]);
   const movingSaving = cheapest.name === city.shortName ? 0 : billTotal - cheapest.total;
   const services = bill.sewerage + bill.refuse + bill.basic;
 
@@ -317,9 +331,10 @@ export function MunicipalRates() {
       >
         <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: textTone(C.orange) }} />
         <span style={{ color: 'var(--ink-muted)' }}>
-          Tariffs are approximate 2025/26 estimates for residential properties.
-          {estimated && ` ${city.name} rates are estimated — verify with your municipality.`}
-          {' '}Water tiers exclude VAT. These are illustrations only — consult your municipality for exact billing.
+          {estimated
+            ? `${city.name} figures are estimates and may be well below your real bill. Confirmed 2026/27 tariffs are in for Johannesburg and Cape Town only.`
+            : `${city.name} figures come from the council's published ${city.tariffYear} tariffs, simplified to one typical charge for refuse and sewerage.`}
+          {' '}Water tiers exclude VAT. Check your municipal account for exact billing.
         </span>
       </div>
 
@@ -448,7 +463,7 @@ export function MunicipalRates() {
               ? 'Registered indigent households pay no property rates and get a free basic allocation of water, electricity, sewerage and refuse removal. Who qualifies differs by municipality.'
               : <>
                   Property rates are {formatRand(bill.rates, 0)} of that, charged on {formatRand(bill.rateableValue, 0)} after the first {formatRand(city.rebateStd, 0)} of the value is excluded.
-                  {movingSaving > 50 && ` The same property would cost about ${formatRand(movingSaving, 0)} a month less in ${cheapest.name}.`}
+                  {!estimated && movingSaving > 50 && ` Using confirmed tariffs, the same property would cost about ${formatRand(movingSaving, 0)} a month less in ${cheapest.name}.`}
                 </>}
             figures={[
               { label: 'Each year', value: formatRand(billTotal * 12, 0) },
@@ -517,7 +532,8 @@ export function MunicipalRates() {
             style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
           >
             <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink)' }}>
-              City comparison — same property value across all municipalities
+              City comparison, same property value
+              <span className="block text-xs font-normal mt-0.5" style={{ color: 'var(--ink-muted)' }}>Only Johannesburg and Cape Town are confirmed 2026/27 tariffs. The others are estimates.</span>
             </h2>
             <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
               Monthly total bill at {formatRandShort(propValue)} municipal value, {rebateType} rebate, {waterKl} kL water.
@@ -610,7 +626,7 @@ export function MunicipalRates() {
             style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}
           >
             <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              {city.shortName} water tariff tiers (2025/26)
+              {city.shortName} water tariff tiers{estimated ? ' (estimate)' : ` (${city.tariffYear})`}
             </h2>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {city.waterTiers.map((tier, i) => {
@@ -639,8 +655,8 @@ export function MunicipalRates() {
 
           <AssumptionsDrawer
             items={[
-              <>Tariffs are the {city.tariffYear} residential figures{estimated ? `, and the ${city.shortName} rate in the rand is estimated` : ''}. Municipalities set new tariffs every July, so compare with your latest municipal account.</>,
-              <>Rates are the municipal value less the first {formatRand(city.rebateStd, 0)} the city excludes, times the rate in the rand{rebateType === 'pensioner' ? `, less the ${city.rebatePct}% pensioner rebate` : ''}.</>,
+              <>{estimated ? `${city.shortName} figures are estimates, not the council's confirmed schedule.` : `${city.shortName} figures are the ${city.tariffYear} residential tariffs.`} Municipalities set new tariffs every July, so compare with your latest municipal account.</>,
+              <>Rates are the municipal value less the first {formatRand(city.rebateStd, 0)} the city excludes, times the rate in the rand{rebateType === 'pensioner' ? `, less the ${city.rebatePct}% pensioner rebate` : ''}.{city.id === 'coct' ? ' Cape Town gives this reduction only on a primary residence valued under R8 million.' : ''}</>,
               <>Water uses the city’s stepped tariff for {waterKl} kL a month, excluding VAT. Sewerage, refuse and basic services are flat monthly amounts.</>,
               <>The 5-year projection grows the whole bill by {escalation}% a year.</>,
               <>Not included: electricity you use, VAT on services, body corporate levies and special rating area levies.</>,

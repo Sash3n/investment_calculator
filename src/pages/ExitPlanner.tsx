@@ -62,7 +62,7 @@ export function ExitPlanner() {
   const [inputs, setInputs] = usePersistentState<ExitPlannerInputs>('fincalc-exit', DEFAULT_INPUTS);
 
   useEffect(() => {
-    const shared = readShareParam<ExitPlannerInputs>();
+    const shared = readShareParam<ExitPlannerInputs>(DEFAULT_INPUTS);
     if (shared) setInputs((prev) => ({ ...prev, ...shared }));
   }, [setInputs]);
 

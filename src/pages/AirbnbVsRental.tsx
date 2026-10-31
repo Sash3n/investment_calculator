@@ -55,7 +55,7 @@ export function AirbnbVsRental() {
   const [inputs, setInputs] = usePersistentState<STRvsLTRInputs>('fincalc-airbnb', DEFAULT_INPUTS);
 
   useEffect(() => {
-    const shared = readShareParam<STRvsLTRInputs>();
+    const shared = readShareParam<STRvsLTRInputs>(DEFAULT_INPUTS);
     if (shared) setInputs((prev) => ({ ...prev, ...shared }));
   }, [setInputs]);
 
