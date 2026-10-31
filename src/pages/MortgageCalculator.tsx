@@ -17,6 +17,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { SaveLoadBar } from '../components/ui/SaveLoadBar';
 import { calcMortgageSummary } from '../utils/mortgage';
+import { MortgageSentence } from '../components/mortgage/MortgageSentence';
 import { calcTransferDuty } from '../utils/tax';
 import { exportMortgagePDF } from '../utils/pdf';
 import { formatRand, formatYears, formatDate, formatPercent } from '../utils/format';
@@ -25,6 +26,7 @@ import type { MortgageInputs } from '../types';
 import { textTone } from '../utils/color';
 
 const ROWS_PER_PAGE = 24;
+const VIEW_KEY = 'fincalc-mortgage-view';
 
 const CHART_COLORS = {
   blue: 'var(--note-blue)',
@@ -93,6 +95,15 @@ export function MortgageCalculator() {
   const [tableOpen, setTableOpen] = useState(false);
   const [tablePage, setTablePage] = useState(0);
   const [showWithExtras, setShowWithExtras] = useState(false);
+
+  // Simple (sentence) or full view; remembered per browser, full by default
+  const [view, setView] = useState<'simple' | 'full'>(() => {
+    try { return localStorage.getItem(VIEW_KEY) === 'simple' ? 'simple' : 'full'; } catch { return 'full'; }
+  });
+  const chooseView = (next: 'simple' | 'full') => {
+    setView(next);
+    try { localStorage.setItem(VIEW_KEY, next); } catch { /* storage blocked */ }
+  };
 
   const set = useCallback(<K extends keyof MortgageInputs>(key: K, raw: string) => {
     setInputs((prev) => ({
@@ -237,6 +248,23 @@ export function MortgageCalculator() {
         icon={Building2}
       />
 
+      <div className="tab-bar max-w-xs mb-6" role="tablist" aria-label="Calculator view">
+        {([['simple', 'Simple view'], ['full', 'Full view']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={view === id}
+            className={clsx('tab-btn', view === id && 'active')}
+            onClick={() => chooseView(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'simple' ? (
+        <MortgageSentence inputs={inputs} result={result} onChange={set} />
+      ) : (<>
       <div className="two-col-layout">
         {/* ── Input panel ──────────────────────────────── */}
         <div className="glass-card-static p-6 space-y-5">
@@ -814,6 +842,7 @@ export function MortgageCalculator() {
           </p>
         </div>
       </div>
+      </>)}
     </motion.div>
   );
 }
