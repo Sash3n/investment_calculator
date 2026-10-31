@@ -16,17 +16,6 @@ export function NotFound() {
       transition={{ duration: 0.5 }}
       className="min-h-[80vh] flex flex-col items-center justify-center px-6 text-center"
     >
-      {/* Glow orb */}
-      <div
-        className="absolute w-[400px] h-[400px] rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-
       {/* Status code */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -37,8 +26,8 @@ export function NotFound() {
         <p
           className="text-[120px] font-black leading-none select-none"
           style={{
-            fontFamily: 'var(--font-heading)',
-            background: 'linear-gradient(135deg, #6366F1 0%, #818CF8 40%, #C7D2FE 100%)',
+            fontFamily: 'var(--font-display)',
+            background: 'linear-gradient(135deg, var(--note-blue) 0%, var(--note-blue) 40%, var(--note-blue) 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}
@@ -47,7 +36,7 @@ export function NotFound() {
         </p>
         <div
           className="absolute inset-0 blur-3xl opacity-20 pointer-events-none"
-          style={{ background: 'linear-gradient(135deg, #6366F1, #818CF8)' }}
+          style={{ background: 'linear-gradient(135deg, var(--note-blue), var(--note-blue))' }}
         />
       </motion.div>
 
@@ -60,13 +49,13 @@ export function NotFound() {
       >
         <h1
           className="text-2xl font-bold"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}
         >
           Page not found
         </h1>
         <p
           className="text-sm max-w-sm mx-auto"
-          style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
+          style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}
         >
           The page you're looking for doesn't exist or has been moved.
           Let's get you back on track.
@@ -100,7 +89,7 @@ export function NotFound() {
       >
         <p
           className="text-[11px] uppercase tracking-widest mb-3"
-          style={{ color: 'var(--color-text-subtle)', fontFamily: 'var(--font-body)' }}
+          style={{ color: 'var(--ink-subtle)', fontFamily: 'var(--font-text)' }}
         >
           Quick links
         </p>
@@ -111,15 +100,15 @@ export function NotFound() {
               <Link
                 key={s.to}
                 to={s.to}
-                className="glass-card-static flex items-center gap-3 p-3 hover:border-[#6366F1] transition-colors text-left group"
+                className="glass-card-static flex items-center gap-3 p-3 hover:border-note-blue transition-colors text-left group"
               >
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(99,102,241,0.12)' }}>
-                  <Icon size={14} className="text-[#6366F1]" />
+                  style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)' }}>
+                  <Icon size={14} className="text-note-blue-ink" />
                 </div>
                 <span
-                  className="text-sm font-medium group-hover:text-[#818CF8] transition-colors"
-                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+                  className="text-sm font-medium group-hover:text-note-blue-ink transition-colors"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-text)' }}
                 >
                   {s.label}
                 </span>

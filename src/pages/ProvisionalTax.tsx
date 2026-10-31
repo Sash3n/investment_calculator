@@ -11,12 +11,13 @@ import { readShareParam } from '../utils/share';
 import { calcIncomeTax } from '../utils/tax';
 import { TAX_YEARS, TAX_YEAR_OPTIONS, DEFAULT_TAX_YEAR, type TaxYearId } from '../config/taxYears';
 import type { AgeGroup } from '../types';
+import { alpha, textTone } from '../utils/color';
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
 };
 
 function toAgeGroup(age: number): AgeGroup {
@@ -111,12 +112,12 @@ export function ProvisionalTax() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: `${C.amber}22` }}>
-            <Receipt size={22} style={{ color: C.amber }} />
+          <div className="p-2.5 rounded-xl" style={{ background: alpha(C.orange, 13) }}>
+            <Receipt size={22} style={{ color: textTone(C.orange) }} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Provisional Tax</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>Provisional Tax</h1>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Freelancers and side-hustlers: know exactly what to set aside and when. ({taxYearLabel})
             </p>
           </div>
@@ -126,8 +127,8 @@ export function ProvisionalTax() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-4 p-5 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             Income details
           </h2>
           <TaxYearSelect id="pt-taxyear" value={taxYear} onChange={setTaxYear} />
@@ -136,12 +137,12 @@ export function ProvisionalTax() {
           <InputField id="pt-other"   label="Other income (interest, rental)"     value={otherIncome}      onChange={(v) => setOtherIncome(Number(v))}      prefix="R" min={0} />
           <InputField id="pt-deduct"  label="Other deductions"                    value={deductions}       onChange={(v) => setDeductions(Number(v))}       prefix="R" min={0} />
 
-          <hr style={{ borderColor: 'var(--color-border)' }} />
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+          <hr style={{ borderColor: 'var(--rule)' }} />
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-muted)' }}>
             RA contribution
           </h2>
           <InputField id="pt-ra"      label="Annual RA contribution"              value={raContribution}   onChange={(v) => setRaContribution(Number(v))}   prefix="R" min={0} />
-          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>
             Max deductible: {formatRand(raDeductCap)} (27.5% of income, capped {formatRand(retirement.cap)})
           </div>
           {/* Slider for RA — hidden when income is zero (max would be 0, slider breaks) */}
@@ -154,7 +155,7 @@ export function ProvisionalTax() {
               value={Math.min(raContribution, raDeductCap)}
               onChange={(e) => setRaContribution(Number(e.target.value))}
               className="w-full"
-              style={{ accentColor: '#6366F1' }}
+              style={{ accentColor: 'var(--note-blue)' }}
             />
           )}
           <InputField id="pt-age"     label="Your age"                            value={age}              onChange={(v) => setAge(Number(v))}              suffix="yrs" min={18} max={100} />
@@ -173,29 +174,29 @@ export function ProvisionalTax() {
 
         <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <StatCard label={paymentLabel}                   value={formatRand(displayPayment)}          color="amber"   icon={Receipt} />
-            <StatCard label="Monthly set aside"              value={formatRand(result.monthlySetAside)}  color="indigo"  icon={CheckCircle2} />
+            <StatCard label={paymentLabel}                   value={formatRand(displayPayment)}          color="orange"   icon={Receipt} />
+            <StatCard label="Monthly set aside"              value={formatRand(result.monthlySetAside)}  color="blue"  icon={CheckCircle2} />
             <StatCard label="Tax on freelance income"        value={formatRand(result.taxOnFreelance)}   color="red"     icon={Receipt} />
-            <StatCard label="Effective tax rate"             value={`${result.effectiveRate.toFixed(1)}%`} color="amber" icon={Info} />
+            <StatCard label="Effective tax rate"             value={`${result.effectiveRate.toFixed(1)}%`} color="orange" icon={Info} />
             {raContribution > 0 && (
               <div className="col-span-2">
-                <StatCard label="RA tax saving this year"  value={formatRand(result.raTaxSaving)}      color="emerald" icon={TrendingDown} />
+                <StatCard label="RA tax saving this year"  value={formatRand(result.raTaxSaving)}      color="green" icon={TrendingDown} />
               </div>
             )}
           </div>
 
           <div className="flex items-start gap-3 p-4 rounded-xl text-sm"
-            style={{ background: `${C.amber}11`, border: `1px solid ${C.amber}44` }}>
-            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.amber }} />
-            <div style={{ color: 'var(--color-text-muted)' }}>
-              <span style={{ color: 'var(--color-text)', fontWeight: 600 }}>{paymentLabel} due {paymentDue}.</span>
+            style={{ background: alpha(C.orange, 7), border: `1px solid ${alpha(C.orange, 27)}` }}>
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.orange) }} />
+            <div style={{ color: 'var(--ink-muted)' }}>
+              <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{paymentLabel} due {paymentDue}.</span>
               {' '}Pay at least 90% of your final liability ({formatRand(result.penaltyThreshold)}) to avoid a 20% penalty on the shortfall.
             </div>
           </div>
 
           <div className="p-5 rounded-2xl"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Tax breakdown</h2>
+            style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--ink)' }}>Tax breakdown</h2>
             <div className="space-y-0 text-sm">
               {[
                 ['Total income',                   formatRand(result.totalIncome)],
@@ -207,18 +208,18 @@ export function ProvisionalTax() {
                 ['Tax on non-employment income',   formatRand(result.taxOnFreelance)],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between items-center py-2"
-                  style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <span style={{ color: 'var(--color-text-muted)' }}>{label}</span>
-                  <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>{value}</span>
+                  style={{ borderBottom: '1px solid var(--rule)' }}>
+                  <span style={{ color: 'var(--ink-muted)' }}>{label}</span>
+                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{value}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="flex items-start gap-2 p-3 rounded-xl text-xs"
-            style={{ background: `${C.indigo}11`, border: `1px solid ${C.indigo}22` }}>
-            <Info size={13} style={{ color: C.indigo }} />
-            <span style={{ color: 'var(--color-text-muted)' }}>
+            style={{ background: alpha(C.blue, 7), border: `1px solid ${alpha(C.blue, 13)}` }}>
+            <Info size={13} style={{ color: textTone(C.blue) }} />
+            <span style={{ color: 'var(--ink-muted)' }}>
               Based on {taxYearLabel} SARS tax tables. Medical aid credit:
               R{TAX_YEARS[taxYear].medCredits.main}/month (main member and first dependant),
               R{TAX_YEARS[taxYear].medCredits.extraDep}/month per additional dependant.

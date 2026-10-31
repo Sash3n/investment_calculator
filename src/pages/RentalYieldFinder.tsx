@@ -8,24 +8,25 @@ import { Home, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcTransferDuty, calcBondRegistrationCost } from '../utils/tax';
+import { alpha, textTone } from '../utils/color';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const C = {
-  indigo:  '#6366F1',
-  emerald: '#10B981',
-  amber:   '#F59E0B',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  green: 'var(--gain)',
+  orange:   'var(--note-orange)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 // ─── Math helpers ──────────────────────────────────────────────────────────────
@@ -168,15 +169,15 @@ export function RentalYieldFinder() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-            <Home size={20} className="text-[#10B981]" />
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
+            <Home size={20} className="text-gain-ink" />
           </div>
           <div>
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Rental Yield Finder
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Find your breakeven rent and true cash flow for any SA rental property
             </p>
           </div>
@@ -189,20 +190,20 @@ export function RentalYieldFinder() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         {[
-          { label: 'Gross Yield',         value: `${grossYield.toFixed(2)}%`,     color: C.amber,   sub: 'annual rent / price' },
-          { label: 'Net Yield',           value: `${netYield.toFixed(2)}%`,       color: netYield >= 0 ? C.emerald : C.red, sub: 'after all costs' },
-          { label: 'Monthly Cash Flow',   value: formatRand(monthlyCashFlow, 0),  color: isCashFlowPositive ? C.emerald : C.red,
+          { label: 'Gross Yield',         value: `${grossYield.toFixed(2)}%`,     color: C.orange,   sub: 'annual rent / price' },
+          { label: 'Net Yield',           value: `${netYield.toFixed(2)}%`,       color: netYield >= 0 ? C.green : C.red, sub: 'after all costs' },
+          { label: 'Monthly Cash Flow',   value: formatRand(monthlyCashFlow, 0),  color: isCashFlowPositive ? C.green : C.red,
             sub: isCashFlowPositive ? 'positive' : 'negative' },
-          { label: 'Breakeven Rent',      value: formatRand(breakEvenRentActual, 0), color: C.indigo, sub: `${breakEvenYield.toFixed(2)}% yield` },
+          { label: 'Breakeven Rent',      value: formatRand(breakEvenRentActual, 0), color: C.blue, sub: `${breakEvenYield.toFixed(2)}% yield` },
         ].map((kpi) => (
           <div key={kpi.label} className="glass-card-static p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: 'var(--color-text-subtle)' }}>{kpi.label}</p>
+              style={{ color: 'var(--ink-subtle)' }}>{kpi.label}</p>
             <p className="text-base font-bold leading-tight"
-              style={{ color: kpi.color, fontFamily: 'var(--font-heading)' }}>
+              style={{ color: textTone(kpi.color), fontFamily: 'var(--font-display)' }}>
               {kpi.value}
             </p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{kpi.sub}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>{kpi.sub}</p>
           </div>
         ))}
       </motion.div>
@@ -212,22 +213,22 @@ export function RentalYieldFinder() {
         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
         className="flex items-center gap-3 p-4 rounded-xl"
         style={{
-          background: isCashFlowPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-          border: `1px solid ${isCashFlowPositive ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
+          background: isCashFlowPositive ? 'color-mix(in srgb, var(--gain) 8%, transparent)' : 'color-mix(in srgb, var(--loss) 8%, transparent)',
+          border: `1px solid ${isCashFlowPositive ? 'color-mix(in srgb, var(--gain) 25%, transparent)' : 'color-mix(in srgb, var(--loss) 25%, transparent)'}`,
         }}
       >
         {isCashFlowPositive
-          ? <CheckCircle2 size={18} style={{ color: C.emerald, flexShrink: 0 }} />
-          : <AlertCircle  size={18} style={{ color: C.red, flexShrink: 0 }} />}
+          ? <CheckCircle2 size={18} style={{ color: textTone(C.green), flexShrink: 0 }} />
+          : <AlertCircle  size={18} style={{ color: textTone(C.red), flexShrink: 0 }} />}
         <div>
           <p className="text-sm font-semibold"
-            style={{ color: isCashFlowPositive ? C.emerald : C.red }}>
+            style={{ color: textTone(isCashFlowPositive ? C.green : C.red) }}>
             {isCashFlowPositive
               ? `Cash-flow positive: ${formatRand(monthlyCashFlow, 0)}/month surplus`
               : `Cash-flow negative: ${formatRand(Math.abs(monthlyCashFlow), 0)}/month shortfall`}
           </p>
-          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            You need at least <strong style={{ color: 'var(--color-text)' }}>{formatRand(breakEvenRentActual, 0)}/month</strong> to break even.
+          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+            You need at least <strong style={{ color: 'var(--ink)' }}>{formatRand(breakEvenRentActual, 0)}/month</strong> to break even.
             {monthlyRent < breakEvenRentActual
               ? ` Increase rent by ${formatRand(breakEvenRentActual - monthlyRent, 0)} to break even.`
               : ` You are ${formatRand(monthlyRent - breakEvenRentActual, 0)} above breakeven.`}
@@ -243,7 +244,7 @@ export function RentalYieldFinder() {
         {/* Property details */}
         <div className="glass-card p-5 space-y-3">
           <p className="text-sm font-bold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Property Details
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -262,8 +263,8 @@ export function RentalYieldFinder() {
           </div>
 
           {/* Upfront costs breakdown */}
-          <div className="rounded-xl p-3.5 space-y-2 mt-1" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: C.indigo }}>
+          <div className="rounded-xl p-3.5 space-y-2 mt-1" style={{ background: 'color-mix(in srgb, var(--note-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: textTone(C.blue) }}>
               Upfront Costs
             </p>
             <InputField id="init" label="Initiation Fee" value={initiationFee}
@@ -277,12 +278,12 @@ export function RentalYieldFinder() {
                   checked={capitaliseInitiationFee}
                   onChange={(e) => setCapitaliseInitiationFee(e.target.checked)}
                 />
-                <div className={`w-9 h-5 rounded-full transition-colors ${capitaliseInitiationFee ? 'bg-[#6366F1]' : 'bg-[#334155]'}`} />
+                <div className={`w-9 h-5 rounded-full transition-colors ${capitaliseInitiationFee ? 'bg-note-blue' : 'bg-rule-strong'}`} />
                 <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${capitaliseInitiationFee ? 'translate-x-4' : 'translate-x-0'}`} />
               </div>
               <div>
-                <p className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>Add Initiation Fee to Loan</p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>
+                <p className="text-xs font-medium" style={{ color: 'var(--ink)' }}>Add Initiation Fee to Loan</p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-subtle)' }}>
                   Finance it instead of paying upfront — increases the bond and monthly repayment.
                 </p>
               </div>
@@ -293,9 +294,9 @@ export function RentalYieldFinder() {
                 { label: 'Bond Registration', value: bondRegCost },
                 { label: 'Total Cash Needed', value: totalUpfront, bold: true },
               ].map((r) => (
-                <div key={r.label} className={`flex justify-between ${r.bold ? 'pt-1.5 border-t border-[rgba(99,102,241,0.2)]' : ''}`}>
-                  <span className="text-xs" style={{ color: r.bold ? C.indigo : 'var(--color-text-muted)' }}>{r.label}</span>
-                  <span className={`text-xs font-semibold tabular-nums ${r.bold ? 'text-sm' : ''}`} style={{ color: r.bold ? C.indigo : 'var(--color-text)' }}>
+                <div key={r.label} className={`flex justify-between ${r.bold ? 'pt-1.5 border-t border-note-blue/20' : ''}`}>
+                  <span className="text-xs" style={{ color: textTone(r.bold ? C.blue : 'var(--ink-muted)') }}>{r.label}</span>
+                  <span className={`text-xs font-semibold tabular-nums ${r.bold ? 'text-sm' : ''}`} style={{ color: textTone(r.bold ? C.blue : 'var(--ink)') }}>
                     {formatRand(r.value)}
                   </span>
                 </div>
@@ -307,7 +308,7 @@ export function RentalYieldFinder() {
         {/* Monthly costs */}
         <div className="glass-card p-5 space-y-3">
           <p className="text-sm font-bold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Monthly Costs
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -328,33 +329,33 @@ export function RentalYieldFinder() {
         className="glass-card-static p-5"
       >
         <p className="text-sm font-semibold mb-3"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Monthly Cost Breakdown
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
           {[
-            { label: 'Bond Payment', value: costs.bond,        color: C.indigo  },
-            { label: 'Levy',         value: costs.levy,        color: C.violet  },
-            { label: 'Rates',        value: costs.rates,       color: C.amber   },
-            { label: 'Insurance',    value: costs.insurance,   color: C.cyan    },
-            { label: 'Effluent',     value: costs.effluent,    color: '#06B6D4' },
-            { label: 'Misc',         value: costs.misc,        color: '#A78BFA' },
-            { label: 'Maintenance',  value: costs.maintenance, color: C.emerald },
+            { label: 'Bond Payment', value: costs.bond,        color: C.blue  },
+            { label: 'Levy',         value: costs.levy,        color: C.brown  },
+            { label: 'Rates',        value: costs.rates,       color: C.orange   },
+            { label: 'Insurance',    value: costs.insurance,   color: C.teal    },
+            { label: 'Effluent',     value: costs.effluent,    color: 'var(--note-teal)' },
+            { label: 'Misc',         value: costs.misc,        color: 'var(--note-brown)' },
+            { label: 'Maintenance',  value: costs.maintenance, color: C.green },
             { label: 'Agent Fee',    value: costs.agentFee,    color: C.red     },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-3 text-center"
-              style={{ background: `${item.color}0D`, border: `1px solid ${item.color}20` }}>
-              <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>{item.label}</p>
-              <p className="text-sm font-bold mt-1" style={{ color: item.color }}>
+              style={{ background: alpha(item.color, 5), border: `1px solid ${alpha(item.color, 13)}` }}>
+              <p className="text-xs font-semibold" style={{ color: 'var(--ink-muted)' }}>{item.label}</p>
+              <p className="text-sm font-bold mt-1" style={{ color: textTone(item.color) }}>
                 {formatRand(item.value, 0)}
               </p>
             </div>
           ))}
         </div>
         <div className="mt-3 pt-3 flex items-center justify-between"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Total Monthly Costs</p>
-          <p className="text-sm font-bold" style={{ color: C.red }}>{formatRand(costs.total, 0)}</p>
+          style={{ borderTop: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--ink-muted)' }}>Total Monthly Costs</p>
+          <p className="text-sm font-bold" style={{ color: textTone(C.red) }}>{formatRand(costs.total, 0)}</p>
         </div>
       </motion.div>
 
@@ -364,27 +365,27 @@ export function RentalYieldFinder() {
         className="glass-card-static p-5"
       >
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Cash Flow vs Rent
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           Monthly cash flow across different rent levels. Dashed line = breakeven at {formatRand(breakEvenRentActual, 0)}/mo
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="rent" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(v)} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => `${v}%`} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="rent" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => formatRandShort(v)} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => `${v}%`} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
               formatter={(v, name) => name === 'Gross Yield' ? [`${v}%`, name] : [formatRand(Number(v), 0), name]}
               contentStyle={TOOLTIP_STYLE}
               labelFormatter={(l) => `Rent: ${formatRand(Number(l), 0)}/mo`}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-            <ReferenceLine yAxisId="left" y={0} stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" />
-            <Line yAxisId="left"  type="monotone" dataKey="cashFlow"   name="Monthly Cash Flow" stroke={C.emerald} strokeWidth={2} dot={false} />
-            <Line yAxisId="right" type="monotone" dataKey="grossYield" name="Gross Yield" stroke={C.amber} strokeWidth={1.5} dot={false} strokeDasharray="4 3" />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+            <ReferenceLine yAxisId="left" y={0} stroke="color-mix(in srgb, var(--ink) 20%, transparent)" strokeDasharray="4 4" />
+            <Line yAxisId="left"  type="monotone" dataKey="cashFlow"   name="Monthly Cash Flow" stroke={C.green} strokeWidth={2} dot={false} />
+            <Line yAxisId="right" type="monotone" dataKey="grossYield" name="Gross Yield" stroke={C.orange} strokeWidth={1.5} dot={false} strokeDasharray="4 3" />
           </LineChart>
         </ResponsiveContainer>
       </motion.div>
@@ -395,31 +396,31 @@ export function RentalYieldFinder() {
         className="glass-card-static p-5"
       >
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           10-Year Investment Projection
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           Equity growth (7% p.a. appreciation) + cumulative net cash flow
         </p>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={roiData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
-            <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-            <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
-            <Line type="monotone" dataKey="equity" name="Equity"          stroke={C.indigo}  strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="netCF"  name="Cumul. Cash Flow" stroke={isCashFlowPositive ? C.emerald : C.red} strokeWidth={1.5} dot={false} />
-            <Line type="monotone" dataKey="total"  name="Total Return"    stroke={C.amber}   strokeWidth={2} dot={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+            <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+            <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+            <ReferenceLine y={0} stroke="color-mix(in srgb, var(--ink) 15%, transparent)" strokeDasharray="4 4" />
+            <Line type="monotone" dataKey="equity" name="Equity"          stroke={C.blue}  strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="netCF"  name="Cumul. Cash Flow" stroke={isCashFlowPositive ? C.green : C.red} strokeWidth={1.5} dot={false} />
+            <Line type="monotone" dataKey="total"  name="Total Return"    stroke={C.orange}   strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
-        <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-subtle)' }}>
+        <p className="text-[10px] mt-2" style={{ color: 'var(--ink-subtle)' }}>
           * Assumes 7% annual appreciation, current rent held constant. Does not account for bond balance reduction.
         </p>
       </motion.div>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Estimates only. Consult a qualified financial adviser before investing. Not financial advice.
       </p>
     </div>

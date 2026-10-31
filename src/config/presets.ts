@@ -26,7 +26,7 @@ export const PRESETS: Preset[] = [
     title: 'First-time Buyer',
     description: 'See your bond repayment, what you qualify for, and the municipal bill on a R1.5m starter home.',
     icon: House,
-    color: '#6366F1',
+    color: 'var(--note-blue)',
     targets: [
       {
         path: '/mortgage', label: 'Mortgage', mode: 'router',

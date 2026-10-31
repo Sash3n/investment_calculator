@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, CornerDownLeft } from 'lucide-react';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, type NavItem } from '../config/nav';
 import { useNavPrefs } from '../hooks/useNavPrefs';
+import { alpha, textTone } from '../utils/color';
 
 interface Scored {
   item: NavItem;
@@ -116,7 +117,7 @@ export function CommandPalette() {
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-3 h-9 rounded-xl text-xs transition-all"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)' }}
+        style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)', color: 'var(--ink-subtle)' }}
         aria-label="Search calculators"
         title="Search calculators (Ctrl+K)"
       >
@@ -124,7 +125,7 @@ export function CommandPalette() {
         <span className="hidden md:inline">Search…</span>
         <kbd
           className="hidden md:inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold"
-          style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)' }}
+          style={{ background: 'var(--paper)', border: '1px solid var(--rule)', color: 'var(--ink-subtle)' }}
         >
           Ctrl K
         </kbd>
@@ -133,17 +134,17 @@ export function CommandPalette() {
       {!open ? null : (
         <div
           className="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4"
-          style={{ background: 'rgba(2,6,23,0.6)', backdropFilter: 'blur(4px)' }}
+          style={{ background: 'color-mix(in srgb, var(--ink) 60%, transparent)', backdropFilter: 'blur(4px)' }}
           onClick={() => setOpen(false)}
         >
           <div
             className="w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl"
-            style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+            style={{ background: 'var(--paper)', border: '1px solid var(--rule)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Search input */}
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b" style={{ borderColor: 'var(--color-border)' }}>
-              <Search size={17} style={{ color: 'var(--color-text-subtle)' }} />
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b" style={{ borderColor: 'var(--rule)' }}>
+              <Search size={17} style={{ color: 'var(--ink-subtle)' }} />
               <input
                 ref={inputRef}
                 value={query}
@@ -151,9 +152,9 @@ export function CommandPalette() {
                 onKeyDown={onKeyDown}
                 placeholder="Search calculators…"
                 className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+                style={{ color: 'var(--ink)', fontFamily: 'var(--font-text)' }}
               />
-              <kbd className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)' }}>
+              <kbd className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)', color: 'var(--ink-subtle)' }}>
                 Esc
               </kbd>
             </div>
@@ -161,7 +162,7 @@ export function CommandPalette() {
             {/* Results */}
             <div ref={listRef} className="max-h-[55vh] overflow-y-auto py-2">
               {results.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm" style={{ color: 'var(--color-text-subtle)' }}>
+                <p className="px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-subtle)' }}>
                   No calculators match “{query}”.
                 </p>
               ) : (
@@ -175,19 +176,19 @@ export function CommandPalette() {
                       onClick={() => go(item)}
                       onMouseMove={() => setActive(idx)}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
-                      style={{ background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent' }}
+                      style={{ background: isActive ? 'color-mix(in srgb, var(--note-blue) 12%, transparent)' : 'transparent' }}
                     >
                       <span
                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${item.color}1f` }}
+                        style={{ background: alpha(item.color, 12) }}
                       >
-                        <Icon size={15} style={{ color: item.color }} />
+                        <Icon size={15} style={{ color: textTone(item.color) }} />
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{item.label}</span>
-                        <span className="block text-[11px] truncate" style={{ color: 'var(--color-text-subtle)' }}>{category}</span>
+                        <span className="block text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{item.label}</span>
+                        <span className="block text-[11px] truncate" style={{ color: 'var(--ink-subtle)' }}>{category}</span>
                       </span>
-                      {isActive && <CornerDownLeft size={14} style={{ color: 'var(--color-text-subtle)' }} />}
+                      {isActive && <CornerDownLeft size={14} style={{ color: 'var(--ink-subtle)' }} />}
                     </button>
                   );
                 })
@@ -195,9 +196,9 @@ export function CommandPalette() {
             </div>
 
             {/* Footer hint */}
-            <div className="flex items-center gap-4 px-4 py-2.5 border-t text-[11px]" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-subtle)' }}>
-              <span className="flex items-center gap-1"><kbd className="px-1 rounded" style={{ background: 'var(--color-surface)' }}>↑</kbd><kbd className="px-1 rounded" style={{ background: 'var(--color-surface)' }}>↓</kbd> navigate</span>
-              <span className="flex items-center gap-1"><kbd className="px-1 rounded" style={{ background: 'var(--color-surface)' }}>↵</kbd> open</span>
+            <div className="flex items-center gap-4 px-4 py-2.5 border-t text-[11px]" style={{ borderColor: 'var(--rule)', color: 'var(--ink-subtle)' }}>
+              <span className="flex items-center gap-1"><kbd className="px-1 rounded" style={{ background: 'var(--paper-raised)' }}>↑</kbd><kbd className="px-1 rounded" style={{ background: 'var(--paper-raised)' }}>↓</kbd> navigate</span>
+              <span className="flex items-center gap-1"><kbd className="px-1 rounded" style={{ background: 'var(--paper-raised)' }}>↵</kbd> open</span>
               <span className="ml-auto">{NAV_ITEMS.length - 1} calculators</span>
             </div>
           </div>

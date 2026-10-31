@@ -11,6 +11,7 @@ import { StatCard } from '../components/ui/StatCard';
 import { formatRand, formatRandShort } from '../utils/format';
 import { calcIncomeTax } from '../utils/tax';
 import type { AgeGroup } from '../types';
+import { alpha, textTone } from '../utils/color';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const CGT_ANNUAL_EXCLUSION = 50_000;
@@ -30,11 +31,11 @@ const YEAR_OPTIONS = [
 ];
 
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -121,11 +122,11 @@ function calcCGTSimple(
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -251,24 +252,24 @@ export function TaxProjections() {
         <div className="flex items-center gap-3 mb-1">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}
           >
-            <TrendingUp size={20} className="text-[#6366F1]" />
+            <TrendingUp size={20} className="text-note-blue-ink" />
           </div>
           <div>
             <h1
               className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}
             >
               Tax Projections
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Multi-year rental tax forecast · SARS 2026 brackets · CGT at each exit point
             </p>
           </div>
           <span
             className="ml-auto text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'rgba(16,185,129,0.12)', color: C.emerald, border: `1px solid ${C.emerald}44` }}
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}
           >
             2026 Tax Year
           </span>
@@ -278,12 +279,12 @@ export function TaxProjections() {
       {/* Info banner */}
       <div
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}
+        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 18%, transparent)' }}
       >
-        <Info size={14} className="text-[#6366F1] mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--color-text-muted)' }}>
+        <Info size={14} className="text-note-blue-ink mt-0.5 flex-shrink-0" />
+        <span style={{ color: 'var(--ink-muted)' }}>
           Shows how your rental tax liability changes year-by-year as rent escalates and bond interest deductions decrease —
-          plus CGT if you sold at each year. <strong style={{ color: 'var(--color-text)' }}>Net Rental Profit</strong> = Gross Rent − All Deductible Costs − Tax (principal repayment excluded — it builds equity).
+          plus CGT if you sold at each year. <strong style={{ color: 'var(--ink)' }}>Net Rental Profit</strong> = Gross Rent − All Deductible Costs − Tax (principal repayment excluded — it builds equity).
         </span>
       </div>
 
@@ -294,10 +295,10 @@ export function TaxProjections() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
-              <Building2 size={15} className="text-[#F59E0B]" />
+              style={{ background: 'color-mix(in srgb, var(--note-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 25%, transparent)' }}>
+              <Building2 size={15} className="text-note-orange-ink" />
             </div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Property &amp; Bond
             </p>
           </div>
@@ -321,10 +322,10 @@ export function TaxProjections() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <Receipt size={15} className="text-[#6366F1]" />
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              <Receipt size={15} className="text-note-blue-ink" />
             </div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Rental &amp; Income
             </p>
           </div>
@@ -370,21 +371,21 @@ export function TaxProjections() {
           label="Net Rental Profit"
           value={formatRand(totalNetCash, 0)}
           sub="After tax &amp; deductions"
-          color={totalNetCash >= 0 ? 'emerald' : 'red'}
+          color={totalNetCash >= 0 ? 'green' : 'red'}
           delay={0.05}
         />
         <StatCard
           label="CGT at Exit"
           value={formatRand(last?.cgtAtExit ?? 0, 0)}
           sub={`Year ${inp.projectionYears} sale`}
-          color="amber"
+          color="orange"
           delay={0.1}
         />
         <StatCard
           label={breakEvenYear ? `Break-even Year ${breakEvenYear}` : 'No break-even'}
           value={breakEvenYear ? `Year ${breakEvenYear}` : '—'}
           sub="Cumulative net cash ≥ 0"
-          color="indigo"
+          color="blue"
           delay={0.15}
         />
       </div>
@@ -395,26 +396,26 @@ export function TaxProjections() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap"
-          style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)' }}
+          style={{ background: 'color-mix(in srgb, var(--gain) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 20%, transparent)' }}
         >
           <div>
-            <p className="text-xs font-semibold mb-0.5" style={{ color: C.emerald }}>
+            <p className="text-xs font-semibold mb-0.5" style={{ color: textTone(C.green) }}>
               Optimal Exit: Year {bestExit.year}
             </p>
-            <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[11px]" style={{ color: 'var(--ink-muted)' }}>
               Highest combined return (net sale proceeds + cumulative rental profit − purchase price)
             </p>
           </div>
           <div className="flex items-center gap-6 flex-shrink-0">
             <div className="text-right">
-              <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Net Proceeds</p>
-              <p className="text-sm font-bold" style={{ color: C.emerald }}>
+              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Net Proceeds</p>
+              <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
                 {formatRand(bestExit.netProceedsAtExit, 0)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Total Return</p>
-              <p className="text-sm font-bold" style={{ color: C.emerald }}>
+              <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Total Return</p>
+              <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
                 {formatRand(bestExit.netProceedsAtExit + bestExit.cumulativeNetCash - inp.purchasePrice, 0)}
               </p>
             </div>
@@ -428,23 +429,23 @@ export function TaxProjections() {
         {/* Annual breakdown */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-4"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Annual Net Profit vs Tax Paid
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={annualChartData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(v)} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => formatRandShort(v)} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [
                   formatRand(Number(v), 0),
                   name === 'netCash' ? 'Net Rental Profit' : 'Tax Paid',
                 ]}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-              <Bar dataKey="netCash" name="Net Rental Profit" fill={C.emerald} radius={[3, 3, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+              <Bar dataKey="netCash" name="Net Rental Profit" fill={C.green} radius={[3, 3, 0, 0]} />
               <Bar dataKey="tax"     name="Tax Paid"          fill={C.red}     radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -453,34 +454,34 @@ export function TaxProjections() {
         {/* Cumulative area */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-4"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Cumulative Net Cash vs Cumulative Tax
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={cumulativeChartData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradNet" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.emerald} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={C.emerald} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.green} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={C.green} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradTax" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor={C.red} stopOpacity={0.25} />
                   <stop offset="95%" stopColor={C.red} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(v)} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => formatRandShort(v)} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [
                   formatRand(Number(v), 0),
                   name === 'cumulativeNet' ? 'Cumulative Net' : 'Cumulative Tax',
                 ]}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               <Area type="monotone" dataKey="cumulativeNet" name="Cumulative Net"
-                stroke={C.emerald} fill="url(#gradNet)" strokeWidth={2} />
+                stroke={C.green} fill="url(#gradNet)" strokeWidth={2} />
               <Area type="monotone" dataKey="cumulativeTax" name="Cumulative Tax"
                 stroke={C.red} fill="url(#gradTax)" strokeWidth={2} />
             </AreaChart>
@@ -491,43 +492,43 @@ export function TaxProjections() {
       {/* Year-by-Year Rental Table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Rental Tax Breakdown
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[680px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Year', 'Gross Rent', 'Bond Interest', 'Other Costs', 'Taxable Rental', 'Tax Paid', 'Net Profit'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
                 <tr key={r.year} style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.04)',
-                  background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                  borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
+                  background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                 }}>
-                  <td className="py-2 px-3 font-bold" style={{ color: '#818CF8' }}>Y{r.year}</td>
-                  <td className="py-2 px-3" style={{ color: 'var(--color-text)' }}>
+                  <td className="py-2 px-3 font-bold" style={{ color: 'var(--note-blue-ink)' }}>Y{r.year}</td>
+                  <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                     {formatRand(r.grossRent, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: C.amber }}>
+                  <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>
                     {formatRand(r.bondInterest, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>
+                  <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                     {formatRand(r.otherDeductions, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>
+                  <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                     {formatRand(r.taxableRental, 0)}
                   </td>
-                  <td className="py-2 px-3" style={{ color: C.red }}>
+                  <td className="py-2 px-3" style={{ color: textTone(C.red) }}>
                     {formatRand(r.rentalTax, 0)}
                   </td>
                   <td className="py-2 px-3 font-semibold"
-                    style={{ color: r.netCash >= 0 ? C.emerald : C.red }}>
+                    style={{ color: textTone(r.netCash >= 0 ? C.green : C.red) }}>
                     {formatRand(r.netCash, 0)}
                   </td>
                 </tr>
@@ -540,21 +541,21 @@ export function TaxProjections() {
       {/* CGT at Exit Table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-1"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Capital Gains Tax at Each Exit Year
         </p>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
           What your CGT bill would be if you sold at the end of each year. Based on SARS 2026 rates — 40% inclusion, R50k annual exclusion.
           <br />
-          <span className="opacity-75">Total Return = Net Sale Proceeds + Cumulative Net Rental − Purchase Price</span>
+          <span>Total Return = Net Sale Proceeds + Cumulative Net Rental − Purchase Price</span>
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[760px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Year', 'Property Value', 'Capital Gain', 'CGT Payable', 'Net Proceeds', 'Cum. Rental Net', 'Total Return'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -564,32 +565,32 @@ export function TaxProjections() {
                 const isOptimal   = bestExit?.year === r.year;
                 return (
                   <tr key={r.year} style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
                     background: isOptimal
-                      ? 'rgba(16,185,129,0.06)'
-                      : i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                      ? 'color-mix(in srgb, var(--gain) 6%, transparent)'
+                      : i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
-                    <td className="py-2 px-3 font-bold" style={{ color: isOptimal ? C.emerald : '#818CF8' }}>
+                    <td className="py-2 px-3 font-bold" style={{ color: textTone(isOptimal ? C.green : 'var(--note-blue)') }}>
                       Y{r.year}{isOptimal ? ' ★' : ''}
                     </td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text)' }}>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.propertyValue, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.amber }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.orange) }}>
                       {formatRand(r.capitalGain, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.red }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.red) }}>
                       {formatRand(r.cgtAtExit, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.emerald }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.green) }}>
                       {formatRand(r.netProceedsAtExit, 0)}
                     </td>
                     <td className="py-2 px-3"
-                      style={{ color: r.cumulativeNetCash >= 0 ? C.emerald : C.red }}>
+                      style={{ color: textTone(r.cumulativeNetCash >= 0 ? C.green : C.red) }}>
                       {formatRand(r.cumulativeNetCash, 0)}
                     </td>
                     <td className="py-2 px-3 font-semibold"
-                      style={{ color: totalReturn >= 0 ? C.emerald : C.red }}>
+                      style={{ color: textTone(totalReturn >= 0 ? C.green : C.red) }}>
                       {formatRand(totalReturn, 0)}
                     </td>
                   </tr>
@@ -601,7 +602,7 @@ export function TaxProjections() {
       </div>
 
       {/* Disclaimer */}
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Projections are illustrative estimates only. Tax rates based on SARS 2026 tax year. Not financial advice — consult a registered tax practitioner before making decisions.
       </p>
     </div>

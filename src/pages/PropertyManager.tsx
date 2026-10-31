@@ -16,6 +16,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatRand, formatRandShort } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
+import { alpha, textTone } from '../utils/color';
 import {
   useSavedProperties, useExpenses, useMaintenance, useIncome, usePropertyRecords,
 } from '../hooks/useFirestore';
@@ -24,8 +25,8 @@ import type {
 } from '../types';
 
 const C = {
-  indigo: '#6366F1', amber: '#F59E0B', emerald: '#10B981',
-  red: '#EF4444', cyan: '#06B6D4', violet: '#8B5CF6',
+  blue: 'var(--note-blue)', orange: 'var(--note-orange)', green: 'var(--gain)',
+  red: 'var(--loss)', teal: 'var(--note-teal)', brown: 'var(--note-brown)',
 };
 
 type Tab = 'overview' | 'expenses' | 'maintenance' | 'rent' | 'records';
@@ -82,16 +83,16 @@ function RandTooltip({ active, payload, label }: { active?: boolean; payload?: {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card-static p-3 text-xs" style={{ minWidth: 150 }}>
-      <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>{label}</p>
+      <p className="font-semibold mb-1" style={{ color: 'var(--ink)' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.fill ?? 'var(--color-text-muted)' }}>{p.name}: {formatRand(p.value, 0)}</p>
+        <p key={i} style={{ color: textTone(p.fill ?? 'var(--ink-muted)') }}>{p.name}: {formatRand(p.value, 0)}</p>
       ))}
     </div>
   );
 }
 
 const STATUS_COLORS: Record<MaintenanceStatus, string> = {
-  planned: C.amber, 'in-progress': C.cyan, done: C.emerald,
+  planned: C.orange, 'in-progress': C.teal, done: C.green,
 };
 
 export function PropertyManager() {
@@ -205,22 +206,22 @@ export function PropertyManager() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <Link to="/portfolio-hub" className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+              style={{ background: 'var(--paper-raised)', border: '1px solid var(--rule)', color: 'var(--ink-muted)' }}
               aria-label="Back to portfolio">
               <ArrowLeft size={16} />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                 {name}
               </h1>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                 {property ? `${formatRandShort(property.inputs.purchasePrice)} · logbook and running costs` : ''}
               </p>
             </div>
           </div>
           <button onClick={exportExcel}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'rgba(16,185,129,0.12)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
             <Download size={14} /> Export Excel
           </button>
         </div>
@@ -235,9 +236,9 @@ export function PropertyManager() {
             <button key={t.id} onClick={() => switchTab(t.id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
               style={{
-                background: active ? 'rgba(99,102,241,0.15)' : 'transparent',
-                border: `1px solid ${active ? 'rgba(99,102,241,0.35)' : 'var(--color-border)'}`,
-                color: active ? C.indigo : 'var(--color-text-muted)',
+                background: active ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'transparent',
+                border: `1px solid ${active ? 'color-mix(in srgb, var(--note-blue) 35%, transparent)' : 'var(--rule)'}`,
+                color: textTone(active ? C.blue : 'var(--ink-muted)'),
               }}>
               <Icon size={14} /> {t.label}
             </button>
@@ -249,20 +250,20 @@ export function PropertyManager() {
       {tab === 'overview' && (
         <div className="space-y-5">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="YTD Income"        value={formatRand(ytdIncome, 0)}    color="emerald" icon={Wallet} />
-            <StatCard label="YTD Expenses"      value={formatRand(ytdExpenses, 0)}  color="amber"   icon={Wrench} />
+            <StatCard label="YTD Income"        value={formatRand(ytdIncome, 0)}    color="green" icon={Wallet} />
+            <StatCard label="YTD Expenses"      value={formatRand(ytdExpenses, 0)}  color="orange"   icon={Wrench} />
             <StatCard label="YTD Net"           value={formatRand(ytdIncome - ytdExpenses, 0)}
-              color={ytdIncome - ytdExpenses >= 0 ? 'indigo' : 'red'} icon={TrendingUp} />
-            <StatCard label="Open Jobs"         value={`${openJobs}`} color={openJobs > 0 ? 'amber' : 'emerald'} icon={Wrench} />
+              color={ytdIncome - ytdExpenses >= 0 ? 'blue' : 'red'} icon={TrendingUp} />
+            <StatCard label="Open Jobs"         value={`${openJobs}`} color={openJobs > 0 ? 'orange' : 'green'} icon={Wrench} />
           </div>
 
-          <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'rgba(16,185,129,0.08)', border: `1px solid ${C.emerald}33` }}>
-            <Receipt size={16} className="mt-0.5 flex-shrink-0" style={{ color: C.emerald }} />
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              <span className="font-semibold" style={{ color: C.emerald }}>
+          <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--gain) 8%, transparent)', border: `1px solid ${alpha(C.green, 20)}` }}>
+            <Receipt size={16} className="mt-0.5 flex-shrink-0" style={{ color: textTone(C.green) }} />
+            <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>
+              <span className="font-semibold" style={{ color: textTone(C.green) }}>
                 {formatRand(ytdDeductible, 0)} in tax-deductible expenses this year.
               </span>{' '}
-              Use this figure in the <Link to="/property-tax" className="underline" style={{ color: C.indigo }}>Property
+              Use this figure in the <Link to="/property-tax" className="underline" style={{ color: textTone(C.blue) }}>Property
               Portfolio Tax</Link> calculator to see the tax effect across your portfolio.
             </div>
           </div>
@@ -273,12 +274,12 @@ export function PropertyManager() {
               <div style={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={monthlyNet} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-                    <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(v) => formatRandShort(Number(v))} />
-                    <Tooltip content={<RandTooltip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
-                    <Legend formatter={(v) => <span style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>{v}</span>} />
-                    <Bar dataKey="income"   name="Income"   fill={C.emerald} radius={[3, 3, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--rule)" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+                    <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={(v) => formatRandShort(Number(v))} />
+                    <Tooltip content={<RandTooltip />} cursor={{ fill: 'color-mix(in srgb, var(--note-blue) 6%, transparent)' }} />
+                    <Legend formatter={(v) => <span style={{ color: 'var(--ink-muted)', fontSize: 12 }}>{v}</span>} />
+                    <Bar dataKey="income"   name="Income"   fill={C.green} radius={[3, 3, 0, 0]} />
                     <Bar dataKey="expenses" name="Expenses" fill={C.red}     radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -297,7 +298,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Log expense
             </button>
           </div>
@@ -311,7 +312,7 @@ export function PropertyManager() {
                 <InputField label="Amount" id="exp-amt" value={expForm.amount}
                   onChange={(v) => setExpForm((f) => ({ ...f, amount: parseFloat(v) || 0 }))} prefix="R" />
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="exp-date" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Date</label>
+                  <label htmlFor="exp-date" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Date</label>
                   <input id="exp-date" type="date" value={expForm.date}
                     onChange={(e) => setExpForm((f) => ({ ...f, date: e.target.value }))}
                     className="select-dark" />
@@ -322,8 +323,8 @@ export function PropertyManager() {
               <div className="flex items-center gap-3">
                 <input type="checkbox" id="exp-ded" checked={expForm.taxDeductible}
                   onChange={(e) => setExpForm((f) => ({ ...f, taxDeductible: e.target.checked }))}
-                  className="w-4 h-4 accent-[#10B981]" />
-                <label htmlFor="exp-ded" className="text-sm cursor-pointer" style={{ color: 'var(--color-text-muted)' }}>
+                  className="w-4 h-4 accent-gain" />
+                <label htmlFor="exp-ded" className="text-sm cursor-pointer" style={{ color: 'var(--ink-muted)' }}>
                   Tax deductible (rental expense claimable against SARS)
                 </label>
               </div>
@@ -336,11 +337,11 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(16,185,129,0.15)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
-                  style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>Cancel</button>
+                  style={{ color: 'var(--ink-muted)', border: '1px solid var(--rule)' }}>Cancel</button>
               </div>
             </div>
           )}
@@ -350,9 +351,9 @@ export function PropertyManager() {
               message="Track rates, levies, insurance and repairs to know this property's true running cost." />
           ) : expenses.length > 0 && (
             <div className="glass-card p-5 overflow-x-auto">
-              <table className="w-full text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              <table className="w-full text-sm" style={{ color: 'var(--ink-muted)' }}>
                 <thead>
-                  <tr className="text-xs uppercase tracking-wide" style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-subtle)' }}>
+                  <tr className="text-xs uppercase tracking-wide" style={{ borderBottom: '1px solid var(--rule)', color: 'var(--ink-subtle)' }}>
                     <th className="text-left py-2">Date</th>
                     <th className="text-left py-2">Category</th>
                     <th className="text-right py-2">Amount</th>
@@ -363,18 +364,18 @@ export function PropertyManager() {
                 </thead>
                 <tbody>
                   {[...expenses].sort((a, b) => b.date.localeCompare(a.date)).map((d) => (
-                    <tr key={d.id} style={{ borderBottom: '1px dashed var(--color-border)' }}>
+                    <tr key={d.id} style={{ borderBottom: '1px dashed var(--rule)' }}>
                       <td className="py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
                       <td className="py-2 capitalize">{EXPENSE_CATEGORIES.find((c) => c.value === d.category)?.label ?? d.category}</td>
-                      <td className="py-2 text-right font-semibold" style={{ color: 'var(--color-text)' }}>{formatRand(d.amount, 0)}</td>
-                      <td className="py-2 text-center">{d.taxDeductible ? <CheckCircle2 size={14} className="inline" style={{ color: C.emerald }} /> : '—'}</td>
+                      <td className="py-2 text-right font-semibold" style={{ color: 'var(--ink)' }}>{formatRand(d.amount, 0)}</td>
+                      <td className="py-2 text-center">{d.taxDeductible ? <CheckCircle2 size={14} className="inline" style={{ color: textTone(C.green) }} /> : '—'}</td>
                       <td className="py-2 max-w-[220px] truncate">{d.note}</td>
                       <td className="py-2 text-right whitespace-nowrap">
-                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: C.indigo }}
+                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: textTone(C.blue) }}
                           onClick={() => { setEditingId(d.id); setShowForm(true); setExpForm({ category: d.category, amount: d.amount, date: d.date, note: d.note, taxDeductible: d.taxDeductible }); }}>
                           <Pencil size={13} />
                         </button>
-                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: C.red }}
+                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: textTone(C.red) }}
                           onClick={() => expensesHook.remove(d.id)}>
                           <Trash2 size={13} />
                         </button>
@@ -394,7 +395,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Log job
             </button>
           </div>
@@ -414,13 +415,13 @@ export function PropertyManager() {
                 <InputField label="Contractor" id="mnt-contractor" type="text" value={maintForm.contractor}
                   onChange={(v) => setMaintForm((f) => ({ ...f, contractor: v }))} placeholder="Joe's Plumbing" />
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="mnt-logged" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Logged</label>
+                  <label htmlFor="mnt-logged" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Logged</label>
                   <input id="mnt-logged" type="date" value={maintForm.dateLogged}
                     onChange={(e) => setMaintForm((f) => ({ ...f, dateLogged: e.target.value }))} className="select-dark" />
                 </div>
                 {maintForm.status === 'done' && (
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="mnt-done" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Completed</label>
+                    <label htmlFor="mnt-done" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Completed</label>
                     <input id="mnt-done" type="date" value={maintForm.dateCompleted}
                       onChange={(e) => setMaintForm((f) => ({ ...f, dateCompleted: e.target.value }))} className="select-dark" />
                   </div>
@@ -437,11 +438,11 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(16,185,129,0.15)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
-                  style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>Cancel</button>
+                  style={{ color: 'var(--ink-muted)', border: '1px solid var(--rule)' }}>Cancel</button>
               </div>
             </div>
           )}
@@ -454,29 +455,29 @@ export function PropertyManager() {
               {[...maintenance].sort((a, b) => b.dateLogged.localeCompare(a.dateLogged)).map((d) => (
                 <div key={d.id} className="glass-card p-4 flex items-center gap-4 flex-wrap">
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                    style={{ background: `${STATUS_COLORS[d.status]}18`, color: STATUS_COLORS[d.status], border: `1px solid ${STATUS_COLORS[d.status]}44` }}>
+                    style={{ background: alpha(STATUS_COLORS[d.status], 9), color: textTone(STATUS_COLORS[d.status]), border: `1px solid ${alpha(STATUS_COLORS[d.status], 27)}` }}>
                     {MAINT_STATUSES.find((s) => s.value === d.status)?.label}
                   </span>
                   <div className="flex-1 min-w-[180px]">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{d.title}</p>
-                    <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{d.title}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--ink-subtle)' }}>
                       Logged {fmtDate(d.dateLogged)}{d.contractor ? ` · ${d.contractor}` : ''}{d.status === 'done' ? ` · completed ${fmtDate(d.dateCompleted)}` : ''}
                     </p>
-                    {d.note && <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{d.note}</p>}
+                    {d.note && <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>{d.note}</p>}
                   </div>
-                  <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{d.cost > 0 ? formatRand(d.cost, 0) : '—'}</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{d.cost > 0 ? formatRand(d.cost, 0) : '—'}</span>
                   <div className="flex gap-1">
                     {d.status !== 'done' && (
-                      <button aria-label="Mark done" title="Mark done" className="p-1.5 rounded-lg" style={{ color: C.emerald }}
+                      <button aria-label="Mark done" title="Mark done" className="p-1.5 rounded-lg" style={{ color: textTone(C.green) }}
                         onClick={() => maintHook.update(d.id, { status: 'done', dateCompleted: today() })}>
                         <CheckCircle2 size={14} />
                       </button>
                     )}
-                    <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: C.indigo }}
+                    <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: textTone(C.blue) }}
                       onClick={() => { setEditingId(d.id); setShowForm(true); setMaintForm({ title: d.title, status: d.status, cost: d.cost, contractor: d.contractor, dateLogged: d.dateLogged, dateCompleted: d.dateCompleted, note: d.note }); }}>
                       <Pencil size={13} />
                     </button>
-                    <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: C.red }}
+                    <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: textTone(C.red) }}
                       onClick={() => maintHook.remove(d.id)}>
                       <Trash2 size={13} />
                     </button>
@@ -494,7 +495,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Log payment
             </button>
           </div>
@@ -508,7 +509,7 @@ export function PropertyManager() {
                 <InputField label="Amount" id="inc-amt" value={incForm.amount}
                   onChange={(v) => setIncForm((f) => ({ ...f, amount: parseFloat(v) || 0 }))} prefix="R" />
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="inc-date" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Date</label>
+                  <label htmlFor="inc-date" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Date</label>
                   <input id="inc-date" type="date" value={incForm.date}
                     onChange={(e) => setIncForm((f) => ({ ...f, date: e.target.value }))} className="select-dark" />
                 </div>
@@ -528,11 +529,11 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(16,185,129,0.15)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
-                  style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>Cancel</button>
+                  style={{ color: 'var(--ink-muted)', border: '1px solid var(--rule)' }}>Cancel</button>
               </div>
             </div>
           )}
@@ -542,9 +543,9 @@ export function PropertyManager() {
               message="Record rent as it lands to keep a clean income history for SARS season." />
           ) : income.length > 0 && (
             <div className="glass-card p-5 overflow-x-auto">
-              <table className="w-full text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              <table className="w-full text-sm" style={{ color: 'var(--ink-muted)' }}>
                 <thead>
-                  <tr className="text-xs uppercase tracking-wide" style={{ borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-subtle)' }}>
+                  <tr className="text-xs uppercase tracking-wide" style={{ borderBottom: '1px solid var(--rule)', color: 'var(--ink-subtle)' }}>
                     <th className="text-left py-2">Date</th>
                     <th className="text-left py-2">Type</th>
                     <th className="text-right py-2">Amount</th>
@@ -555,18 +556,18 @@ export function PropertyManager() {
                 </thead>
                 <tbody>
                   {[...income].sort((a, b) => b.date.localeCompare(a.date)).map((d) => (
-                    <tr key={d.id} style={{ borderBottom: '1px dashed var(--color-border)' }}>
+                    <tr key={d.id} style={{ borderBottom: '1px dashed var(--rule)' }}>
                       <td className="py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
                       <td className="py-2 capitalize">{d.type}</td>
-                      <td className="py-2 text-right font-semibold" style={{ color: C.emerald }}>{formatRand(d.amount, 0)}</td>
+                      <td className="py-2 text-right font-semibold" style={{ color: textTone(C.green) }}>{formatRand(d.amount, 0)}</td>
                       <td className="py-2">{d.tenant}</td>
                       <td className="py-2 max-w-[220px] truncate">{d.note}</td>
                       <td className="py-2 text-right whitespace-nowrap">
-                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: C.indigo }}
+                        <button aria-label="Edit" className="p-1.5 rounded-lg" style={{ color: textTone(C.blue) }}
                           onClick={() => { setEditingId(d.id); setShowForm(true); setIncForm({ type: d.type, amount: d.amount, date: d.date, tenant: d.tenant, note: d.note }); }}>
                           <Pencil size={13} />
                         </button>
-                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: C.red }}
+                        <button aria-label="Delete" className="p-1.5 rounded-lg" style={{ color: textTone(C.red) }}
                           onClick={() => incomeHook.remove(d.id)}>
                           <Trash2 size={13} />
                         </button>
@@ -586,7 +587,7 @@ export function PropertyManager() {
           <div className="flex justify-end">
             <button onClick={() => { resetForms(); setShowForm(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'rgba(99,102,241,0.12)', color: C.indigo, border: `1px solid ${C.indigo}44` }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: textTone(C.blue), border: `1px solid ${alpha(C.blue, 27)}` }}>
               <Plus size={13} /> Add record
             </button>
           </div>
@@ -603,7 +604,7 @@ export function PropertyManager() {
                   onChange={(v) => setRecForm((f) => ({ ...f, value: parseFloat(v) || 0 }))} prefix="R"
                   help="e.g. monthly rent on the lease, insured value on a policy" />
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="rec-renew" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Renewal / expiry (optional)</label>
+                  <label htmlFor="rec-renew" className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-muted)' }}>Renewal / expiry (optional)</label>
                   <input id="rec-renew" type="date" value={recForm.renewalDate}
                     onChange={(e) => setRecForm((f) => ({ ...f, renewalDate: e.target.value }))} className="select-dark" />
                 </div>
@@ -619,11 +620,11 @@ export function PropertyManager() {
                     resetForms();
                   }}
                   className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(16,185,129,0.15)', color: C.emerald, border: `1px solid ${C.emerald}44` }}>
+                  style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: textTone(C.green), border: `1px solid ${alpha(C.green, 27)}` }}>
                   {editingId ? 'Update' : 'Save'}
                 </button>
                 <button onClick={resetForms} className="px-4 py-2 rounded-xl text-sm"
-                  style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>Cancel</button>
+                  style={{ color: 'var(--ink-muted)', border: '1px solid var(--rule)' }}>Cancel</button>
               </div>
             </div>
           )}
@@ -636,27 +637,27 @@ export function PropertyManager() {
               {records.map((d) => (
                 <div key={d.id} className="glass-card p-4 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <FileText size={14} style={{ color: C.violet }} />
-                    <p className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>{d.title}</p>
-                    <button aria-label="Edit" className="p-1 rounded-lg" style={{ color: C.indigo }}
+                    <FileText size={14} style={{ color: textTone(C.brown) }} />
+                    <p className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{d.title}</p>
+                    <button aria-label="Edit" className="p-1 rounded-lg" style={{ color: textTone(C.blue) }}
                       onClick={() => { setEditingId(d.id); setShowForm(true); setRecForm({ type: d.type, title: d.title, value: d.value, renewalDate: d.renewalDate, note: d.note }); }}>
                       <Pencil size={13} />
                     </button>
-                    <button aria-label="Delete" className="p-1 rounded-lg" style={{ color: C.red }}
+                    <button aria-label="Delete" className="p-1 rounded-lg" style={{ color: textTone(C.red) }}
                       onClick={() => recordsHook.remove(d.id)}>
                       <Trash2 size={13} />
                     </button>
                   </div>
-                  <p className="text-[11px] capitalize" style={{ color: 'var(--color-text-subtle)' }}>
+                  <p className="text-[11px] capitalize" style={{ color: 'var(--ink-subtle)' }}>
                     {RECORD_TYPES.find((t) => t.value === d.type)?.label ?? d.type}
                     {d.value > 0 ? ` · ${formatRand(d.value, 0)}` : ''}
                   </p>
                   {d.renewalDate && (
-                    <p className="text-xs flex items-center gap-1.5" style={{ color: C.amber }}>
+                    <p className="text-xs flex items-center gap-1.5" style={{ color: textTone(C.orange) }}>
                       <CalendarClock size={12} /> Renews {fmtDate(d.renewalDate)}
                     </p>
                   )}
-                  {d.note && <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{d.note}</p>}
+                  {d.note && <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>{d.note}</p>}
                 </div>
               ))}
             </div>

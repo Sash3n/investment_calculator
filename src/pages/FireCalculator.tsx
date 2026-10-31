@@ -8,23 +8,24 @@ import {
 import { Flame, Target, Zap, Info, DollarSign } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { formatRand, formatRandShort } from '../utils/format';
+import { alpha, textTone } from '../utils/color';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const C = {
-  indigo:  '#6366F1',
-  amber:   '#F59E0B',
-  emerald: '#10B981',
-  red:     '#EF4444',
-  cyan:    '#06B6D4',
-  violet:  '#8B5CF6',
+  blue:  'var(--note-blue)',
+  orange:   'var(--note-orange)',
+  green: 'var(--gain)',
+  red:     'var(--loss)',
+  teal:    'var(--note-teal)',
+  brown:  'var(--note-brown)',
 };
 
 const TOOLTIP_STYLE = {
-  background:   'rgba(15,20,40,0.95)',
-  border:       '1px solid rgba(255,255,255,0.1)',
+  background:   'color-mix(in srgb, var(--paper-raised) 95%, transparent)',
+  border:       '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
   borderRadius: 10,
   fontSize:     12,
-  color:        '#F1F5F9',
+  color:        'var(--ink)',
 };
 
 const SWR_OPTIONS = [
@@ -220,22 +221,22 @@ export function FireCalculator() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}
+            style={{ background: 'color-mix(in srgb, var(--loss) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 30%, transparent)' }}
           >
-            <Flame size={20} className="text-[#EF4444]" />
+            <Flame size={20} className="text-loss-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               FIRE Calculator
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
               Financial Independence, Retire Early · SA-adjusted · 3–4% safe withdrawal rates
             </p>
           </div>
           <span
             className="text-xs px-3 py-1.5 rounded-full font-semibold hidden sm:inline-block"
-            style={{ background: 'rgba(239,68,68,0.1)', color: C.red, border: `1px solid ${C.red}44` }}
+            style={{ background: 'color-mix(in srgb, var(--loss) 10%, transparent)', color: textTone(C.red), border: `1px solid ${alpha(C.red, 27)}` }}
           >
             {isFinite(yrs4) ? `FIRE in ${yrs4.toFixed(1)} yrs` : 'Adjust inputs'}
           </span>
@@ -247,24 +248,24 @@ export function FireCalculator() {
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="rounded-xl p-4 flex items-center gap-4 flex-wrap"
         style={{
-          background: onTrack4 ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)',
-          border: `1px solid ${onTrack4 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+          background: onTrack4 ? 'color-mix(in srgb, var(--gain) 7%, transparent)' : 'color-mix(in srgb, var(--loss) 7%, transparent)',
+          border: `1px solid ${onTrack4 ? 'color-mix(in srgb, var(--gain) 20%, transparent)' : 'color-mix(in srgb, var(--loss) 20%, transparent)'}`,
         }}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: onTrack4 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)' }}
+            style={{ background: onTrack4 ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--loss) 15%, transparent)' }}
           >
-            <Target size={16} style={{ color: onTrack4 ? C.emerald : C.red }} />
+            <Target size={16} style={{ color: textTone(onTrack4 ? C.green : C.red) }} />
           </div>
           <div>
-            <p className="text-xs font-bold" style={{ color: onTrack4 ? C.emerald : C.red }}>
+            <p className="text-xs font-bold" style={{ color: textTone(onTrack4 ? C.green : C.red) }}>
               {onTrack4
                 ? `On track — you'll hit your FIRE number by age ${inp.targetRetirementAge}`
                 : `Behind target — at age ${inp.targetRetirementAge} you'll have ${formatRand(balanceAtRetirement, 0)} vs target ${formatRand(target4, 0)}`}
             </p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--ink-muted)' }}>
               Based on {(selectedSwr * 100).toFixed(1)}% SWR · {inp.monthlyExpensesInRetirement > 0
                 ? `R${(inp.monthlyExpensesInRetirement / 1000).toFixed(0)}k/month retirement expenses (today's money)`
                 : 'Enter monthly expenses in retirement'}
@@ -273,8 +274,8 @@ export function FireCalculator() {
         </div>
         {onTrack4 && (
           <div className="text-right flex-shrink-0">
-            <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>Surplus at retirement</p>
-            <p className="text-sm font-bold" style={{ color: C.emerald }}>
+            <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>Surplus at retirement</p>
+            <p className="text-sm font-bold" style={{ color: textTone(C.green) }}>
               {formatRand(balanceAtRetirement - target4, 0)}
             </p>
           </div>
@@ -288,11 +289,11 @@ export function FireCalculator() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <DollarSign size={15} className="text-[#6366F1]" />
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
+              <DollarSign size={15} className="text-note-blue-ink" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Your Finances
             </p>
           </div>
@@ -314,11 +315,11 @@ export function FireCalculator() {
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
-              <Flame size={15} className="text-[#EF4444]" />
+              style={{ background: 'color-mix(in srgb, var(--loss) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--loss) 25%, transparent)' }}>
+              <Flame size={15} className="text-loss-ink" />
             </div>
             <p className="text-sm font-semibold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               FIRE Targets
             </p>
           </div>
@@ -333,12 +334,12 @@ export function FireCalculator() {
               help="SA CPI average ~5.5%" />
             <div className="flex flex-col gap-1.5">
               <p className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+                style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
                 Years to FIRE target
               </p>
-              <p className="text-xl font-bold" style={{ color: C.amber, fontFamily: 'var(--font-heading)' }}>
+              <p className="text-xl font-bold" style={{ color: textTone(C.orange), fontFamily: 'var(--font-display)' }}>
                 {yearsToRetirement} yrs
-                <span className="text-xs font-normal ml-1" style={{ color: 'var(--color-text-subtle)' }}>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--ink-subtle)' }}>
                   (age {inp.targetRetirementAge})
                 </span>
               </p>
@@ -350,10 +351,10 @@ export function FireCalculator() {
       {/* SWR summary cards */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider mb-3"
-          style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+          style={{ color: 'var(--ink-muted)', fontFamily: 'var(--font-text)' }}>
           FIRE Number by Safe Withdrawal Rate
         </p>
-        <p className="text-[11px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-[11px] mb-2" style={{ color: 'var(--ink-muted)' }}>
           Click a card to set it as your active SWR target.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -371,27 +372,27 @@ export function FireCalculator() {
                 transition={{ delay: swr * 5 }}
                 className="glass-card-static p-4 rounded-xl cursor-pointer transition-all"
                 style={{
-                  borderLeft: `3px solid ${swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo}`,
-                  outline: isActive ? `2px solid ${swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo}` : 'none',
+                  borderLeft: `3px solid ${swr === 0.04 ? C.green : swr === 0.035 ? C.orange : C.blue}`,
+                  outline: isActive ? `2px solid ${swr === 0.04 ? C.green : swr === 0.035 ? C.orange : C.blue}` : 'none',
                   outlineOffset: 2,
                 }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-bold" style={{ color: swr === 0.04 ? C.emerald : swr === 0.035 ? C.amber : C.indigo }}>
+                  <p className="text-xs font-bold" style={{ color: textTone(swr === 0.04 ? C.green : swr === 0.035 ? C.orange : C.blue) }}>
                     {label}
                   </p>
                   {achieved && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: 'rgba(16,185,129,0.1)', color: C.emerald }}>
+                      style={{ background: 'color-mix(in srgb, var(--gain) 10%, transparent)', color: textTone(C.green) }}>
                       Age {fireAge.toFixed(0)}
                     </span>
                   )}
                 </div>
-                <p className="text-lg font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                <p className="text-lg font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                   {formatRandShort(target)}
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>
-                <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--color-text-subtle)' }}>
+                <p className="text-[11px] mt-1" style={{ color: 'var(--ink-muted)' }}>{sub}</p>
+                <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--ink-subtle)' }}>
                   {achieved
                     ? `${yrs.toFixed(1)} years to reach`
                     : 'Not achievable at current rate'}
@@ -405,30 +406,30 @@ export function FireCalculator() {
       {/* Coast FIRE callout */}
       <div
         className="rounded-xl p-4 flex items-start gap-4 flex-wrap"
-        style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.2)' }}
+        style={{ background: 'color-mix(in srgb, var(--note-blue) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}
       >
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: 'rgba(99,102,241,0.15)' }}>
-          <Zap size={16} className="text-[#6366F1]" />
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)' }}>
+          <Zap size={16} className="text-note-blue-ink" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold mb-0.5" style={{ color: C.indigo }}>Coast FIRE (4% SWR)</p>
-          <p className="text-sm font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-xs font-bold mb-0.5" style={{ color: textTone(C.blue) }}>Coast FIRE (4% SWR)</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             {formatRand(coastBalance, 0)}
           </p>
-          <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
             If your portfolio reaches this balance today, it will compound on its own to your FIRE number by
             age {inp.targetRetirementAge} — without any further contributions.{' '}
             {coastReached
-              ? <span style={{ color: C.emerald }}>You'll reach Coast FIRE at age {coastReached.age}.</span>
-              : <span style={{ color: C.amber }}>You haven't reached Coast FIRE yet at current trajectory.</span>}
+              ? <span style={{ color: textTone(C.green) }}>You'll reach Coast FIRE at age {coastReached.age}.</span>
+              : <span style={{ color: textTone(C.orange) }}>You haven't reached Coast FIRE yet at current trajectory.</span>}
           </p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>
+          <p className="text-[10px]" style={{ color: 'var(--ink-subtle)' }}>
             {inp.currentSavings >= coastBalance ? 'Already coasting!' : 'Gap to Coast FIRE'}
           </p>
-          <p className="text-sm font-bold" style={{ color: inp.currentSavings >= coastBalance ? C.emerald : C.amber }}>
+          <p className="text-sm font-bold" style={{ color: textTone(inp.currentSavings >= coastBalance ? C.green : C.orange) }}>
             {inp.currentSavings >= coastBalance
               ? 'Achieved'
               : formatRand(coastBalance - inp.currentSavings, 0)}
@@ -442,43 +443,43 @@ export function FireCalculator() {
         {/* Portfolio growth vs FIRE targets */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Portfolio Growth vs FIRE Targets
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             Nominal balance vs 3% and 4% SWR targets (inflation-adjusted expenses)
           </p>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={growthChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradBal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.indigo} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={C.indigo} stopOpacity={0.02} />
+                  <stop offset="5%"  stopColor={C.blue} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} label={{ value: 'Age', position: 'insideBottom', offset: -2, fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} label={{ value: 'Age', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v, name) => [
                   formatRand(Number(v), 0),
                   name === 'balance' ? 'Your Portfolio' : name === 'target4' ? '4% SWR Target' : '3% SWR Target',
                 ]}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
               <Area type="monotone" dataKey="balance" name="Portfolio"
-                stroke={C.indigo} fill="url(#gradBal)" strokeWidth={2.5} />
+                stroke={C.blue} fill="url(#gradBal)" strokeWidth={2.5} />
               <Line type="monotone" dataKey="target4" name="4% Target"
-                stroke={C.emerald} strokeWidth={1.5} dot={false} strokeDasharray="5 3" />
+                stroke={C.green} strokeWidth={1.5} dot={false} strokeDasharray="5 3" />
               <Line type="monotone" dataKey="target3" name="3% Target"
-                stroke={C.amber} strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+                stroke={C.orange} strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
               {isFinite(yrs4) && (
                 <ReferenceLine
                   x={String(Math.round(fireAge4))}
-                  stroke={C.emerald}
+                  stroke={C.green}
                   strokeDasharray="4 2"
-                  label={{ value: `FIRE ${Math.round(fireAge4)}`, fontSize: 10, fill: C.emerald, position: 'top' }}
+                  label={{ value: `FIRE ${Math.round(fireAge4)}`, fontSize: 10, fill: C.green, position: 'top' }}
                 />
               )}
             </AreaChart>
@@ -488,22 +489,22 @@ export function FireCalculator() {
         {/* Extra contribution impact */}
         <div className="glass-card-static p-5">
           <p className="text-sm font-semibold mb-1"
-            style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             Years Saved by Contributing More
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
             How many years earlier you reach FIRE (4% SWR) by increasing monthly contributions
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={bumpChart} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748B' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748B' }} unit=" yrs" />
-              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} unit=" yrs" />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }}
                 formatter={(v) => [`${Number(v).toFixed(1)} years earlier`, 'Years saved']}
                 contentStyle={TOOLTIP_STYLE}
               />
-              <Bar dataKey="saving" name="Years saved" fill={C.emerald} radius={[4, 4, 0, 0]}>
+              <Bar dataKey="saving" name="Years saved" fill={C.green} radius={[4, 4, 0, 0]}>
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -511,11 +512,11 @@ export function FireCalculator() {
           <div className="mt-3 space-y-1.5">
             {bumps.map((b) => (
               <div key={b.bump} className="flex items-center justify-between text-xs py-1.5 px-3 rounded-lg"
-                style={{ background: 'rgba(255,255,255,0.025)' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>
+                style={{ background: 'color-mix(in srgb, var(--ink) 2.5%, transparent)' }}>
+                <span style={{ color: 'var(--ink-muted)' }}>
                   +{formatRand(b.bump, 0)}/month extra
                 </span>
-                <span className="font-semibold" style={{ color: b.saving > 0 ? C.emerald : 'var(--color-text-subtle)' }}>
+                <span className="font-semibold" style={{ color: textTone(b.saving > 0 ? C.green : 'var(--ink-subtle)') }}>
                   {b.saving > 0
                     ? `${b.saving.toFixed(1)} years earlier (age ${(inp.currentAge + b.years).toFixed(0)})`
                     : '—'}
@@ -529,13 +530,13 @@ export function FireCalculator() {
       {/* Inflation-adjusted real value note */}
       <div
         className="flex items-start gap-3 p-3 rounded-xl text-xs"
-        style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}
+        style={{ background: 'color-mix(in srgb, var(--note-orange) 7%, transparent)', border: '1px solid color-mix(in srgb, var(--note-orange) 18%, transparent)' }}
       >
-        <Info size={14} className="text-[#F59E0B] mt-0.5 flex-shrink-0" />
-        <span style={{ color: 'var(--color-text-muted)' }}>
-          <strong style={{ color: 'var(--color-text)' }}>SA inflation note:</strong> At {inp.annualInflationPercent}% p.a., your retirement expenses of{' '}
-          <strong style={{ color: C.amber }}>{formatRand(inp.monthlyExpensesInRetirement * 12, 0)}/year</strong> (today's money)
-          will be <strong style={{ color: C.red }}>{formatRand(retirementAnnualExp, 0)}/year</strong> in{' '}
+        <Info size={14} className="text-note-orange-ink mt-0.5 flex-shrink-0" />
+        <span style={{ color: 'var(--ink-muted)' }}>
+          <strong style={{ color: 'var(--ink)' }}>SA inflation note:</strong> At {inp.annualInflationPercent}% p.a., your retirement expenses of{' '}
+          <strong style={{ color: textTone(C.orange) }}>{formatRand(inp.monthlyExpensesInRetirement * 12, 0)}/year</strong> (today's money)
+          will be <strong style={{ color: textTone(C.red) }}>{formatRand(retirementAnnualExp, 0)}/year</strong> in{' '}
           {yearsToRetirement} years. The FIRE targets above are based on that inflated figure — so your portfolio needs
           to be larger than a simple 25× today's expenses would suggest.
         </span>
@@ -544,16 +545,16 @@ export function FireCalculator() {
       {/* Year-by-year table */}
       <div className="glass-card-static p-5">
         <p className="text-sm font-semibold mb-4"
-          style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
           Year-by-Year Projection
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[700px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
                 {['Age', 'Annual Contribution', 'Growth', 'Portfolio Balance', 'Real Value', '4% FIRE Target', 'Progress'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
-                    style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                    style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -563,52 +564,52 @@ export function FireCalculator() {
                 const isCoast = isCoastYear(r.age);
                 const isFire4 = isFireYear4(r.age);
                 const isTarget = r.age === inp.targetRetirementAge;
-                let rowBg = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)';
-                if (isFire4)  rowBg = 'rgba(16,185,129,0.08)';
-                if (isCoast)  rowBg = 'rgba(99,102,241,0.06)';
-                if (isTarget && !isFire4) rowBg = 'rgba(245,158,11,0.05)';
+                let rowBg = i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)';
+                if (isFire4)  rowBg = 'color-mix(in srgb, var(--gain) 8%, transparent)';
+                if (isCoast)  rowBg = 'color-mix(in srgb, var(--note-blue) 6%, transparent)';
+                if (isTarget && !isFire4) rowBg = 'color-mix(in srgb, var(--note-orange) 5%, transparent)';
 
                 return (
-                  <tr key={r.year} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: rowBg }}>
+                  <tr key={r.year} style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)', background: rowBg }}>
                     <td className="py-2 px-3 font-bold" style={{
-                      color: isFire4 ? C.emerald : isTarget ? C.amber : '#818CF8',
+                      color: textTone(isFire4 ? C.green : isTarget ? C.orange : 'var(--note-blue)'),
                     }}>
                       {r.age}
                       {isFire4  && <span className="ml-1 text-[10px]">🔥 FIRE</span>}
-                      {isCoast && !isFire4 && <span className="ml-1 text-[10px]" style={{ color: C.indigo }}>⚡ Coast</span>}
-                      {isTarget && !isFire4 && <span className="ml-1 text-[10px]" style={{ color: C.amber }}>★ Target</span>}
+                      {isCoast && !isFire4 && <span className="ml-1 text-[10px]" style={{ color: textTone(C.blue) }}>⚡ Coast</span>}
+                      {isTarget && !isFire4 && <span className="ml-1 text-[10px]" style={{ color: textTone(C.orange) }}>★ Target</span>}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.indigo }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>
                       {formatRand(r.contribution, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: C.emerald }}>
+                    <td className="py-2 px-3" style={{ color: textTone(C.green) }}>
                       +{formatRand(r.growth, 0)}
                     </td>
-                    <td className="py-2 px-3 font-semibold" style={{ color: 'var(--color-text)' }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink)' }}>
                       {formatRand(r.balance, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                       {formatRand(r.realBalance, 0)}
                     </td>
-                    <td className="py-2 px-3" style={{ color: 'var(--color-text-muted)' }}>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>
                       {formatRand(r.fireTarget4, 0)}
                     </td>
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 rounded-full overflow-hidden"
-                          style={{ background: 'rgba(255,255,255,0.06)', minWidth: 50 }}>
+                          style={{ background: 'color-mix(in srgb, var(--ink) 6%, transparent)', minWidth: 50 }}>
                           <div
                             className="h-full rounded-full transition-all duration-300"
                             style={{
                               width: `${pct}%`,
                               background: pct >= 100
-                                ? C.emerald
-                                : pct >= 75 ? C.amber : C.indigo,
+                                ? C.green
+                                : pct >= 75 ? C.orange : C.blue,
                             }}
                           />
                         </div>
                         <span className="text-[10px] font-semibold w-8 text-right"
-                          style={{ color: pct >= 100 ? C.emerald : 'var(--color-text-subtle)' }}>
+                          style={{ color: textTone(pct >= 100 ? C.green : 'var(--ink-subtle)') }}>
                           {pct.toFixed(0)}%
                         </span>
                       </div>
@@ -619,13 +620,13 @@ export function FireCalculator() {
             </tbody>
           </table>
         </div>
-        <p className="text-[10px] mt-3" style={{ color: 'var(--color-text-subtle)' }}>
+        <p className="text-[10px] mt-3" style={{ color: 'var(--ink-subtle)' }}>
           🔥 = FIRE reached (4% SWR) &nbsp;·&nbsp; ⚡ = Coast FIRE reached &nbsp;·&nbsp; ★ = your target retirement age
         </p>
       </div>
 
       {/* Disclaimer */}
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Projections are illustrative only. Returns are not guaranteed. FIRE calculations assume consistent contributions and returns — actual results will vary. Not financial advice — consult a CFP.
       </p>
     </div>

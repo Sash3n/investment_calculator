@@ -16,6 +16,7 @@ import {
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { formatRand, formatRandShort } from '../utils/format';
+import { alpha, SERIES, tokenColor, textTone } from '../utils/color';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,41 +42,38 @@ export interface Transaction {
 
 // ─── Colour palette ────────────────────────────────────────────────────────────
 
-const PALETTE = [
-  '#6366F1','#10B981','#F59E0B','#EF4444','#06B6D4',
-  '#8B5CF6','#EC4899','#F97316','#14B8A6','#64748B',
-  '#A855F7','#22C55E','#EAB308','#3B82F6','#D946EF',
-];
+// Tag colours on offer: the chart series plus neutrals
+const PALETTE = [...SERIES, 'var(--warn)', 'var(--ink-subtle)', 'var(--ink-muted)'];
 
 // ─── SA-relevant default tags ─────────────────────────────────────────────────
 
 const DEFAULT_TAGS: Omit<BudgetTag, 'id'>[] = [
   // Income
-  { name: 'Salary',           color: '#10B981', type: 'income'  },
-  { name: 'Freelance',        color: '#06B6D4', type: 'income'  },
-  { name: 'Rental Income',    color: '#8B5CF6', type: 'income'  },
-  { name: 'Medical Aid (CTC)',color: '#EC4899', type: 'income'  },
-  { name: 'Other Income',     color: '#64748B', type: 'income'  },
+  { name: 'Salary',           color: 'var(--gain)', type: 'income'  },
+  { name: 'Freelance',        color: 'var(--note-teal)', type: 'income'  },
+  { name: 'Rental Income',    color: 'var(--note-brown)', type: 'income'  },
+  { name: 'Medical Aid (CTC)',color: 'var(--note-red)', type: 'income'  },
+  { name: 'Other Income',     color: 'var(--ink-subtle)', type: 'income'  },
   // Expense
-  { name: 'Bond / Rent',      color: '#6366F1', type: 'expense' },
-  { name: 'Rates & Levies',   color: '#F59E0B', type: 'expense' },
-  { name: 'Groceries',        color: '#22C55E', type: 'expense' },
-  { name: 'Fuel',             color: '#F97316', type: 'expense' },
-  { name: 'Medical Aid',      color: '#EC4899', type: 'expense' },
-  { name: 'Discovery',        color: '#EC4899', type: 'expense' },
-  { name: 'Payflex',          color: '#EF4444', type: 'expense' },
-  { name: 'Education',        color: '#8B5CF6', type: 'expense' },
-  { name: 'Subscriptions',    color: '#06B6D4', type: 'expense' },
-  { name: 'Entertainment',    color: '#F59E0B', type: 'expense' },
-  { name: 'Insurance',        color: '#64748B', type: 'expense' },
-  { name: 'Investment',       color: '#10B981', type: 'expense' },
-  { name: 'Transport',        color: '#3B82F6', type: 'expense' },
-  { name: 'Other',            color: '#94A3B8', type: 'both'    },
+  { name: 'Bond / Rent',      color: 'var(--note-blue)', type: 'expense' },
+  { name: 'Rates & Levies',   color: 'var(--note-orange)', type: 'expense' },
+  { name: 'Groceries',        color: 'var(--gain)', type: 'expense' },
+  { name: 'Fuel',             color: 'var(--note-orange)', type: 'expense' },
+  { name: 'Medical Aid',      color: 'var(--note-red)', type: 'expense' },
+  { name: 'Discovery',        color: 'var(--note-red)', type: 'expense' },
+  { name: 'Payflex',          color: 'var(--loss)', type: 'expense' },
+  { name: 'Education',        color: 'var(--note-brown)', type: 'expense' },
+  { name: 'Subscriptions',    color: 'var(--note-teal)', type: 'expense' },
+  { name: 'Entertainment',    color: 'var(--note-orange)', type: 'expense' },
+  { name: 'Insurance',        color: 'var(--ink-subtle)', type: 'expense' },
+  { name: 'Investment',       color: 'var(--gain)', type: 'expense' },
+  { name: 'Transport',        color: 'var(--note-blue)', type: 'expense' },
+  { name: 'Other',            color: 'var(--ink-muted)', type: 'both'    },
 ];
 
 const TOOLTIP_STYLE = {
-  background: 'rgba(15,20,40,0.95)', border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 10, fontSize: 12, color: '#F1F5F9',
+  background: 'color-mix(in srgb, var(--paper-raised) 95%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 10%, transparent)',
+  borderRadius: 10, fontSize: 12, color: 'var(--ink)',
 };
 
 // ─── Month helpers ─────────────────────────────────────────────────────────────
@@ -125,7 +123,7 @@ function useBudgetTags(uid: string | null) {
         }
         setTags(seeded);
       } else {
-        setTags(snap.docs.map((d) => ({ id: d.id, ...d.data() } as BudgetTag)));
+        setTags(snap.docs.map((d) => { const t = { id: d.id, ...d.data() } as BudgetTag; return { ...t, color: tokenColor(t.color) }; }));
       }
     } catch { /* offline — keep empty */ }
   }, [uid]);
@@ -169,7 +167,7 @@ function useTransactions(uid: string | null) {
         type:        d.data().type,
         tagId:       d.data().tagId,
         tagName:     d.data().tagName,
-        tagColor:    d.data().tagColor,
+        tagColor:    tokenColor(d.data().tagColor ?? ""),
         yearMonth:   d.data().yearMonth,
         date:        d.data().date,
         createdAt:   d.data().createdAt?.toDate() ?? new Date(),
@@ -201,7 +199,7 @@ function useTransactions(uid: string | null) {
 function TagBadge({ tag, onRemove }: { tag: BudgetTag; onRemove?: () => void }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-      style={{ background: `${tag.color}18`, color: tag.color, border: `1px solid ${tag.color}30` }}>
+      style={{ background: alpha(tag.color, 9), color: textTone(tag.color), border: `1px solid ${alpha(tag.color, 19)}` }}>
       {tag.name}
       {onRemove && (
         <button onClick={onRemove} className="ml-0.5 hover:opacity-70">
@@ -325,8 +323,8 @@ export function BudgetPlanner() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const netColor  = net >= 0 ? '#10B981' : '#EF4444';
-  const srColor   = savingsRate >= 20 ? '#10B981' : savingsRate >= 10 ? '#F59E0B' : '#EF4444';
+  const netColor  = net >= 0 ? 'var(--gain)' : 'var(--loss)';
+  const srColor   = savingsRate >= 20 ? 'var(--gain)' : savingsRate >= 10 ? 'var(--note-orange)' : 'var(--loss)';
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5">
@@ -335,15 +333,15 @@ export function BudgetPlanner() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-            <Wallet size={20} className="text-[#10B981]" />
+            style={{ background: 'color-mix(in srgb, var(--gain) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--gain) 25%, transparent)' }}>
+            <Wallet size={20} className="text-gain-ink" />
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Budget Tracker
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
               Log real transactions · custom tags · monthly & quarterly view
             </p>
           </div>
@@ -353,16 +351,16 @@ export function BudgetPlanner() {
               <button key={m} onClick={() => setViewMode(m)}
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                 style={{
-                  background: viewMode === m ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                  color: viewMode === m ? '#10B981' : 'var(--color-text-muted)',
-                  border: `1px solid ${viewMode === m ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                  background: viewMode === m ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                  color: viewMode === m ? 'var(--gain-ink)' : 'var(--ink-muted)',
+                  border: `1px solid ${viewMode === m ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 10%, transparent)'}`,
                 }}>
                 {m === 'monthly' ? 'Monthly' : 'Quarterly'}
               </button>
             ))}
             <button onClick={() => setShowTagMgr((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.12)', color: '#6366F1', border: '1px solid rgba(99,102,241,0.25)' }}>
+              style={{ background: 'color-mix(in srgb, var(--note-blue) 12%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 25%, transparent)' }}>
               <Tag size={12} /> Tags
             </button>
           </div>
@@ -374,17 +372,17 @@ export function BudgetPlanner() {
         className="flex items-center gap-3">
         <button onClick={() => setCurrentYM(prevMonth(currentYM))}
           className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text-muted)' }}>
+          style={{ background: 'color-mix(in srgb, var(--ink) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 10%, transparent)', color: 'var(--ink-muted)' }}>
           <ChevronLeft size={15} />
         </button>
         <div className="flex-1 text-center">
-          <p className="text-base font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+          <p className="text-base font-bold" style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
             {viewMode === 'monthly' ? fmtYM(currentYM) : `Q${quarterOf(currentYM)} ${currentYM.split('-')[0]}`}
           </p>
         </div>
         <button onClick={() => setCurrentYM(nextMonth(currentYM))}
           className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text-muted)' }}>
+          style={{ background: 'color-mix(in srgb, var(--ink) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 10%, transparent)', color: 'var(--ink-muted)' }}>
           <ChevronRight size={15} />
         </button>
       </motion.div>
@@ -393,14 +391,14 @@ export function BudgetPlanner() {
       {!user && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex items-center gap-3 p-4 rounded-xl"
-          style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
-          <LogIn size={16} style={{ color: '#6366F1' }} />
-          <p className="text-sm flex-1" style={{ color: 'var(--color-text-muted)' }}>
+          style={{ background: 'color-mix(in srgb, var(--note-blue) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--note-blue) 20%, transparent)' }}>
+          <LogIn size={16} style={{ color: 'var(--note-blue-ink)' }} />
+          <p className="text-sm flex-1" style={{ color: 'var(--ink-muted)' }}>
             Sign in to save transactions and tags to your account.
           </p>
           <button onClick={signIn}
             className="px-3 py-1.5 rounded-xl text-xs font-semibold"
-            style={{ background: 'rgba(99,102,241,0.15)', color: '#6366F1', border: '1px solid rgba(99,102,241,0.3)' }}>
+            style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
             Sign in with Google
           </button>
         </motion.div>
@@ -413,8 +411,8 @@ export function BudgetPlanner() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
             className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'Income',       value: formatRand(income, 0),   color: '#10B981' },
-              { label: 'Expenses',     value: formatRand(expenses, 0), color: '#EF4444' },
+              { label: 'Income',       value: formatRand(income, 0),   color: 'var(--gain)' },
+              { label: 'Expenses',     value: formatRand(expenses, 0), color: 'var(--loss)' },
               { label: 'Net',          value: formatRand(net, 0),      color: netColor,
                 sub: net >= 0 ? 'surplus' : 'deficit' },
               { label: 'Savings Rate', value: `${savingsRate.toFixed(1)}%`, color: srColor,
@@ -422,11 +420,11 @@ export function BudgetPlanner() {
             ].map((k) => (
               <div key={k.label} className="glass-card-static p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                  style={{ color: 'var(--color-text-subtle)' }}>{k.label}</p>
+                  style={{ color: 'var(--ink-subtle)' }}>{k.label}</p>
                 <p className="text-lg font-bold leading-tight"
-                  style={{ color: k.color, fontFamily: 'var(--font-heading)' }}>{k.value}</p>
+                  style={{ color: textTone(k.color), fontFamily: 'var(--font-display)' }}>{k.value}</p>
                 {'sub' in k && k.sub && (
-                  <p className="text-[10px] mt-0.5" style={{ color: k.color }}>{k.sub}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: textTone(k.color) }}>{k.sub}</p>
                 )}
               </div>
             ))}
@@ -437,9 +435,9 @@ export function BudgetPlanner() {
             <button onClick={() => setShowAddForm((v) => !v)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all w-full justify-center"
               style={{
-                background: showAddForm ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)',
-                color: showAddForm ? '#10B981' : 'var(--color-text-muted)',
-                border: `1px solid ${showAddForm ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.1)'}`,
+                background: showAddForm ? 'color-mix(in srgb, var(--gain) 12%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                color: showAddForm ? 'var(--gain-ink)' : 'var(--ink-muted)',
+                border: `1px solid ${showAddForm ? 'color-mix(in srgb, var(--gain) 25%, transparent)' : 'color-mix(in srgb, var(--ink) 10%, transparent)'}`,
               }}>
               {showAddForm ? <X size={14} /> : <Plus size={14} />}
               {showAddForm ? 'Cancel' : '+ Add Transaction'}
@@ -458,14 +456,14 @@ export function BudgetPlanner() {
                           className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
                           style={{
                             background: form.type === t
-                              ? t === 'income' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'
-                              : 'rgba(255,255,255,0.04)',
+                              ? t === 'income' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--loss) 15%, transparent)'
+                              : 'color-mix(in srgb, var(--ink) 4%, transparent)',
                             color: form.type === t
-                              ? t === 'income' ? '#10B981' : '#EF4444'
-                              : 'var(--color-text-muted)',
+                              ? t === 'income' ? 'var(--gain-ink)' : 'var(--loss-ink)'
+                              : 'var(--ink-muted)',
                             border: `1px solid ${form.type === t
-                              ? t === 'income' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'
-                              : 'rgba(255,255,255,0.08)'}`,
+                              ? t === 'income' ? 'color-mix(in srgb, var(--gain) 30%, transparent)' : 'color-mix(in srgb, var(--loss) 30%, transparent)'
+                              : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                           }}>
                           {t === 'income' ? '↑ Income' : '↓ Expense'}
                         </button>
@@ -476,7 +474,7 @@ export function BudgetPlanner() {
                       {/* Description */}
                       <div className="col-span-2 flex flex-col gap-1">
                         <label className="text-[10px] font-semibold uppercase tracking-wider"
-                          style={{ color: 'var(--color-text-muted)' }}>Description</label>
+                          style={{ color: 'var(--ink-muted)' }}>Description</label>
                         <input
                           className="input-dark px-3 py-2 rounded-xl text-sm"
                           placeholder="e.g. Payflex - Takealot"
@@ -489,7 +487,7 @@ export function BudgetPlanner() {
                       {/* Amount */}
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-semibold uppercase tracking-wider"
-                          style={{ color: 'var(--color-text-muted)' }}>Amount (R)</label>
+                          style={{ color: 'var(--ink-muted)' }}>Amount (R)</label>
                         <input
                           className="input-dark px-3 py-2 rounded-xl text-sm"
                           type="number" placeholder="0.00"
@@ -502,7 +500,7 @@ export function BudgetPlanner() {
                       {/* Date */}
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-semibold uppercase tracking-wider"
-                          style={{ color: 'var(--color-text-muted)' }}>Date</label>
+                          style={{ color: 'var(--ink-muted)' }}>Date</label>
                         <input
                           className="input-dark px-3 py-2 rounded-xl text-sm"
                           type="date"
@@ -515,22 +513,22 @@ export function BudgetPlanner() {
                     {/* Tag picker */}
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-semibold uppercase tracking-wider"
-                        style={{ color: 'var(--color-text-muted)' }}>Tag</label>
+                        style={{ color: 'var(--ink-muted)' }}>Tag</label>
                       <div className="flex flex-wrap gap-1.5">
                         {filteredTags.map((t) => (
                           <button key={t.id} onClick={() => setForm((f) => ({ ...f, tagId: t.id }))}
                             className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
                             style={{
-                              background: form.tagId === t.id ? `${t.color}25` : `${t.color}0D`,
-                              color: t.color,
-                              border: `1px solid ${form.tagId === t.id ? t.color + '50' : t.color + '20'}`,
-                              outline: form.tagId === t.id ? `2px solid ${t.color}40` : 'none',
+                              background: form.tagId === t.id ? alpha(t.color, 15) : alpha(t.color, 5),
+                              color: textTone(t.color),
+                              border: `1px solid ${form.tagId === t.id ? alpha(t.color, 31) : alpha(t.color, 13)}`,
+                              outline: form.tagId === t.id ? `2px solid ${alpha(t.color, 25)}` : 'none',
                             }}>
                             {t.name}
                           </button>
                         ))}
                         {filteredTags.length === 0 && (
-                          <p className="text-xs" style={{ color: 'var(--color-text-subtle)' }}>
+                          <p className="text-xs" style={{ color: 'var(--ink-subtle)' }}>
                             No tags for this type. Add one in Tags panel.
                           </p>
                         )}
@@ -540,7 +538,7 @@ export function BudgetPlanner() {
                     <button onClick={handleAddTx}
                       disabled={!form.description || !form.amount || !form.tagId || !user}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-                      style={{ background: 'rgba(16,185,129,0.15)', color: '#10B981', border: '1px solid rgba(16,185,129,0.3)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--gain) 15%, transparent)', color: 'var(--gain-ink)', border: '1px solid color-mix(in srgb, var(--gain) 30%, transparent)' }}>
                       {user ? 'Add Transaction' : 'Sign in to add'}
                     </button>
                   </div>
@@ -553,19 +551,19 @@ export function BudgetPlanner() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="glass-card-static p-5">
             <p className="text-sm font-semibold mb-3"
-              style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
               Transactions — {fmtYM(currentYM)}
-              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--color-text-muted)' }}>
+              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--ink-muted)' }}>
                 ({monthTxs.length} entries)
               </span>
             </p>
             {monthTxs.length === 0 ? (
               <div className="text-center py-10">
-                <BarChart3 size={32} className="mx-auto mb-3" style={{ color: 'var(--color-text-subtle)' }} />
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                <BarChart3 size={32} className="mx-auto mb-3" style={{ color: 'var(--ink-subtle)' }} />
+                <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
                   No transactions yet for this month.
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--color-text-subtle)' }}>
+                <p className="text-xs mt-1" style={{ color: 'var(--ink-subtle)' }}>
                   Click "+ Add Transaction" above to get started.
                 </p>
               </div>
@@ -574,7 +572,7 @@ export function BudgetPlanner() {
                 {/* Income */}
                 {monthTxs.filter((t) => t.type === 'income').length > 0 && (
                   <p className="text-[10px] font-semibold uppercase tracking-wider pt-1 pb-0.5"
-                    style={{ color: '#10B981' }}>Income</p>
+                    style={{ color: 'var(--gain-ink)' }}>Income</p>
                 )}
                 {monthTxs.filter((t) => t.type === 'income').map((tx) => (
                   <TxRow key={tx.id} tx={tx} onRemove={() => removeTx(tx.id)} />
@@ -582,7 +580,7 @@ export function BudgetPlanner() {
                 {/* Expenses */}
                 {monthTxs.filter((t) => t.type === 'expense').length > 0 && (
                   <p className="text-[10px] font-semibold uppercase tracking-wider pt-2 pb-0.5"
-                    style={{ color: '#EF4444' }}>Expenses</p>
+                    style={{ color: 'var(--loss-ink)' }}>Expenses</p>
                 )}
                 {monthTxs.filter((t) => t.type === 'expense').map((tx) => (
                   <TxRow key={tx.id} tx={tx} onRemove={() => removeTx(tx.id)} />
@@ -600,7 +598,7 @@ export function BudgetPlanner() {
               {expByTag.length > 0 && (
                 <div className="glass-card-static p-5">
                   <p className="text-sm font-semibold mb-3"
-                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                     Expense Breakdown
                   </p>
                   <div className="flex items-center gap-4">
@@ -610,15 +608,15 @@ export function BudgetPlanner() {
                           paddingAngle={2} dataKey="value">
                           {expByTag.map((e, i) => <Cell key={i} fill={e.color} />)}
                         </Pie>
-                        <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+                        <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="flex-1 space-y-1.5 min-w-0">
                       {expByTag.map((e) => (
                         <div key={e.name} className="flex items-center gap-2 text-xs">
                           <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: e.color }} />
-                          <span className="flex-1 truncate" style={{ color: 'var(--color-text-muted)' }}>{e.name}</span>
-                          <span className="font-semibold flex-shrink-0" style={{ color: e.color }}>{formatRand(e.value, 0)}</span>
+                          <span className="flex-1 truncate" style={{ color: 'var(--ink-muted)' }}>{e.name}</span>
+                          <span className="font-semibold flex-shrink-0" style={{ color: textTone(e.color) }}>{formatRand(e.value, 0)}</span>
                         </div>
                       ))}
                     </div>
@@ -630,7 +628,7 @@ export function BudgetPlanner() {
               {incByTag.length > 0 && (
                 <div className="glass-card-static p-5">
                   <p className="text-sm font-semibold mb-3"
-                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                     Income Breakdown
                   </p>
                   <div className="flex items-center gap-4">
@@ -640,15 +638,15 @@ export function BudgetPlanner() {
                           paddingAngle={2} dataKey="value">
                           {incByTag.map((e, i) => <Cell key={i} fill={e.color} />)}
                         </Pie>
-                        <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+                        <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="flex-1 space-y-1.5 min-w-0">
                       {incByTag.map((e) => (
                         <div key={e.name} className="flex items-center gap-2 text-xs">
                           <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: e.color }} />
-                          <span className="flex-1 truncate" style={{ color: 'var(--color-text-muted)' }}>{e.name}</span>
-                          <span className="font-semibold flex-shrink-0" style={{ color: e.color }}>{formatRand(e.value, 0)}</span>
+                          <span className="flex-1 truncate" style={{ color: 'var(--ink-muted)' }}>{e.name}</span>
+                          <span className="font-semibold flex-shrink-0" style={{ color: textTone(e.color) }}>{formatRand(e.value, 0)}</span>
                         </div>
                       ))}
                     </div>
@@ -670,30 +668,30 @@ export function BudgetPlanner() {
               <button key={m.ym}
                 onClick={() => { setCurrentYM(m.ym); setViewMode('monthly'); }}
                 className="glass-card p-5 text-left transition-all hover:scale-[1.01]"
-                style={{ border: m.ym === currentYM ? '1px solid rgba(99,102,241,0.4)' : undefined }}>
+                style={{ border: m.ym === currentYM ? '1px solid color-mix(in srgb, var(--note-blue) 40%, transparent)' : undefined }}>
                 <p className="text-sm font-bold mb-3"
-                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                   {parseYM(m.ym).toLocaleDateString('en-ZA', { month: 'long' })}
                 </p>
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: 'var(--color-text-muted)' }}>Income</span>
-                    <span style={{ color: '#10B981', fontWeight: 600 }}>{formatRand(m.income, 0)}</span>
+                    <span style={{ color: 'var(--ink-muted)' }}>Income</span>
+                    <span style={{ color: 'var(--gain-ink)', fontWeight: 600 }}>{formatRand(m.income, 0)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: 'var(--color-text-muted)' }}>Expenses</span>
-                    <span style={{ color: '#EF4444', fontWeight: 600 }}>{formatRand(m.expenses, 0)}</span>
+                    <span style={{ color: 'var(--ink-muted)' }}>Expenses</span>
+                    <span style={{ color: 'var(--loss-ink)', fontWeight: 600 }}>{formatRand(m.expenses, 0)}</span>
                   </div>
                   <div className="flex justify-between text-xs pt-1"
-                    style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span style={{ color: 'var(--color-text-muted)' }}>Net</span>
-                    <span style={{ color: m.net >= 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>
+                    style={{ borderTop: '1px solid color-mix(in srgb, var(--ink) 6%, transparent)' }}>
+                    <span style={{ color: 'var(--ink-muted)' }}>Net</span>
+                    <span style={{ color: m.net >= 0 ? 'var(--gain-ink)' : 'var(--loss-ink)', fontWeight: 700 }}>
                       {m.net >= 0 ? '+' : ''}{formatRand(m.net, 0)}
                     </span>
                   </div>
                 </div>
                 {m.income === 0 && m.expenses === 0 && (
-                  <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-subtle)' }}>No data — click to add</p>
+                  <p className="text-[10px] mt-2" style={{ color: 'var(--ink-subtle)' }}>No data — click to add</p>
                 )}
               </button>
             ))}
@@ -703,18 +701,18 @@ export function BudgetPlanner() {
           {quarterData.some((m) => m.income > 0 || m.expenses > 0) && (
             <div className="glass-card-static p-5">
               <p className="text-sm font-semibold mb-4"
-                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                 Q{quarterOf(currentYM)} {currentYM.split('-')[0]} — Income vs Expenses
               </p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={quarterData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748B' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={formatRandShort} />
-                  <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)", stroke: "rgba(148,163,184,0.25)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
-                  <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
-                  <Bar dataKey="income"   name="Income"   fill="#10B981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in srgb, var(--ink) 5%, transparent)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--ink-subtle)' }} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-subtle)' }} tickFormatter={formatRandShort} />
+                  <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
+                  <Bar dataKey="income"   name="Income"   fill="var(--gain)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" name="Expenses" fill="var(--loss)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -723,14 +721,14 @@ export function BudgetPlanner() {
           {/* Quarter totals */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Q Income',   value: quarterData.reduce((s, m) => s + m.income, 0),   color: '#10B981' },
-              { label: 'Q Expenses', value: quarterData.reduce((s, m) => s + m.expenses, 0), color: '#EF4444' },
-              { label: 'Q Net',      value: quarterData.reduce((s, m) => s + m.net, 0),      color: quarterData.reduce((s, m) => s + m.net, 0) >= 0 ? '#10B981' : '#EF4444' },
+              { label: 'Q Income',   value: quarterData.reduce((s, m) => s + m.income, 0),   color: 'var(--gain)' },
+              { label: 'Q Expenses', value: quarterData.reduce((s, m) => s + m.expenses, 0), color: 'var(--loss)' },
+              { label: 'Q Net',      value: quarterData.reduce((s, m) => s + m.net, 0),      color: quarterData.reduce((s, m) => s + m.net, 0) >= 0 ? 'var(--gain)' : 'var(--loss)' },
             ].map((k) => (
               <div key={k.label} className="glass-card-static p-4 text-center">
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-                  style={{ color: 'var(--color-text-subtle)' }}>{k.label}</p>
-                <p className="text-base font-bold" style={{ color: k.color, fontFamily: 'var(--font-heading)' }}>
+                  style={{ color: 'var(--ink-subtle)' }}>{k.label}</p>
+                <p className="text-base font-bold" style={{ color: textTone(k.color), fontFamily: 'var(--font-display)' }}>
                   {formatRand(k.value, 0)}
                 </p>
               </div>
@@ -747,12 +745,12 @@ export function BudgetPlanner() {
             exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="glass-card p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <Tag size={14} style={{ color: '#6366F1' }} />
+                <Tag size={14} style={{ color: 'var(--note-blue-ink)' }} />
                 <p className="text-sm font-bold"
-                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                   Manage Tags
                 </p>
-                <p className="text-xs ml-1" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-xs ml-1" style={{ color: 'var(--ink-muted)' }}>
                   Add, rename or remove tags. Changes apply to future transactions.
                 </p>
               </div>
@@ -760,10 +758,10 @@ export function BudgetPlanner() {
               {/* Add new tag */}
               {user && (
                 <div className="flex flex-wrap gap-2 items-end p-3 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--ink) 3%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 7%, transparent)' }}>
                   <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
                     <label className="text-[10px] font-semibold uppercase tracking-wider"
-                      style={{ color: 'var(--color-text-muted)' }}>Tag Name</label>
+                      style={{ color: 'var(--ink-muted)' }}>Tag Name</label>
                     <input
                       className="input-dark px-3 py-2 rounded-xl text-sm"
                       placeholder="e.g. Payflex"
@@ -774,15 +772,15 @@ export function BudgetPlanner() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-semibold uppercase tracking-wider"
-                      style={{ color: 'var(--color-text-muted)' }}>Type</label>
+                      style={{ color: 'var(--ink-muted)' }}>Type</label>
                     <div className="flex gap-1">
                       {(['income', 'expense', 'both'] as const).map((t) => (
                         <button key={t} onClick={() => setNewTagType(t)}
                           className="px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                           style={{
-                            background: newTagType === t ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-                            color: newTagType === t ? '#6366F1' : 'var(--color-text-muted)',
-                            border: `1px solid ${newTagType === t ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                            background: newTagType === t ? 'color-mix(in srgb, var(--note-blue) 15%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+                            color: newTagType === t ? 'var(--note-blue-ink)' : 'var(--ink-muted)',
+                            border: `1px solid ${newTagType === t ? 'color-mix(in srgb, var(--note-blue) 30%, transparent)' : 'color-mix(in srgb, var(--ink) 8%, transparent)'}`,
                           }}>
                           {t}
                         </button>
@@ -791,7 +789,7 @@ export function BudgetPlanner() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-semibold uppercase tracking-wider"
-                      style={{ color: 'var(--color-text-muted)' }}>Colour</label>
+                      style={{ color: 'var(--ink-muted)' }}>Colour</label>
                     <div className="flex gap-1 flex-wrap max-w-[200px]">
                       {PALETTE.map((c) => (
                         <button key={c} onClick={() => setNewTagColor(c)}
@@ -806,7 +804,7 @@ export function BudgetPlanner() {
                   </div>
                   <button onClick={handleAddTag} disabled={!newTagName.trim()}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold disabled:opacity-40"
-                    style={{ background: 'rgba(99,102,241,0.15)', color: '#6366F1', border: '1px solid rgba(99,102,241,0.3)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--note-blue) 15%, transparent)', color: 'var(--note-blue-ink)', border: '1px solid color-mix(in srgb, var(--note-blue) 30%, transparent)' }}>
                     <Plus size={12} /> Add Tag
                   </button>
                 </div>
@@ -816,40 +814,40 @@ export function BudgetPlanner() {
               <div className="flex flex-wrap gap-2">
                 {tags.map((t) => (
                   <div key={t.id} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
-                    style={{ background: `${t.color}0D`, border: `1px solid ${t.color}25` }}>
+                    style={{ background: alpha(t.color, 5), border: `1px solid ${alpha(t.color, 15)}` }}>
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: t.color }} />
                     {editingTagId === t.id ? (
                       <input
                         className="text-xs bg-transparent border-0 outline-none w-24"
-                        style={{ color: t.color }}
+                        style={{ color: textTone(t.color) }}
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleRename(t.id)}
                         autoFocus
                       />
                     ) : (
-                      <span className="text-xs font-semibold" style={{ color: t.color }}>{t.name}</span>
+                      <span className="text-xs font-semibold" style={{ color: textTone(t.color) }}>{t.name}</span>
                     )}
-                    <span className="text-[9px] px-1 rounded" style={{ color: 'var(--color-text-subtle)', background: 'rgba(255,255,255,0.05)' }}>
+                    <span className="text-[9px] px-1 rounded" style={{ color: 'var(--ink-subtle)', background: 'color-mix(in srgb, var(--ink) 5%, transparent)' }}>
                       {t.type}
                     </span>
                     {user && (
                       <>
                         {editingTagId === t.id ? (
                           <button onClick={() => handleRename(t.id)}
-                            className="p-0.5 rounded" style={{ color: '#10B981' }}>
+                            className="p-0.5 rounded" style={{ color: 'var(--gain-ink)' }}>
                             <Check size={10} />
                           </button>
                         ) : (
                           <button onClick={() => { setEditingTagId(t.id); setEditingName(t.name); }}
                             className="p-0.5 rounded opacity-50 hover:opacity-100"
-                            style={{ color: 'var(--color-text-muted)' }}>
+                            style={{ color: 'var(--ink-muted)' }}>
                             <Pencil size={10} />
                           </button>
                         )}
                         <button onClick={() => removeTag(t.id)}
                           className="p-0.5 rounded opacity-50 hover:opacity-100"
-                          style={{ color: '#EF4444' }}>
+                          style={{ color: 'var(--loss-ink)' }}>
                           <Trash2 size={10} />
                         </button>
                       </>
@@ -862,7 +860,7 @@ export function BudgetPlanner() {
         )}
       </AnimatePresence>
 
-      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--ink-subtle)' }}>
         Data saved securely to your account. Not financial advice.
       </p>
     </div>
@@ -874,27 +872,27 @@ export function BudgetPlanner() {
 function TxRow({ tx, onRemove }: { tx: Transaction; onRemove: () => void }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl group"
-      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+      style={{ background: 'color-mix(in srgb, var(--ink) 2.5%, transparent)', border: '1px solid color-mix(in srgb, var(--ink) 5%, transparent)' }}>
       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-        style={{ background: tx.type === 'income' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)' }}>
+        style={{ background: tx.type === 'income' ? 'color-mix(in srgb, var(--gain) 15%, transparent)' : 'color-mix(in srgb, var(--loss) 12%, transparent)' }}>
         {tx.type === 'income'
-          ? <TrendingUp size={10} style={{ color: '#10B981' }} />
-          : <TrendingDown size={10} style={{ color: '#EF4444' }} />}
+          ? <TrendingUp size={10} style={{ color: 'var(--gain-ink)' }} />
+          : <TrendingDown size={10} style={{ color: 'var(--loss-ink)' }} />}
       </div>
-      <p className="flex-1 text-sm truncate" style={{ color: 'var(--color-text)' }}>
+      <p className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>
         {tx.description}
       </p>
       <TagBadge tag={{ id: tx.tagId, name: tx.tagName, color: tx.tagColor, type: tx.type }} />
-      <p className="text-xs flex-shrink-0" style={{ color: 'var(--color-text-subtle)' }}>
+      <p className="text-xs flex-shrink-0" style={{ color: 'var(--ink-subtle)' }}>
         {new Date(tx.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
       </p>
       <p className="text-sm font-bold flex-shrink-0 w-28 text-right"
-        style={{ color: tx.type === 'income' ? '#10B981' : '#EF4444' }}>
+        style={{ color: tx.type === 'income' ? 'var(--gain-ink)' : 'var(--loss-ink)' }}>
         {tx.type === 'expense' ? '-' : '+'}{formatRand(tx.amount, 0)}
       </p>
       <button onClick={onRemove}
         className="opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-all flex-shrink-0"
-        style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>
+        style={{ color: 'var(--loss-ink)', background: 'color-mix(in srgb, var(--loss) 8%, transparent)' }}>
         <Trash2 size={12} />
       </button>
     </div>
