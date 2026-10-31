@@ -4,6 +4,7 @@ import { Search, CornerDownLeft } from 'lucide-react';
 import { NAV_CATEGORIES, NAV_ITEMS, NAV_BY_PATH, type NavItem } from '../config/nav';
 import { useNavPrefs } from '../hooks/useNavPrefs';
 import { alpha, textTone } from '../utils/color';
+import { OPEN_PALETTE_EVENT } from '../utils/commandPalette';
 
 interface Scored {
   item: NavItem;
@@ -65,8 +66,13 @@ export function CommandPalette() {
         setOpen((o) => !o);
       }
     };
+    const openFromPage = () => setOpen(true);
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener(OPEN_PALETTE_EVENT, openFromPage);
+    return () => {
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener(OPEN_PALETTE_EVENT, openFromPage);
+    };
   }, []);
 
   // Reset state when opening
