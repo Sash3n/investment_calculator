@@ -2,13 +2,13 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ReferenceLine, BarChart, Bar,
+  ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
 } from 'recharts';
 import { Car, Trophy, Info } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { SelectField } from '../components/ui/SelectField';
 import { formatRand, formatRandShort } from '../utils/format';
-import { calcPayment } from '../utils/mortgage';
+import { calcCarScenario, buildCarComparison } from '../utils/carExtraVsInvesting';
 import { textTone } from '../utils/color';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -52,147 +52,6 @@ const DEFAULT_RETURNS: Record<string, number> = {
   Custom: 10,
 };
 
-// ─── Math helpers ────────────────────────────────────────────────────────────
-
-interface CarScenario {
-  loanAmount: number;
-  balloonAmount: number;
-  financedAmount: number;
-  standardPayment: number;
-  totalWithExtra: number;
-  totalStandard: number;
-  interestStandard: number;
-  interestWithExtra: number;
-  interestSaved: number;
-  monthsSaved: number;
-  monthsWithExtra: number;
-}
-
-function calcCarScenario(
-  vehiclePrice: number,
-  deposit: number,
-  balloonPercent: number,
-  interestRate: number,
-  termMonths: number,
-  extraPayment: number,
-): CarScenario {
-  const loanAmount    = Math.max(0, vehiclePrice - deposit);
-  const balloonAmount = vehiclePrice * (balloonPercent / 100);
-  const financedAmount = Math.max(0, loanAmount - balloonAmount);
-  const termYears = termMonths / 12;
-
-  const standardPayment = calcPayment(financedAmount, interestRate, termYears, 12);
-  const r = interestRate / 100 / 12;
-
-  // Simulate standard amortisation
-  let bal = financedAmount;
-  let intStd = 0;
-  for (let m = 0; m < termMonths && bal > 0.01; m++) {
-    const interest = bal * r;
-    intStd += interest;
-    const principal = Math.min(standardPayment - interest, bal);
-    bal -= principal;
-  }
-  const totalStandard = standardPayment * termMonths + balloonAmount;
-  const interestStandard = intStd;
-
-  // Simulate with extra payment
-  bal = financedAmount;
-  let intExtra = 0;
-  let monthsWithExtra = 0;
-  for (let m = 0; m < termMonths && bal > 0.01; m++) {
-    const interest = bal * r;
-    intExtra += interest;
-    const principal = Math.min(standardPayment + extraPayment - interest, bal);
-    bal -= principal;
-    monthsWithExtra++;
-    if (bal <= 0.01) break;
-  }
-  const totalWithExtra = (standardPayment + extraPayment) * monthsWithExtra + balloonAmount;
-  const interestWithExtra = intExtra;
-  const interestSaved = Math.max(0, interestStandard - interestWithExtra);
-  const monthsSaved = Math.max(0, termMonths - monthsWithExtra);
-
-  return {
-    loanAmount, balloonAmount, financedAmount,
-    standardPayment, totalWithExtra, totalStandard,
-    interestStandard, interestWithExtra, interestSaved,
-    monthsSaved, monthsWithExtra,
-  };
-}
-
-interface YearRow {
-  year: string;
-  interestSaved: number;
-  investValue: number;
-  winner: 'extra' | 'invest';
-}
-
-function buildYearByYear(
-  scenario: CarScenario,
-  extraPayment: number,
-  expectedReturnPct: number,
-  cgtRate: number,
-  isTFSA: boolean,
-  termMonths: number,
-): YearRow[] {
-  const r = expectedReturnPct / 100 / 12;
-  const rows: YearRow[] = [];
-  const maxMonths = termMonths;
-
-  let intStd  = 0;
-  let intExtra = 0;
-  let balStd  = scenario.financedAmount;
-  let balExtra = scenario.financedAmount;
-  let portfolio = 0;
-  const rLoan = scenario.financedAmount > 0 ? scenario.financedAmount * 0 : 0; // we track via scenario
-  const loanR = (scenario.standardPayment > 0 && scenario.financedAmount > 0)
-    ? (() => {
-        // Back-calculate monthly rate from payment
-        // We just use the passed interestRate / 100 / 12 via closure — approximation
-        return 0;
-      })()
-    : 0;
-  void loanR; void rLoan;
-
-  // Re-derive monthly loan rate from scenario
-  // We'll redo it here simply
-  const interestRateGuess = scenario.interestStandard / (scenario.financedAmount * termMonths / 12 / 2);
-
-  for (let m = 1; m <= maxMonths; m++) {
-    // Standard loan interest this month
-    const intThisMonthStd = balStd * interestRateGuess / 12;
-    intStd += intThisMonthStd;
-    const principalStd = Math.min(scenario.standardPayment - intThisMonthStd, balStd);
-    balStd = Math.max(0, balStd - principalStd);
-
-    // Extra payment loan interest this month
-    const intThisMonthExtra = balExtra * interestRateGuess / 12;
-    intExtra += intThisMonthExtra;
-    const principalExtra = Math.min(scenario.standardPayment + extraPayment - intThisMonthExtra, balExtra);
-    balExtra = Math.max(0, balExtra - principalExtra);
-
-    // Investment portfolio grows
-    portfolio = (portfolio + extraPayment) * (1 + r);
-
-    if (m % 12 === 0 || m === maxMonths) {
-      const interestSavedSoFar = Math.max(0, intStd - intExtra);
-      const contributions = extraPayment * m;
-      const gain = Math.max(0, portfolio - contributions);
-      const tax = isTFSA ? 0 : gain * (cgtRate / 100);
-      const investAfterTax = portfolio - tax;
-
-      rows.push({
-        year: `Yr ${Math.ceil(m / 12)}`,
-        interestSaved: Math.round(interestSavedSoFar),
-        investValue:   Math.round(Math.max(0, investAfterTax)),
-        winner:        investAfterTax > interestSavedSoFar ? 'invest' : 'extra',
-      });
-    }
-  }
-  return rows;
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function CarExtraVsInvesting() {
@@ -215,22 +74,22 @@ export function CarExtraVsInvesting() {
   );
 
   const yearData = useMemo(
-    () => buildYearByYear(scenario, extraPayment, expectedReturn, cgtRate, isTFSA, termMonths),
-    [scenario, extraPayment, expectedReturn, cgtRate, isTFSA, termMonths]
+    () => buildCarComparison(scenario, extraPayment, interestRate, expectedReturn, cgtRate, isTFSA, termMonths),
+    [scenario, extraPayment, interestRate, expectedReturn, cgtRate, isTFSA, termMonths]
   );
 
   // Final comparison at end of term
   const finalRow = yearData[yearData.length - 1];
   const winner = finalRow ? finalRow.winner : 'extra';
-  const winnerAmount = finalRow ? Math.abs(finalRow.investValue - finalRow.interestSaved) : 0;
+  const winnerAmount = finalRow ? Math.abs(finalRow.difference) : 0;
 
   // Investment portfolio value at term end
   const finalInvestValue   = finalRow?.investValue ?? 0;
-  const finalInterestSaved = finalRow?.interestSaved ?? 0;
+  const finalBondRouteValue = finalRow?.bondRouteValue ?? 0;
 
   const barData = [
-    { label: 'Interest Saved\n(extra payment)', value: finalInterestSaved, color: C.blue },
-    { label: 'Portfolio Value\n(invest instead)', value: finalInvestValue, color: C.green },
+    { label: 'Pay extra, then invest', value: finalBondRouteValue, color: C.blue },
+    { label: 'Invest instead', value: finalInvestValue, color: C.green },
   ];
 
   return (
@@ -278,8 +137,8 @@ export function CarExtraVsInvesting() {
             </p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>
               {winner === 'invest'
-                ? `Your ${formatRand(extraPayment, 0)}/mo invested at ${expectedReturn}% p.a. grows to ${formatRand(finalInvestValue, 0)}, beating the ${formatRand(finalInterestSaved, 0)} interest saved on the car loan.`
-                : `Paying ${formatRand(extraPayment, 0)}/mo extra saves ${formatRand(finalInterestSaved, 0)} in car interest — better than the ${formatRand(finalInvestValue, 0)} investment portfolio at ${expectedReturn}% p.a.`}
+                ? `Investing ${formatRand(extraPayment, 0)}/mo at ${expectedReturn}% a year grows to ${formatRand(finalInvestValue, 0)}, more than the ${formatRand(finalBondRouteValue, 0)} you would build by paying the car off early and then investing the instalment.`
+                : `Paying ${formatRand(extraPayment, 0)}/mo extra saves ${formatRand(scenario.interestSaved, 0)} in interest. Investing the instalment once the car is paid off builds ${formatRand(finalBondRouteValue, 0)}, more than the ${formatRand(finalInvestValue, 0)} from investing the extra now.`}
             </p>
           </div>
         </motion.div>
@@ -376,6 +235,8 @@ export function CarExtraVsInvesting() {
               { label: 'Expected Investment', value: `${expectedReturn}%`,             color: C.green, sub: isTFSA ? 'tax-free' : `after ~${cgtRate}% CGT` },
               { label: 'Interest Saved',      value: formatRand(scenario.interestSaved, 0), color: C.blue, sub: 'if paying extra' },
               { label: 'Portfolio at Term',   value: formatRand(finalInvestValue, 0), color: C.orange,   sub: 'if investing instead' },
+              { label: 'Pay Extra, Then Invest', value: formatRand(finalBondRouteValue, 0), color: C.blue, sub: 'invested after payoff' },
+              { label: 'Difference', value: formatRand(winnerAmount, 0), color: winner === 'invest' ? C.green : C.blue, sub: winner === 'invest' ? 'in favour of investing' : 'in favour of paying extra' },
             ].map((kpi) => (
               <div key={kpi.label} className="glass-card-static p-3 rounded-xl">
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
@@ -396,7 +257,7 @@ export function CarExtraVsInvesting() {
           Final Outcome at End of Term
         </p>
         <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
-          Both options use the same {formatRand(extraPayment, 0)}/month over {Math.round(termMonths / 12)} years
+          Both routes spend the same each month for {Math.round(termMonths / 12)} years; paying extra invests the instalment once the car is paid off
         </p>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={barData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
@@ -406,7 +267,7 @@ export function CarExtraVsInvesting() {
             <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} formatter={(v) => formatRand(Number(v), 0)} contentStyle={TOOLTIP_STYLE} />
             <Bar dataKey="value" name="Amount" radius={[6, 6, 0, 0]}>
               {barData.map((entry, i) => (
-                <rect key={i} fill={entry.color} />
+                <Cell key={i} fill={entry.color} />
               ))}
             </Bar>
           </BarChart>
@@ -421,7 +282,7 @@ export function CarExtraVsInvesting() {
           Year-by-Year Comparison
         </p>
         <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
-          Interest saved (extra payment) vs portfolio value (investing) — where they cross, the winner switches
+          Investments in each route, after CGT. Paying extra only starts investing once the car is paid off.
         </p>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={yearData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
@@ -434,9 +295,9 @@ export function CarExtraVsInvesting() {
             />
             <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-muted)' }} />
             <ReferenceLine y={0} stroke="color-mix(in srgb, var(--ink) 10%, transparent)" />
-            <Line type="monotone" dataKey="interestSaved" name="Interest Saved (pay extra)"
+            <Line type="monotone" dataKey="bondRouteValue" name="Pay extra, then invest"
               stroke={C.blue} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="investValue" name="Portfolio Value (invest)"
+            <Line type="monotone" dataKey="investValue" name="Invest instead"
               stroke={C.green} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
@@ -453,7 +314,7 @@ export function CarExtraVsInvesting() {
           <table className="w-full text-xs">
             <thead>
               <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--ink) 8%, transparent)' }}>
-                {['Year', 'Interest Saved', 'Portfolio Value', 'Difference', 'Leading'].map((h) => (
+                {['Year', 'Interest Saved', 'Pay Extra, Then Invest', 'Invest Instead', 'Difference', 'Leading'].map((h) => (
                   <th key={h} className="py-2 px-3 text-left font-semibold"
                     style={{ color: 'var(--ink-muted)' }}>{h}</th>
                 ))}
@@ -461,14 +322,15 @@ export function CarExtraVsInvesting() {
             </thead>
             <tbody>
               {yearData.map((row, i) => {
-                const diff = row.investValue - row.interestSaved;
+                const diff = row.difference;
                 return (
                   <tr key={row.year} style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--ink) 4%, transparent)',
                     background: i % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--ink) 1.5%, transparent)',
                   }}>
                     <td className="py-2 px-3 font-semibold" style={{ color: 'var(--ink-muted)' }}>{row.year}</td>
-                    <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>{formatRand(row.interestSaved, 0)}</td>
+                    <td className="py-2 px-3" style={{ color: 'var(--ink-muted)' }}>{formatRand(row.interestSaved, 0)}</td>
+                    <td className="py-2 px-3" style={{ color: textTone(C.blue) }}>{formatRand(row.bondRouteValue, 0)}</td>
                     <td className="py-2 px-3" style={{ color: textTone(C.green) }}>{formatRand(row.investValue, 0)}</td>
                     <td className="py-2 px-3" style={{ color: textTone(diff > 0 ? C.green : C.blue) }}>
                       {diff > 0 ? '+' : ''}{formatRand(diff, 0)}

@@ -95,26 +95,20 @@ export function PaymentVsInvesting() {
   );
 
   // ── Chart data ─────────────────────────────────────────────
-  // Area chart: interest saved (A) vs portfolio value after tax (B)
+  // Area chart: each route's investments, after CGT
   const areaData = useMemo(() => {
-    return result.yearByYear.map((row) => {
-      // Interest saved up to this year (approximate)
-      const interestSavedSoFar = row.year === result.yearByYear.length
-        ? result.interestSaved
-        : (result.interestSaved * row.year / result.yearByYear.length);
-      return {
-        year: `Yr ${row.year}`,
-        'Interest Saved (A)': Math.round(Math.max(0, interestSavedSoFar)),
-        'Portfolio Value (B)': row.investmentValue,
-      };
-    });
+    return result.yearByYear.map((row) => ({
+      year: `Yr ${row.year}`,
+      'Invested after payoff (A)': row.bondRouteInvestmentValue,
+      'Portfolio (B)': row.investmentValue,
+    }));
   }, [result]);
 
   // Line chart: net worth comparison
   const netWorthData = useMemo(() => {
     return result.yearByYear.map((row) => ({
       year: `Yr ${row.year}`,
-      'Net Worth A (Bond↓)': Math.round(inputs.loanBalance - row.bondBalanceA),
+      'Net Worth A (Bond↓)': Math.round(inputs.loanBalance - row.bondBalanceA + row.bondRouteInvestmentValue),
       'Net Worth B (Portfolio)': Math.round(row.investmentValue + (inputs.loanBalance - row.bondBalanceB)),
     }));
   }, [result, inputs.loanBalance]);
@@ -139,6 +133,7 @@ export function PaymentVsInvesting() {
       ['Months Saved', result.monthsSaved],
       ['New Payoff Date', formatDate(result.newPayoffDate)],
       ['Effective Return', `${result.effectiveReturnA}%`],
+      ['Invested after payoff (after tax)', result.bondRouteValue.toFixed(2)],
       ['', ''],
       ['--- Scenario B: Invest Instead ---', ''],
       ['Portfolio Value at Payoff', result.portfolioValueAtPayoff.toFixed(2)],
@@ -151,10 +146,11 @@ export function PaymentVsInvesting() {
     XLSX.utils.book_append_sheet(wb, ws, 'Summary');
 
     // Year by year
-    const ybyHeaders = ['Year', 'Bond Balance A', 'Bond Balance B', 'Investment Value', 'Net Difference', 'Winner'];
+    const ybyHeaders = ['Year', 'Bond Balance A', 'Invested after payoff A', 'Bond Balance B', 'Investment Value B', 'Net Difference', 'Winner'];
     const ybyRows = result.yearByYear.map((r) => [
       r.year,
       r.bondBalanceA,
+      r.bondRouteInvestmentValue,
       r.bondBalanceB,
       r.investmentValue,
       r.netDifference,
@@ -257,8 +253,8 @@ export function PaymentVsInvesting() {
             </div>
             <p className="text-xs text-ink-muted max-w-sm mx-auto" style={{ fontFamily: 'var(--font-text)' }}>
               {result.winner === 'investing'
-                ? `Investing your ${formatRand(inputs.extraMonthlyAmount, 0)}/month in ${ETF_OPTIONS.find(e => e.value === inputs.investmentVehicle)?.label?.split('(')[0].trim() ?? 'an ETF'} at ${inputs.expectedReturn}% p.a. yields more (after CGT) than the interest you would save by paying off the bond faster.`
-                : `Paying an extra ${formatRand(inputs.extraMonthlyAmount, 0)}/month off your bond at ${inputs.interestRate}% is a guaranteed ${inputs.interestRate}% tax-free return — better than the after-tax investment outcome in this scenario.`}
+                ? `Investing ${formatRand(inputs.extraMonthlyAmount, 0)}/month at ${inputs.expectedReturn}% a year leaves you better off by ${formatDate(result.standardPayoffDate)} than paying it into the bond and investing the freed-up instalment once the bond is paid off.`
+                : `Paying an extra ${formatRand(inputs.extraMonthlyAmount, 0)}/month into your bond at ${inputs.interestRate}%, then investing the instalment once it is paid off, leaves you better off by ${formatDate(result.standardPayoffDate)} than investing the extra now.`}
             </p>
           </motion.div>
 
@@ -279,7 +275,7 @@ export function PaymentVsInvesting() {
                   { label: 'Interest Saved', value: formatRand(result.interestSaved), color: 'var(--gain)' },
                   { label: 'Months Saved', value: formatYears(result.monthsSaved), color: 'var(--note-blue)' },
                   { label: 'New Payoff Date', value: formatDate(result.newPayoffDate), color: 'var(--ink)' },
-                  { label: 'Effective Return', value: formatPercent(result.effectiveReturnA), color: 'var(--note-blue)' },
+                  { label: 'Then invested (after tax)', value: formatRand(result.bondRouteValue), color: 'var(--note-blue)' },
                 ].map((s) => (
                   <div key={s.label}>
                     <p className="text-[10px] text-ink-subtle uppercase tracking-wider" style={{ fontFamily: 'var(--font-text)' }}>
@@ -334,7 +330,7 @@ export function PaymentVsInvesting() {
           {/* Area chart: interest saved vs portfolio value */}
           <div className="glass-card-static p-5">
             <p className="text-sm font-semibold text-ink mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              Cumulative Benefit Over Time
+              Investments Over Time (after CGT)
             </p>
             <ResponsiveContainer width="100%" height={230}>
               <AreaChart data={areaData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
@@ -354,9 +350,9 @@ export function PaymentVsInvesting() {
                   tickFormatter={(v) => `R ${(v / 1000).toFixed(0)}K`} />
                 <Tooltip cursor={{ fill: "color-mix(in srgb, var(--note-blue) 8%, transparent)", stroke: "color-mix(in srgb, var(--ink-muted) 25%, transparent)" }} content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-muted)' }} />
-                <Area type="monotone" dataKey="Interest Saved (A)" stroke={CHART_COLORS.blue}
+                <Area type="monotone" dataKey="Invested after payoff (A)" stroke={CHART_COLORS.blue}
                   fill="url(#gradIntSaved)" strokeWidth={2} />
-                <Area type="monotone" dataKey="Portfolio Value (B)" stroke={CHART_COLORS.green}
+                <Area type="monotone" dataKey="Portfolio (B)" stroke={CHART_COLORS.green}
                   fill="url(#gradPortfolio)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -368,7 +364,7 @@ export function PaymentVsInvesting() {
               Net Worth Comparison
             </p>
             <p className="text-xs text-ink-subtle mb-4" style={{ fontFamily: 'var(--font-text)' }}>
-              A: Equity gained from paying down bond · B: Portfolio + standard bond equity
+              Home equity plus investments after CGT. A invests its full instalment once the bond is paid off.
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={netWorthData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
@@ -409,8 +405,9 @@ export function PaymentVsInvesting() {
               <tr>
                 <th>Year</th>
                 <th>Bond Balance (A)</th>
+                <th>Invested (A)</th>
                 <th>Bond Balance (B)</th>
-                <th>Investment Value</th>
+                <th>Invested (B)</th>
                 <th>Net Difference</th>
                 <th>Winner</th>
               </tr>
@@ -420,6 +417,7 @@ export function PaymentVsInvesting() {
                 <tr key={row.year}>
                   <td>{row.year}</td>
                   <td style={{ color: 'var(--note-blue-ink)' }}>{formatRand(row.bondBalanceA)}</td>
+                  <td style={{ color: 'var(--note-blue-ink)' }}>{formatRand(row.bondRouteInvestmentValue)}</td>
                   <td style={{ color: 'var(--ink-muted)' }}>{formatRand(row.bondBalanceB)}</td>
                   <td style={{ color: 'var(--gain-ink)' }}>{formatRand(row.investmentValue)}</td>
                   <td style={{ color: row.netDifference >= 0 ? 'var(--gain-ink)' : 'var(--note-blue-ink)' }}>
@@ -453,6 +451,7 @@ export function PaymentVsInvesting() {
             <p className="text-xs text-ink-muted leading-relaxed" style={{ fontFamily: 'var(--font-text)' }}>
               Capital Gains Tax (CGT) in South Africa applies only to gains above the annual exclusion (R50,000 from 2026/27).
               To stay conservative, this calculation ignores the exclusion and taxes the whole gain at a {inputs.cgtRate}% effective CGT rate (40% inclusion × marginal rate).
+              Both routes spend the same amount each month until your original payoff date. In A, once the bond is paid off, the full instalment plus the extra is invested at the same return, so the comparison is what each route leaves you with on that date.
               Bond interest savings are effectively a tax-free, guaranteed return equal to your interest rate.
               ETF returns shown are average historical returns — actual returns may vary.
               Consult a qualified financial advisor before making investment decisions.

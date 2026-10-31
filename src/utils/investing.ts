@@ -4,8 +4,16 @@ import { calcPayment, calcAmortization } from './mortgage';
 /**
  * Compare putting extra payments toward the bond vs investing the same amount.
  *
- * Scenario A: Extra payment reduces bond faster → saves interest
- * Scenario B: Extra payment is invested at expected return rate
+ * Both routes spend the same cash every month (the standard instalment plus the
+ * extra amount) until the original payoff date, and are compared on what you
+ * own at that date.
+ *
+ * Scenario A: the extra goes into the bond. Once the bond is paid off early, the
+ *             whole monthly amount is invested at the expected return.
+ * Scenario B: the extra is invested every month while the bond runs its full term.
+ *
+ * Investments in both routes grow at the expected return and pay CGT on their
+ * gain (cgtRate is the effective rate on the whole gain).
  */
 export function calcExtraPaymentVsInvesting(inputs: InvestingInputs): InvestingResult {
   const {
@@ -42,35 +50,49 @@ export function calcExtraPaymentVsInvesting(inputs: InvestingInputs): InvestingR
 
   const effectiveReturnA = interestRate; // Bond interest rate is the guaranteed return
 
-  // ── Scenario B: Invest instead ────────────────────────────
-  // Invest extra each month for the duration until bond is paid off (standard term)
-  // Use standard payoff date as the comparison horizon
+  // ── Month-by-month portfolios for both routes ─────────────
+  // Contributions go in at the start of the month and grow through it.
   const monthlyInvestReturn = expectedReturn / 100 / 12;
+  const monthlyBudget = calcPayment(loanBalance, interestRate, remainingTermYears, 12) + extraMonthlyAmount;
+  const afterTax = (value: number, contributed: number) =>
+    value - Math.max(0, value - contributed) * (cgtRate / 100);
 
-  // Portfolio value at the standard payoff date
-  let portfolioValue = 0;
+  const portfolioA: number[] = [0];   // index = month
+  const contributedA: number[] = [0];
+  const portfolioB: number[] = [0];
+  const contributedB: number[] = [0];
   for (let m = 1; m <= standardMonths; m++) {
-    portfolioValue = (portfolioValue + extraMonthlyAmount) * (1 + monthlyInvestReturn);
+    // A: whatever the bond does not need this month (all of it after payoff)
+    const bondPaymentA = amortWithExtra[m - 1]?.totalPayment ?? 0;
+    const investA = Math.max(0, monthlyBudget - bondPaymentA);
+    portfolioA[m] = (portfolioA[m - 1] + investA) * (1 + monthlyInvestReturn);
+    contributedA[m] = contributedA[m - 1] + investA;
+    // B: the extra amount, every month of the full term
+    portfolioB[m] = (portfolioB[m - 1] + extraMonthlyAmount) * (1 + monthlyInvestReturn);
+    contributedB[m] = contributedB[m - 1] + extraMonthlyAmount;
   }
 
-  // After-tax: CGT applies to gains only (SA: 40% inclusion × marginal rate)
-  const totalContributions = extraMonthlyAmount * standardMonths;
-  const gain = Math.max(0, portfolioValue - totalContributions);
-  const cgtPayable = gain * (cgtRate / 100);
-  const afterTaxPortfolioValue = portfolioValue - cgtPayable;
+  // ── Scenario B: Invest instead ────────────────────────────
+  const portfolioValue = portfolioB[standardMonths] ?? 0;
+  const afterTaxPortfolioValue = afterTax(portfolioValue, contributedB[standardMonths] ?? 0);
 
-  const netBenefitB = afterTaxPortfolioValue - interestSaved;
+  // ── Scenario A after payoff ───────────────────────────────
+  const bondRouteValue = afterTax(portfolioA[standardMonths] ?? 0, contributedA[standardMonths] ?? 0);
 
-  const winner: 'bond' | 'investing' = afterTaxPortfolioValue > interestSaved ? 'investing' : 'bond';
-  const winnerAmount = Math.abs(afterTaxPortfolioValue - interestSaved);
+  // Both bonds are paid off by the comparison date, so wealth is the after-tax investments
+  const netBenefitB = afterTaxPortfolioValue - bondRouteValue;
+  const winner: 'bond' | 'investing' = netBenefitB > 0 ? 'investing' : 'bond';
+  const winnerAmount = Math.abs(netBenefitB);
 
   // ── Year-by-year comparison table ────────────────────────
   const yearByYear: InvestingRow[] = [];
   const maxYears = Math.ceil(standardMonths / 12);
 
   for (let year = 1; year <= maxYears; year++) {
-    // Bond balance in Scenario A (with extra payments)
     const monthA = year * 12;
+    const m = Math.min(monthA, standardMonths);
+
+    // Bond balance in Scenario A (with extra payments)
     let bondBalA = 0;
     if (monthA < amortWithExtra.length) {
       bondBalA = amortWithExtra[Math.min(monthA, amortWithExtra.length) - 1]?.closingBalance ?? 0;
@@ -82,38 +104,24 @@ export function calcExtraPaymentVsInvesting(inputs: InvestingInputs): InvestingR
       bondBalB = standardAmort[Math.min(monthA, standardAmort.length) - 1]?.closingBalance ?? 0;
     }
 
-    // Investment portfolio value in Scenario B at year
-    let invValue = 0;
-    for (let m = 1; m <= Math.min(year * 12, standardMonths); m++) {
-      invValue = (invValue + extraMonthlyAmount) * (1 + monthlyInvestReturn);
-    }
-    // Apply CGT if past payoff
-    const contribSoFar = extraMonthlyAmount * Math.min(year * 12, standardMonths);
-    const gainSoFar = Math.max(0, invValue - contribSoFar);
-    const taxSoFar = gainSoFar * (cgtRate / 100);
-    const invValueAfterTax = invValue - taxSoFar;
+    // Investments in each route if sold at this point (after CGT)
+    const invValueA = afterTax(portfolioA[m], contributedA[m]);
+    const invValueB = afterTax(portfolioB[m], contributedB[m]);
 
-    // Net difference: (interest saved so far by A) vs (investment value so far by B)
-    const interestSavedSoFar = year * 12 <= standardMonths
-      ? (standardAmort[Math.min(year * 12, standardAmort.length) - 1]?.cumulativeInterest ?? 0) -
-        (amortWithExtra[Math.min(year * 12, amortWithExtra.length) - 1]?.cumulativeInterest ?? 0)
-      : interestSaved;
-
-    const netDiff = invValueAfterTax - Math.max(0, interestSavedSoFar);
+    // Net worth difference: (investments − bond still owed) of B minus the same for A
+    const netDiff = (invValueB - Math.max(0, bondBalB)) - (invValueA - Math.max(0, bondBalA));
     const rowWinner: 'A' | 'B' = netDiff > 0 ? 'B' : 'A';
 
     yearByYear.push({
       year,
       bondBalanceA: Math.round(Math.max(0, bondBalA)),
       bondBalanceB: Math.round(Math.max(0, bondBalB)),
-      investmentValue: Math.round(Math.max(0, invValueAfterTax)),
+      investmentValue: Math.round(Math.max(0, invValueB)),
+      bondRouteInvestmentValue: Math.round(Math.max(0, invValueA)),
       netDifference: Math.round(netDiff),
       winner: rowWinner,
     });
   }
-
-  // ── Find break-even year ──────────────────────────────────
-  // Already embedded in yearByYear winner column
 
   return {
     interestSaved,
@@ -121,6 +129,7 @@ export function calcExtraPaymentVsInvesting(inputs: InvestingInputs): InvestingR
     newPayoffDate,
     standardPayoffDate,
     effectiveReturnA,
+    bondRouteValue,
     portfolioValueAtPayoff: portfolioValue,
     afterTaxPortfolioValue,
     netBenefitB,
